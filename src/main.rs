@@ -3,13 +3,15 @@ use gtk4::gdk;
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 use once_cell::sync::Lazy;
+use tokio::runtime::Runtime;
 
 mod components;
 mod helpers;
 use helpers::config_loader::{read_config, Config};
 
-static CONFIG: Lazy<Config> = Lazy::new(read_config);
-
+static CONFIG: Lazy<Config> = Lazy::new(|| {
+    read_config()
+});
 
 
 fn create_main_window(application: &Application)-> ApplicationWindow{
@@ -41,17 +43,16 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
     return window
 
 }
-
 fn main() {
     helpers::load_resources();
     let application = Application::new(Some("com.skxxtz.sherlock"), Default::default());
 
-    application.connect_activate(move |app| {
-        let mut window = create_main_window(&app);
-        window.show();
+    application.connect_activate(|app| {
+        helpers::load_css();
+        let mut window = create_main_window(app);
 
         window = components::views::search(window);
-        helpers::load_css();
+        window.show();
     });
 
     application.run();
