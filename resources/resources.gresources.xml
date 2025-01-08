@@ -1,0 +1,11 @@
+<gresources>
+    <gresource prefix="/com/skxxtz/sherlock">
+        <file>main.css</file>
+        <file>fallback.json</file>
+        <file alias="ui/tile.ui">ui/tile.ui</file>
+        <file alias="ui/calc_tile.ui">ui/calc_tile.ui</file>
+        <file alias="ui/wiki_tile.ui">ui/wiki_tile.ui</file>
+        <file alias="ui/search.ui">ui/search.ui</file>
+    </gresource>
+</gresources>
+

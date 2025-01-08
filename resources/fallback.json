@@ -1,0 +1,41 @@
+[
+    {
+        "name": "Calculator",
+        "type": "calculation",
+        "args": {},
+        "priority": 1
+    },
+    {
+        "name": "App Launcher",
+        "alias": "app",
+        "type": "launch_app",
+        "args": {},
+        "priority": 2
+    },
+    {
+        "name": "Power Management",
+        "alias": "pm",
+        "type": "command",
+        "args": {"commands": {
+            "Shutdown": {"icon": "system-shutdown", "exec": "systemctl poweroff"},
+            "Sleep": {"icon": "system-suspend", "exec": "systemctl suspend"},
+            "Lock": {"icon": "system-lock-screen", "exec": "/bin/bash -c ~/.config/skxxtz/scripts/swaylock.sh"},
+            "Reboot": {"icon": "system-reboot", "exec": "systemctl reboot"}
+        }},
+        "priority": 3
+    },
+    {
+        "name": "Web Search",
+        "alias": "gg",
+        "type": "web_search",
+        "args": {"search_engine": "google"},
+        "priority": 4
+    },
+    {
+        "name": "Wikipedia Search",
+        "alias": "wiki",
+        "type": "get_api",
+        "args": {"icon": "", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
+        "priority": 5
+    }
+]

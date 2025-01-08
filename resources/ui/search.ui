@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <object class="GtkBox" id="vbox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">5</property>
+
+        <child>
+            <object class="GtkBox" id="search-bar-holder">
+                <property name="name">search-bar-holder</property>
+                <child>
+                    <object class="GtkEntry" id="search-bar">
+                        <property name="placeholder-text">Search:</property>
+                        <property name="name">search-bar</property>
+                        <property name="hexpand">true</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+
+        <child>
+            <object class="GtkLabel" id="category-type-label">
+                <property name="name">category-type</property>
+                <property name="label">All</property>
+                <property name="hexpand">True</property>
+                <property name="xalign">0</property>
+            </object>
+        </child>
+
+        <child>
+            <object class="GtkScrolledWindow" id="scrolled-window">
+                <property name="vexpand">true</property>
+                <property name="hexpand">false</property>
+                <property name="name">scroll-window</property>
+                <child>
+                    <object class="GtkListBox" id="result-frame">
+                        <property name="name">list_box</property>
+
+                        <child>
+                        </child>
+
+                    </object>
+                </child>
+            </object>
+        </child>
+
+        <child>
+            <object class="GtkBox" id="nofitications">
+                <property name="visible">false</property>
+                <style>
+                    <class name="notifications"/>
+                </style>
+
+            </object>
+        </child>
+    </object>
+
+</interface>
+
