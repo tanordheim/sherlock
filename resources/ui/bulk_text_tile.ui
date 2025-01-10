@@ -1,87 +1,98 @@
 <interface>
-<object class="GtkListBoxRow" id="holder">
-    <style>
-        <class name="tile"/>
-    </style>
+    <object class="GtkListBoxRow" id="holder">
+        <style>
+            <class name="tile"/>
+            <class name="bulk-text"/>
+        </style>
 
-    <child>
-        <object class="GtkBox">
-            <child>
-                <object class="GtkBox" id="attrs-holder">
-                    <property name="visible">false</property>
-                </object>
-            </child>
+        <child>
+            <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="hexpand">true</property> 
 
+                <child>
+                    <object class="GtkBox" id="attrs-holder">
+                        <property name="visible">false</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkBox" id="bulk-text-tilte-bar">
+                        <property name="valign">center</property>
+                        <property name="name">bulk-text-title-bar</property>
+                        <property name="spacing">10</property>
+                        <child>
+                            <object class="GtkImage" id="icon-name">
+                                <property name="name">bulk-text-icon</property>
+                                <property name="icon-name"></property>
+                                <property name="pixel-size">15</property>   
+                            </object>
+                        </child>
+                        <child>
+                            <object class="GtkBox">
+                                <property name="valign">center</property>
+                                <child>
+                                    <object class="GtkLabel" id="launcher-type">
+                                        <property name="name">bulk-text-title</property>
+                                        <property name="xalign">0</property>
+                                    </object>
+                                </child>
+                            </object>
+                        </child>
+                    </object>
+                </child>
 
-
-            <property name="orientation">vertical</property>
-            <property name="spacing">20</property>
-            <property name="hexpand">true</property> 
-
-
-
-            <child>
-                <object class="GtkBox" id="bulk-text-tilte-bar">
-                    <property name="valign">center</property>
-                    <property name="spacing">20</property>
-                    <child>
-                        <object class="GtkImage" id="icon-name">
-                            <property name="name">bulk-text-icon</property>
-                            <property name="icon-name">system-shutdown</property>
-                            <property name="pixel-size">15</property>   
-                        </object>
-                    </child>
-                    <child>
-                        <object class="GtkLabel" id="launcher-type">
-                            <property name="name">bulk-text-title</property>
-                            <property name="xalign">0</property>
-                        </object>
-                    </child>
-                </object>
-            </child>
-
-            <child>
-                <object class="GtkBox" id="content-holder">
-                    <property name="orientation">vertical</property>
-                    <property name="spacing">2</property>
-                    <property name="valign">center</property>
-                    <property name="hexpand">true</property>
-
-
-                    <child>
-                        <object class="GtkLabel" id="content-title">
-                            <property name="name">bulk-text-content-title</property>
-                            <property name="xalign">0</property>
-                        </object>
-                    </child>
-                    <child>
-                        <object class="GtkLabel" id="content-body">
-                            <property name="name">bulk-text-content-body</property>
-                            <property name="xalign">0</property>
-                        </object>
-                    </child>
-
-                </object>
-            </child>
-
-            <child>
-                <object class="GtkBox" id="shortcut-holder">
-                    <property name="valign">center</property>
-                    <property name="name">shortcut-holder</property>
-                    <property name="visible">false</property>
-                    <child>
-                        <object class="GtkLabel" id="shortcut">
-                            <property name="name">shortcut</property>
-                            <property name="label"></property>   
-                        </object>
-                    </child>
-                </object>
-            </child>
+                <child>
+                    <object class="GtkBox" id="content-holder">
+                        <property name="name">bulk-text-content-holder</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">5</property>
+                        <property name="valign">center</property>
+                        <property name="hexpand">true</property>
 
 
-        </object>
-    </child>
+                        <child>
+                            <object class="GtkBox" id="loader-holder">
+                                <property name="orientation">vertical</property>
 
 
-</object>
+                            </object>
+                        </child>
+                        <child>
+                            <object class="GtkLabel" id="content-title">
+                                <property name="name">bulk-text-content-title</property>
+                                <property name="xalign">0</property>
+                            </object>
+                        </child>
+
+
+                        <child>
+                            <object class="GtkTextView" id="content-body">
+                                <property name="name">bulk-text-content-body</property>
+                                <property name="wrap-mode">word</property>
+                            </object>
+                        </child>
+
+                    </object>
+                </child>
+
+                <child>
+                    <object class="GtkBox" id="shortcut-holder">
+                        <property name="valign">center</property>
+                        <property name="name">shortcut-holder</property>
+                        <property name="visible">false</property>
+                        <child>
+                            <object class="GtkLabel" id="shortcut">
+                                <property name="name">shortcut</property>
+                                <property name="label"></property>   
+                            </object>
+                        </child>
+                    </object>
+                </child>
+
+
+            </object>
+        </child>
+
+
+    </object>
 </interface>

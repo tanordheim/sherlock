@@ -1,4 +1,13 @@
-use gtk4::{prelude::*, Label, Box};
+use gtk4::{prelude::*, Label, Box, ListBoxRow, TextView, Box as HVBox};
+use crate::launcher::Launcher;
+
+pub struct AsyncLauncherTile {
+    pub launcher: Launcher,
+    pub widget: ListBoxRow,
+    pub title: Label,
+    pub body: TextView,
+    pub loader_holder: HVBox,
+}
 
 pub fn insert_attrs(attr_holder:&Box, attrs:Vec<String>){
     for item in attrs{

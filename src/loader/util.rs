@@ -8,9 +8,14 @@ use serde::Deserialize;
 pub struct CommandConfig {
     pub name: String,
     pub alias: Option<String>,
+    #[serde(default)]
     pub r#type: String,
+    #[serde(default)]
     pub args: serde_json::Value,
+    #[serde(default)]
     pub priority: u32,
+    #[serde(default)]
+    pub r#async: bool,
 }
 
 #[derive(Deserialize, Debug, Clone)]

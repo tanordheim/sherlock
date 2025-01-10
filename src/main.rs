@@ -48,8 +48,8 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
 
 }
 
-
-fn main() {
+#[tokio::main]
+async fn main() {
     Loader::load_resources();
 
 
