@@ -21,8 +21,8 @@ impl Loader {
 
             // Try to deserialize the user configuration, falling back to defaults
             toml::de::from_str(&config_str)
-                .unwrap_or_else(|_| {
-                    println!("Failed to deserialize config, using defaults.");
+                .unwrap_or_else(|e| {
+                    println!("Failed to deserialize config, using defaults. {}", e);
                     default_config
                 })
         } else {

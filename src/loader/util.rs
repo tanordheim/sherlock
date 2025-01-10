@@ -28,62 +28,65 @@ impl Config {
             },
             appearance: ConfigAppearance {
                 recolor_icons: false,
+                icon_paths: Default::default(),
             }
         }
     }
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
-pub struct ConfigDefaultApps{
-    #[serde(default)]
-    pub terminal: Option<String>,
-}
-#[derive(Deserialize, Debug, Clone, Default)]
-pub struct ConfigAppearance{
-    #[serde(default)]
-    pub recolor_icons: bool,
-}
-
-pub fn read_file(file_path: &str)->std::io::Result<String>{
-    let file = File::open(file_path)?;
-    let mut reader = BufReader::new(file);
-    let mut content = String::new();
-    reader.read_to_string(&mut content)?;
-    Ok(content)
-}
-
-pub fn get_terminal()->Option<String>{
-    let mut terminal = None;
-
-    //Check if $TERMAINAL is set
-    if let Ok(term) = env::var("TERMINAL") {
-        if is_terminal_installed(&term) {
-            terminal = Some(term); 
-        }
+    pub struct ConfigDefaultApps{
+        #[serde(default)]
+        pub terminal: Option<String>,
     }
-    // Try other terminals
-    if terminal.is_none(){
-        let terminals = [
-            "kitty", "gnome-terminal", "xterm", "konsole", "alacritty",
-            "urxvt", "mate-terminal", "terminator", "sakura", "terminology",
-            "st", "xfce4-terminal", "guake", "x11-terminal", "macos-terminal",
-            "iterm2", "lxterminal", "foot", "wezterm", "tilix"
-        ];
-        for t in terminals{
-            if is_terminal_installed(t){
-                terminal = Some(t.to_string());
-                break;
+#[derive(Deserialize, Debug, Clone, Default)]
+    pub struct ConfigAppearance{
+        #[serde(default)]
+        pub recolor_icons: bool,
+        #[serde(default)]
+        pub icon_paths: Vec<String>, 
+    }
+
+    pub fn read_file(file_path: &str)->std::io::Result<String>{
+        let file = File::open(file_path)?;
+        let mut reader = BufReader::new(file);
+        let mut content = String::new();
+        reader.read_to_string(&mut content)?;
+        Ok(content)
+    }
+
+    pub fn get_terminal()->Option<String>{
+        let mut terminal = None;
+
+        //Check if $TERMAINAL is set
+        if let Ok(term) = env::var("TERMINAL") {
+            if is_terminal_installed(&term) {
+                terminal = Some(term); 
             }
         }
+        // Try other terminals
+        if terminal.is_none(){
+            let terminals = [
+                "kitty", "gnome-terminal", "xterm", "konsole", "alacritty",
+                "urxvt", "mate-terminal", "terminator", "sakura", "terminology",
+                "st", "xfce4-terminal", "guake", "x11-terminal", "macos-terminal",
+                "iterm2", "lxterminal", "foot", "wezterm", "tilix"
+            ];
+            for t in terminals{
+                if is_terminal_installed(t){
+                    terminal = Some(t.to_string());
+                    break;
+                }
+            }
 
+        }
+
+        terminal
     }
-
-    terminal
-}
-fn is_terminal_installed(terminal: &str) -> bool {
-    Command::new(terminal)
-        .arg("--version") // You can adjust this if the terminal doesn't have a "--version" flag
-        .output()
-        .is_ok()
-}
+    fn is_terminal_installed(terminal: &str) -> bool {
+        Command::new(terminal)
+            .arg("--version") // You can adjust this if the terminal doesn't have a "--version" flag
+            .output()
+            .is_ok()
+    }
 
