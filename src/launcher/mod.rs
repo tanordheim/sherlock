@@ -67,6 +67,9 @@ pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String)-
     let mut index:i32 = 0;
     for launcher in launchers.iter() {
         let alias = launcher.alias();
+        if launcher.priority() == 0 && alias != sel_mode {
+            continue;
+        } 
         
         if alias == sel_mode || sel_mode == "all" {
             let (returned_index, result) = launcher.get_patch(index, keyword);

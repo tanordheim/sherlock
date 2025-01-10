@@ -47,6 +47,8 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
     return window
 
 }
+
+
 fn main() {
     Loader::load_resources();
 
@@ -54,18 +56,16 @@ fn main() {
     let application = Application::new(Some("com.skxxtz.sherlock"), Default::default());
 
     application.connect_activate(|app| {
-        let t1 = std::time::Instant::now();
         let launchers = Loader::load_launchers();
         Loader::load_css();
 
-
-        let mut window = create_main_window(app);
-
+        // Move the async block to GTK's main thread
+        let app_clone = app.clone();
+        let mut window = create_main_window(&app_clone);
         window = ui::search::search(window, launchers);
         window.show();
-        println!("time elapsed: {:?}", t1.elapsed());
     });
 
     application.run();
-
 }
+

@@ -57,7 +57,6 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text().to_string();
 
-
         // Check if current text is present in modes
         if modes.contains_key(&current_text) {
             if let Some(mode_name) = modes.get(&current_text){
@@ -65,7 +64,6 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
                 search_bar.set_text("");
             }
         } else {
-            // Get the new widgets for the specific input text
             set_results(&current_text,&mode_clone_ev_changed.borrow(), &*results, &launchers_clone_ev_changed);
         }
     });
