@@ -56,6 +56,7 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
     search_bar.grab_focus();
 
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
+    let cancel_flag = Rc::new(RefCell::new(false));
 
     // Eventhandling for text change inside search bar
     // EVENT: CHANGE
@@ -64,6 +65,7 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
         if let Some(task) = current_task.borrow_mut().take(){
             task.abort();
         };
+        *cancel_flag.borrow_mut() = true;
 
         // Check if current text is present in modes
         let results_clone_ev_changed = results.clone();
@@ -76,8 +78,13 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
             }
         
         } else {
+            *cancel_flag.borrow_mut() = false;
+            let cancel_flag = Rc::clone(&cancel_flag);
 
             let task = glib::MainContext::default().spawn_local(async move {
+                if *cancel_flag.borrow(){
+                    return;
+                }
                 set_results_async(&current_text,&mode_clone_ev_changed2.borrow(), &*results_clone_ev_changed, &launchers_clone_ev_changed2).await;
             });
             *current_task.borrow_mut() = Some(task);
