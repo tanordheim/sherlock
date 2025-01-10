@@ -88,26 +88,23 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                 &*results,
                 &non_async_launchers,
             );
-            let widgets: HashMap<String, AsyncLauncherTile> = async_launchers
+            let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
                 .filter_map(|launcher| {
                     launcher.get_loader_widget(&current_text).map(
                         |(widget, title, body, loader_holder)| {
-                            (
-                                launcher.uid(),
                                 AsyncLauncherTile {
                                     launcher: launcher.clone(),
                                     widget,
                                     title,
                                     body,
                                     loader_holder,
-                                },
-                            )
+                                }
                         },
                     )
                 })
                 .collect();
-            for (_, widget) in widgets.iter() {
+            for widget in widgets.iter() {
                 results.append(&widget.widget);
             }
             select_first_row(&*results);
@@ -116,7 +113,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                 if *cancel_flag.borrow() {
                     return;
                 }
-                for (_, widget) in widgets.iter() {
+                for widget in widgets.iter() {
                     if let Some((title, body)) = widget.launcher.get_result(&current_text).await {
                         widget.title.set_text(&title);
                         widget.body.buffer().set_text(&body);

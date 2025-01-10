@@ -3,7 +3,7 @@ use gtk4::{Label, ListBoxRow, TextView, Box as HVBox};
 pub mod app_launcher;
 pub mod web_launcher;
 pub mod calc_launcher;
-pub mod get_api_launcher;
+pub mod bulk_text_launcher;
 pub mod system_cmd_launcher;
 
 use crate::ui::tiles::Tile;
@@ -11,7 +11,7 @@ use crate::ui::tiles::Tile;
 use app_launcher::App;
 use web_launcher::Web;
 use calc_launcher::Calc;
-use get_api_launcher::ApiGet;
+use bulk_text_launcher::BulkText;
 use system_cmd_launcher::SystemCommand;
 
 #[derive(Clone, Debug)]
@@ -19,7 +19,7 @@ pub enum Launcher{
     App(App),
     Web(Web),
     Calc(Calc),
-    ApiGet(ApiGet),
+    BulkText(BulkText),
     SystemCommand(SystemCommand),
 }
 impl Launcher{
@@ -28,7 +28,7 @@ impl Launcher{
             Launcher::App(_) => None,
             Launcher::Web(_) => None,
             Launcher::Calc(_) => None,
-            Launcher::ApiGet(api) => Tile::bulk_text_tile_loader(&api.name, &api.method, &api.icon, &api.url, keyword),
+            Launcher::BulkText(api) => Tile::bulk_text_tile_loader(&api.name, &api.method, &api.icon, keyword),
             Launcher::SystemCommand(_) => None,
         }
         
@@ -38,7 +38,7 @@ impl Launcher{
             Launcher::App(app) => Tile::app_tile(index, app.apps.clone(), &app.name, &app.method, keyword),
             Launcher::Web(web) => Tile::web_tile(&web.name, &web.method, &web.icon, &web.engine, index, keyword),
             Launcher::Calc(calc) => Tile::calc_tile(index, keyword, &calc.method),
-            Launcher::ApiGet(api) => Tile::bulk_text_tile(&api.name, &api.method, &api.icon, &api.url, index, keyword),
+            Launcher::BulkText(api) => Tile::bulk_text_tile(&api.name, &api.method, &api.icon, index, keyword),
             Launcher::SystemCommand(cmd) => Tile::app_tile(index, cmd.commands.clone(), &cmd.name, &cmd.method, keyword),
         }
     }
@@ -47,7 +47,7 @@ impl Launcher{
             Launcher::App(_) => None,
             Launcher::Web(_) => None,
             Launcher::Calc(_) => None,
-            Launcher::ApiGet(api) => api.get_result(keyword).await,
+            Launcher::BulkText(api) => api.get_result(keyword).await,
             Launcher::SystemCommand(_) => None,
         }
     }
@@ -56,7 +56,7 @@ impl Launcher{
             Launcher::App(app) => app.priority,
             Launcher::Web(web) => web.priority,
             Launcher::Calc(calc) => calc.priority,
-            Launcher::ApiGet(api) => api.priority,
+            Launcher::BulkText(api) => api.priority,
             Launcher::SystemCommand(cmd) => cmd.priority,
         }
     }
@@ -65,7 +65,7 @@ impl Launcher{
             Launcher::App(app) => app.alias.clone().unwrap_or_default(),
             Launcher::Web(web) => web.alias.clone().unwrap_or_default(),
             Launcher::Calc(calc) => calc.alias.clone().unwrap_or_default(),
-            Launcher::ApiGet(api) => api.alias.clone().unwrap_or_default(),
+            Launcher::BulkText(api) => api.alias.clone().unwrap_or_default(),
             Launcher::SystemCommand(cmd) => cmd.alias.clone().unwrap_or_default(),
         }
     }
@@ -74,7 +74,7 @@ impl Launcher{
             Launcher::App(app) => app.name.clone(),
             Launcher::Web(web) => web.name.clone(),
             Launcher::Calc(calc) => calc.name.clone(),
-            Launcher::ApiGet(api) => api.name.clone(),
+            Launcher::BulkText(api) => api.name.clone(),
             Launcher::SystemCommand(cmd) => cmd.name.clone(),
         }
     }
@@ -83,17 +83,8 @@ impl Launcher{
             Launcher::App(app) => app.r#async.clone(),
             Launcher::Web(web) => web.r#async.clone(),
             Launcher::Calc(calc) => calc.r#async.clone(),
-            Launcher::ApiGet(api) => api.r#async.clone(),
+            Launcher::BulkText(api) => api.r#async.clone(),
             Launcher::SystemCommand(cmd) => cmd.r#async.clone(),
-        }
-    }
-    pub fn uid(&self)->String{
-        match self {
-            Launcher::App(app) => app.uuid.clone(),
-            Launcher::Web(web) => web.uuid.clone(),
-            Launcher::Calc(calc) => calc.uuid.clone(),
-            Launcher::ApiGet(api) => api.uuid.clone(),
-            Launcher::SystemCommand(cmd) => cmd.uuid.clone(),
         }
     }
 }

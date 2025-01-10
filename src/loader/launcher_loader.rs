@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use crate::launcher::{Launcher, app_launcher, web_launcher, calc_launcher, system_cmd_launcher, get_api_launcher};
+use crate::launcher::{Launcher, app_launcher, web_launcher, calc_launcher, system_cmd_launcher, bulk_text_launcher};
 use app_launcher::{App, AppData};
 use web_launcher::Web;
 use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
-use get_api_launcher::ApiGet;
+use bulk_text_launcher::BulkText;
 use std::path::Path;
 use std::{env, fs};
 
@@ -50,7 +50,6 @@ impl Loader {
             match cmd.r#type.as_str(){
                 "launch_app" => Some(Launcher::App(App {
                     method: "app".to_string(),
-                    uuid: format!("app_{}", uuid_counter),
                     name: cmd.name.clone(),
                     alias: cmd.alias.clone(), 
                     priority: cmd.priority,
@@ -59,7 +58,6 @@ impl Loader {
                 })),
                 "web_search" => Some(Launcher::Web(Web {
                     method: "web".to_string(),
-                    uuid: format!("web_{}", uuid_counter),
                     name: cmd.name.clone(), 
                     alias: cmd.alias.clone(),
                     icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
@@ -69,7 +67,6 @@ impl Loader {
                 })),
                 "calculation" => Some(Launcher::Calc(Calc {
                     method: "calc".to_string(),
-                    uuid: format!("calc_{}", uuid_counter),
                     alias: cmd.alias.clone(), 
                     name: cmd.name.clone(), 
                     r#async: cmd.r#async,
@@ -79,7 +76,6 @@ impl Loader {
                     let commands: HashMap<String, AppData> = serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();                
                     Some(Launcher::SystemCommand(SystemCommand {
                         method: "command".to_string(),
-                        uuid: format!("command_{}", uuid_counter),
                         name: cmd.name.clone(),
                         alias: cmd.alias.clone(), 
                         priority: cmd.priority,
@@ -89,18 +85,17 @@ impl Loader {
 
                 },
                 "get_api" => {
-                    Some(Launcher::ApiGet(ApiGet{
-                        method: "get_api".to_string(),
-                        uuid: format!("get_api_{}", uuid_counter),
+                    Some(Launcher::BulkText(BulkText{
+                        method: "bulk_text".to_string(),
                         alias: cmd.alias.clone(),
                         name: cmd.name.clone(),
                         priority: cmd.priority,
                         r#async: cmd.r#async,
-
-                        title_key: cmd.args["title-key"].as_str().unwrap_or_default().to_string(),
-                        body_key: cmd.args["body-key"].as_str().unwrap_or_default().to_string(),
                         icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        url: cmd.args["url"].as_str().unwrap_or_default().to_string(),
+
+                        exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
+                        args: cmd.args["exec-args"].as_str().unwrap_or_default().to_string(),
+                        whitespace: cmd.args["whitespace"].as_str().unwrap_or("_").to_string(),
                     }))
                 }
                 _ => None

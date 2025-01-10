@@ -4,7 +4,7 @@ use super::Tile;
 use super::util::insert_attrs;
 
 impl Tile{
-    pub fn bulk_text_tile_loader(name: &String, method: &String, icon: &String, path: &String, keyword:&String)->Option<(ListBoxRow, Label, TextView, Box)>{
+    pub fn bulk_text_tile_loader(name: &String, method: &String, icon: &String, keyword:&String)->Option<(ListBoxRow, Label, TextView, Box)>{
         if !keyword.is_empty(){
             let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/bulk_text_tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
@@ -22,7 +22,6 @@ impl Tile{
             let attrs: Vec<String> = vec![
                 format!("{} | {}", "method", method),
                 format!("{} | {}", "keyword", keyword),
-                format!("{} | {}", "path", path),
             ];
             insert_attrs(&attr_holder, attrs);
 
@@ -32,7 +31,7 @@ impl Tile{
     
 
     }
-    pub fn bulk_text_tile(name: &String, method: &String, icon: &String, path: &String, index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
+    pub fn bulk_text_tile(name: &String, method: &String, icon: &String, index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
         if !keyword.is_empty(){
             let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/bulk_text_tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
@@ -48,7 +47,6 @@ impl Tile{
             let attrs: Vec<String> = vec![
                 format!("{} | {}", "method", method),
                 format!("{} | {}", "keyword", keyword),
-                format!("{} | {}", "path", path),
             ];
             insert_attrs(&attr_holder, attrs);
 
