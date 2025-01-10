@@ -2,6 +2,7 @@
     {
         "name": "Calculator",
         "type": "calculation",
+        "async": false,
         "args": {},
         "priority": 1
     },
@@ -9,6 +10,7 @@
         "name": "App Launcher",
         "alias": "app",
         "type": "launch_app",
+        "async": false,
         "args": {},
         "priority": 2
     },
@@ -16,6 +18,7 @@
         "name": "Power Management",
         "alias": "pm",
         "type": "command",
+        "async": false,
         "args": {"commands": {
             "Shutdown": {"icon": "system-shutdown", "exec": "systemctl poweroff"},
             "Sleep": {"icon": "system-suspend", "exec": "systemctl suspend"},
@@ -28,6 +31,7 @@
         "name": "Web Search",
         "alias": "gg",
         "type": "web_search",
+        "async": false,
         "args": {"search_engine": "google", "icon": "google"},
         "priority": 4
     },
@@ -38,6 +42,7 @@
         "name": "Wikipedia Search",
         "alias": "wiki",
         "type": "get_api",
+        "async": true, 
         "args": {"icon": "wikipedia", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
         "priority": 0 
     }
