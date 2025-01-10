@@ -23,6 +23,15 @@ pub enum Launcher{
     SystemCommand(SystemCommand),
 }
 impl Launcher{
+    async fn get_patch_async(&self, index:i32, keyword: &String)->(i32, Vec<ListBoxRow>){
+        match self {
+            Launcher::App(app) => Tile::app_tile(index, app.apps.clone(), &app.name, &app.method, keyword),
+            Launcher::Web(web) => Tile::web_tile(&web.name, &web.method, &web.icon, &web.engine, index, keyword),
+            Launcher::Calc(calc) => Tile::calc_tile(index, keyword, &calc.method),
+            Launcher::ApiGet(api) => Tile::bulk_text_tile_async(&api.name, &api.method, &api.icon, &api.url, &api.key, index, keyword).await,
+            Launcher::SystemCommand(cmd) => Tile::app_tile(index, cmd.commands.clone(), &cmd.name, &cmd.method, keyword),
+        }
+    }
     fn get_patch(&self, index:i32, keyword: &String)->(i32, Vec<ListBoxRow>){
         match self {
             Launcher::App(app) => Tile::app_tile(index, app.apps.clone(), &app.name, &app.method, keyword),
@@ -59,6 +68,26 @@ impl Launcher{
             Launcher::SystemCommand(cmd) => cmd.name.clone(),
         }
     }
+}
+
+pub async fn construct_tiles_async(keyword: &String, launchers: &[Launcher], mode: &String)->Vec<ListBoxRow>{
+    let mut widgets = Vec::with_capacity(launchers.len());
+    let sel_mode = mode.trim();
+    let mut index:i32 = 0;
+    for launcher in launchers.iter() {
+        let alias = launcher.alias();
+        if launcher.priority() == 0 && alias != sel_mode {
+            continue;
+        } 
+        
+        if alias == sel_mode || sel_mode == "all" {
+            let (returned_index, result) = launcher.get_patch_async(index, keyword).await;
+            index = returned_index;
+            widgets.extend(result); 
+            
+        }
+    }
+    widgets
 }
 
 pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String)->Vec<ListBoxRow>{

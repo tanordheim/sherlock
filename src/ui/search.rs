@@ -5,9 +5,12 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use gtk4::glib;
+
 use crate::launcher::Launcher;
 use crate::actions::execute_from_attrs;
 use super::util::*;
+
 
 
 pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> ApplicationWindow {
@@ -52,20 +55,34 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
     window.set_child(Some(&vbox));
     search_bar.grab_focus();
 
+    let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
+
     // Eventhandling for text change inside search bar
     // EVENT: CHANGE
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text().to_string();
+        if let Some(task) = current_task.borrow_mut().take(){
+            task.abort();
+        };
 
         // Check if current text is present in modes
-        if modes.contains_key(&current_text) {
+        let results_clone_ev_changed = results.clone();
+        let launchers_clone_ev_changed2 = launchers_clone_ev_changed.clone();
+        let mode_clone_ev_changed2 = mode_clone_ev_changed.clone();
+        if modes.contains_key(&current_text){
             if let Some(mode_name) = modes.get(&current_text){
                 set_mode(&mode_title_clone, &mode_clone_ev_changed, &current_text, mode_name);
                 search_bar.set_text("");
             }
+        
         } else {
-            set_results(&current_text,&mode_clone_ev_changed.borrow(), &*results, &launchers_clone_ev_changed);
+
+            let task = glib::MainContext::default().spawn_local(async move {
+                set_results_async(&current_text,&mode_clone_ev_changed2.borrow(), &*results_clone_ev_changed, &launchers_clone_ev_changed2).await;
+            });
+            *current_task.borrow_mut() = Some(task);
         }
+
     });
 
 
@@ -161,3 +178,8 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
     return window;
 }
 
+
+async fn async_operation(results: &ListBox, launchers: &Vec<Launcher>){
+    glib::timeout_future_seconds(1).await;
+    set_results("zen", "all", results, launchers);
+}

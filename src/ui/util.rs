@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use crate::launcher::{construct_tiles, Launcher};
+use crate::launcher::{construct_tiles, construct_tiles_async, Launcher};
 use crate::actions::execute_from_attrs;
 
 pub fn execute_by_index(results:&ListBox, index:i32){
@@ -40,6 +40,17 @@ pub fn set_mode(mode_title:&Label, mode_c:&Rc<RefCell<String>>, ctext:&str, mode
 }
 
 
+pub async fn set_results_async(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
+    // Remove all elements inside to avoid duplicates
+    while let Some(row) = results_frame.last_child() {
+        results_frame.remove(&row);
+    }
+    let widgets = construct_tiles_async(&keyword.to_string(), &launchers, &mode.to_string()).await;
+    for widget in widgets {
+        results_frame.append(&widget);
+    }
+    select_first_row(&results_frame);
+}
 pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
