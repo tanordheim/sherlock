@@ -1,6 +1,6 @@
 use gio::prelude::*;
 use gtk4::gdk;
-use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
+use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey, IconTheme};
 use gtk4_layer_shell::{Layer, LayerShell};
 use once_cell::sync::Lazy;
 use std::env;
@@ -52,12 +52,15 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
 fn main() {
     Loader::load_resources();
 
+
     env::set_var("GSK_RENDERER", "cairo");
     let application = Application::new(Some("com.skxxtz.sherlock"), Default::default());
 
     application.connect_activate(|app| {
         let launchers = Loader::load_launchers();
         Loader::load_css();
+        let icon_theme = IconTheme::default();
+        println!("{:?}", icon_theme.resource_path());
 
         // Move the async block to GTK's main thread
         let app_clone = app.clone();

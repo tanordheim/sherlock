@@ -76,6 +76,7 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
         match key {
             gdk::Key::Up => {
+
                 let new_row = select_row(-1, &results_clone_ev_nav);
 
                 let row_allocation = new_row.allocation();
@@ -90,11 +91,11 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
                 } 
             },
             gdk::Key::Down => {
-                select_row(1, &results_clone_ev_nav);
+                let new_row = select_row(1, &results_clone_ev_nav);
                 let allocation = result_viewport.allocation();
                 let list_box_rect = Rectangle::from(allocation);
 
-                let row_allocation = results_clone_ev_nav.selected_row().unwrap().allocation();
+                let row_allocation = new_row.allocation();
                 let row_rect = Rectangle::from(row_allocation);
 
                 let list_height = list_box_rect.height() as f64;
@@ -108,6 +109,7 @@ pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> Application
                     let new_value = current_value + delta;
                     vadjustment.set_value(new_value);
                 }
+
             },
             gdk::Key::BackSpace => {
                 let ctext = &search_bar.text();

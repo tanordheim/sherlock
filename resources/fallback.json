@@ -28,7 +28,7 @@
         "name": "Web Search",
         "alias": "gg",
         "type": "web_search",
-        "args": {"search_engine": "google"},
+        "args": {"search_engine": "google", "icon": "google"},
         "priority": 4
     },
 
@@ -38,7 +38,7 @@
         "name": "Wikipedia Search",
         "alias": "wiki",
         "type": "get_api",
-        "args": {"icon": "system-search-symbolic", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
-        "priority": 5
+        "args": {"icon": "wikipedia", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
+        "priority": 0 
     }
 ]

@@ -26,7 +26,7 @@ impl Launcher{
     fn get_patch(&self, index:i32, keyword: &String)->(i32, Vec<ListBoxRow>){
         match self {
             Launcher::App(app) => Tile::app_tile(index, app.apps.clone(), &app.name, &app.method, keyword),
-            Launcher::Web(web) => Tile::web_tile(&web.name, &web.method, &web.engine, index, keyword),
+            Launcher::Web(web) => Tile::web_tile(&web.name, &web.method, &web.icon, &web.engine, index, keyword),
             Launcher::Calc(calc) => Tile::calc_tile(index, keyword, &calc.method),
             Launcher::ApiGet(api) => Tile::bulk_text_tile(&api.name, &api.method, &api.icon, &api.url, &api.key, index, keyword),
             Launcher::SystemCommand(cmd) => Tile::app_tile(index, cmd.commands.clone(), &cmd.name, &cmd.method, keyword),

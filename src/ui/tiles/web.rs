@@ -4,7 +4,7 @@ use super::Tile;
 use super::util::insert_attrs;
 
 impl Tile{
-    pub fn web_tile(name:&String, method: &String, engine: &String ,index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
+    pub fn web_tile(name:&String, method: &String, icon: &String, engine: &String ,index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
         if !keyword.is_empty(){
             let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
@@ -21,7 +21,7 @@ impl Tile{
             }
 
             launcher_type.set_text(name);
-            icon_obj.set_icon_name(Some("google"));
+            icon_obj.set_icon_name(Some(icon));
             title_obj.set_text(keyword);
 
             let attrs: Vec<String> = vec![
