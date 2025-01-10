@@ -8,11 +8,14 @@
     --error: #E3655B;
 
 }
+*{
+    background: hsl(var(--background));
+    background-color: hsl(var(--background));
+}
 
 window {
     color: hsl(var(--text));
     border-radius: 5px;
-    background: hsla(var(--background), 1);
     border: 2px solid hsl(var(--border));
 }
 
@@ -21,7 +24,7 @@ window {
 #search-bar{
     outline: none;
     border: 1px solid hsla(var(--border), 1);
-    background: hsla(var(--background),0.1);
+    background: hsla(var(--background),1);
     min-height: 40px;
     color: hsl(var(--text));
     font-size: 15px;
@@ -34,6 +37,8 @@ window {
     outline: none;
 }
 #search-bar placeholder{
+    background: transparent;
+    background-color: transparent;
     color: hsla(var(--text), 0.7);
     font-weight: 500;
 }
@@ -41,13 +46,13 @@ window {
 #category-type{
     font-size: 13px;
     font-weight: bold;
-    color: hls(var(--text));
+    color: hsl(var(--text));
     opacity: 0.3;
     padding: 2px 20px 0px 20px;
 }
 
 #list_box{
-    background: hsla(var(--background),0);
+    background: hsl(var(--background));
 }
 #scroll-window{
     padding: 5px 10px 5px 10px;
@@ -63,9 +68,11 @@ overshoot{
     background:hsla(0, 0%, 0, 0);
     opacity: 0.0;
 }
-
+image{
+    color: red;
+}
 .tile{
-    background: hsla(var(--background), 0);
+    outline: none;
     min-height: 50px;
     padding: 0px 10px;
     margin-bottom: 5px;
@@ -79,10 +86,12 @@ overshoot{
     margin:0px;
     padding: 0px;
 }
-.tile:selected{
+.tile:selected, .tile:selected * {
     transition: 0.1s ease;
     background: hsla(var(--foreground), 1);
+    background-color: hsla(var(--foreground), 1);
     outline: none;
+    border: none;
 }
 .tile:focus{
     outline:none;
@@ -107,9 +116,12 @@ overshoot{
 }
 .tile:selected #shortcut-holder{
     background: hsla(var(--background), 0.5);
+    background-color: hsla(var(--background), 0.5);
     color: hsla(var(--text), 0.5);
 }
 #shortcut{
+    background: hsla(var(--background), 0);
+    background-color: hsla(var(--background), 0);
     font-size: 11px;
     font-weight: bold;
     color: hsla(var(--text), 0.5);
@@ -135,6 +147,17 @@ overshoot{
     font-size: 20px;
     color: var(--success);
     animation: 0.4s ease-in-out slide 1s forwards;
+}
+
+
+/* BULK TEXT TILE */
+#bulk-text-title{
+    padding: 10px 0px;
+    font-size: 10px;
+    color: gray;
+}
+#bulk-text-content-title{
+    color: hsl(var(--text));
 }
 
 

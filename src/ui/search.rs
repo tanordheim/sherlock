@@ -1,22 +1,16 @@
 use gtk4::gdk::{self, Rectangle};
-use gtk4::{prelude::*, EventControllerKey, ListBoxRow, ScrolledWindow};
-use gtk4::{ApplicationWindow, Box as HVBox, Builder, Entry, ListBox, Label};
-use std::cell::RefCell;
+use gtk4::{self, prelude::*, ApplicationWindow, Builder, EventControllerKey};
+use gtk4::{Box as HVBox, Entry, ScrolledWindow, Label, ListBox};
 use std::collections::HashMap;
-use std::process::{exit, Command};
 use std::rc::Rc;
-use std::{env, path::Path};
-use cli_clipboard::{ClipboardContext, ClipboardProvider};
+use std::cell::RefCell;
 
-use crate::components::launchers;
-use crate::helpers;
-use helpers::{read_from_label, select_first_row};
-use launchers::{get_launchers, launcher_loop, Launcher};
+use crate::launcher::Launcher;
+use crate::actions::execute_from_attrs;
+use super::util::*;
 
 
-pub fn search(window: ApplicationWindow) -> ApplicationWindow {
-    let launchers: Vec<Launcher> = get_launchers();
-
+pub fn search(window: ApplicationWindow, launchers:Vec<Launcher>) -> ApplicationWindow {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
     let mut modes: HashMap<String, String> = HashMap::new();
@@ -40,7 +34,6 @@ pub fn search(window: ApplicationWindow) -> ApplicationWindow {
 
     //RC cloning:
     let results = Rc::new(results);
-
 
     let mode_clone_ev_changed = Rc::clone(&mode);
     let mode_clone_ev_nav = Rc::clone(&mode);
@@ -162,155 +155,9 @@ pub fn search(window: ApplicationWindow) -> ApplicationWindow {
         false.into()
     });
 
+
     window.add_controller(event_controller);
 
     return window;
 }
 
-fn set_mode(mode_title:&Label, mode_c:&Rc<RefCell<String>>, ctext:&str, mode_name:&String){
-    let new_mode = ctext.to_string();
-    mode_title.set_text(mode_name);
-    *mode_c.borrow_mut() = new_mode;
-
-}
-
-fn execute_by_index(results:&ListBox, index:i32){
-    if let Some(row) = results.row_at_index(index-1){
-        let attrs = get_row_attrs(row);
-        execute_from_attrs(attrs);
-    }
-
-    
-    
-}
-fn get_row_attrs(selected_row:ListBoxRow)->HashMap<String, String>{
-    let mut attrs: HashMap<String, String> = Default::default();
-    if let Some(main_holder) = selected_row.first_child() {
-        if let Some(attrs_holder) = main_holder.first_child() {
-            if let Some(first_label_obj) = attrs_holder.first_child() {
-                if let Some(text) = read_from_label(&first_label_obj) {
-                    attrs.insert(text.0, text.1);
-                }
-                let mut current_label_obj = first_label_obj;
-                while let Some(next_label_obj) = current_label_obj.next_sibling() {
-                    if let Some(text) = read_from_label(&next_label_obj) {
-                        attrs.insert(text.0, text.1);
-                    }
-                    current_label_obj = next_label_obj;
-                }
-            }
-        }
-    }
-    attrs
-}
-
-fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
-    // Remove all elements inside to avoid duplicates
-    while let Some(row) = results_frame.last_child() {
-        results_frame.remove(&row);
-    }
-    let widgets = launcher_loop(&keyword.to_string(), &launchers, &mode.to_string());
-    for widget in widgets {
-        results_frame.append(&widget);
-    }
-    select_first_row(&results_frame);
-
-
-}
-
-fn select_row(offset: i32, listbox:&Rc<ListBox>)->ListBoxRow{
-    if let Some(row) = listbox.selected_row(){
-        let new_index = row.index() + offset;
-        if let Some(new_row) = listbox.row_at_index(new_index){
-            listbox.select_row(Some(&new_row));
-            return new_row
-        };
-    };
-    return ListBoxRow::new();
-}
-
-fn execute_from_attrs(attrs: HashMap<String, String>) {
-    if let Some(method) = attrs.get("method") {
-        match method.as_str() {
-            "app" => {
-                let exec = attrs.get("exec").expect("Missing field: exec");
-                applaunch(exec);
-                exit(0);
-            }
-            "web" => {
-                let query = attrs
-                    .get("keyword")
-                    .expect("Missing field: keyword (query)");
-                let engine = attrs.get("engine").expect("Missing field: engine (query)");
-                websearch(engine, query);
-                exit(0);
-            },
-            "command" => {
-                let exec = attrs.get("exec").expect("Missing field: exec");
-                command_launch(exec);
-                exit(0)
-            },
-            "calc" => {
-                let string = attrs.get("result").expect("Missing field: result");
-                copy_to_clipboard(string);
-            }
-            _ => {
-                eprint!("Invalid method: {}", method)
-            }
-        }
-    }
-}
-
-fn websearch(engine: &str, query: &str) {
-    let mut engines: HashMap<&str, &str> = Default::default();
-    engines.insert("google", "https://www.google.com/search?q={}");
-    engines.insert("bing", "https://www.bing.com/search?q={}");
-    engines.insert("duckduckgo", "https://duckduckgo.com/?q={}");
-    if let Some(url_template) = engines.get(engine) {
-        let url = url_template.replace("{}", query);
-        let _ = open::that(url);
-    }
-}
-
-fn applaunch(exec: &str) {
-    let parts: Vec<String> = exec.split_whitespace().map(String::from).collect();
-
-    if parts.is_empty() {
-        eprintln!("Error: Command is empty");
-        exit(1);
-    }
-
-    let mut command = Command::new(&parts[0]);
-    for arg in &parts[1..] {
-        if !arg.starts_with("%") {
-            command.arg(arg);
-        }
-    }
-
-    let _output = command.spawn().expect("Failed to start the application");
-}
-
-fn command_launch(exec: &str) {
-    let mut parts = exec.split_whitespace();
-    let command = parts.next().expect("No command found.");
-    let args: Vec<&str> = parts.collect();
-
-    let output = Command::new(command)
-        .args(args)
-        .output()
-        .expect(format!("Failed to execute command: {:?}", command).as_str());
-
-    if output.status.success() {
-        println!("Command executed successfully!");
-        println!("Output: {}", String::from_utf8_lossy(&output.stdout));
-    } else {
-        eprintln!("Command failed with status: {}", output.status);
-        eprintln!("Error: {}", String::from_utf8_lossy(&output.stderr));
-    }
-}
-fn copy_to_clipboard(string:&String){
-    let mut ctx = ClipboardContext::new().unwrap();
-    ctx.set_contents(string.to_owned()).unwrap();
-
-
-}

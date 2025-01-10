@@ -35,7 +35,7 @@
         "name": "Wikipedia Search",
         "alias": "wiki",
         "type": "get_api",
-        "args": {"icon": "", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
+        "args": {"icon": "system-search-symbolic", "key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
         "priority": 5
     }
 ]

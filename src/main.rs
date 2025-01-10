@@ -3,14 +3,18 @@ use gtk4::gdk;
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 use once_cell::sync::Lazy;
-use tokio::runtime::Runtime;
+use std::env;
 
-mod components;
-mod helpers;
-use helpers::config_loader::{read_config, Config};
+mod launcher;
+mod ui;
+mod actions;
+mod loader;
+
+use loader::{Loader, util::Config};
+
 
 static CONFIG: Lazy<Config> = Lazy::new(|| {
-    read_config()
+    Loader::load_config()
 });
 
 
@@ -44,16 +48,24 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
 
 }
 fn main() {
-    helpers::load_resources();
+    Loader::load_resources();
+
+    env::set_var("GSK_RENDERER", "cairo");
     let application = Application::new(Some("com.skxxtz.sherlock"), Default::default());
 
     application.connect_activate(|app| {
-        helpers::load_css();
+        let t1 = std::time::Instant::now();
+        let launchers = Loader::load_launchers();
+        Loader::load_css();
+
+
         let mut window = create_main_window(app);
 
-        window = components::views::search(window);
+        window = ui::search::search(window, launchers);
         window.show();
+        println!("time elapsed: {:?}", t1.elapsed());
     });
 
     application.run();
+
 }
