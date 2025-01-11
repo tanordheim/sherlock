@@ -9,7 +9,26 @@
 
 }
 
-* {
+
+
+overshoot *,
+undershoot *,
+overshoot.top,
+overshoot.right,
+overshoot.bottom,
+overshoot.left
+undershoot.top,
+undershoot.right,
+undershoot.bottom,
+undershoot.left,
+#scroll-window > *
+{
+  background: none;
+  border: none;
+  background-color: none;
+}
+
+*{
     background: hsl(var(--background));
     background-color: hsl(var(--background));
 }
@@ -55,9 +74,6 @@ window {
     padding: 2px 20px 0px 20px;
 }
 
-#list_box {
-    background: hsl(var(--background));
-}
 
 #scroll-window {
     padding: 5px 10px 5px 10px;
@@ -72,10 +88,6 @@ scrollbar slider {
     border: none;
 }
 
-overshoot {
-    background: hsla(0, 0%, 0, 0);
-    opacity: 0.0;
-}
 
 image {
     color: white;
@@ -107,7 +119,6 @@ image {
     outline: none;
     border: none;
 }
-
 .tile:focus {
     outline: none;
 }
@@ -193,7 +204,7 @@ image {
 #bulk-text-content-body {
     font-size: 14px;
     color: hsl(var(--text));
-    text-wrap: word;
+    line-height: 1.4;
 }
 
 

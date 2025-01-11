@@ -1,9 +1,9 @@
 use gtk4::gdk::{self, Rectangle};
 use gtk4::{self, prelude::*, ApplicationWindow, Builder, EventControllerKey};
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use gtk4::glib;
 
@@ -78,9 +78,9 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
             *cancel_flag.borrow_mut() = false;
             let cancel_flag = Rc::clone(&cancel_flag);
             let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-                launchers_clone_ev_changed2
-                    .into_iter()
-                    .partition(|launcher| launcher.is_async());
+                                                         launchers_clone_ev_changed2
+                                                         .into_iter()
+                                                         .partition(|launcher| launcher.is_async());
 
             set_results(
                 &current_text,
@@ -92,20 +92,21 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                 .iter()
                 .filter_map(|launcher| {
                     launcher.get_loader_widget(&current_text).map(
-                        |(widget, title, body, loader_holder)| {
-                                AsyncLauncherTile {
-                                    launcher: launcher.clone(),
-                                    widget,
-                                    title,
-                                    body,
-                                    loader_holder,
-                                }
+                        |(widget, title, body)| {
+                            AsyncLauncherTile {
+                                launcher: launcher.clone(),
+                                widget,
+                                title,
+                                body,
+                            }
                         },
                     )
                 })
-                .collect();
+            .collect();
             for widget in widgets.iter() {
-                results.append(&widget.widget);
+                if *mode_clone_ev_changed.borrow().trim() == widget.launcher.alias() {
+                    results.append(&widget.widget);
+                } 
             }
             select_first_row(&*results);
 
@@ -117,8 +118,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                     if let Some((title, body)) = widget.launcher.get_result(&current_text).await {
                         widget.title.set_text(&title);
                         widget.body.buffer().set_text(&body);
-                        widget.loader_holder.set_visible(false);
-                    }
+                    } 
                 }
             });
             *current_task.borrow_mut() = Some(task);
@@ -167,14 +167,19 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
             }
             gdk::Key::BackSpace => {
                 let ctext = &search_bar.text();
-                if ctext.is_empty() {
-                    set_mode(&mode_title, &mode_clone_ev_nav, "all", &"All".to_string());
-                    set_results(
-                        &ctext,
-                        &mode_clone_ev_nav.borrow(),
-                        &*results_clone_ev_nav,
-                        &launchers_clone_ev_nav,
-                    );
+
+                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
+                    let _ = &search_bar.set_text("");
+                } else {
+                    if ctext.is_empty() {
+                        set_mode(&mode_title, &mode_clone_ev_nav, "all", &"All".to_string());
+                        set_results(
+                            &ctext,
+                            &mode_clone_ev_nav.borrow(),
+                            &*results_clone_ev_nav,
+                            &launchers_clone_ev_nav,
+                        );
+                    }
                 }
             }
             gdk::Key::Return => {

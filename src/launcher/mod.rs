@@ -23,7 +23,7 @@ pub enum Launcher{
     SystemCommand(SystemCommand),
 }
 impl Launcher{
-    pub fn get_loader_widget(&self, keyword: &String)-> Option<(ListBoxRow, Label, TextView, HVBox)>{
+    pub fn get_loader_widget(&self, keyword: &String)-> Option<(ListBoxRow, Label, TextView)>{
         match self {
             Launcher::App(_) => None,
             Launcher::Web(_) => None,

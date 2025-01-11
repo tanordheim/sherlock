@@ -1,4 +1,5 @@
 use gio::prelude::*;
+use gtk4::Settings;
 use gtk4::gdk;
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey };
 use gtk4_layer_shell::{Layer, LayerShell};
@@ -42,8 +43,10 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
         }
         false.into()
     });
-
     window.add_controller(event_controller);
+    if let Some(settings) = Settings::default(){
+        settings.set_gtk_application_prefer_dark_theme(true);
+    }
     return window
 
 }

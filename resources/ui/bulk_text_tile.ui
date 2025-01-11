@@ -19,7 +19,7 @@
                     <object class="GtkBox" id="bulk-text-tilte-bar">
                         <property name="valign">center</property>
                         <property name="name">bulk-text-title-bar</property>
-                        <property name="spacing">10</property>
+                        <property name="spacing">5</property>
                         <child>
                             <object class="GtkImage" id="icon-name">
                                 <property name="name">bulk-text-icon</property>
@@ -50,13 +50,6 @@
                         <property name="hexpand">true</property>
 
 
-                        <child>
-                            <object class="GtkBox" id="loader-holder">
-                                <property name="orientation">vertical</property>
-
-
-                            </object>
-                        </child>
                         <child>
                             <object class="GtkLabel" id="content-title">
                                 <property name="name">bulk-text-content-title</property>

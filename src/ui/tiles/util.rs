@@ -6,7 +6,6 @@ pub struct AsyncLauncherTile {
     pub widget: ListBoxRow,
     pub title: Label,
     pub body: TextView,
-    pub loader_holder: HVBox,
 }
 
 pub fn insert_attrs(attr_holder:&Box, attrs:Vec<String>){
