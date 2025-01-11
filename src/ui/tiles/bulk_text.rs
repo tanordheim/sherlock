@@ -6,7 +6,7 @@ use super::util::insert_attrs;
 impl Tile{
     pub fn bulk_text_tile_loader(name: &String, method: &String, icon: &String, keyword:&String)->Option<(ListBoxRow, Label, TextView)>{
         if !keyword.is_empty(){
-            let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/bulk_text_tile.ui");
+            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
             let launcher_type:Label = builder.object("launcher-type").unwrap();
             let icon_obj:Image = builder.object("icon-name").unwrap();
@@ -32,7 +32,7 @@ impl Tile{
     }
     pub fn bulk_text_tile(name: &String, method: &String, icon: &String, index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
         if !keyword.is_empty(){
-            let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/bulk_text_tile.ui");
+            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
             let launcher_type:Label = builder.object("launcher-type").unwrap();
             let icon_obj:Image = builder.object("icon-name").unwrap();

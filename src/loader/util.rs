@@ -32,6 +32,7 @@ impl Config {
                 terminal: None,
             },
             appearance: ConfigAppearance {
+                gsk_renderer: "cairo".to_string(),
                 recolor_icons: false,
                 icon_paths: Default::default(),
             }
@@ -46,6 +47,8 @@ impl Config {
     }
 #[derive(Deserialize, Debug, Clone, Default)]
     pub struct ConfigAppearance{
+        #[serde(default)]
+        pub gsk_renderer: String, 
         #[serde(default)]
         pub recolor_icons: bool,
         #[serde(default)]

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-    <!-- Define resources with the prefix /com/skxxtz/sherlock -->
-    <gresource prefix="/com/skxxtz/sherlock">
-        <!-- These files will be bundled and available under this prefix -->
+    <gresource prefix="/dev/skxxtz/sherlock">
         <file>main.css</file>
         <file>fallback.json</file>
         <file alias="ui/tile.ui">ui/tile.ui</file>
@@ -10,10 +8,7 @@
         <file alias="ui/bulk_text_tile.ui">ui/bulk_text_tile.ui</file>
         <file alias="ui/search.ui">ui/search.ui</file>
     </gresource>
-
-    <!-- Define resources with the prefix /org/gtk/libgtk/icons/ -->
     <gresource prefix="/org/gtk/libgtk/icons/">
-        <!-- These files will be bundled and available as icons under this prefix -->
         <file alias="google.svg">icons/google.svg</file>
         <file alias="bing.svg">icons/bing.svg</file>
         <file alias="duckduckgo.svg">icons/duckduckgo.svg</file>

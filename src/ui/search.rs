@@ -25,7 +25,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
     }
 
     // Initialize the builder with the correct path
-    let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/search.ui");
+    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
     // Get the requred object references
     let vbox: HVBox = builder.object("vbox").unwrap();

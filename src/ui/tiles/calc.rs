@@ -9,7 +9,7 @@ impl Tile{
         let mut results: Vec<ListBoxRow> = Default::default();
         match eval_str(equation){
             Ok(result)=> {
-                let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/calc_tile.ui");
+                let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/calc_tile.ui");
 
                 let holder:ListBoxRow = builder.object("holder").unwrap();
                 let attr_holder:Box = builder.object("attrs-holder").unwrap();

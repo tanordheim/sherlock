@@ -24,7 +24,7 @@ impl Loader {
                 _ => String::new()
             }
         } else {
-            let data = gio::resources_lookup_data("/com/skxxtz/sherlock/fallback.json", gio::ResourceLookupFlags::NONE)
+            let data = gio::resources_lookup_data("/dev/skxxtz/sherlock/fallback.json", gio::ResourceLookupFlags::NONE)
                 .expect("Failed to load fallback.json from resources");
             match std::str::from_utf8(&data) {
                 Ok(value) => {

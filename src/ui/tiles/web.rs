@@ -6,7 +6,7 @@ use super::util::insert_attrs;
 impl Tile{
     pub fn web_tile(name:&String, method: &String, icon: &String, engine: &String ,index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
         if !keyword.is_empty(){
-            let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/tile.ui");
+            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
             let holder:ListBoxRow = builder.object("holder").unwrap();
             let icon_obj:Image = builder.object("icon-name").unwrap();
             let title_obj:Label = builder.object("app-name").unwrap();
