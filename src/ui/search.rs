@@ -59,7 +59,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
     let cancel_flag = Rc::new(RefCell::new(false));
 
     // Eventhandling for text change inside search bar
-    // EVENT: CHANGE
+    // EVENT: Change
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
@@ -181,6 +181,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                         );
                     }
                 }
+                select_first_row(&*results_clone_ev_nav);
             }
             gdk::Key::Return => {
                 if let Some(row) = results_enter.selected_row() {
