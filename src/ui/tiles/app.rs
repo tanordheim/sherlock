@@ -14,7 +14,7 @@ impl Tile{
         let mut index_ref = index;
 
         for (key, value) in commands.into_iter() {
-            if key.to_lowercase().contains(&keyword.to_lowercase()){
+            if value.search_string.to_lowercase().contains(&keyword.to_lowercase()){
                 let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/tile.ui");
                 let holder:ListBoxRow = builder.object("holder").unwrap();
                 let icon_obj:Image = builder.object("icon-name").unwrap();

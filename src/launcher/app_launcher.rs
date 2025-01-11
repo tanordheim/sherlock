@@ -5,6 +5,7 @@ use std::collections::HashMap;
 pub struct AppData{
     pub icon: String,
     pub exec: String,
+    pub search_string: String,
 }
 
 #[derive(Clone, Debug)]

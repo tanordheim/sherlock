@@ -5,6 +5,7 @@ use std::path::Path;
 use regex::Regex;
 use rayon::prelude::*;
 
+use crate::ui::search;
 use crate::CONFIG;
 use crate::launcher::app_launcher::AppData;
 use super::{Loader, util::read_file};
@@ -23,6 +24,7 @@ impl Loader{
         let exec_re = Regex::new(r"(?i)Exec\s*=\s*(.*)\n").unwrap();
         let display_re = Regex::new(r"(?i)NoDisplay\s*=\s*(.*)\n").unwrap();
         let terminal_re = Regex::new(r"(?i)Terminal\s*=\s*(.*)\n").unwrap();
+        let keywords_re = Regex::new(r"(?i)Keywords\s*=\s*(.*)\n").unwrap();
 
         let parse_field = |content: &str, regex: &Regex| {
             regex
@@ -64,6 +66,7 @@ impl Loader{
                     return None; // Skip entries with empty names
                 }
 
+                let keywords = parse_field(&content, &keywords_re);
                 let icon = parse_field(&content, &icon_re);
                 let exec_path = parse_field(&content, &exec_re);
 
@@ -79,8 +82,10 @@ impl Loader{
                     exec_path.to_string()
                 };
 
+                let search_string = format!("{};{}", name, keywords);
+
                 // Return the processed app data
-                Some((name, AppData { icon, exec }))
+                Some((name, AppData { icon, exec, search_string }))
             })
         .collect();
         apps
