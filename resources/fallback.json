@@ -43,7 +43,7 @@
         "alias": "wiki",
         "type": "get_api",
         "async": true, 
-        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "{}"},
+        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "{keyword}"},
         "priority": 0 
     }
 ]
