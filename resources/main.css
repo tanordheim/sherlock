@@ -205,12 +205,14 @@ image {
     font-size: 17px;
     font-weight: bold;
     color: hsl(var(--text));
+    min-height: 20px;
 }
 
 #bulk-text-content-body {
     font-size: 14px;
     color: hsl(var(--text));
     line-height: 1.4;
+    min-height: 20px;
 }
 
 
