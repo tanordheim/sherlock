@@ -5,7 +5,6 @@ use std::path::Path;
 use regex::Regex;
 use rayon::prelude::*;
 
-use crate::ui::search;
 use crate::CONFIG;
 use crate::launcher::app_launcher::AppData;
 use super::{Loader, util::read_file};

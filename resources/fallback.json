@@ -20,10 +20,10 @@
         "type": "command",
         "async": false,
         "args": {"commands": {
-            "Shutdown": {"icon": "system-shutdown", "exec": "systemctl poweroff"},
-            "Sleep": {"icon": "system-suspend", "exec": "systemctl suspend"},
-            "Lock": {"icon": "system-lock-screen", "exec": "/bin/bash -c ~/.config/skxxtz/scripts/swaylock.sh"},
-            "Reboot": {"icon": "system-reboot", "exec": "systemctl reboot"}
+            "Shutdown": {"icon": "system-shutdown", "exec": "systemctl poweroff", "search_string": "Poweroff;Shutdown"},
+            "Sleep": {"icon": "system-suspend", "exec": "systemctl suspend", "search_string": "Sleep;"},
+            "Lock": {"icon": "system-lock-screen", "exec": "/bin/bash -c ~/.config/skxxtz/scripts/swaylock.sh", "search_string": "Lock Screen;"},
+            "Reboot": {"icon": "system-reboot", "exec": "systemctl reboot", "search_string": "reboot"}
         }},
         "priority": 3
     },
