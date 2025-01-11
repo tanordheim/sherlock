@@ -1,4 +1,4 @@
-use gtk4::{prelude::*, Label, Box, ListBoxRow, TextView, Box as HVBox};
+use gtk4::{prelude::*, Label, Box, ListBoxRow, TextView};
 use crate::launcher::Launcher;
 
 pub struct AsyncLauncherTile {

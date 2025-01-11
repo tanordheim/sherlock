@@ -11,7 +11,7 @@ pub fn websearch(engine: &str, query: &str) {
         let url = url_template.replace("{}", query);
         if let Err(e) = Command::new("sh")
             .arg("-c")
-                .arg(format!("xdg-open '{}' &", url)) // Linux
+                .arg(format!("xdg-open '{}'", url)) // Linux
                 .spawn()
         {
             eprintln!("Failed to open browser: {}", e);

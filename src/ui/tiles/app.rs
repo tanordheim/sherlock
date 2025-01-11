@@ -13,6 +13,7 @@ impl Tile{
         let mut results: Vec<ListBoxRow> = Default::default();
         let mut index_ref = index;
 
+
         for (key, value) in commands.into_iter() {
             if value.search_string.to_lowercase().contains(&keyword.to_lowercase()){
                 let builder = Builder::from_resource("/com/skxxtz/sherlock/ui/tile.ui");

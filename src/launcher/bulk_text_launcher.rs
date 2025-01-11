@@ -1,7 +1,7 @@
 use std::process::Stdio;
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
-use tokio::io::{AsyncReadExt, AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncReadExt, BufReader};
 
 #[derive(Clone, Debug)]
 pub struct BulkText{

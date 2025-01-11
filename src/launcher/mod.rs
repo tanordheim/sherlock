@@ -1,4 +1,4 @@
-use gtk4::{Label, ListBoxRow, TextView, Box as HVBox};
+use gtk4::{Label, ListBoxRow, TextView};
 
 pub mod app_launcher;
 pub mod web_launcher;

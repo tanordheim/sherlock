@@ -44,9 +44,6 @@ fn create_main_window(application: &Application)-> ApplicationWindow{
         false.into()
     });
     window.add_controller(event_controller);
-    if let Some(settings) = Settings::default(){
-        settings.set_gtk_application_prefer_dark_theme(true);
-    }
     return window
 
 }
@@ -62,6 +59,10 @@ async fn main() {
     application.connect_activate(|app| {
         let launchers = Loader::load_launchers();
         Loader::load_icon_theme(&CONFIG.appearance.icon_paths);
+        if let Some(settings) = Settings::default(){
+            println!("icon theme: {:?}", settings.gtk_icon_theme_name());
+        }
+
         Loader::load_css();
 
         // Move the async block to GTK's main thread
