@@ -21,16 +21,22 @@ undershoot.top,
 undershoot.right,
 undershoot.bottom,
 undershoot.left,
-#scroll-window > *
+#scroll-window > *,
+overshoot:backdrop
 {
   background: none;
   border: none;
-  background-color: none;
+  background-color: transparent;
 }
 
 *{
+    margin: None;
+    -gtk-secondary-caret-color: hsl(var(--background)); 
     background: hsl(var(--background));
     background-color: hsl(var(--background));
+    outline-width: 0px;
+    outline-offset: -3px;
+    outline-style: dashed;
 }
 
 window {

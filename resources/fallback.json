@@ -36,12 +36,16 @@
         "priority": 4
     },
 
+
+
     {
         "name": "Wikipedia Search",
         "alias": "wiki",
         "type": "get_api",
         "async": true, 
-        "args": {"icon": "wikipedia", "title-key":"title", "body-key":"extract", "url": "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={}&exintro&explaintext"},
+        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "{}"},
         "priority": 0 
     }
 ]
+
+
