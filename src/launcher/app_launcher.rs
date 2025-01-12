@@ -1,12 +1,6 @@
-use serde::Deserialize;
 use std::collections::HashMap;
+use crate::loader::util::AppData;
 
-#[derive(Deserialize, Clone, Debug)]
-pub struct AppData{
-    pub icon: String,
-    pub exec: String,
-    pub search_string: String,
-}
 
 #[derive(Clone, Debug)]
 pub struct App{

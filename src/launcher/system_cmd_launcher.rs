@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::app_launcher::AppData;
+use crate::loader::util::AppData;
 
 #[derive(Clone, Debug)]
 pub struct SystemCommand{

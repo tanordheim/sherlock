@@ -1,15 +1,15 @@
+use std::{env, fs};
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::launcher::{Launcher, app_launcher, web_launcher, calc_launcher, system_cmd_launcher, bulk_text_launcher};
-use app_launcher::{App, AppData};
+use app_launcher::App;
 use web_launcher::Web;
 use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
 use bulk_text_launcher::BulkText;
-use std::path::Path;
-use std::{env, fs};
 
-use super::{Loader, util::CommandConfig};
+use super::{Loader, util::CommandConfig, util::AppData};
 
 
 impl Loader {

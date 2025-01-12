@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use gtk4::{self, prelude::*, Builder, ListBoxRow, Image, Label, Box};
 
 use crate::CONFIG;
-use crate::launcher::app_launcher::AppData;
+use crate::loader::util::AppData;
 
 use super::Tile;
 use super::util::{ensure_icon_name, insert_attrs};

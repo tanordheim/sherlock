@@ -18,6 +18,13 @@ pub struct CommandConfig {
     pub r#async: bool,
 }
 
+#[derive(Deserialize, Clone, Debug)]
+pub struct AppData{
+    pub icon: String,
+    pub exec: String,
+    pub search_string: String,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
     #[serde(default)]

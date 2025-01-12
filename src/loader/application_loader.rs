@@ -6,15 +6,14 @@ use regex::Regex;
 use rayon::prelude::*;
 
 use crate::CONFIG;
-use crate::launcher::app_launcher::AppData;
-use super::{Loader, util::read_file};
+use super::{Loader, util::read_file, util::AppData};
 
 impl Loader{
     pub fn load_applications() -> HashMap<String, AppData> {
         let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
         let sherlock_ignore_path = format!("{}/.config/sherlock/sherlockignore", home_dir);
+        let sherlock_alias_path = format!("{}/.config/sherlock/sherlock_alias.jsonImplement custom file for aliases and custom icons for apps.Implement custom file for aliases and custom icons for apps.", home_dir);
 
-        //Check if user has created sherlockignore file
         let system_apps = "/usr/share/applications/";
         let mut ignore_apps: Vec<String> = Default::default();
 
@@ -32,8 +31,13 @@ impl Loader{
                 .unwrap_or_default()
         };
 
+        //Check if user has created sherlockignore file
         if Path::new(&sherlock_ignore_path).exists(){
             ignore_apps = read_to_string(sherlock_ignore_path).unwrap().lines().map(String::from).collect();
+        }
+        //Check if user has created sherlockalias file
+        if Path::new(&sherlock_alias_path).exists(){
+            ignore_apps = read_to_string(sherlock_alias_path).unwrap().lines().map(String::from).collect();
         }
 
         let files:Vec<_> = fs::read_dir(system_apps)
