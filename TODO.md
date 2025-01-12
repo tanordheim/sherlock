@@ -17,5 +17,5 @@
 - [ ] Let user set flags such as --config to set the fallbacks, style, and config
 - [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
 - [x] Implement custom file for aliases and custom icons for apps.
-- [ ] Improve sherlock ignore file to use * macro and case sensitivity
+- [x] Improve sherlock ignore file to use * macro and case sensitivity
 - [ ] 
