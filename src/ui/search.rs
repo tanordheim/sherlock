@@ -164,6 +164,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                     let new_value = current_value + delta;
                     vadjustment.set_value(new_value);
                 }
+                return true.into()
             }
             gdk::Key::BackSpace => {
                 let ctext = &search_bar.text();

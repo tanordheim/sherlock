@@ -21,10 +21,6 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
 async fn main() {
     Loader::load_resources();
     let sherlock_flags = Loader::load_flags();
-    println!("{:?}", sherlock_flags);
-    
-    
-
 
     env::set_var("GSK_RENDERER", &CONFIG.appearance.gsk_renderer);
     let application = Application::new(Some("dev.skxxtz.sherlock"), Default::default());
