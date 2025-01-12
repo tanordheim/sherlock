@@ -10,11 +10,12 @@
 - [ ] Maybe change alias for each command in commandlauncher. (if possible)
 - [ ] Add callback type for a cmd to execute another one
 - [ ] Add enter command type for a tile
+- [ ] Implement command execution count and sort commands based on that
 - [ ] 
 
 ## Configuration
 - [ ] Let user set flags such as --config to set the fallbacks, style, and config
 - [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
-- [ ] Implement custom file for aliases and custom icons for apps.
+- [x] Implement custom file for aliases and custom icons for apps.
 - [ ] Improve sherlock ignore file to use * macro and case sensitivity
 - [ ] 
