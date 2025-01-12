@@ -29,7 +29,6 @@ async fn main() {
         Loader::load_icon_theme(&CONFIG.appearance.icon_paths);
         Loader::load_css();
 
-        // Move the async block to GTK's main thread
         let app_clone = app.clone();
         let mut window = ui::window::window(&app_clone);
         window = ui::search::search(window, launchers);

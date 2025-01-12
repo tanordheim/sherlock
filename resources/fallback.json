@@ -2,7 +2,6 @@
     {
         "name": "Calculator",
         "type": "calculation",
-        "async": false,
         "args": {},
         "priority": 1
     },
@@ -10,42 +9,67 @@
         "name": "App Launcher",
         "alias": "app",
         "type": "launch_app",
-        "async": false,
         "args": {},
         "priority": 2
+    },
+    {
+        "name": "Bookmarks",
+        "alias": "",
+        "type": "command",
+        "args": {"commands": {
+            "ChatGPT": {"icon": "chat-gpt", "exec": "xdg-open https://chatgpt.com &", "search_string": "chatgpt;ai;"}
+        }},
+        "priority": 3
+    },
+    {
+        "name": "Network Management",
+        "alias": "nm",
+        "type": "command",
+        "args": {"commands": {
+            "Waves": {"icon": "network-connect", "exec": "nmcli d wifi c Waves &", "search_string": "wifi;waves"},
+            "Waves-AP": {"icon": "network-connect", "exec": "nmcli d wifi c Waves-AP &", "search_string": "wifi;wavesap"}
+        }},
+        "priority": 4
     },
     {
         "name": "Power Management",
         "alias": "pm",
         "type": "command",
-        "async": false,
         "args": {"commands": {
             "Shutdown": {"icon": "system-shutdown", "exec": "systemctl poweroff", "search_string": "Poweroff;Shutdown"},
             "Sleep": {"icon": "system-suspend", "exec": "systemctl suspend", "search_string": "Sleep;"},
-            "Lock": {"icon": "system-lock-screen", "exec": "/bin/bash -c ~/.config/skxxtz/scripts/swaylock.sh", "search_string": "Lock Screen;"},
+            "Lock": {"icon": "system-lock-screen", "exec": "systemctl suspend & swaylock", "search_string": "Lock Screen;"},
             "Reboot": {"icon": "system-reboot", "exec": "systemctl reboot", "search_string": "reboot"}
         }},
-        "priority": 3
+        "priority": 4
     },
+    {
+        "name": "OBS Studio",
+        "alias": "",
+        "type": "command",
+        "args": {"commands": {
+            "Start Recording": {"icon": "sherlock-record", "exec": "obs --startrecording &", "search_string": "recording;start recording;startrecording;obs studio;"}
+        }},
+        "priority": 5
+    },
+    
+
+
+
+
     {
         "name": "Web Search",
         "alias": "gg",
         "type": "web_search",
-        "async": false,
         "args": {"search_engine": "google", "icon": "google"},
-        "priority": 4
+        "priority": 100
     },
-
-
-
     {
         "name": "Wikipedia Search",
         "alias": "wiki",
-        "type": "get_api",
+        "type": "bulk_text",
         "async": true, 
         "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "{keyword}"},
         "priority": 0 
     }
 ]
-
-

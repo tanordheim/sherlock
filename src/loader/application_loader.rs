@@ -84,7 +84,7 @@ impl Loader{
                 let search_string = format!("{};{}", name, keywords);
 
                 // Return the processed app data
-                Some((name, AppData { icon, exec, search_string }))
+                Some((name, AppData { icon, exec, search_string}))
             })
         .collect();
         apps

@@ -24,7 +24,8 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             },
             "command" => {
                 let exec = attrs.get("exec").expect("Missing field: exec");
-                commandlaunch::command_launch(exec);
+                let keyword = attrs.get("keyword").expect("Missing field: keyword");
+                commandlaunch::command_launch(exec, keyword);
                 exit(0)
             },
             "calc" => {

@@ -1,6 +1,7 @@
 use std::process::Command;
 
-pub fn command_launch(exec: &str) {
+pub fn command_launch(exec: &str, keyword: &String) {
+    let exec = exec.replace("{keyword}", &keyword);
     let commands: Vec<&str> = exec.split('&').collect();
     let num_cmds = commands.len();
 
@@ -37,4 +38,3 @@ pub fn command_launch(exec: &str) {
         }
     }
 }
-

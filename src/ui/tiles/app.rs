@@ -35,16 +35,18 @@ impl Tile{
                     value.icon
                 };
 
+                let tile_name = key.replace("{keyword}", keyword);
+
                 let launcher_type:Label = builder.object("launcher-type").unwrap();
                 launcher_type.set_text(name);
                 icon_obj.set_icon_name(Some(&icon));
-                title_obj.set_text(&key);
-
+                title_obj.set_text(&tile_name);
 
                 let attrs: Vec<String> = vec![
                     format!("{} | {}", "method", method),
                     format!("{} | {}", "app_name", &key),
                     format!("{} | {}", "exec", &value.exec),
+                    format!("{} | {}", "keyword", keyword),
                 ];
                 insert_attrs(&attr_holder, attrs);
                 index_ref += 1;

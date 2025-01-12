@@ -84,7 +84,7 @@ impl Loader {
                     }))
 
                 },
-                "get_api" => {
+                "bulk_text" => {
                     Some(Launcher::BulkText(BulkText{
                         method: "bulk_text".to_string(),
                         alias: cmd.alias.clone(),
