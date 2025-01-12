@@ -25,6 +25,13 @@ pub struct AppData{
     pub search_string: String,
 }
 
+#[derive(Deserialize, Clone, Debug)]
+pub struct SherlockAlias{
+    pub name: Option<String>,
+    pub icon: Option<String>,
+    pub keywords: Option<String>,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
     #[serde(default)]

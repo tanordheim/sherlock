@@ -6,13 +6,14 @@ use regex::Regex;
 use rayon::prelude::*;
 
 use crate::CONFIG;
-use super::{Loader, util::read_file, util::AppData};
+use super::{Loader, util};
+use util::{read_file, AppData, SherlockAlias};
 
 impl Loader{
     pub fn load_applications() -> HashMap<String, AppData> {
         let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
         let sherlock_ignore_path = format!("{}/.config/sherlock/sherlockignore", home_dir);
-        let sherlock_alias_path = format!("{}/.config/sherlock/sherlock_alias.jsonImplement custom file for aliases and custom icons for apps.Implement custom file for aliases and custom icons for apps.", home_dir);
+        let sherlock_alias_path = format!("{}/.config/sherlock/sherlock_alias.json", home_dir);
 
         let system_apps = "/usr/share/applications/";
         let mut ignore_apps: Vec<String> = Default::default();
@@ -36,17 +37,34 @@ impl Loader{
             ignore_apps = read_to_string(sherlock_ignore_path).unwrap().lines().map(String::from).collect();
         }
         //Check if user has created sherlockalias file
-        if Path::new(&sherlock_alias_path).exists(){
-            ignore_apps = read_to_string(sherlock_alias_path).unwrap().lines().map(String::from).collect();
-        }
+        let sherlock_aliases:HashMap<String, SherlockAlias> = if Path::new(&sherlock_alias_path).exists(){
+            match fs::read_to_string(sherlock_alias_path) {
+                Ok(json_data) => match serde_json::from_str(&json_data) {
+                    Ok(alias_map) => alias_map,
+                    Err(e) => {
+                        eprint!("Failed to parse alias file. {}", e);
+                        HashMap::new()
+                    }
+                },
+                Err(e) => {
+                    eprint!("Failed to read alias file. {}", e);
+                    HashMap::new()
+                }
+            }
+        } else {
+            HashMap::new()
+        };
+        println!("{:?}", sherlock_aliases);
 
-        let files:Vec<_> = fs::read_dir(system_apps)
+
+
+        let dektop_files:Vec<_> = fs::read_dir(system_apps)
             .expect("Unable to read/access /usr/share/applications directory")
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.path().extension().map(|ext| ext == "desktop").unwrap_or(false))
             .collect();
-        {}
-        let file_contents:Vec<String> = files
+
+        let file_contents:Vec<String> = dektop_files
             .into_par_iter()
             .filter_map(|entry| {
                 let path = entry.path();
@@ -64,16 +82,16 @@ impl Loader{
                 }
 
                 // Extract fields
-                let name = parse_field(&content, &name_re);
+                let mut name = parse_field(&content, &name_re);
                 if name.is_empty() || ignore_apps.contains(&name){
                     return None; // Skip entries with empty names
                 }
 
-                let keywords = parse_field(&content, &keywords_re);
-                let icon = parse_field(&content, &icon_re);
-                let exec_path = parse_field(&content, &exec_re);
+                let mut keywords = parse_field(&content, &keywords_re);
+                let mut icon = parse_field(&content, &icon_re);
 
                 // Construct the executable command
+                let exec_path = parse_field(&content, &exec_re);
                 let exec = if parse_field(&content, &terminal_re) == "true" {
                     if let Some(terminal) = &CONFIG.default_apps.terminal {
                         format!("{} {}", terminal, exec_path)
@@ -85,8 +103,23 @@ impl Loader{
                     exec_path.to_string()
                 };
 
-                let search_string = format!("{};{}", name, keywords);
 
+
+                // apply aliases
+                if let Some(alias) = sherlock_aliases.get(&name){
+                    if let Some(alias_name) = alias.name.as_ref() {
+                        name = alias_name.to_string();
+                    }
+                    if let Some(alias_icon) = alias.icon.as_ref() {
+                        icon = alias_icon.to_string();
+                    }
+                    if let Some(alias_keywords) = alias.keywords.as_ref() {
+                        keywords = alias_keywords.to_string();
+                    }
+                    
+                };
+
+                let search_string = format!("{};{}", name, keywords);
                 // Return the processed app data
                 Some((name, AppData { icon, exec, search_string}))
             })
