@@ -11,7 +11,7 @@
 - [ ] Implement command execution count and sort commands based on that
 
 ## Configuration
-- [ ] Let user set flags such as --config to set the fallbacks-, style-, and config-files
+- [x] Let user set flags such as --config to set the fallbacks-, style-, and config-files
 - [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
 - [x] Implement custom file for aliases and custom icons for apps.
 - [x] Improve sherlock ignore file to use * macro and case sensitivity
