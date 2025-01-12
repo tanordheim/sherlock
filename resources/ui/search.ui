@@ -35,6 +35,7 @@
                 <property name="vexpand">true</property>
                 <property name="hexpand">false</property>
                 <property name="name">scroll-window</property>
+                <property name="focusable">false</property>
                 <child>
                     <object class="GtkListBox" id="result-frame">
                         <property name="name">list_box</property>

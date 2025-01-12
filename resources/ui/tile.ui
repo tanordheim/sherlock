@@ -1,5 +1,6 @@
 <interface>
 <object class="GtkListBoxRow" id="holder">
+    <property name="focusable">false</property>
     <style>
         <class name="tile"/>
     </style>
