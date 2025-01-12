@@ -10,6 +10,7 @@ build = "build.rs"
 [dependencies]
 cli-clipboard = "0.4.0"
 gio = "0.20.7"
+glob = "0.3.2"
 gtk4 = "^0.9.5"
 gtk4-layer-shell = "0.4.0"
 meval = "0.2.0"

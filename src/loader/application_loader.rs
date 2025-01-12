@@ -4,6 +4,7 @@ use std::env;
 use std::path::Path;
 use regex::Regex;
 use rayon::prelude::*;
+use glob::Pattern;
 
 use crate::CONFIG;
 use super::{Loader, util};
@@ -16,7 +17,7 @@ impl Loader{
         let sherlock_alias_path = format!("{}/.config/sherlock/sherlock_alias.json", home_dir);
 
         let system_apps = "/usr/share/applications/";
-        let mut ignore_apps: Vec<String> = Default::default();
+        let mut ignore_apps: Vec<Pattern> = Default::default();
 
         let name_re = Regex::new(r"(?i)Name\s*=\s*(.*)\n").unwrap();
         let icon_re = Regex::new(r"(?i)Icon\s*=\s*(.*)\n").unwrap();
@@ -32,10 +33,18 @@ impl Loader{
                 .unwrap_or_default()
         };
 
-        //Check if user has created sherlockignore file
-        if Path::new(&sherlock_ignore_path).exists(){
-            ignore_apps = read_to_string(sherlock_ignore_path).unwrap().lines().map(String::from).collect();
-        }
+        //Check if user has created sherlockignore file and parse ignores
+        if Path::new(&sherlock_ignore_path).exists() {
+            ignore_apps = read_to_string(sherlock_ignore_path)
+                .unwrap() 
+                .lines()
+                .filter_map(|line| {
+                    let line = line.to_lowercase();
+                    Pattern::new(&line).ok() // Only include valid patterns
+                })
+            .collect();
+        }        
+
         //Check if user has created sherlockalias file
         let sherlock_aliases:HashMap<String, SherlockAlias> = if Path::new(&sherlock_alias_path).exists(){
             match fs::read_to_string(sherlock_alias_path) {
@@ -83,7 +92,7 @@ impl Loader{
 
                 // Extract fields
                 let mut name = parse_field(&content, &name_re);
-                if name.is_empty() || ignore_apps.contains(&name){
+                if name.is_empty() || should_ignoe(&ignore_apps, &name){
                     return None; // Skip entries with empty names
                 }
 
@@ -126,4 +135,11 @@ impl Loader{
         .collect();
         apps
     }
+}
+
+fn should_ignoe(ignore_apps: &Vec<Pattern>, app: &String)->bool{
+    let app_name = app.to_lowercase();
+    ignore_apps.iter().any(|pattern| {
+        pattern.matches(&app_name)
+    })
 }
