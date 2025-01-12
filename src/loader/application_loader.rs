@@ -1,20 +1,19 @@
 use std::collections::HashMap;
 use std::fs::{self, read_to_string};
-use std::env;
 use std::path::Path;
 use regex::Regex;
 use rayon::prelude::*;
 use glob::Pattern;
 
 use crate::CONFIG;
+use super::util::SherlockFlags;
 use super::{Loader, util};
 use util::{read_file, AppData, SherlockAlias};
 
 impl Loader{
-    pub fn load_applications() -> HashMap<String, AppData> {
-        let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
-        let sherlock_ignore_path = format!("{}/.config/sherlock/sherlockignore", home_dir);
-        let sherlock_alias_path = format!("{}/.config/sherlock/sherlock_alias.json", home_dir);
+    pub fn load_applications(sherlock_flags: &SherlockFlags) -> HashMap<String, AppData> {
+        let sherlock_ignore_path = sherlock_flags.ignore.clone();
+        let sherlock_alias_path = sherlock_flags.alias.clone();
 
         let system_apps = "/usr/share/applications/";
         let mut ignore_apps: Vec<Pattern> = Default::default();

@@ -4,6 +4,7 @@ pub mod launcher_loader;
 pub mod css_loader;
 pub mod config_loader;
 pub mod icon_loader;        
+pub mod flag_loader;
 pub mod util;
 
 

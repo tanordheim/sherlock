@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::fs;
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -9,13 +9,13 @@ use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
 use bulk_text_launcher::BulkText;
 
-use super::{Loader, util::CommandConfig, util::AppData};
+use super::{Loader, util};
+use util::{CommandConfig, SherlockFlags, AppData};
 
 
 impl Loader {
-    pub fn load_launchers()->Vec<Launcher>{
-        let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
-        let user_config_path = format!("{}/.config/sherlock/fallback.json", home_dir);
+    pub fn load_launchers(sherlock_flags: &SherlockFlags)->Vec<Launcher>{
+        let user_config_path = sherlock_flags.fallback.clone();
 
         // Check if the user has a custom config file
         let json_str = if Path::new(&user_config_path).exists() {
@@ -36,7 +36,6 @@ impl Loader {
             }
         }; 
         let config: Vec<CommandConfig> = if !json_str.is_empty() {
-
             serde_json::from_str(&json_str.as_str()).expect("Error parsing fallbacks")
         } else {
             Default::default()
@@ -54,7 +53,7 @@ impl Loader {
                     alias: cmd.alias.clone(), 
                     priority: cmd.priority,
                     r#async: cmd.r#async,
-                    apps: Loader::load_applications(),
+                    apps: Loader::load_applications(sherlock_flags),
                 })),
                 "web_search" => Some(Launcher::Web(Web {
                     method: "web".to_string(),

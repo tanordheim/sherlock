@@ -25,6 +25,15 @@ pub struct AppData{
     pub search_string: String,
 }
 
+#[derive(Debug)]
+pub struct SherlockFlags {
+    pub config: String,
+    pub fallback: String,
+    pub style: String,
+    pub ignore: String,
+    pub alias: String,
+}
+
 #[derive(Deserialize, Clone, Debug)]
 pub struct SherlockAlias{
     pub name: Option<String>,
