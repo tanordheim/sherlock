@@ -114,7 +114,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 #### Arguments (args):
 **commands** (required):<br>
 Has following fields of its own:
-1. name field / the name of the applicaiton
+1. `name field` / the name of the applicaiton
 2. `icon` / the icon-name for the icon to display 
 3. `exec` / the command to execute
 4. `search_string` / the string to match to on search
