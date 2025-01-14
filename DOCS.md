@@ -1,5 +1,5 @@
 # Launchers
-The philosophy of the Sherlock Application Launcher is, that every tile is "owned" by a launcher. You can think of a launcher as a category to which each of the tiles belong to.If a launcher is for example set to invisible, all of its children will also be invisible. The launchers are defined in the `fallback.json` file in your config directory (`/home/user/.config/sherlock/`). The application will fallback to a default configuration, stored in [fallback.json](resources/fallback.json)<br><br>
+The philosophy of the Sherlock Application Launcher is, that every tile is "owned" by a launcher. You can think of a launcher as a category to which each of the tiles belong to.If a launcher is for example set to invisible, all of its children will also be invisible. The launchers are defined in the `fallback.json` file in your config directory (`/home/user/.config/sherlock/`). The application will fallback to a default configuration, stored in [fallback.json](resources/fallback.json).<br><br>
 
 The Launcher can be of the following types:<br>
 - **[App Launcher](#app-launcher):** Launches your apps. 
