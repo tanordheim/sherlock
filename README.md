@@ -71,7 +71,9 @@ Can be either of those:
 <br>
 **icon** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
+
 ---
+
 ### Calculator
 ```json
 {
@@ -81,6 +83,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
     "priority": 1,
 }
 ```
+
 ---
 
 ### Command Launcher
@@ -108,7 +111,9 @@ Has following fields of its own:
 2. icon / the icon-name for the icon to display 
 3. exec / the command to execute
 4. search_string / the string to match to on search
+
 ---
+
 ### Bulk Text
 ```json
 {
