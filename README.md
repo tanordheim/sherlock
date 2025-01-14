@@ -15,7 +15,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - **Bulk Text:** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 
 ### Common Launcher Argument
-`[UI]` corresponds to ui related attributes.
+`[UI]` corresponds to ui related attributes.\n
 `[FC]` corresponds to functionality related attributes.
 
 - `name` [UI] (required): Specifies the name of the category the resulting tiles corresponds to. This name will be displayed under the apps name. It has no further impact on the application but **must be set but can be empty**. 
