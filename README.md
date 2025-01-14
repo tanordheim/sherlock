@@ -52,25 +52,92 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 <br><br>
 
 ## Getting Started
+
 ### Dependencies
+
+To run the Sherlock Launcher, ensure the following dependencies are installed:
+
 - `gtk4`
 - `gtk-4-layer-shell`
 
+Additionally, if you're building from source, you will need:
+
+- `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
+
 ### Installation
+
 #### <ins>Arch Linux</ins>
+
+If you're using Arch Linux, you can install the pre-built binary package with the following command:
+
 ```bash
 yay -S sherlock-launcher-bin
 ```
 
 #### <ins>From Source</ins>
-Make sure you have the following dependencies installed:
-- `rust` - [How to install rust]("https://www.rust-lang.org/tools/install")
-- `gtk4` - [Gtk4 Documentation]("https://docs.gtk.org/gtk4/")
-- `gtk-4-layer-shell` - [Gtk4 Layer Shell]("https://github.com/wmww/gtk4-layer-shell")
 
-```bash
-git clone https://github.com/skxxtz/sherlock.git
-cd sherlock
-cargo build --release
-sudo cp target/release/sherlock /usr/bin/
-```
+To build Sherlock Launcher from source, follow these steps. Make sure you have the necessary dependencies installed:
+
+- `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
+- `gtk4` - [Gtk4 Documentation](https://docs.gtk.org/gtk4/)
+- `gtk-4-layer-shell` - [Gtk4 Layer Shell](https://github.com/wmww/gtk4-layer-shell)
+
+1. **Clone the repository**:
+
+    ```bash
+    git clone https://github.com/skxxtz/sherlock.git
+    cd sherlock
+    ```
+
+2. **Install necessary Rust dependencies**:
+
+    Build the project using the following command:
+
+    ```bash
+    cargo build --release
+    ```
+
+3. **Install the binary**:
+
+    After the build completes, install the binary to your system:
+
+    ```bash
+    sudo cp target/release/sherlock /usr/bin/
+    ```
+
+---
+
+#### <ins>Build Debian Package</ins>
+
+To build a `.deb` package directly from the source, follow these steps:
+
+1. **Install the `cargo-deb` tool**:
+
+    First, you need to install the `cargo-deb` tool, which simplifies packaging Rust projects as Debian packages:
+
+    ```bash
+    cargo install cargo-deb
+    ```
+
+2. **Build the Debian package**:
+
+    After installing `cargo-deb`, run the following command to build the `.deb` package:
+
+    ```bash
+    cargo deb
+    ```
+
+    This will create a `.deb` package in the `target/debian` directory.
+
+3. **Install the generated `.deb` package**:
+
+    Once the package is built, you can install it using:
+
+    ```bash
+    sudo dpkg -i target/debian/sherlock-launcher_0.1.0_amd64.deb
+    ```
+
+    (Make sure to replace the filename if the version number is different.)
+
+After installation, you can enjoy using Sherlock Launcher, which will handle dependencies and installation automatically!
+
