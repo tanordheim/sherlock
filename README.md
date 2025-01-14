@@ -52,11 +52,11 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 <br><br>
 
 ## Getting Started
-## Dependencies
+### Dependencies
 - gtk4
 - gtk-4-layer-shell
 
-### InstallationS
+### Installation
 #### Arch Linux
 ```bash
 yay -S sherlock-launcher-bin
