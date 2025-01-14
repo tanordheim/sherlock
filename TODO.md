@@ -7,6 +7,7 @@
 ## Functionalities
 - [x] Implement locking mechanism to only have one instance running at a time.
 - [ ] Maybe change alias for each command in commandlauncher. (if possible)
+- [ ] Add ArgCommand launcher type or convert existsing one to be more versatile
 - [ ] Add callback type for a cmd to execute another one
 - [ ] Add enter command type for a tile
 - [ ] Implement command execution count and sort commands based on that
