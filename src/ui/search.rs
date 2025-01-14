@@ -49,6 +49,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
 
     // Initiallize the view to show all apps
     set_home_screen("", "all", &*results, &launchers);
+    select_first_row(&*results);
 
     // Setting search window to active
     window.set_child(Some(&vbox));

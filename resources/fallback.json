@@ -8,9 +8,10 @@
     {
         "name": "App Launcher",
         "alias": "app",
-        "type": "launch_app",
+        "type": "app_launcher",
         "args": {},
-        "priority": 2
+        "priority": 2,
+        "home": true
     },
     {
         "name": "Bookmarks",
@@ -52,7 +53,6 @@
         }},
         "priority": 5
     },
-    
 
 
 
@@ -60,8 +60,15 @@
     {
         "name": "Web Search",
         "alias": "gg",
-        "type": "web_search",
+        "type": "web_launcher",
         "args": {"search_engine": "google", "icon": "google"},
+        "priority": 100
+    },
+    {
+        "name": "YouTube Search",
+        "alias": "yt",
+        "type": "web_search",
+        "args": {"search_engine": "https://www.youtube.com/results?search_query={keyword}", "icon": "sherlock-youtube"},
         "priority": 100
     },
     {
@@ -73,3 +80,4 @@
         "priority": 0 
     }
 ]
+
