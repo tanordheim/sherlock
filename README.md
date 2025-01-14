@@ -16,4 +16,23 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - gtk4
 - gtk-4-layer-shell
 
+## Installation
 
+### Arch Linux
+```bash
+yay -S sherlock-launcher-bin
+```
+
+### From Source
+Make sure you have the following dependencies installed:
+- Rust
+- Cargo
+- gtk4
+- gtk-4-layer-shell
+
+```bash
+git clone https://github.com/skxxtz/sherlock.git
+cd sherlock
+cargo build --release
+sudo cp target/release/sherlock /usr/bin/
+```
