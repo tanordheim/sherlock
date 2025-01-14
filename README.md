@@ -53,8 +53,8 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 ## Getting Started
 ### Dependencies
-- gtk4
-- gtk-4-layer-shell
+- `gtk4`
+- `gtk-4-layer-shell`
 
 ### Installation
 #### Arch Linux
