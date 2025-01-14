@@ -29,7 +29,7 @@ The Launcher can be of the following types:<br>
 | `home`      | `[FC]` (optional) | Defines whether the elements of this launcher should be shown on startup. |
 | `type`      | `[FC]` (required) | Specifies the tile and functionality that should be used to display this Launcher. |
 | `args`      | `[FC]` (required) | A value with `type` specific arguments. **Can be empty**. |
-| `priority`  | `[FC]` (required) | Specifies the order in which to show the launcher elements on startup. |
+| `priority`  | `[FC]` (required) | Specifies the order in which to show the launcher elements on startup. If set to 0, the results will only be shown it the `alias` is currently active. |
 | `async`     | `[FC]` (optional) | Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`. |
 
 ---
