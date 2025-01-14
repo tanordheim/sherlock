@@ -2,8 +2,9 @@
 
 In the Sherlock Application Launcher, each tile is associated with a specific "launcher." You can think of a launcher as a category to which tiles belong. For example, if a launcher is set to invisible, all tiles under that launcher will also be invisible.<br>
 
-Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [fallback.json](resources/fallback.json).
-er can be of the following types:<br>
+Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [fallback.json](resources/fallback.json).<br>
+
+The launcher can be of the following types:<br>
 
 - **[App Launcher](#app-launcher):** Launches your apps. 
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
