@@ -70,17 +70,20 @@ impl Launcher{
             Launcher::SystemCommand {..} => None,
         }
     }
-    pub fn priority(&self)->u32{
-        self.common().priority
+    pub fn name(&self)->String{
+        self.common().name.clone()
     }
     pub fn alias(&self)->String{
         self.common().alias.clone().unwrap_or_default()
     }
-    pub fn name(&self)->String{
-        self.common().name.clone()
+    pub fn priority(&self)->u32{
+        self.common().priority
     }
     pub fn is_async(&self)->bool{
         self.common().r#async
+    }
+    pub fn home(&self)->bool{
+        self.common().home
     }
 }
 
