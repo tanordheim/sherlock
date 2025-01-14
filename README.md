@@ -64,10 +64,9 @@ yay -S sherlock-launcher-bin
 
 #### <ins>From Source</ins>
 Make sure you have the following dependencies installed:
-- `rust`
-- `cargo`
-- `gtk4`
-- `gtk-4-layer-shell`
+- `rust` - [How to install rust]("https://www.rust-lang.org/tools/install")
+- `gtk4` - [Gtk4 Documentation]("https://docs.gtk.org/gtk4/")
+- `gtk-4-layer-shell` - [Gtk4 Layer Shell]("https://github.com/wmww/gtk4-layer-shell")
 
 ```bash
 git clone https://github.com/skxxtz/sherlock.git
