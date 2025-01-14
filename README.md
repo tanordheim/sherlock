@@ -64,10 +64,10 @@ yay -S sherlock-launcher-bin
 
 #### From Source
 Make sure you have the following dependencies installed:
-- Rust
-- Cargo
-- gtk4
-- gtk-4-layer-shell
+- `rust`
+- `cargo`
+- `gtk4`
+- `gtk-4-layer-shell`
 
 ```bash
 git clone https://github.com/skxxtz/sherlock.git
