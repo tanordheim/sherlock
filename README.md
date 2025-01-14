@@ -74,7 +74,6 @@ Can be either of the following:
 | **Ecosia**      | `https://www.ecosia.org/search?q={keyword}` |
 | **Qwant**       | `https://www.qwant.com/?q={keyword}`     |
 | **Startpage**   | `https://www.startpage.com/sp/search?q={keyword}` |
-
 | **Custom**      | `https://www.example.com/search={keyword}` |
 
 **`icon`** (required):<br>
