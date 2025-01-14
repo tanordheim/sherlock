@@ -6,7 +6,7 @@
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
   <picture>
-    <img alt="application screenshot" height="400" src="images/home-screen.png">
+    <img alt="application screenshot" width="100%" src="images/home-screen.png">
   </picture>
 </div>
 
