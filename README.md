@@ -55,20 +55,22 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 }
 ```
 #### Arguments (args):
-**seach_engine** (required):<br>
-Can be either of those:
-1. google -> "https://www.google.com/search?q={keyword}"
-2. bing -> "https://www.bing.com/search?q={keyword}"
-3. duckduckgo -> "https://duckduckgo.com/?q={keyword}"
-4. yahoo -> "https://search.yahoo.com/search?p={keyword}"
-5. baidu -> "https://www.baidu.com/s?wd={keyword}"
-6. yande -> "https://yandex.com/search/?text={keyword}"
-7. ask -> "https://www.ask.com/web?q={keyword}"
-8. ecosia -> "https://www.ecosia.org/search?q={keyword}"
-9. qwant -> "https://www.qwant.com/?q={keyword}"
-10. startpage -> "https://www.startpage.com/sp/search?q={keyword}"
-11. custom -> "https://www.example.com/search={keyword}"
-<br>
+**search_engine** (required):
+Can be either of the following:
+| Search Engine   | URL                                      |
+|-----------------|------------------------------------------|
+| **Google**      | `https://www.google.com/search?q={keyword}` |
+| **Bing**        | `https://www.bing.com/search?q={keyword}` |
+| **DuckDuckGo**  | `https://duckduckgo.com/?q={keyword}`    |
+| **Yahoo**       | `https://search.yahoo.com/search?p={keyword}` |
+| **Baidu**       | `https://www.baidu.com/s?wd={keyword}`   |
+| **Yandex**      | `https://yandex.com/search/?text={keyword}` |
+| **Ask**         | `https://www.ask.com/web?q={keyword}`    |
+| **Ecosia**      | `https://www.ecosia.org/search?q={keyword}` |
+| **Qwant**       | `https://www.qwant.com/?q={keyword}`     |
+| **Startpage**   | `https://www.startpage.com/sp/search?q={keyword}` |
+| **Custom**      | `https://www.example.com/search={keyword}` |
+
 **icon** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
 
