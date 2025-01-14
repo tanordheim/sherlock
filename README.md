@@ -14,9 +14,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - **Command:** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **Bulk Text:** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 
-### Common Launcher Argument
-`[UI]` corresponds to ui related attributes.\n
-`[FC]` corresponds to functionality related attributes.
+### Common Launcher Attributes
+`[UI]` corresponds to ui related attributes.<br>
+`[FC]` corresponds to functionality related attributes.<br>
 
 - `name` [UI] (required): Specifies the name of the category the resulting tiles corresponds to. This name will be displayed under the apps name. It has no further impact on the application but **must be set but can be empty**. 
 - `alias` [FC] (optional): Specifies what the command should be to search that category with.
@@ -24,4 +24,24 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - `type` [FC] (required): Specifies the tile and functionality that should be used to display this Launcher.
 - `args` [FC] (required): A value with `type` specific arguments. **Can be empty**.
 - `priority` [FC] (required): Specifies the order in which to show the launcher elements on startup. 
+
+### Launcher Specific Attributes and Arguments
+#### Web Launcher
+
+##### Arguments:
+
+**seach_engine** (required):<br>
+Can be either of those:
+0. custom -> "https://www.example.com/search={keyword}"
+1. google -> "https://www.google.com/search?q={keyword}"
+2. bing -> "https://www.bing.com/search?q={keyword}"
+3. duckduckgo -> "https://duckduckgo.com/?q={keyword}"
+4. yahoo -> "https://search.yahoo.com/search?p={keyword}"
+5. baidu -> "https://www.baidu.com/s?wd={keyword}"
+6. yande -> "https://yandex.com/search/?text={keyword}"
+7. ask -> "https://www.ask.com/web?q={keyword}"
+8. ecosia -> "https://www.ecosia.org/search?q={keyword}"
+9. qwant -> "https://www.qwant.com/?q={keyword}"
+10. startpage -> "https://www.startpage.com/sp/search?q={keyword}"
+
 
