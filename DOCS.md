@@ -15,15 +15,16 @@ The launcher can be of the following types:<br>
 
 
 ## Common Launcher Attributes
+
 | Attribute   | Type | Description |
 |-------------|------|-------------|
-| `name`      | `[UI]` (required) | Specifies the name of the category the resulting tiles correspond to. This name will be displayed under the app's name. It has no further impact on the application but **must be set but can be empty**. |
-| `alias`     | `[FC]` (optional) | Specifies what the command should be to search that category with. |
-| `home`      | `[FC]` (optional) | Defines whether the elements of this launcher should be shown on startup. |
-| `type`      | `[FC]` (required) | Specifies the tile and functionality that should be used to display this Launcher. |
-| `args`      | `[FC]` (required) | A value with `type` specific arguments. **Can be empty**. |
-| `priority`  | `[FC]` (required) | Specifies the order in which to show the launcher elements on startup. If set to 0, the results will only be shown it the `alias` is currently active. |
-| `async`     | `[FC]` (optional) | Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`. |
+| `name`      | `[UI]` (required) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
+| `alias`     | `[FC]` (optional) | The command used to search within this category. |
+| `home`      | `[FC]` (optional) | Determines if the elements of this launcher are displayed at startup. |
+| `type`      | `[FC]` (required) | Specifies the tile and functionality to be used for this Launcher. |
+| `args`      | `[FC]` (required) | Arguments specific to the `type`. Can be left empty. |
+| `priority`  | `[FC]` (required) | Defines the display order of launcher elements at startup. A value of 0 means the launcher will only be shown if the `alias` is active. |
+| `async`     | `[FC]` (optional) | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
 
 ---
 
