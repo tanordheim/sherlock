@@ -1,5 +1,5 @@
 ## UI
-- [ ] Improve startup time more by reducing amount of widgets shown in the beginning. Let user configure the launchers shown on startup.
+- [x] Improve startup time more by reducing amount of widgets shown in the beginning. Let user configure the launchers shown on startup.
 
 ## Scripts
 - [ ] Custom Spotify (ncspot) script to control it
