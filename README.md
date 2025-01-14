@@ -24,6 +24,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - `type` [FC] (required): Specifies the tile and functionality that should be used to display this Launcher.
 - `args` [FC] (required): A value with `type` specific arguments. **Can be empty**.
 - `priority` [FC] (required): Specifies the order in which to show the launcher elements on startup. 
+- `async` [FC] (optional): Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`
 
 ### Launcher Specific Attributes and Arguments
 #### Web Launcher
@@ -54,7 +55,7 @@ Can be either of those:
 10. startpage -> "https://www.startpage.com/sp/search?q={keyword}"
 11. custom -> "https://www.example.com/search={keyword}"
 <br>
-**icon**:(required):<br>
+**icon** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
 
 #### Command Launcher
@@ -76,7 +77,6 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 }
 ```
 #### Arguments (args):
-
 **commands** (required):<br>
 Has following fields of its own:
 1. name field / the name of the applicaiton
