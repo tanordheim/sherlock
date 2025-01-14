@@ -105,6 +105,11 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
                 "icon": "icon-name",
                 "exec": "command to execute", 
                 "search_string": "examplecommand"
+            },
+            "command2": {
+                "icon": "icon-name",
+                "exec": "command to execute", 
+                "search_string": "examplecommand"
             }
         }
     },
