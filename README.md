@@ -10,11 +10,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 ## Launchers
 - **[App Launcher](#app-launcher):** Launches your apps. 
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
-- **Calculator:** Converts your input into a math equation and displays its result. On Enter, it also copies the result into the clipboard.
-- **Command:** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
-- **Bulk Text:** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
-
-
+- **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Enter, it also copies the result into the clipboard.
+- **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
+- **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 
 
 
@@ -31,32 +29,17 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - `async` [FC] (optional): Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`
 ---
 
-
-### Command Launcher
+### App Launcher
 ```json
 {
-    "name": "Example Command",
-    "alias": "ex",
-    "type": "command",
-    "args": {
-        "commands": {
-            "command name": {
-                "icon": "icon-name",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-            }
-        }
-    },
-    "priority": 5
+    "name": "App Launcher",
+    "alias": "app",
+    "type": "app_launcher",
+    "args": {},
+    "priority": 2,
+    "home": true
 }
 ```
-#### Arguments (args):
-**commands** (required):<br>
-Has following fields of its own:
-1. name field / the name of the applicaiton
-2. icon / the icon-name for the icon to display 
-3. exec / the command to execute
-4. search_string / the string to match to on search
 ---
 ### Web Launcher
 ```json
@@ -88,5 +71,67 @@ Can be either of those:
 <br>
 **icon** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
+---
+### Calculator
+```json
+{
+    "name": "Calculator",
+    "type": "calculation",
+    "args": {},
+    "priority": 1,
+}
+```
+---
 
+### Command Launcher
+```json
+{
+    "name": "Example Command",
+    "alias": "ex",
+    "type": "command",
+    "args": {
+        "commands": {
+            "command name": {
+                "icon": "icon-name",
+                "exec": "command to execute", 
+                "search_string": "examplecommand"
+            }
+        }
+    },
+    "priority": 5
+}
+```
+#### Arguments (args):
+**commands** (required):<br>
+Has following fields of its own:
+1. name field / the name of the applicaiton
+2. icon / the icon-name for the icon to display 
+3. exec / the command to execute
+4. search_string / the string to match to on search
+---
+### Bulk Text
+```json
+{
+    "name": "Wikipedia Search",
+    "alias": "wiki",
+    "type": "bulk_text",
+    "async": true,
+    "args": {
+        "icon": "wikipedia",
+        "exec": "wiki-api"
+        "exec-args": "{keyword}"
+    },
+    "priority": 5
+}
+```
+#### Arguments (args):
+**icon** (required):<br>
+Specifies the icon shown for the command.<br>
 
+**exec** (required):<br>
+Specifies the program that should be run. **Note:** that its probably suitable to run it asynchronously. To do that, set the `async` attribute to `true`.
+
+**exec-args** (optional):<br>
+Specifies the arguments to pass along to the `exec` program.
+
+--- 
