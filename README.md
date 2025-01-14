@@ -8,11 +8,15 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 
 ## Launchers
-- **App Launcher:** Launches your apps. 
-- **Web Launcher:** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
+- **[App Launcher](#app-launcher):** Launches your apps. 
+- **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
 - **Calculator:** Converts your input into a math equation and displays its result. On Enter, it also copies the result into the clipboard.
 - **Command:** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **Bulk Text:** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
+
+
+
+
 
 ### Common Launcher Attributes
 `[UI]` corresponds to ui related attributes.<br>
@@ -25,9 +29,36 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - `args` [FC] (required): A value with `type` specific arguments. **Can be empty**.
 - `priority` [FC] (required): Specifies the order in which to show the launcher elements on startup. 
 - `async` [FC] (optional): Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`
+---
 
-### Launcher Specific Attributes and Arguments
-#### Web Launcher
+
+### Command Launcher
+```json
+{
+    "name": "Example Command",
+    "alias": "ex",
+    "type": "command",
+    "args": {
+        "commands": {
+            "command name": {
+                "icon": "icon-name",
+                "exec": "command to execute", 
+                "search_string": "examplecommand"
+            }
+        }
+    },
+    "priority": 5
+}
+```
+#### Arguments (args):
+**commands** (required):<br>
+Has following fields of its own:
+1. name field / the name of the applicaiton
+2. icon / the icon-name for the icon to display 
+3. exec / the command to execute
+4. search_string / the string to match to on search
+---
+### Web Launcher
 ```json
 {
     "name": "Web Search",
@@ -58,29 +89,4 @@ Can be either of those:
 **icon** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
 
-#### Command Launcher
-```json
-{
-    "name": "Example Command",
-    "alias": "ex",
-    "type": "command",
-    "args": {
-        "commands": {
-            "command name": {
-                "icon": "icon-name",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-            }
-        }
-    },
-    "priority": 5
-}
-```
-#### Arguments (args):
-**commands** (required):<br>
-Has following fields of its own:
-1. name field / the name of the applicaiton
-2. icon / the icon-name for the icon to display 
-3. exec / the command to execute
-4. search_string / the string to match to on search
 
