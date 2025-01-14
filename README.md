@@ -22,16 +22,16 @@ The Launcher can be of the following types:<br>
 
 
 ### Common Launcher Attributes
-`[UI]` corresponds to ui related attributes.<br>
-`[FC]` corresponds to functionality related attributes.<br>
+| Attribute   | Type | Description |
+|-------------|------|-------------|
+| `name`      | `[UI]` (required) | Specifies the name of the category the resulting tiles correspond to. This name will be displayed under the app's name. It has no further impact on the application but **must be set but can be empty**. |
+| `alias`     | `[FC]` (optional) | Specifies what the command should be to search that category with. |
+| `home`      | `[FC]` (optional) | Defines whether the elements of this launcher should be shown on startup. |
+| `type`      | `[FC]` (required) | Specifies the tile and functionality that should be used to display this Launcher. |
+| `args`      | `[FC]` (required) | A value with `type` specific arguments. **Can be empty**. |
+| `priority`  | `[FC]` (required) | Specifies the order in which to show the launcher elements on startup. |
+| `async`     | `[FC]` (optional) | Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`. |
 
-- `name` `[UI]` (required): Specifies the name of the category the resulting tiles corresponds to. This name will be displayed under the apps name. It has no further impact on the application but **must be set but can be empty**. 
-- `alias` `[FC]` (optional): Specifies what the command should be to search that category with.
-- `home` `[FC]` (optional): Defines, wheather the elements of this launcher should be shown on startup.
-- `type` `[FC]` (required): Specifies the tile and functionality that should be used to display this Launcher.
-- `args` `[FC]` (required): A value with `type` specific arguments. **Can be empty**.
-- `priority` `[FC]` (required): Specifies the order in which to show the launcher elements on startup. 
-- `async` `[FC]` (optional): Specifies if the launcher should be executed asynchronously. Implemented for `Bulk Text`
 ---
 
 ### App Launcher
@@ -133,7 +133,7 @@ Has following fields of its own:
         "exec": "wiki-api"
         "exec-args": "{keyword}"
     },
-    "priority": 5
+    "priority": 0
 }
 ```
 #### Arguments (args):
