@@ -51,7 +51,7 @@ impl Loader {
                 method: cmd.r#type.clone(),
                 priority: cmd.priority,
                 r#async: cmd.r#async,
-
+                home: cmd.home,
             };
 
             match cmd.r#type.as_str(){

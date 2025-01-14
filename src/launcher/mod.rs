@@ -20,7 +20,8 @@ pub struct LauncherCommons {
     pub alias: Option<String>,
     pub method: String,
     pub priority: u32,
-    pub r#async: bool
+    pub r#async: bool,
+    pub home: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -32,6 +33,15 @@ pub enum Launcher{
     SystemCommand {common: LauncherCommons, specific: SystemCommand},
 }
 impl Launcher{
+    pub fn common(&self)-> &LauncherCommons {
+        match self {
+            Launcher::App { common, .. } => common,
+            Launcher::Web { common, .. } => common,
+            Launcher::Calc { common, .. } => common,
+            Launcher::BulkText { common, .. } => common,
+            Launcher::SystemCommand { common, .. } => common,
+        }
+    }
     pub fn get_loader_widget(&self, keyword: &String)-> Option<(ListBoxRow, Label, TextView)>{
         match self {
             Launcher::App {..} => None,
@@ -61,40 +71,16 @@ impl Launcher{
         }
     }
     pub fn priority(&self)->u32{
-        match self {
-            Launcher::App {common: c, specific: _} => c.priority,
-            Launcher::Web {common: c, specific: _} => c.priority,
-            Launcher::Calc {common: c, specific: _} =>c.priority,
-            Launcher::BulkText {common: c, specific: _} => c.priority,
-            Launcher::SystemCommand {common: c, specific: _} => c.priority,
-        }
+        self.common().priority
     }
     pub fn alias(&self)->String{
-        match self {
-            Launcher::App {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
-            Launcher::Web {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
-            Launcher::Calc {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
-            Launcher::BulkText {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
-            Launcher::SystemCommand {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
-        }
+        self.common().alias.clone().unwrap_or_default()
     }
     pub fn name(&self)->String{
-        match self {
-            Launcher::App {common: c, specific: _} => c.name.clone(),
-            Launcher::Web {common: c, specific: _} => c.name.clone(),
-            Launcher::Calc {common: c, specific: _} => c.name.clone(),
-            Launcher::BulkText {common: c, specific: _} => c.name.clone(),
-            Launcher::SystemCommand {common: c, specific: _} => c.name.clone(),
-        }
+        self.common().name.clone()
     }
     pub fn is_async(&self)->bool{
-        match self {
-            Launcher::App {common: c, specific: _} => c.r#async.clone(),
-            Launcher::Web {common: c, specific: _} => c.r#async.clone(),
-            Launcher::Calc {common: c, specific: _} => c.r#async.clone(),
-            Launcher::BulkText {common: c, specific: _} => c.r#async.clone(),
-            Launcher::SystemCommand {common: c, specific: _} => c.r#async.clone(),
-        }
+        self.common().r#async
     }
 }
 

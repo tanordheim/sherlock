@@ -48,8 +48,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
     let launchers_clone_ev_nav = launchers.clone();
 
     // Initiallize the view to show all apps
-    set_results("", "all", &*results, &launchers);
-    select_first_row(&*results);
+    set_home_screen("", "all", &*results, &launchers);
 
     // Setting search window to active
     window.set_child(Some(&vbox));
