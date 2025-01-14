@@ -1,0 +1,228 @@
+::root {
+    --background: 0, 0%, 9%;
+    --foreground: 0, 0%, 15%;
+    --text: 126, 45%, 96%;
+    --border: 0, 0%, 19%;
+
+    --success: #60A561;
+    --error: #E3655B;
+
+}
+
+
+
+overshoot *,
+undershoot *,
+overshoot.top,
+overshoot.right,
+overshoot.bottom,
+overshoot.left
+undershoot.top,
+undershoot.right,
+undershoot.bottom,
+undershoot.left,
+#scroll-window > *,
+overshoot:backdrop
+{
+  background: none;
+  border: none;
+  background-color: transparent;
+}
+
+
+*{
+    margin: None;
+    -gtk-secondary-caret-color: hsl(var(--background)); 
+    background: hsl(var(--background));
+    background-color: hsl(var(--background));
+    outline-width: 0px;
+    outline-offset: -3px;
+    outline-style: dashed;
+}
+
+window {
+    color: hsl(var(--text));
+    border-radius: 5px;
+    border: 2px solid hsl(var(--border));
+}
+
+
+/* SEARCH PAGE */
+#search-bar {
+    outline: none;
+    border: 1px solid hsla(var(--border), 1);
+    background: hsla(var(--background), 1);
+    min-height: 40px;
+    color: hsl(var(--text));
+    font-size: 15px;
+    padding-left: 20px;
+}
+
+#search-bar-holder {
+    padding: 10px 10px 0px 10px;
+}
+
+#search-bar:focus {
+    outline: none;
+}
+
+#search-bar placeholder {
+    background: transparent;
+    background-color: transparent;
+    color: hsla(var(--text), 0.7);
+    font-weight: 500;
+}
+
+#category-type {
+    font-size: 13px;
+    font-weight: bold;
+    color: hsl(var(--text));
+    opacity: 0.3;
+    padding: 2px 20px 0px 20px;
+}
+
+
+#scroll-window {
+    padding: 5px 10px 5px 10px;
+}
+
+scrollbar {
+    transform: translate(8px, 0px);
+}
+
+scrollbar slider {
+    background: hsla(var(--text), 0.1);
+    border: none;
+}
+
+
+image {
+    color: white;
+}
+
+.tile {
+    outline: none;
+    min-height: 50px;
+    padding: 0px 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+.tile #title {
+    font-size: 15px;
+    color: hsl(var(--text));
+}
+
+.tile #icon {
+    margin: 0px;
+    padding: 0px;
+}
+
+.tile:selected,
+.tile:selected * {
+    transition: 0.1s ease;
+    background: hsla(var(--foreground), 1);
+    background-color: hsla(var(--foreground), 1);
+    outline: none;
+    border: none;
+}
+.tile:focus {
+    outline: none;
+}
+
+#launcher-type {
+    font-size: 10px;
+    color: hsla(var(--text), 0.4);
+    margin-left: 0px;
+}
+
+.notifications {
+    min-height: 30px;
+    background: hsla(var(--foreground), 0.5);
+    border-radius: 2px;
+    margin: 0px 5px 5px 5px;
+}
+
+#shortcut-holder {
+    margin-right: 25px;
+    padding: 5px 10px;
+    background: hsla(var(--foreground), 0.5);
+    border-radius: 5px;
+}
+
+.tile:selected #shortcut-holder {
+    background: hsla(var(--background), 0.5);
+    background-color: hsla(var(--background), 0.5);
+    color: hsla(var(--text), 0.5);
+}
+
+#shortcut {
+    background: hsla(var(--background), 0);
+    background-color: hsla(var(--background), 0);
+    font-size: 11px;
+    font-weight: bold;
+    color: hsla(var(--text), 0.5);
+}
+
+/*CALCULATOR*/
+.calc-tile {
+    padding: 10px 10px 20px 10px;
+    border-radius: 5px;
+}
+
+#calc-tile-quation {
+    font-size: 10px;
+    color: gray;
+}
+
+#calc-tile-result {
+    font-size: 25px;
+    color: gray;
+}
+
+/* ABOUT PAGE */
+#title_text {
+    font-size: 20px;
+    color: var(--success);
+    animation: 0.4s ease-in-out slide 1s forwards;
+}
+
+
+/* BULK TEXT TILE */
+.bulk-text {
+    padding-bottom: 10px;
+    min-height: 50px;
+}
+
+
+#bulk-text-title {
+    margin-left: 10px;
+    padding: 10px 0px;
+    font-size: 10px;
+    color: gray;
+}
+
+#bulk-text-content-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: hsl(var(--text));
+    min-height: 20px;
+}
+
+#bulk-text-content-body {
+    font-size: 14px;
+    color: hsl(var(--text));
+    line-height: 1.4;
+    min-height: 20px;
+}
+
+
+@keyframes slide {
+    from {
+        transform: translate(0px, 0px);
+    }
+
+    to {
+        transform: translate(-20px, 0px);
+    }
+}

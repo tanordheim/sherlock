@@ -1,13 +1,3 @@
-# Sherlock Application Launcher
-<div align="center" style="text-align:center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="images/logo-light.png">
-    <img alt="sherlock logo" height="128" src="images/logo-light.png">
-  </picture>
-</div>
-
-
 ## Dependencies
 - gtk4
 - gtk-4-layer-shell
