@@ -18,13 +18,10 @@ static CONFIG: Lazy<Config> = Lazy::new(|| {
 });
 
 
-
-
-
 #[tokio::main]
 async fn main() {
     let lock_file = "/tmp/sherlock.lock";
-    let lock = match lock::ensure_single_instance(lock_file) {
+    let _ = match lock::ensure_single_instance(lock_file) {
         Ok(lock) => lock,
         Err(msg) => {
             eprintln!("{}", msg);

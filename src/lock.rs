@@ -1,22 +1,23 @@
-use std::fs::{remove_file, File};
-
+use std::fs::{File, remove_file};
+use std::path::Path;
 
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
     LockFile::new(lock_file)
 }
 
 pub struct LockFile {
-    pub path: String,
+    path: String,
 }
 
 impl LockFile {
     pub fn new(path: &str) -> Result<Self, String> {
+        if Path::new(path).exists() {
+            return Err("Lockfile already exists. Aborting...".to_string());
+        }
+
         match File::create(path) {
             Ok(_) => Ok(LockFile { path: path.to_string() }),
-            Err(e) => {
-                let message = format!("Error occurred: {} \n {}", e, path);
-                Err(message)
-            }
+            Err(e) => Err(format!("Failed to create lock file: {}", e)),
         }
     }
 
