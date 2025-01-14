@@ -2,7 +2,7 @@ use std::fs;
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::launcher::{Launcher, app_launcher, web_launcher, calc_launcher, system_cmd_launcher, bulk_text_launcher};
+use crate::launcher::{app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, Launcher, LauncherCommons};
 use app_launcher::App;
 use web_launcher::Web;
 use calc_launcher::Calc;
@@ -45,57 +45,32 @@ impl Loader {
 
         let mut launchers: Vec<Launcher> = config.iter().filter_map(|cmd|{
             uuid_counter += 1;
+            let common = LauncherCommons {
+                name: cmd.name.to_string(),
+                alias: cmd.alias.clone(),
+                method: cmd.r#type.clone(),
+                priority: cmd.priority,
+                r#async: cmd.r#async,
+
+            };
 
             match cmd.r#type.as_str(){
-                "launch_app" => Some(Launcher::App(App {
-                    method: "app".to_string(),
-                    name: cmd.name.clone(),
-                    alias: cmd.alias.clone(), 
-                    priority: cmd.priority,
-                    r#async: cmd.r#async,
-                    apps: Loader::load_applications(sherlock_flags),
-                })),
-                "web_search" => Some(Launcher::Web(Web {
-                    method: "web".to_string(),
-                    name: cmd.name.clone(), 
-                    alias: cmd.alias.clone(),
+                "app_launcher" => Some(Launcher::App { common, specific: App {apps: Loader::load_applications(sherlock_flags)}}),
+                "web_launcher" => Some(Launcher::Web { common, specific: Web {
                     icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
                     engine: cmd.args["search_engine"].as_str().unwrap_or_default().to_string(),
-                    priority: cmd.priority,
-                    r#async: cmd.r#async,
-                })),
-                "calculation" => Some(Launcher::Calc(Calc {
-                    method: "calc".to_string(),
-                    alias: cmd.alias.clone(), 
-                    name: cmd.name.clone(), 
-                    r#async: cmd.r#async,
-                    priority: cmd.priority,
-                })),
+                }}),
+                "calculation" => Some(Launcher::Calc{common, specific: Calc {}}),
                 "command" => {
                     let commands: HashMap<String, AppData> = serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();                
-                    Some(Launcher::SystemCommand(SystemCommand {
-                        method: "command".to_string(),
-                        name: cmd.name.clone(),
-                        alias: cmd.alias.clone(), 
-                        priority: cmd.priority,
-                        r#async: cmd.r#async,
-                        commands,
-                    }))
-
+                    Some(Launcher::SystemCommand {common, specific: SystemCommand { commands }})
                 },
                 "bulk_text" => {
-                    Some(Launcher::BulkText(BulkText{
-                        method: "bulk_text".to_string(),
-                        alias: cmd.alias.clone(),
-                        name: cmd.name.clone(),
-                        priority: cmd.priority,
-                        r#async: cmd.r#async,
+                    Some(Launcher::BulkText{common, specific: BulkText{
                         icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-
                         exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
                         args: cmd.args["exec-args"].as_str().unwrap_or_default().to_string(),
-                        whitespace: cmd.args["whitespace"].as_str().unwrap_or("_").to_string(),
-                    }))
+                    }})
                 }
                 _ => None
             }

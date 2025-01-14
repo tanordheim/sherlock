@@ -15,76 +15,85 @@ use bulk_text_launcher::BulkText;
 use system_cmd_launcher::SystemCommand;
 
 #[derive(Clone, Debug)]
+pub struct LauncherCommons {
+    pub name: String,
+    pub alias: Option<String>,
+    pub method: String,
+    pub priority: u32,
+    pub r#async: bool
+}
+
+#[derive(Clone, Debug)]
 pub enum Launcher{
-    App(App),
-    Web(Web),
-    Calc(Calc),
-    BulkText(BulkText),
-    SystemCommand(SystemCommand),
+    App {common: LauncherCommons, specific: App},
+    Web {common: LauncherCommons, specific: Web},
+    Calc {common: LauncherCommons, specific: Calc},
+    BulkText {common: LauncherCommons, specific: BulkText},
+    SystemCommand {common: LauncherCommons, specific: SystemCommand},
 }
 impl Launcher{
     pub fn get_loader_widget(&self, keyword: &String)-> Option<(ListBoxRow, Label, TextView)>{
         match self {
-            Launcher::App(_) => None,
-            Launcher::Web(_) => None,
-            Launcher::Calc(_) => None,
-            Launcher::BulkText(api) => Tile::bulk_text_tile_loader(&api.name, &api.method, &api.icon, keyword),
-            Launcher::SystemCommand(_) => None,
+            Launcher::App {..} => None,
+            Launcher::Web {..} => None,
+            Launcher::Calc {..} => None,
+            Launcher::BulkText {common:c, specific:s} => Tile::bulk_text_tile_loader(&c.name, &c.method, &s.icon, keyword),
+            Launcher::SystemCommand {..} => None,
         }
         
     }
     fn get_patch(&self, index:i32, keyword: &String)->(i32, Vec<ListBoxRow>){
         match self {
-            Launcher::App(app) => Tile::app_tile(index, app.apps.clone(), &app.name, &app.method, keyword),
-            Launcher::Web(web) => Tile::web_tile(&web.name, &web.method, &web.icon, &web.engine, index, keyword),
-            Launcher::Calc(calc) => Tile::calc_tile(index, keyword, &calc.method),
-            Launcher::BulkText(api) => Tile::bulk_text_tile(&api.name, &api.method, &api.icon, index, keyword),
-            Launcher::SystemCommand(cmd) => Tile::app_tile(index, cmd.commands.clone(), &cmd.name, &cmd.method, keyword),
+            Launcher::App {common: c, specific: s} => Tile::app_tile(index, s.apps.clone(), &c.name, &c.method, keyword),
+            Launcher::Web {common: c, specific: s} => Tile::web_tile(&c.name, &c.method, &s.icon, &s.engine, index, keyword),
+            Launcher::Calc {common: c, specific: _} => Tile::calc_tile(index, keyword, &c.method),
+            Launcher::BulkText {common: c, specific: s} => Tile::bulk_text_tile(&c.name, &c.method, &s.icon, index, keyword),
+            Launcher::SystemCommand {common: c, specific: s} => Tile::app_tile(index, s.commands.clone(), &c.name, &c.method, keyword),
         }
     }
     pub async fn get_result(&self, keyword: &String)->Option<(String, String)>{
         match self {
-            Launcher::App(_) => None,
-            Launcher::Web(_) => None,
-            Launcher::Calc(_) => None,
-            Launcher::BulkText(api) => api.get_result(keyword).await,
-            Launcher::SystemCommand(_) => None,
+            Launcher::App {..} => None,
+            Launcher::Web {..} => None,
+            Launcher::Calc {..} => None,
+            Launcher::BulkText {common: _, specific: s} => s.get_result(keyword).await,
+            Launcher::SystemCommand {..} => None,
         }
     }
     pub fn priority(&self)->u32{
         match self {
-            Launcher::App(app) => app.priority,
-            Launcher::Web(web) => web.priority,
-            Launcher::Calc(calc) => calc.priority,
-            Launcher::BulkText(api) => api.priority,
-            Launcher::SystemCommand(cmd) => cmd.priority,
+            Launcher::App {common: c, specific: _} => c.priority,
+            Launcher::Web {common: c, specific: _} => c.priority,
+            Launcher::Calc {common: c, specific: _} =>c.priority,
+            Launcher::BulkText {common: c, specific: _} => c.priority,
+            Launcher::SystemCommand {common: c, specific: _} => c.priority,
         }
     }
     pub fn alias(&self)->String{
         match self {
-            Launcher::App(app) => app.alias.clone().unwrap_or_default(),
-            Launcher::Web(web) => web.alias.clone().unwrap_or_default(),
-            Launcher::Calc(calc) => calc.alias.clone().unwrap_or_default(),
-            Launcher::BulkText(api) => api.alias.clone().unwrap_or_default(),
-            Launcher::SystemCommand(cmd) => cmd.alias.clone().unwrap_or_default(),
+            Launcher::App {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
+            Launcher::Web {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
+            Launcher::Calc {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
+            Launcher::BulkText {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
+            Launcher::SystemCommand {common: c, specific: _} => c.alias.clone().unwrap_or_default(),
         }
     }
     pub fn name(&self)->String{
         match self {
-            Launcher::App(app) => app.name.clone(),
-            Launcher::Web(web) => web.name.clone(),
-            Launcher::Calc(calc) => calc.name.clone(),
-            Launcher::BulkText(api) => api.name.clone(),
-            Launcher::SystemCommand(cmd) => cmd.name.clone(),
+            Launcher::App {common: c, specific: _} => c.name.clone(),
+            Launcher::Web {common: c, specific: _} => c.name.clone(),
+            Launcher::Calc {common: c, specific: _} => c.name.clone(),
+            Launcher::BulkText {common: c, specific: _} => c.name.clone(),
+            Launcher::SystemCommand {common: c, specific: _} => c.name.clone(),
         }
     }
     pub fn is_async(&self)->bool{
         match self {
-            Launcher::App(app) => app.r#async.clone(),
-            Launcher::Web(web) => web.r#async.clone(),
-            Launcher::Calc(calc) => calc.r#async.clone(),
-            Launcher::BulkText(api) => api.r#async.clone(),
-            Launcher::SystemCommand(cmd) => cmd.r#async.clone(),
+            Launcher::App {common: c, specific: _} => c.r#async.clone(),
+            Launcher::Web {common: c, specific: _} => c.r#async.clone(),
+            Launcher::Calc {common: c, specific: _} => c.r#async.clone(),
+            Launcher::BulkText {common: c, specific: _} => c.r#async.clone(),
+            Launcher::SystemCommand {common: c, specific: _} => c.r#async.clone(),
         }
     }
 }
