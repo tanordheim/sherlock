@@ -5,7 +5,7 @@
 - [ ] Custom Spotify (ncspot) script to control it
 
 ## Functionalities
-    - [x] Implement locking mechanism to only have one instance running at a time.
+- [x] Implement locking mechanism to only have one instance running at a time.
 - [ ] Maybe change alias for each command in commandlauncher. (if possible)
 - [ ] Add callback type for a cmd to execute another one
 - [ ] Add enter command type for a tile
