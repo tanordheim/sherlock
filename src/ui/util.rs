@@ -40,19 +40,27 @@ pub fn set_mode(mode_title:&Label, mode_c:&Rc<RefCell<String>>, ctext:&str, mode
 }
 
 
-pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
+pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
     // Check if launcher should be shown on home
-    let (show, not_show) = launchers.into_iter().partition(|l| l.home());
+    let (show, _): (Vec<Launcher>, Vec<Launcher>) =
+                          launchers
+                          .clone()
+                          .into_iter()
+                          .partition(|launcher| launcher.show_home());
+
+    for item in show.iter() {
+        println!("{}", item.show_home());
+    }
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
+    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
     for widget in widgets {
         results_frame.append(&widget);
     }
 }
-pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
+pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);

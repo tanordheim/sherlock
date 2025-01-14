@@ -82,7 +82,7 @@ impl Launcher{
     pub fn is_async(&self)->bool{
         self.common().r#async
     }
-    pub fn home(&self)->bool{
+    pub fn show_home(&self)->bool{
         self.common().home
     }
 }
