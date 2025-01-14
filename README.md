@@ -8,6 +8,7 @@
   <picture>
     <img alt="application screenshot" width="100%" src="images/home-screen.png">
   </picture>
+  <br>
 </div>
 
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage.
