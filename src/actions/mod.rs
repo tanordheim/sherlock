@@ -9,12 +9,12 @@ pub mod util;
 pub fn execute_from_attrs(attrs: HashMap<String, String>) {
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
-            "app" => {
+            "app_launcher" => {
                 let exec = attrs.get("exec").expect("Missing field: exec");
                 applaunch::applaunch(exec);
                 exit(0);
             }
-            "web" => {
+            "web_launcher" => {
                 let query = attrs
                     .get("keyword")
                     .expect("Missing field: keyword (query)");
