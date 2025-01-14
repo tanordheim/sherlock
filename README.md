@@ -1,7 +1,7 @@
 # Sherlock Application Launcher
 <div align="center" style="text-align:center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="images/logo-light.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
