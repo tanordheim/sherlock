@@ -1,4 +1,4 @@
-The Launch# Launchers
+# Launchers
 
 In the Sherlock Application Launcher, each tile is associated with a specific "launcher." You can think of a launcher as a category to which tiles belong. For example, if a launcher is set to invisible, all tiles under that launcher will also be invisible.<br>
 
