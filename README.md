@@ -1,6 +1,8 @@
 # Sherlock Application Launcher
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage.
 
+> **Warning:** The app is was created on Arch Linux with the Hyprland tiling window manager in mind. It may cause errors or wont function at all on other system configurations.
+
 
 ## Dependencies
 - gtk4
@@ -69,6 +71,7 @@ Can be either of the following:
 | **Ecosia**      | `https://www.ecosia.org/search?q={keyword}` |
 | **Qwant**       | `https://www.qwant.com/?q={keyword}`     |
 | **Startpage**   | `https://www.startpage.com/sp/search?q={keyword}` |
+
 | **Custom**      | `https://www.example.com/search={keyword}` |
 
 **`icon`** (required):<br>
