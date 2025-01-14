@@ -57,12 +57,13 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 To run the Sherlock Launcher, ensure the following dependencies are installed:
 
-- `gtk4`
-- `gtk-4-layer-shell`
+- `gtk4` - [Gtk4 Documentation](https://docs.gtk.org/gtk4/)
+- `gtk-4-layer-shell` - [Gtk4 Layer Shell](https://github.com/wmww/gtk4-layer-shell)
 
 Additionally, if you're building from source, you will need:
 
 - `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
+- `git` - [How to install git](https://github.com/git-guides/install-git)
 
 ### Installation
 
@@ -76,9 +77,11 @@ yay -S sherlock-launcher-bin
 
 #### <ins>From Source</ins>
 
-To build Sherlock Launcher from source, follow these steps. Make sure you have the necessary dependencies installed:
+To build Sherlock Launcher from source, follow these steps.<br>
+Make sure you have the necessary dependencies installed:
 
 - `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
+- `git` - [How to install git](https://github.com/git-guides/install-git)
 - `gtk4` - [Gtk4 Documentation](https://docs.gtk.org/gtk4/)
 - `gtk-4-layer-shell` - [Gtk4 Layer Shell](https://github.com/wmww/gtk4-layer-shell)
 
@@ -109,7 +112,12 @@ To build Sherlock Launcher from source, follow these steps. Make sure you have t
 
 #### <ins>Build Debian Package</ins>
 
-To build a `.deb` package directly from the source, follow these steps:
+To build a `.deb` package directly from the source, follow these steps:<br>
+Make sure you have the folloing dependencies installed:
+- `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
+- `git` - [How to install git](https://github.com/git-guides/install-git)
+- `gtk4` - [Gtk4 Documentation](https://docs.gtk.org/gtk4/)
+- `gtk-4-layer-shell` - [Gtk4 Layer Shell](https://github.com/wmww/gtk4-layer-shell)
 
 1. **Install the `cargo-deb` tool**:
 
