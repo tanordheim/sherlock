@@ -3,7 +3,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-light.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
-    <img alt="sherlock logo" height="128" src="images/logo-light.svg">
+    <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
 </div>
 
