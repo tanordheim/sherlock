@@ -11,7 +11,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 ## Launchers
 The philosophy of the Sherlock Application Launcher is, that every tile is owned by a launcher. You can think of a launcher as a category to which each of the tiles belong to.<br>
-
+The Launcher can be of the following types:<br>
 - **[App Launcher](#app-launcher):** Launches your apps. 
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Enter, it also copies the result into the clipboard.
