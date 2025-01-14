@@ -28,11 +28,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 ### Launcher Specific Attributes and Arguments
 #### Web Launcher
 
-##### Arguments:
-
+#### Arguments:
 **seach_engine** (required):<br>
 Can be either of those:
-0. custom -> "https://www.example.com/search={keyword}"
 1. google -> "https://www.google.com/search?q={keyword}"
 2. bing -> "https://www.bing.com/search?q={keyword}"
 3. duckduckgo -> "https://duckduckgo.com/?q={keyword}"
@@ -43,5 +41,6 @@ Can be either of those:
 8. ecosia -> "https://www.ecosia.org/search?q={keyword}"
 9. qwant -> "https://www.qwant.com/?q={keyword}"
 10. startpage -> "https://www.startpage.com/sp/search?q={keyword}"
+11. custom -> "https://www.example.com/search={keyword}"
 
 
