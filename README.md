@@ -55,7 +55,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 }
 ```
 #### Arguments (args):
-**search_engine** (required):
+**`search_engine`** (required):
 Can be either of the following:
 | Search Engine   | URL                                      |
 |-----------------|------------------------------------------|
@@ -71,7 +71,7 @@ Can be either of the following:
 | **Startpage**   | `https://www.startpage.com/sp/search?q={keyword}` |
 | **Custom**      | `https://www.example.com/search={keyword}` |
 
-**icon** (required):<br>
+**`icon`** (required):<br>
 Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
 
 ---
@@ -110,9 +110,9 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 **commands** (required):<br>
 Has following fields of its own:
 1. name field / the name of the applicaiton
-2. icon / the icon-name for the icon to display 
-3. exec / the command to execute
-4. search_string / the string to match to on search
+2. `icon` / the icon-name for the icon to display 
+3. `exec` / the command to execute
+4. `search_string` / the string to match to on search
 
 ---
 
@@ -132,13 +132,13 @@ Has following fields of its own:
 }
 ```
 #### Arguments (args):
-**icon** (required):<br>
+**`icon`** (required):<br>
 Specifies the icon shown for the command.<br>
 
-**exec** (required):<br>
+**`exec`** (required):<br>
 Specifies the program that should be run. **Note:** that its probably suitable to run it asynchronously. To do that, set the `async` attribute to `true`.
 
-**exec-args** (optional):<br>
+**`exec-args`** (optional):<br>
 Specifies the arguments to pass along to the `exec` program.
 
 --- 
