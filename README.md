@@ -45,9 +45,12 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - Type the launcher alias and spacebar to only search within a specific category of commands.
 - Categories are fully configureable, allowing you to customize search scopes.
 
+### ⌨️ Shortcuts
+
+
+
 --- 
 <br><br>
-
 
 ## Getting Started
 ## Dependencies
