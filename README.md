@@ -27,7 +27,6 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 ### Launcher Specific Attributes and Arguments
 #### Web Launcher
-
 #### Arguments:
 **seach_engine** (required):<br>
 Can be either of those:
@@ -42,5 +41,28 @@ Can be either of those:
 9. qwant -> "https://www.qwant.com/?q={keyword}"
 10. startpage -> "https://www.startpage.com/sp/search?q={keyword}"
 11. custom -> "https://www.example.com/search={keyword}"
+<br>
+**icon**:(required):<br>
+Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
 
+#### Command Launcher
+#### Arguments:
+```json
+"args": {
+    "commands": {
+        "command name": {
+            "icon": "icon-name",
+            "exec": "command to execute", 
+            "search_string": "examplecommand"
+        }
+    }
+}
+```
+
+**commands** (required):<br>
+Has following fields of its own:
+1. name field / the name of the applicaiton
+2. icon / the icon-name for the icon to display 
+3. exec / the command to execute
+4. search_string / the string to match to on search
 
