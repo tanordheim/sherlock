@@ -58,7 +58,10 @@ async fn main() {
                 Default::default()
             }
         };
-        Loader::load_icon_theme(&app_config.appearance.icon_paths);
+        Loader::load_icon_theme(&app_config.appearance.icon_paths)
+            .map_err(|e| error_list.push(e))
+            .ok();
+
         Loader::load_css(&sherlock_flags);
         
 
