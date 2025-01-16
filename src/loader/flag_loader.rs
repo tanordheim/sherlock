@@ -1,5 +1,4 @@
 use std::env;
-use open::with;
 
 use super::{Loader, util::SherlockFlags};
 
@@ -10,7 +9,7 @@ impl Loader {
         SherlockFlags::new(args)
     }
 }
-
+//TODO Error Handling
 impl SherlockFlags {
     fn new(args: Vec<String>) -> Self {
         let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
