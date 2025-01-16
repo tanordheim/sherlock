@@ -12,21 +12,19 @@ pub fn errors(window: ApplicationWindow, stack: &Stack, errors: &Vec<SherlockErr
 
     let vbox: HVBox = builder.object("vbox").unwrap();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
-    let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
+    let results: ListBox = builder.object("result-frame").unwrap();
 
     let (_, error_tiles)= Tile::error_tile(0, errors);
     error_tiles.iter().for_each(|tile| results.append(tile));
     
-    let stack_ev_nav = Rc::new(stack.clone());
-    nav_event(&window, stack_ev_nav, results, result_viewport);
     stack.add_named(&vbox, Some("error-page"));
-
+    nav_event(&window, stack.clone(), results, result_viewport);
     window
 }
 fn nav_event(
     window: &ApplicationWindow,
-    stack: Rc<Stack>,
-    result_holder: Rc<ListBox>,
+    stack: Stack,
+    result_holder: ListBox,
     result_viewport: ScrolledWindow,
 ) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability
@@ -37,7 +35,6 @@ fn nav_event(
     let window_clone = window.clone();
 
     event_controller.borrow_mut().set_propagation_phase(gtk4::PropagationPhase::Capture);
-
     event_controller
         .borrow_mut()
         .connect_key_pressed(move |_, key, _, _| {

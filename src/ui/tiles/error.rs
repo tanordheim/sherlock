@@ -9,6 +9,7 @@ impl Tile {
             .iter()
             .map(|e| {
                 let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_tile.ui");
+                
                 let holder: ListBoxRow = builder.object("holder").unwrap();
                 let title: Label = builder.object("error-title").unwrap();
                 let content_title: Label = builder.object("content-title").unwrap();
