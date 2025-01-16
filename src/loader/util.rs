@@ -53,7 +53,7 @@ impl Config {
     pub fn default()->Self{
         Config {
             default_apps: ConfigDefaultApps {
-                terminal: None,
+                terminal: get_terminal(),
             },
             appearance: ConfigAppearance {
                 gsk_renderer: "cairo".to_string(),

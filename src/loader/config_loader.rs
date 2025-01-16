@@ -4,34 +4,31 @@ use std::{fs, env};
 use super::Loader;
 use super::util::{Config, get_terminal};
 
-impl Loader {
-    pub fn load_config() -> Config {
-        let default_config = Config::default();
 
-        let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
+impl Loader {
+    pub fn load_config() -> Result<Config, String> {
+        let default_config = Config::default();
+        let home_dir = env::var("HOME").map_err(|e| format!("Cannot unpack home directory for user. Error: {}", e))?;
         let user_config_path = format!("{}/.config/sherlock/config.toml", home_dir);
 
-        // Check if the user has a custom config file
-        let mut user_config = if Path::new(&user_config_path).exists() {
+        // Attempt to read and parse the user config file if it exists
+        let user_config: Config = if Path::new(&user_config_path).exists() {
             let config_str = fs::read_to_string(&user_config_path)
-                .unwrap_or_else(|_| {
-                    println!("Error reading config file, using defaults.");
-                    String::new()
-                });
+                .map_err(|e| format!("Failed to read the user config file. Error: {}", e))?;
 
-            // Try to deserialize the user configuration, falling back to defaults
             toml::de::from_str(&config_str)
-                .unwrap_or_else(|e| {
-                    println!("Failed to deserialize config, using defaults. {}", e);
-                    default_config
-                })
+                .map_err(|e| format!("Could not parse user config. Error: {}", e))?
         } else {
             default_config
         };
 
-        if user_config.default_apps.terminal.is_none() {
-            user_config.default_apps.terminal = get_terminal();
-        };
-        user_config
+        // Ensure terminal configuration is set
+        let mut final_config = user_config;
+        if final_config.default_apps.terminal.is_none() {
+            final_config.default_apps.terminal = get_terminal();
+        }
+
+        Ok(final_config)
     }
 }
+
