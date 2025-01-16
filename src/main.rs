@@ -1,7 +1,6 @@
-use gio::prelude::*;
-use gtk4::{prelude::*, Application, StackTransitionType};
+zRe gio::prelude::*;
+use gtk4::{prelude::*, Application};
 use std::{env, process};
-use gtk4::glib::{self, ControlFlow};
 
 
 mod launcher;
@@ -11,7 +10,6 @@ mod loader;
 mod lock;
 
 use loader::{util::{Config, SherlockError}, Loader};
-
 
 
 
@@ -65,23 +63,19 @@ async fn main() {
         
 
 
-        let app_clone = app.clone();
-        let (mut window, stack) = ui::window::window(&app_clone);
-        if !error_list.is_empty(){
-            ui::error_view::errors(&window, &error_list);
-        };
+        let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers, app_config.clone());
-        
-        glib::timeout_add_seconds_local(2, move || {
-            stack.set_transition_type(StackTransitionType::SlideLeftRight);
-            stack.set_visible_child_name("search-stack");
-            ControlFlow::Continue
-        });
+        if !error_list.is_empty(){
+            window = ui::error_view::errors(window, &stack, &error_list);
+            stack.set_visible_child_name("error-page");
+        } 
         window.show();
     });
 
     application.run();
 }
+
+
 
 
 

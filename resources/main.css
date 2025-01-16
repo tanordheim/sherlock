@@ -222,7 +222,9 @@ image {
     padding: 10px;
     min-height: 50px;
 }
-
+.error {
+    padding-bottom: 10px;
+}
 
 #error-title {
     padding: 10px 0px;

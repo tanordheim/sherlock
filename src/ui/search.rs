@@ -42,7 +42,7 @@ pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<La
         app_config);
 
 
-    search_stack.add_named(&vbox, Some("search-stack"));
+    search_stack.add_named(&vbox, Some("search-page"));
     return window;
 }
 
