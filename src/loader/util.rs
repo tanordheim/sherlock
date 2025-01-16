@@ -49,7 +49,7 @@ pub struct SherlockError {
     pub traceback: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct Config{
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,

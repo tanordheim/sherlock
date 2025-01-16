@@ -9,7 +9,7 @@ mod actions;
 mod loader;
 mod lock;
 
-use loader::{util::{Config, SherlockError}, Loader};
+use loader::{util::SherlockError, Loader};
 
 
 
@@ -28,14 +28,9 @@ async fn main() {
     };
 
     // Parse configs
-    let app_config: Config = match Loader::load_config() {
-        Ok(config) => config,
-        Err(e) => {
-            startup_errors.push(e);
-            Config::default()
-        }
-    };
-
+    let app_config = Loader::load_config()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
 
     let sherlock_flags = Loader::load_flags();
     Loader::load_resources();
@@ -51,13 +46,10 @@ async fn main() {
     application.connect_activate(move |app| {
         let mut error_list: Vec<SherlockError> = startup_errors.clone();
 
-        let launchers = match Loader::load_launchers(&sherlock_flags, &app_config){
-            Ok(value)=> value,
-            Err(e) => {
-                error_list.push(e);
-                Default::default()
-            }
-        };
+        let launchers = Loader::load_launchers(&sherlock_flags, &app_config)
+            .map_err(|e| error_list.push(e))
+            .unwrap_or_default();
+        
         Loader::load_icon_theme(&app_config.appearance.icon_paths)
             .map_err(|e| error_list.push(e))
             .ok();
