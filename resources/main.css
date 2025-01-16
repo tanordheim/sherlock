@@ -120,12 +120,14 @@ image {
 
 .tile:selected,
 .tile:selected * {
-    min-height: 50px;
     transition: 0.1s ease;
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);
     outline: none;
     border: none;
+}
+.error:selected *:nth-child(2) {
+    min-height: 30px; /*Needed because height bugs*/
 }
 .tile:focus {
     outline: none;
