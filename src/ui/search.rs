@@ -1,5 +1,4 @@
-use gtk4::gdk::{self, Rectangle};
-use gtk4::{self, prelude::*, ApplicationWindow, Builder, EventControllerKey};
+use gtk4::{self, prelude::*, gdk, ApplicationWindow, Builder, EventControllerKey};
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -14,48 +13,29 @@ use crate::launcher::Launcher;
 use crate::loader::util::Config;
 
 pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
-    // Collect Modes
-    let mode = Rc::new(RefCell::new("all".to_string()));
-    let mut modes: HashMap<String, String> = HashMap::new();
-    for item in launchers.iter() {
-        let alias = item.alias();
-        if !alias.is_empty() {
-            let name = item.name();
-            modes.insert(format!("{} ", alias), name);
-        }
-    }
-
-    // Initialize the builder with the correct path
-    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
-
-    // Get the requred object references
-    let vbox: HVBox = builder.object("vbox").unwrap();
-    let search_bar: Entry = builder.object("search-bar").unwrap();
-    let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
-    let mode_title: Label = builder.object("category-type-label").unwrap();
-    let results: ListBox = builder.object("result-frame").unwrap();
+    let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) = construct_window(&launchers);
 
     //RC cloning:
-    let results = Rc::new(results);
     let app_config = Rc::new(app_config);
     let app_config_ev_changed = Rc::clone(&app_config);
-    let app_config_ev_nav = Rc::clone(&app_config);
 
-    let mode_clone_ev_changed = Rc::clone(&mode);
-    let mode_clone_ev_nav = Rc::clone(&mode);
+    let mode_ev_changed = Rc::clone(&mode);
+    let mode_ev_nav = Rc::clone(&mode);
+
     let mode_title_clone = mode_title.clone();
 
-    let results_enter = Rc::clone(&results);
-    let results_clone_ev_nav = Rc::clone(&results);
+    let results_ev_enter = Rc::clone(&results);
+    let results_ev_nav = Rc::clone(&results);
 
-    let launchers_clone_ev_changed = launchers.clone();
-    let launchers_clone_ev_nav = launchers.clone();
+    let launchers_ev_changed = launchers.clone();
+    let launchers_ev_nav = launchers.clone();
 
     // Initiallize the view to show all apps
     set_home_screen("", "all", &*results, &launchers, &app_config);
-    select_first_row(&*results);
+    results.focus_first();
 
     // Setting search window to active
+    //
     window.set_child(Some(&vbox));
     search_bar.grab_focus();
 
@@ -68,11 +48,10 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
         let current_text = search_bar.text().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
             task.abort();
-
         };
         *cancel_flag.borrow_mut() = true;
 
-        let launchers_clone_ev_changed2 = launchers_clone_ev_changed.clone();
+        let launchers_ev_changed2 = launchers_ev_changed.clone();
         if modes.contains_key(&current_text) {
             if let Some(mode_name) = modes.get(&current_text) {
                 set_mode(&mode_title_clone, &mode, &current_text, mode_name);
@@ -82,13 +61,13 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
             *cancel_flag.borrow_mut() = false;
             let cancel_flag = Rc::clone(&cancel_flag);
             let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-                                                         launchers_clone_ev_changed2
+                                                         launchers_ev_changed2
                                                          .into_iter()
                                                          .partition(|launcher| launcher.is_async());
 
             set_results(
                 &current_text,
-                &mode_clone_ev_changed.borrow(),
+                &mode_ev_changed.borrow(),
                 &*results,
                 &non_async_launchers,
                 &app_config_ev_changed,
@@ -109,11 +88,11 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
                 })
             .collect();
             for widget in widgets.iter() {
-                if *mode_clone_ev_changed.borrow().trim() == widget.launcher.alias() {
+                if *mode_ev_changed.borrow().trim() == widget.launcher.alias() {
                     results.append(&widget.widget);
                 } 
             }
-            select_first_row(&*results);
+            results.focus_first();
 
             let task = glib::MainContext::default().spawn_local(async move {
                 if *cancel_flag.borrow() {
@@ -137,38 +116,10 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
         match key {
             gdk::Key::Up => {
-                let new_row = select_row(-1, &results_clone_ev_nav);
-
-                let row_allocation = new_row.allocation();
-                let row_rect = Rectangle::from(row_allocation);
-
-                let row_start = (row_rect.y()) as f64;
-                let vadjustment = result_viewport.vadjustment();
-
-                let current_value = vadjustment.value();
-                if current_value > row_start {
-                    vadjustment.set_value(row_start);
-                }
+                results_ev_nav.focus_prev(&result_viewport);
             }
             gdk::Key::Down => {
-                let new_row = select_row(1, &results_clone_ev_nav);
-                let allocation = result_viewport.allocation();
-                let list_box_rect = Rectangle::from(allocation);
-
-                let row_allocation = new_row.allocation();
-                let row_rect = Rectangle::from(row_allocation);
-
-                let list_height = list_box_rect.height() as f64;
-                let row_end = (row_rect.y() + row_rect.height() + 10) as f64;
-                let vadjustment = result_viewport.vadjustment();
-
-                let current_value = vadjustment.value();
-                let list_end = list_height + current_value;
-                if row_end > list_end {
-                    let delta = row_end - list_end;
-                    let new_value = current_value + delta;
-                    vadjustment.set_value(new_value);
-                }
+                results_ev_nav.focus_next(&result_viewport);
                 return true.into()
             }
             gdk::Key::BackSpace => {
@@ -178,47 +129,47 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
                     let _ = &search_bar.set_text("");
                 } else {
                     if ctext.is_empty() {
-                        set_mode(&mode_title, &mode_clone_ev_nav, "all", &"All".to_string());
+                        set_mode(&mode_title, &mode_ev_nav, "all", &"All".to_string());
                         set_results(
                             &ctext,
-                            &mode_clone_ev_nav.borrow(),
-                            &*results_clone_ev_nav,
-                            &launchers_clone_ev_nav,
+                            &mode_ev_nav.borrow(),
+                            &*results_ev_nav,
+                            &launchers_ev_nav,
                             &app_config,
                         );
                     }
                 }
-                select_first_row(&*results_clone_ev_nav);
+                results_ev_nav.focus_first();
             }
             gdk::Key::Return => {
-                if let Some(row) = results_enter.selected_row() {
+                if let Some(row) = results_ev_enter.selected_row() {
                     let attrs: HashMap<String, String> = get_row_attrs(row);
                     execute_from_attrs(attrs);
                 }
             }
             gdk::Key::_1 => {
                 if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
-                    execute_by_index(&*results_clone_ev_nav, 1);
+                    execute_by_index(&*results_ev_nav, 1);
                 }
             }
             gdk::Key::_2 => {
                 if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
-                    execute_by_index(&*results_clone_ev_nav, 2);
+                    execute_by_index(&*results_ev_nav, 2);
                 }
             }
             gdk::Key::_3 => {
                 if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
-                    execute_by_index(&*results_clone_ev_nav, 3);
+                    execute_by_index(&*results_ev_nav, 3);
                 }
             }
             gdk::Key::_4 => {
                 if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
-                    execute_by_index(&*results_clone_ev_nav, 4);
+                    execute_by_index(&*results_ev_nav, 4);
                 }
             }
             gdk::Key::_5 => {
                 if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
-                    execute_by_index(&*results_clone_ev_nav, 5);
+                    execute_by_index(&*results_ev_nav, 5);
                 }
             }
 
@@ -231,3 +182,33 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
 
     return window;
 }
+
+
+fn construct_window(launchers: &Vec<Launcher>)
+-> (Rc<RefCell<String>>, HashMap<String, String>, HVBox, Entry, ScrolledWindow, Label, Rc<ListBox>)
+{
+    // Collect Modes
+    let mode = Rc::new(RefCell::new("all".to_string()));
+    let mut modes: HashMap<String, String> = HashMap::new();
+    for item in launchers.iter() {
+        let alias = item.alias();
+        if !alias.is_empty() {
+            let name = item.name();
+            modes.insert(format!("{} ", alias), name);
+        }
+    }
+
+    // Initialize the builder with the correct path
+    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
+
+    // Get the requred object references
+    let vbox: HVBox = builder.object("vbox").unwrap();
+    let search_bar: Entry = builder.object("search-bar").unwrap();
+    let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
+    let mode_title: Label = builder.object("category-type-label").unwrap();
+    let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
+
+    (mode, modes, vbox, search_bar, result_viewport, mode_title, results)
+}
+
+

@@ -1,4 +1,5 @@
-use gtk4::{prelude::*, ListBox, ListBoxRow, Widget, Label};
+use gtk4::gdk::Rectangle;
+use gtk4::{prelude::*, ListBox, ListBoxRow, Widget, Label, ScrolledWindow};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -84,23 +85,66 @@ pub fn read_from_label(label_obj:&Widget)->Option<(String, String)>{
 }
 
 
-
-pub fn select_first_row(results: &ListBox){
-    if let Some(first_row) = results.first_child(){
-        if let Some(row) = first_row.downcast_ref::<gtk4::ListBoxRow>() {
-            results.select_row(Some(row));
-        } 
-    }
+pub trait RowOperations {
+    fn focus_next(&self, result_viewport: &ScrolledWindow);
+    fn focus_prev(&self, result_viewport: &ScrolledWindow);
+    fn focus_first(&self);
+    fn select_offset_row(&self, offset: i32)->ListBoxRow;
 }
 
-pub fn select_row(offset: i32, listbox:&Rc<ListBox>)->ListBoxRow{
-    if let Some(row) = listbox.selected_row(){
-        let new_index = row.index() + offset;
-        if let Some(new_row) = listbox.row_at_index(new_index){
-            listbox.select_row(Some(&new_row));
-            return new_row
+impl RowOperations for ListBox {
+    fn focus_next(&self, result_viewport:&ScrolledWindow) {
+        let new_row = self.select_offset_row(1);
+        let allocation = self.allocation();
+        let list_box_rect = Rectangle::from(allocation);
+
+        let row_allocation = new_row.allocation();
+        let row_rect = Rectangle::from(row_allocation);
+
+        let list_height = list_box_rect.height() as f64;
+        let row_end = (row_rect.y() + row_rect.height() + 10) as f64;
+        let vadjustment = result_viewport.vadjustment();
+
+        let current_value = vadjustment.value();
+        let list_end = list_height + current_value;
+        if row_end > list_end {
+            let delta = row_end - list_end;
+            let new_value = current_value + delta;
+            vadjustment.set_value(new_value);
+        }
+        
+    }
+    fn focus_prev(&self, result_viewport:&ScrolledWindow) {
+        let new_row = self.select_offset_row(-1);
+
+        let row_allocation = new_row.allocation();
+        let row_rect = Rectangle::from(row_allocation);
+
+        let row_start = (row_rect.y()) as f64;
+        let vadjustment = result_viewport.vadjustment();
+
+        let current_value = vadjustment.value();
+        if current_value > row_start {
+            vadjustment.set_value(row_start);
+        }
+        
+    }
+    fn focus_first(&self){
+        if let Some(first_row) = self.first_child(){
+            if let Some(row) = first_row.downcast_ref::<gtk4::ListBoxRow>() {
+                self.select_row(Some(row));
+            } 
+        }
+    }
+    fn select_offset_row(&self, offset: i32)->ListBoxRow{
+        if let Some(row) = self.selected_row(){
+            let new_index = row.index() + offset;
+            if let Some(new_row) = self.row_at_index(new_index){
+                self.select_row(Some(&new_row));
+                return new_row
+            };
         };
-    };
-    return ListBoxRow::new();
+        return ListBoxRow::new();
+    }
 }
 

@@ -50,6 +50,7 @@ async fn main() {
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
 
     application.connect_activate(move |app| {
+        let mut startup_errors: Vec<String> = startup_errors.clone();
         let mut runtime_errors: Vec<String> = Vec::new();
 
         let launchers = match Loader::load_launchers(&sherlock_flags, &app_config){
@@ -59,7 +60,6 @@ async fn main() {
                 Default::default()
             }
         };
-
         Loader::load_icon_theme(&app_config.appearance.icon_paths);
         Loader::load_css(&sherlock_flags);
 
