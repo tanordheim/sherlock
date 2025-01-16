@@ -1,9 +1,8 @@
-use gtk4::{self, gdk::{self, Key}, prelude::*, ApplicationWindow, Builder, EventControllerKey};
+use gtk4::{self, gdk::{self, Key}, prelude::*, ApplicationWindow, Builder, EventControllerKey, Stack};
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
-
 use gtk4::glib;
 
 use super::tiles::util::AsyncLauncherTile;
@@ -12,12 +11,12 @@ use crate::actions::execute_from_attrs;
 use crate::launcher::Launcher;
 use crate::loader::util::Config;
 
-pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
+
+pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
     // Initiallize the view to show all apps
     let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) = construct_window(&launchers);
     set_home_screen("", "all", &*results, &launchers, &app_config);
     results.focus_first();
-    window.set_child(Some(&vbox));
     search_bar.grab_focus();
 
 
@@ -42,6 +41,8 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: C
         launchers,
         app_config);
 
+
+    search_stack.add_named(&vbox, Some("search-stack"));
     return window;
 }
 
@@ -186,27 +187,29 @@ fn change_event(
             );
 
             // Create loader widgets
+            let current_mode = mode_ev_changed.borrow().trim().to_string();
             let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
                 .filter_map(|launcher| {
-                    launcher.get_loader_widget(&current_text).map(
-                        |(widget, title, body)| {
-                            AsyncLauncherTile {
-                                launcher: launcher.clone(),
-                                widget,
-                                title,
-                                body,
-                            }
-                        },
-                    )
+                    if current_mode == launcher.alias() {
+                        launcher.get_loader_widget(&current_text).map(
+                            |(widget, title, body)| {
+                                AsyncLauncherTile {
+                                    launcher: launcher.clone(),
+                                    widget,
+                                    title,
+                                    body,
+                                }
+                            },
+                        )
+                    } else {
+                        None
+                    }
                 })
             .collect();
 
-            // Check if alias is active for async widget
             for widget in widgets.iter() {
-                if *mode_ev_changed.borrow().trim() == widget.launcher.alias() {
-                    results_ev_changed.append(&widget.widget);
-                } 
+                results_ev_changed.append(&widget.widget);
             }
             results_ev_changed.focus_first();
 

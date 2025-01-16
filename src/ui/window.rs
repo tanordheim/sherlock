@@ -1,8 +1,8 @@
-use gtk4::gdk;
+use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey };
 use gtk4_layer_shell::{Layer, LayerShell};
 
-pub fn window(application: &Application)-> ApplicationWindow{
+pub fn window(application: &Application)-> (ApplicationWindow, Stack){
     let window:ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(900)
@@ -14,6 +14,9 @@ pub fn window(application: &Application)-> ApplicationWindow{
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
 
+    //Build main frame here that holds logic for stacking
+    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
+    let holder:Stack = builder.object("stack").unwrap();
 
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
@@ -27,6 +30,9 @@ pub fn window(application: &Application)-> ApplicationWindow{
         false.into()
     });
     window.add_controller(event_controller);
-    return window
+    window.set_child(Some(&holder));
+    return (window, holder)
+
 
 }
+

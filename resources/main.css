@@ -21,7 +21,7 @@ undershoot.top,
 undershoot.right,
 undershoot.bottom,
 undershoot.left,
-#scroll-window > *,
+.scroll-window > *,
 overshoot:backdrop
 {
   background: none;
@@ -82,7 +82,7 @@ window {
 }
 
 
-#scroll-window {
+.scrolled-window {
     padding: 5px 10px 5px 10px;
 }
 
@@ -215,6 +215,37 @@ image {
     line-height: 1.4;
     min-height: 20px;
 }
+
+
+/*Error*/
+#error-scroll-window {
+    padding: 10px;
+    min-height: 50px;
+}
+
+
+#error-title {
+    padding: 10px 0px;
+    font-size: 10px;
+    color: gray;
+}
+
+#error-content-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: hsl(var(--text));
+    min-height: 20px;
+}
+
+#error-content-body {
+    margin-left: 10px;
+    font-size: 14px;
+    color: hsl(var(--text));
+    line-height: 1.4;
+    min-height: 20px;
+    color: gray;
+}
+
 
 
 @keyframes slide {

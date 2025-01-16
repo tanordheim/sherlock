@@ -61,3 +61,18 @@ Ensure one of these is installed to avoid the `E5000` error.
 
 ---
 
+#### Env Var not Found Error
+- Cannot unpack home directory for user.
+
+#### File Read Error
+- Failed to read the user configuration file: [file]
+- Failed to load provided fallback file: [file]
+
+#### File Parse Error
+- Failed to read the user configuration file: [file]
+- Failed to parse [file] as a valid UTF-8 string.
+- Failed to parse [file] as a valid json.
+
+#### Resource Lookup Error
+- Failed to load [file] from resource.
+

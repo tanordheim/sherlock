@@ -32,6 +32,9 @@
 
         <child>
             <object class="GtkScrolledWindow" id="scrolled-window">
+                <style>
+                    <class name="scrolled-window"/>
+                </style>
                 <property name="vexpand">true</property>
                 <property name="hexpand">false</property>
                 <property name="name">scroll-window</property>

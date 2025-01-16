@@ -9,20 +9,33 @@ use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
 use bulk_text_launcher::BulkText;
 
-use super::{Loader, util};
+use super::{util::{self, SherlockError}, Loader};
 use util::{CommandConfig, SherlockFlags, AppData, Config};
 
 
 impl Loader {
-    pub fn load_launchers(sherlock_flags: &SherlockFlags, app_config:&Config)->Result<Vec<Launcher>, String>{
+    pub fn load_launchers(sherlock_flags: &SherlockFlags, app_config:&Config)->Result<Vec<Launcher>, SherlockError>{
         // Read fallback data here:
         let json_str = if Path::new(&sherlock_flags.fallback).exists() {
             fs::read_to_string(&sherlock_flags.fallback)
-                .map_err(|e| format!("Failed to load fallback file: {}\nError: {}", sherlock_flags.fallback, e))?
+                .map_err(|e| SherlockError {
+                    name: format!("File Read Error"),
+                    message: format!("Failed to load provided fallback file: {}", sherlock_flags.fallback),
+                    traceback: e.to_string(),
+                })?
         } else {
             let data = gio::resources_lookup_data("/dev/skxxtz/sherlock/fallback.json", gio::ResourceLookupFlags::NONE)
-                .map_err(|e| format!("Failed to load fallback.json from resources. Error: {}", e))?;
-            std::str::from_utf8(&data).map_err(|e| format!("Failed to parse fallback.json from resources. Error: {}", e))?.to_string()
+                .map_err(|e| SherlockError {
+                    name: format!("Resource Lookup Error"),
+                    message: format!("Failed to load 'fallback.json' from resource."),
+                    traceback: e.to_string(),
+                })?;
+            std::str::from_utf8(&data)
+                .map_err(|e| SherlockError {
+                    name: format!("File Parsing Error"),
+                    message: format!("Failed to parse 'fallback.json' as a valid UTF-8 string."),
+                    traceback: e.to_string(),
+                })?.to_string()
         }; 
 
         if json_str.is_empty() {
@@ -31,7 +44,11 @@ impl Loader {
 
 
         let config:Vec<CommandConfig> = serde_json::from_str(&json_str.as_str())
-            .map_err(|e| format!("Failed to parse fallbacks. Error: {}", e))?;
+            .map_err(|e| SherlockError {
+                name: format!("File Parse Error"),
+                message: format!("Failed to parse fallback file as valid json."),
+                traceback: e.to_string(),
+            })?;
 
         // Parse the launchers 
         let mut launchers: Vec<Launcher> = config.iter().filter_map(|cmd|{

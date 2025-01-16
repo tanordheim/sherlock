@@ -1,6 +1,7 @@
 use gio::prelude::*;
-use gtk4::{prelude::*, Application};
+use gtk4::{prelude::*, Application, StackTransitionType};
 use std::{env, process};
+use gtk4::glib::{self, ControlFlow};
 
 
 mod launcher;
@@ -9,14 +10,14 @@ mod actions;
 mod loader;
 mod lock;
 
-use loader::{util::Config, Loader};
+use loader::{util::{Config, SherlockError}, Loader};
 
 
 
 
 #[tokio::main]
 async fn main() {
-    let mut startup_errors: Vec<String> = Vec::new();
+    let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for file lock to only start a single instance
     let lock_file = "/tmp/sherlock.lock";
@@ -43,30 +44,39 @@ async fn main() {
 
 
     for i in startup_errors.iter(){
-        println!("{i}");
+        println!("{:?}", i);
     }
     // Initialize application
     let application = Application::new(Some("dev.skxxtz.sherlock"), Default::default());
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
 
     application.connect_activate(move |app| {
-        let mut startup_errors: Vec<String> = startup_errors.clone();
-        let mut runtime_errors: Vec<String> = Vec::new();
+        let mut error_list: Vec<SherlockError> = startup_errors.clone();
 
         let launchers = match Loader::load_launchers(&sherlock_flags, &app_config){
             Ok(value)=> value,
             Err(e) => {
-                runtime_errors.push(e);
+                error_list.push(e);
                 Default::default()
             }
         };
         Loader::load_icon_theme(&app_config.appearance.icon_paths);
         Loader::load_css(&sherlock_flags);
+        
 
 
         let app_clone = app.clone();
-        let mut window = ui::window::window(&app_clone);
-        window = ui::search::search(window, launchers, app_config.clone());
+        let (mut window, stack) = ui::window::window(&app_clone);
+        if !error_list.is_empty(){
+            ui::error_view::errors(&window, &error_list);
+        };
+        window = ui::search::search(window, &stack, launchers, app_config.clone());
+        
+        glib::timeout_add_seconds_local(2, move || {
+            stack.set_transition_type(StackTransitionType::SlideLeftRight);
+            stack.set_visible_child_name("search-stack");
+            ControlFlow::Continue
+        });
         window.show();
     });
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+    <object class="GtkBox" id="vbox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">5</property>
+
+        <child>
+            <object class="GtkScrolledWindow" id="scrolled-window">
+                <style>
+                    <class name="scrolled-window"/>
+                </style>
+                <property name="vexpand">true</property>
+                <property name="hexpand">false</property>
+                <property name="name">error-scroll-window</property>
+                <property name="focusable">false</property>
+                <child>
+                    <object class="GtkListBox" id="result-frame">
+                        <property name="name">list_box</property>
+
+                        <child>
+                        </child>
+
+                    </object>
+                </child>
+            </object>
+        </child>
+    </object>
+
+</interface>
+

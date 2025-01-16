@@ -50,7 +50,7 @@ impl Launcher{
             Launcher::BulkText {common:c, specific:s} => Tile::bulk_text_tile_loader(&c.name, &c.method, &s.icon, keyword),
             Launcher::SystemCommand {..} => None,
         }
-        
+
     }
     fn get_patch(&self, index:i32, keyword: &String, app_config: &Config)->(i32, Vec<ListBoxRow>){
         match self {
@@ -89,20 +89,20 @@ impl Launcher{
 
 
 pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String, app_config: &Config)->Vec<ListBoxRow>{
-    let mut widgets = Vec::with_capacity(launchers.len());
+    let mut widgets = Vec::new();
+    let mut index: i32 = 0;
     let sel_mode = mode.trim();
-    let mut index:i32 = 0;
     for launcher in launchers.iter() {
         let alias = launcher.alias();
         if launcher.priority() == 0 && alias != sel_mode {
             continue;
         } 
-        
+
         if alias == sel_mode || sel_mode == "all" {
             let (returned_index, result) = launcher.get_patch(index, keyword, app_config);
             index = returned_index;
             widgets.extend(result); 
-            
+
         }
     }
     widgets

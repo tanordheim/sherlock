@@ -42,6 +42,13 @@ pub struct SherlockAlias{
     pub keywords: Option<String>,
 }
 
+#[derive(Clone, Debug)]
+pub struct SherlockError {
+    pub name: String,
+    pub message: String,
+    pub traceback: String,
+}
+
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config{
     #[serde(default)]
