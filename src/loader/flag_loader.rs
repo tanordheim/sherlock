@@ -1,4 +1,6 @@
 use std::env;
+use open::with;
+
 use super::{Loader, util::SherlockFlags};
 
 
@@ -19,7 +21,7 @@ impl SherlockFlags {
             args.iter()
                 .position(|arg| arg == flag)
                 .and_then(|index| args.get(index + 1))
-                .map_or(default,|f| f.replace("", &home_dir).to_string())
+                .map_or(default,|f| f.replace("~", &home_dir).to_string())
                 .to_string()
         };
 
