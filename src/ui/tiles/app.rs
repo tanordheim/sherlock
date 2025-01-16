@@ -46,9 +46,9 @@ impl Tile{
                     format!("{} | {}", "exec", &value.exec),
                     format!("{} | {}", "keyword", keyword),
                 ];
+                 
                 insert_attrs(&attr_holder, attrs);
                 index_ref += 1;
-
                 results.push(holder);
             }
 

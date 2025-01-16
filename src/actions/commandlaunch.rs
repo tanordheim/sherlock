@@ -12,14 +12,11 @@ pub fn command_launch(exec: &str, keyword: &String) {
             let args: Vec<&str> = parts.collect();
 
             if num_cmds > 1 {
-                // Background execution (spawn)
-                let child = Command::new(execute)
+                Command::new(execute)
                     .args(&args)
                     .spawn()
                     .expect(&format!("Failed to execute command: {:?}", command));
 
-                // Optionally handle the background process (e.g., wait for it to finish or handle its output)
-                println!("Command started in background with PID: {}", child.id());
             } else {
                 // Synchronous execution (output)
                 let output = Command::new(execute)
