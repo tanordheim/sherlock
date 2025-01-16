@@ -36,9 +36,6 @@ async fn main() {
     Loader::load_resources();
 
 
-    for i in startup_errors.iter(){
-        println!("{:?}", i);
-    }
     // Initialize application
     let application = Application::new(Some("dev.skxxtz.sherlock"), Default::default());
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
