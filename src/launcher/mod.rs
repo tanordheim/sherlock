@@ -6,7 +6,7 @@ pub mod calc_launcher;
 pub mod bulk_text_launcher;
 pub mod system_cmd_launcher;
 
-use crate::ui::tiles::Tile;
+use crate::{loader::util::Config, ui::tiles::Tile};
 
 use app_launcher::App;
 use web_launcher::Web;
@@ -52,13 +52,13 @@ impl Launcher{
         }
         
     }
-    fn get_patch(&self, index:i32, keyword: &String)->(i32, Vec<ListBoxRow>){
+    fn get_patch(&self, index:i32, keyword: &String, app_config: &Config)->(i32, Vec<ListBoxRow>){
         match self {
-            Launcher::App {common: c, specific: s} => Tile::app_tile(index, s.apps.clone(), &c.name, &c.method, keyword),
+            Launcher::App {common: c, specific: s} => Tile::app_tile(index, s.apps.clone(), &c.name, &c.method, keyword, app_config),
             Launcher::Web {common: c, specific: s} => Tile::web_tile(&c.name, &c.method, &s.icon, &s.engine, index, keyword),
             Launcher::Calc {common: c, specific: _} => Tile::calc_tile(index, keyword, &c.method),
             Launcher::BulkText {common: c, specific: s} => Tile::bulk_text_tile(&c.name, &c.method, &s.icon, index, keyword),
-            Launcher::SystemCommand {common: c, specific: s} => Tile::app_tile(index, s.commands.clone(), &c.name, &c.method, keyword),
+            Launcher::SystemCommand {common: c, specific: s} => Tile::app_tile(index, s.commands.clone(), &c.name, &c.method, keyword, app_config),
         }
     }
     pub async fn get_result(&self, keyword: &String)->Option<(String, String)>{
@@ -88,7 +88,7 @@ impl Launcher{
 }
 
 
-pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String)->Vec<ListBoxRow>{
+pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String, app_config: &Config)->Vec<ListBoxRow>{
     let mut widgets = Vec::with_capacity(launchers.len());
     let sel_mode = mode.trim();
     let mut index:i32 = 0;
@@ -99,7 +99,7 @@ pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String)-
         } 
         
         if alias == sel_mode || sel_mode == "all" {
-            let (returned_index, result) = launcher.get_patch(index, keyword);
+            let (returned_index, result) = launcher.get_patch(index, keyword, app_config);
             index = returned_index;
             widgets.extend(result); 
             

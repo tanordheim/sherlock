@@ -5,6 +5,7 @@ use std::cell::RefCell;
 
 use crate::launcher::{construct_tiles, Launcher};
 use crate::actions::execute_from_attrs;
+use crate::loader::util::Config;
 
 pub fn execute_by_index(results:&ListBox, index:i32){
     if let Some(row) = results.row_at_index(index-1){
@@ -40,7 +41,7 @@ pub fn set_mode(mode_title:&Label, mode_c:&Rc<RefCell<String>>, ctext:&str, mode
 }
 
 
-pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
+pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>, app_config: &Config){
     // Check if launcher should be shown on home
     let (show, _): (Vec<Launcher>, Vec<Launcher>) =
                           launchers
@@ -55,17 +56,17 @@ pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
+    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string(), app_config);
     for widget in widgets {
         results_frame.append(&widget);
     }
 }
-pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>){
+pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>, app_config: &Config){
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
+    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string(), app_config);
     for widget in widgets {
         results_frame.append(&widget);
     }

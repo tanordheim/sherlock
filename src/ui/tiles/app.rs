@@ -1,15 +1,13 @@
 use std::collections::HashMap;
 use gtk4::{self, prelude::*, Builder, ListBoxRow, Image, Label, Box};
 
-use crate::CONFIG;
-use crate::loader::util::AppData;
+use crate::loader::util::{Config, AppData};
 
 use super::Tile;
 use super::util::{ensure_icon_name, insert_attrs};
 
-
 impl Tile{
-    pub fn app_tile(index:i32, commands:HashMap<String, AppData>, name:&String, method:&String, keyword:&String)->(i32, Vec<ListBoxRow>){
+    pub fn app_tile(index:i32, commands:HashMap<String, AppData>, name:&String, method:&String, keyword:&String, app_config:&Config)->(i32, Vec<ListBoxRow>){
         let mut results: Vec<ListBoxRow> = Default::default();
         let mut index_ref = index;
 
@@ -29,7 +27,7 @@ impl Tile{
                     shortcut.set_text(format!("ctrl + {}", index_ref + 1).as_str());
                 }
                 
-                let icon = if CONFIG.appearance.recolor_icons {
+                let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
                 } else {
                     value.icon

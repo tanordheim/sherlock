@@ -10,41 +10,31 @@ use system_cmd_launcher::SystemCommand;
 use bulk_text_launcher::BulkText;
 
 use super::{Loader, util};
-use util::{CommandConfig, SherlockFlags, AppData};
+use util::{CommandConfig, SherlockFlags, AppData, Config};
 
 
 impl Loader {
-    pub fn load_launchers(sherlock_flags: &SherlockFlags)->Vec<Launcher>{
-        let user_config_path = sherlock_flags.fallback.clone();
-
-        // Check if the user has a custom config file
-        let json_str = if Path::new(&user_config_path).exists() {
-            match fs::read_to_string(&user_config_path){
-                Ok(value) => value,
-                _ => String::new()
-            }
+    pub fn load_launchers(sherlock_flags: &SherlockFlags, app_config:&Config)->Result<Vec<Launcher>, String>{
+        // Read fallback data here:
+        let json_str = if Path::new(&sherlock_flags.fallback).exists() {
+            fs::read_to_string(&sherlock_flags.fallback)
+                .map_err(|e| format!("Failed to load fallback file: {}\nError: {}", sherlock_flags.fallback, e))?
         } else {
             let data = gio::resources_lookup_data("/dev/skxxtz/sherlock/fallback.json", gio::ResourceLookupFlags::NONE)
-                .expect("Failed to load fallback.json from resources");
-            match std::str::from_utf8(&data) {
-                Ok(value) => {
-                    value.to_string()
-                },
-                _ => {
-                    String::new()
-                }
-            }
+                .map_err(|e| format!("Failed to load fallback.json from resources. Error: {}", e))?;
+            std::str::from_utf8(&data).map_err(|e| format!("Failed to parse fallback.json from resources. Error: {}", e))?.to_string()
         }; 
-        let config: Vec<CommandConfig> = if !json_str.is_empty() {
-            serde_json::from_str(&json_str.as_str()).expect("Error parsing fallbacks")
-        } else {
-            Default::default()
+
+        if json_str.is_empty() {
+            return Ok(Vec::new())
         };
 
-        let mut uuid_counter: u32 = 0;
 
+        let config:Vec<CommandConfig> = serde_json::from_str(&json_str.as_str())
+            .map_err(|e| format!("Failed to parse fallbacks. Error: {}", e))?;
+
+        // Parse the launchers 
         let mut launchers: Vec<Launcher> = config.iter().filter_map(|cmd|{
-            uuid_counter += 1;
             let common = LauncherCommons {
                 name: cmd.name.to_string(),
                 alias: cmd.alias.clone(),
@@ -55,7 +45,7 @@ impl Loader {
             };
 
             match cmd.r#type.as_str(){
-                "app_launcher" => Some(Launcher::App { common, specific: App {apps: Loader::load_applications(sherlock_flags)}}),
+                "app_launcher" => Some(Launcher::App { common, specific: App {apps: Loader::load_applications(sherlock_flags, app_config)}}),
                 "web_launcher" => Some(Launcher::Web { common, specific: Web {
                     icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
                     engine: cmd.args["search_engine"].as_str().unwrap_or_default().to_string(),
@@ -76,7 +66,7 @@ impl Loader {
             }
         }).collect();
         launchers.sort_by_key(|s| s.priority());
-        launchers
+        Ok(launchers)
     }
 
 }

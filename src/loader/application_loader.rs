@@ -5,13 +5,12 @@ use regex::Regex;
 use rayon::prelude::*;
 use glob::Pattern;
 
-use crate::CONFIG;
 use super::util::SherlockFlags;
 use super::{Loader, util};
 use util::{read_file, AppData, SherlockAlias};
 
 impl Loader{
-    pub fn load_applications(sherlock_flags: &SherlockFlags) -> HashMap<String, AppData> {
+    pub fn load_applications(sherlock_flags: &SherlockFlags, app_config: &util::Config) -> HashMap<String, AppData> {
         let sherlock_ignore_path = sherlock_flags.ignore.clone();
         let sherlock_alias_path = sherlock_flags.alias.clone();
 
@@ -101,7 +100,7 @@ impl Loader{
                 // Construct the executable command
                 let exec_path = parse_field(&content, &exec_re);
                 let exec = if parse_field(&content, &terminal_re) == "true" {
-                    if let Some(terminal) = &CONFIG.default_apps.terminal {
+                    if let Some(terminal) = &app_config.default_apps.terminal {
                         format!("{} {}", terminal, exec_path)
                     } else {
                         eprintln!("E5000 No terminal found!");

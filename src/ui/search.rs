@@ -11,8 +11,9 @@ use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::Launcher;
+use crate::loader::util::Config;
 
-pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> ApplicationWindow {
+pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
     let mut modes: HashMap<String, String> = HashMap::new();
@@ -36,6 +37,9 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
 
     //RC cloning:
     let results = Rc::new(results);
+    let app_config = Rc::new(app_config);
+    let app_config_ev_changed = Rc::clone(&app_config);
+    let app_config_ev_nav = Rc::clone(&app_config);
 
     let mode_clone_ev_changed = Rc::clone(&mode);
     let mode_clone_ev_nav = Rc::clone(&mode);
@@ -48,7 +52,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
     let launchers_clone_ev_nav = launchers.clone();
 
     // Initiallize the view to show all apps
-    set_home_screen("", "all", &*results, &launchers);
+    set_home_screen("", "all", &*results, &launchers, &app_config);
     select_first_row(&*results);
 
     // Setting search window to active
@@ -87,6 +91,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                 &mode_clone_ev_changed.borrow(),
                 &*results,
                 &non_async_launchers,
+                &app_config_ev_changed,
             );
             let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
@@ -179,6 +184,7 @@ pub fn search(window: ApplicationWindow, launchers: Vec<Launcher>) -> Applicatio
                             &mode_clone_ev_nav.borrow(),
                             &*results_clone_ev_nav,
                             &launchers_clone_ev_nav,
+                            &app_config,
                         );
                     }
                 }
