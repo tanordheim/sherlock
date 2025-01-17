@@ -48,7 +48,8 @@ async fn main() {
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
 
     application.connect_activate(move |app| {
-        let mut error_list: Vec<SherlockError> = startup_errors.clone();
+        let mut error_list = startup_errors.clone();
+        let mut non_breaking = non_breaking.clone();
 
         let (launchers, launcher_errors) = Loader::load_launchers(&sherlock_flags, &app_config);
         error_list.extend(launcher_errors);
