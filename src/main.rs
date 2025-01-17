@@ -1,5 +1,6 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
+use launcher::app_launcher;
 use std::{env, process};
 
 
@@ -51,25 +52,39 @@ async fn main() {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
 
-        let (launchers, launcher_errors) = Loader::load_launchers(&sherlock_flags, &app_config);
-        error_list.extend(launcher_errors);
-        
-        Loader::load_icon_theme(&app_config.appearance.icon_paths)
+        let (launchers, n) = Loader::load_launchers(&sherlock_flags, &app_config)
             .map_err(|e| error_list.push(e))
-            .ok();
+            .unwrap_or_default();
+        non_breaking.extend(n);
+        
+        let n = Loader::load_icon_theme(&app_config.appearance.icon_paths);
+        non_breaking.extend(n);
 
         Loader::load_css(&sherlock_flags)
             .map_err(|e| error_list.push(e))
             .ok();
         
 
-
+        
         let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers, app_config.clone());
-        if !error_list.is_empty(){
-            window = ui::error_view::errors(window, &stack, &error_list);
-            stack.set_visible_child_name("error-page");
-        } 
+        
+    
+        if !app_config.debug.try_surpress_errors{
+            if !app_config.debug.try_surpress_warnings {
+                if !error_list.is_empty() || !non_breaking.is_empty(){
+                    window = ui::error_view::errors(window, &stack, &error_list, &non_breaking);
+                    stack.set_visible_child_name("error-page");
+                }
+            } else {
+                if !error_list.is_empty() {
+                    window = ui::error_view::errors(window, &stack, &error_list, &Vec::<SherlockError>::new());
+                    stack.set_visible_child_name("error-page");
+                }
+            }
+        }
+        if !app_config.debug.try_surpress_errors{
+        }
         window.show();
     });
 

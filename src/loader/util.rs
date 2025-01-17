@@ -54,6 +54,8 @@ pub struct Config{
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,
     #[serde(default)]
+    pub debug: ConfigDebug,
+    #[serde(default)]
     pub appearance: ConfigAppearance,
 }
 impl Config {
@@ -64,6 +66,10 @@ impl Config {
                 terminal: get_terminal()
                     .map_err(|e| non_breaking.push(e))
                     .unwrap_or_default(),
+            },
+            debug: ConfigDebug {
+                try_surpress_errors: false,
+                try_surpress_warnings: true,
             },
             appearance: ConfigAppearance {
                 gsk_renderer: "cairo".to_string(),
@@ -79,6 +85,13 @@ impl Config {
     pub struct ConfigDefaultApps{
         #[serde(default)]
         pub terminal: String,
+    }
+#[derive(Deserialize, Debug, Clone, Default)]
+    pub struct ConfigDebug{
+        #[serde(default)]
+        pub try_surpress_errors: bool,
+        #[serde(default)]
+        pub try_surpress_warnings: bool,
     }
 #[derive(Deserialize, Debug, Clone, Default)]
     pub struct ConfigAppearance{

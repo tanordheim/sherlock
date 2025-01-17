@@ -7,14 +7,17 @@ use super::util::*;
 
 use crate::{loader::util::SherlockError, ui::tiles::Tile};
 
-pub fn errors(window: ApplicationWindow, stack: &Stack, errors: &Vec<SherlockError>)->ApplicationWindow{
+pub fn errors(window: ApplicationWindow, stack: &Stack, errors: &Vec<SherlockError>, non_breaking: &Vec<SherlockError>)->ApplicationWindow{
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_view.ui");
 
     let vbox: HVBox = builder.object("vbox").unwrap();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
     let results: ListBox = builder.object("result-frame").unwrap();
 
-    let (_, error_tiles)= Tile::error_tile(0, errors);
+    let (_, breaking_error_tiles)= Tile::error_tile(0, errors, "🚨  BREAKING:  ");
+    let (_, error_tiles)= Tile::error_tile(0, non_breaking, "⚠️   WARNING:  ");
+
+    breaking_error_tiles.iter().for_each(|tile| results.append(tile));
     error_tiles.iter().for_each(|tile| results.append(tile));
     
     stack.add_named(&vbox, Some("error-page"));
