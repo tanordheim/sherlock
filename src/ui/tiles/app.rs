@@ -36,6 +36,9 @@ impl Tile{
                 let tile_name = key.replace("{keyword}", keyword);
 
                 let launcher_type:Label = builder.object("launcher-type").unwrap();
+                if name.is_empty(){
+                    launcher_type.set_visible(false);
+                }
                 launcher_type.set_text(name);
                 icon_obj.set_icon_name(Some(&icon));
                 title_obj.set_text(&tile_name);

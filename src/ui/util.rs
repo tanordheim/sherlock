@@ -1,20 +1,20 @@
 use gtk4::gdk::Rectangle;
-use gtk4::{prelude::*, ListBox, ListBoxRow, Widget, Label, ScrolledWindow};
+use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, Widget};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
 
-use crate::launcher::{construct_tiles, Launcher};
 use crate::actions::execute_from_attrs;
+use crate::launcher::{construct_tiles, Launcher};
 use crate::loader::util::Config;
 
-pub fn execute_by_index(results:&ListBox, index:i32){
-    if let Some(row) = results.row_at_index(index-1){
+pub fn execute_by_index(results: &ListBox, index: i32) {
+    if let Some(row) = results.row_at_index(index - 1) {
         let attrs = get_row_attrs(row);
         execute_from_attrs(attrs);
     }
 }
-pub fn get_row_attrs(selected_row:ListBoxRow)->HashMap<String, String>{
+pub fn get_row_attrs(selected_row: ListBoxRow) -> HashMap<String, String> {
     let mut attrs: HashMap<String, String> = Default::default();
     if let Some(main_holder) = selected_row.first_child() {
         if let Some(attrs_holder) = main_holder.first_child() {
@@ -35,20 +35,24 @@ pub fn get_row_attrs(selected_row:ListBoxRow)->HashMap<String, String>{
     attrs
 }
 
-pub fn set_mode(mode_title:&Label, mode_c:&Rc<RefCell<String>>, ctext:&str, mode_name:&String){
+pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, mode_name: &String) {
     let new_mode = ctext.to_string();
     mode_title.set_text(mode_name);
     *mode_c.borrow_mut() = new_mode;
 }
 
-
-pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>, app_config: &Config){
+pub fn set_home_screen(
+    keyword: &str,
+    mode: &str,
+    results_frame: &ListBox,
+    launchers: &Vec<Launcher>,
+    app_config: &Config,
+) {
     // Check if launcher should be shown on home
-    let (show, _): (Vec<Launcher>, Vec<Launcher>) =
-                          launchers
-                          .clone()
-                          .into_iter()
-                          .partition(|launcher| launcher.show_home());
+    let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
+        .clone()
+        .into_iter()
+        .partition(|launcher| launcher.show_home());
 
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
@@ -59,38 +63,48 @@ pub fn set_home_screen(keyword:&str,mode:&str, results_frame:&ListBox, launchers
         results_frame.append(&widget);
     }
 }
-pub fn set_results(keyword:&str,mode:&str, results_frame:&ListBox, launchers:&Vec<Launcher>, app_config: &Config){
+pub fn set_results(
+    keyword: &str,
+    mode: &str,
+    results_frame: &ListBox,
+    launchers: &Vec<Launcher>,
+    app_config: &Config,
+) {
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string(), app_config);
+    let widgets = construct_tiles(
+        &keyword.to_string(),
+        &launchers,
+        &mode.to_string(),
+        app_config,
+    );
     for widget in widgets {
         results_frame.append(&widget);
     }
 }
-pub fn read_from_label(label_obj:&Widget)->Option<(String, String)>{
-    if let Some(label) = label_obj.downcast_ref::<Label>(){
+pub fn read_from_label(label_obj: &Widget) -> Option<(String, String)> {
+    if let Some(label) = label_obj.downcast_ref::<Label>() {
         let text = label.text();
         let parts: Vec<&str> = text.split(" | ").collect();
 
         if parts.len() == 2 {
-            return Some((parts[0].to_string(), parts[1].to_string()))
+            return Some((parts[0].to_string(), parts[1].to_string()));
         }
     }
-    return None
+    return None;
 }
-
 
 pub trait RowOperations {
     fn focus_next(&self, result_viewport: &ScrolledWindow);
     fn focus_prev(&self, result_viewport: &ScrolledWindow);
     fn focus_first(&self);
-    fn select_offset_row(&self, offset: i32)->ListBoxRow;
+    fn select_offset_row(&self, offset: i32) -> ListBoxRow;
 }
 
 impl RowOperations for ListBox {
-    fn focus_next(&self, result_viewport:&ScrolledWindow) {
+    fn focus_next(&self, result_viewport: &ScrolledWindow) {
         let new_row = self.select_offset_row(1);
         let allocation = result_viewport.allocation();
         let list_box_rect = Rectangle::from(allocation);
@@ -109,9 +123,8 @@ impl RowOperations for ListBox {
             let new_value = current_value + delta;
             vadjustment.set_value(new_value);
         }
-        
     }
-    fn focus_prev(&self, result_viewport:&ScrolledWindow) {
+    fn focus_prev(&self, result_viewport: &ScrolledWindow) {
         let new_row = self.select_offset_row(-1);
 
         let row_allocation = new_row.allocation();
@@ -124,25 +137,23 @@ impl RowOperations for ListBox {
         if current_value > row_start {
             vadjustment.set_value(row_start);
         }
-        
     }
-    fn focus_first(&self){
-        if let Some(first_row) = self.first_child(){
+    fn focus_first(&self) {
+        if let Some(first_row) = self.first_child() {
             if let Some(row) = first_row.downcast_ref::<gtk4::ListBoxRow>() {
                 self.select_row(Some(row));
-            } 
+            }
         }
     }
-    fn select_offset_row(&self, offset: i32)->ListBoxRow{
-        if let Some(row) = self.selected_row(){
+    fn select_offset_row(&self, offset: i32) -> ListBoxRow {
+        if let Some(row) = self.selected_row() {
             let new_index = row.index() + offset;
-            if let Some(new_row) = self.row_at_index(new_index){
+            if let Some(new_row) = self.row_at_index(new_index) {
                 self.select_row(Some(&new_row));
-                return new_row
+                return new_row;
             };
             return row;
         };
         return ListBoxRow::new();
     }
 }
-
