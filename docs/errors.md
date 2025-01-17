@@ -76,3 +76,5 @@ Ensure one of these is installed to avoid the `E5000` error.
 #### Resource Lookup Error
 - Failed to load [file] from resource.
 
+#### Display Error
+- Could not connect to a display.

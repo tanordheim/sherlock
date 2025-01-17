@@ -2,8 +2,6 @@ use std::env;
 
 use super::{util::{SherlockError, SherlockFlags}, Loader};
 
-
-//TODO Error Handling
 impl Loader {
     pub fn load_flags()->Result<SherlockFlags, SherlockError>{
         let args: Vec<String> = env::args().collect();

@@ -54,7 +54,9 @@ async fn main() {
             .map_err(|e| error_list.push(e))
             .ok();
 
-        Loader::load_css(&sherlock_flags);
+        Loader::load_css(&sherlock_flags)
+            .map_err(|e| error_list.push(e))
+            .ok();
         
 
 
