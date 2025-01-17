@@ -11,6 +11,7 @@
 
 
 
+
 overshoot *,
 undershoot *,
 overshoot.top,
@@ -29,12 +30,13 @@ overshoot:backdrop
   background-color: transparent;
 }
 
-
+scrolledwindow > viewport * , scrolledwindow > viewport, window, box {
+    background: hsl(var(--background));
+}
 *{
+    padding: None;
     margin: None;
     -gtk-secondary-caret-color: hsl(var(--background)); 
-    background: hsl(var(--background));
-    background-color: hsl(var(--background));
     outline-width: 0px;
     outline-offset: -3px;
     outline-style: dashed;
@@ -45,7 +47,6 @@ window {
     border-radius: 5px;
     border: 2px solid hsl(var(--border));
 }
-
 
 /* SEARCH PAGE */
 #search-bar {
@@ -83,7 +84,7 @@ window {
 
 
 .scrolled-window {
-    padding: 5px 10px 5px 10px;
+    padding: 10px 10px 5px 10px;
 }
 
 scrollbar {
@@ -139,12 +140,6 @@ image {
     margin-left: 0px;
 }
 
-.notifications {
-    min-height: 30px;
-    background: hsla(var(--foreground), 0.5);
-    border-radius: 2px;
-    margin: 0px 5px 5px 5px;
-}
 
 #shortcut-holder {
     margin-right: 25px;
@@ -253,6 +248,13 @@ image {
 
 
 
+/*Notification Center*/
+.notifications {
+    min-height: 25px;
+    background: hsla(var(--foreground), 0.5);
+    border-radius: 2px;
+    margin: 0px 2px 2px 2px;
+}
 @keyframes slide {
     from {
         transform: translate(0px, 0px);

@@ -1,6 +1,5 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
-use launcher::app_launcher;
 use std::{env, process};
 
 

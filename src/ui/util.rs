@@ -92,14 +92,14 @@ pub trait RowOperations {
 impl RowOperations for ListBox {
     fn focus_next(&self, result_viewport:&ScrolledWindow) {
         let new_row = self.select_offset_row(1);
-        let allocation = self.allocation();
+        let allocation = result_viewport.allocation();
         let list_box_rect = Rectangle::from(allocation);
 
         let row_allocation = new_row.allocation();
         let row_rect = Rectangle::from(row_allocation);
 
         let list_height = list_box_rect.height() as f64;
-        let row_end = (row_rect.y() + row_rect.height() + 10) as f64;
+        let row_end = (row_rect.y() + row_rect.height() + 14) as f64;
         let vadjustment = result_viewport.vadjustment();
 
         let current_value = vadjustment.value();
@@ -140,6 +140,7 @@ impl RowOperations for ListBox {
                 self.select_row(Some(&new_row));
                 return new_row
             };
+            return row;
         };
         return ListBoxRow::new();
     }

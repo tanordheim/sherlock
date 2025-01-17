@@ -15,10 +15,10 @@ use crate::loader::util::Config;
 pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
     // Initiallize the view to show all apps
     let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) = construct_window(&launchers);
+    result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     set_home_screen("", "all", &*results, &launchers, &app_config);
     results.focus_first();
     search_bar.grab_focus();
-
 
     change_event(
         &search_bar,

@@ -6,7 +6,7 @@ pub fn window(application: &Application)-> (ApplicationWindow, Stack){
     let window:ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(900)
-        .default_height(589)
+        .default_height(610)
         .resizable(false)
         .build();
 
