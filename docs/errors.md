@@ -67,6 +67,7 @@ Ensure one of these is installed to avoid the `E5000` error.
 #### File Read Error
 - Failed to read the user configuration file: [file]
 - Failed to load provided fallback file: [file]
+- Failed to read the file at '[file]'
 
 #### File Parse Error
 - Failed to read the user configuration file: [file]

@@ -46,9 +46,8 @@ async fn main() {
     application.connect_activate(move |app| {
         let mut error_list: Vec<SherlockError> = startup_errors.clone();
 
-        let launchers = Loader::load_launchers(&sherlock_flags, &app_config)
-            .map_err(|e| error_list.push(e))
-            .unwrap_or_default();
+        let (launchers, launcher_errors) = Loader::load_launchers(&sherlock_flags, &app_config);
+        error_list.extend(launcher_errors);
         
         Loader::load_icon_theme(&app_config.appearance.icon_paths)
             .map_err(|e| error_list.push(e))

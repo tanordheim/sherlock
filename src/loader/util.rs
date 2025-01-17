@@ -57,24 +57,25 @@ pub struct Config{
     pub appearance: ConfigAppearance,
 }
 impl Config {
-    pub fn default()->Self{
-        Config {
+    pub fn default()->Result<Self, SherlockError>{
+        Ok(Config {
             default_apps: ConfigDefaultApps {
-                terminal: get_terminal(),
+                terminal: get_terminal()
+                    .map_err(|e| e)?,
             },
             appearance: ConfigAppearance {
                 gsk_renderer: "cairo".to_string(),
                 recolor_icons: false,
                 icon_paths: Default::default(),
             }
-        }
+        })
     }
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
     pub struct ConfigDefaultApps{
         #[serde(default)]
-        pub terminal: Option<String>,
+        pub terminal: String,
     }
 #[derive(Deserialize, Debug, Clone, Default)]
     pub struct ConfigAppearance{
@@ -94,7 +95,7 @@ impl Config {
         Ok(content)
     }
 
-    pub fn get_terminal()->Option<String>{
+    pub fn get_terminal()->Result<String, SherlockError>{
         let mut terminal = None;
 
         //Check if $TERMAINAL is set
@@ -119,8 +120,15 @@ impl Config {
             }
 
         }
-
-        terminal
+        if let Some(t) = terminal {
+            Ok(t)
+        } else {
+            Err(SherlockError{
+                name: "Terminal not Found Error".to_string(),
+                message: "Failed to parse default app 'Terminal'.".to_string(),
+                traceback: "Unable to locate or parse a valid terminal app. Ensure that the terminal app is correctly specified in the configuration file or environment variables.".to_string(),
+            })
+        }
     }
     fn is_terminal_installed(terminal: &str) -> bool {
         Command::new(terminal)

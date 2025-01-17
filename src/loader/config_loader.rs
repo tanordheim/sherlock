@@ -2,7 +2,7 @@ use std::path::Path;
 use std::{fs, env};
 
 use super::Loader;
-use super::util::{get_terminal, Config, SherlockError};
+use super::util::{Config, SherlockError};
 
 
 impl Loader {
@@ -30,15 +30,10 @@ impl Loader {
                     traceback: e.to_string(),
                 })?
         } else {
-            Config::default()
+            Config::default()?
         };
 
-        let mut final_config = user_config;
-        if final_config.default_apps.terminal.is_none() {
-            final_config.default_apps.terminal = get_terminal();
-        }
-
-        Ok(final_config)
+        Ok(user_config)
     }
 }
 
