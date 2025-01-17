@@ -8,8 +8,8 @@ impl Loader {
         let icon_theme = IconTheme::for_display(Display::default().as_ref().unwrap());
         let home_dir = env::var("HOME")
                 .map_err(|e| SherlockError {
-                    name:format!("Env Var Not Found Error"),
-                    message: format!("Cannot unpack home directory for user."),
+                    name:format!("Env Var not Found Error"),
+                    message: format!("Failed to unpack home directory for user."),
                     traceback: e.to_string(),
                 })?;
         icon_paths

@@ -26,7 +26,7 @@ pub struct AppData{
     pub search_string: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SherlockFlags {
     pub config: String,
     pub fallback: String,

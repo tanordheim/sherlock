@@ -1,46 +1,95 @@
 use std::env;
 
-use super::{Loader, util::SherlockFlags};
+use super::{util::{SherlockError, SherlockFlags}, Loader};
 
 
+//TODO Error Handling
 impl Loader {
-    pub fn load_flags()->SherlockFlags{
+    pub fn load_flags()->Result<SherlockFlags, SherlockError>{
         let args: Vec<String> = env::args().collect();
+        if args.contains(&"--help".to_string()){
+            let _ = print_help();
+            std::process::exit(0);
+        }
+        if args.contains(&"--version".to_string()){
+            let _ = print_version();
+            std::process::exit(0);
+        }
+
         SherlockFlags::new(args)
     }
 }
-//TODO Error Handling
 impl SherlockFlags {
-    fn new(args: Vec<String>) -> Self {
-        let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
-        let defaults = SherlockFlags::default();
+    fn new(args: Vec<String>) -> Result<Self, SherlockError>{
+        let home_dir = env::var("HOME")
+            .map_err(|e| SherlockError {
+                name: "Env Var not Found Err".to_string(),
+                message: format!("Failed to unpack home directory for user."),
+                traceback: e.to_string(),
+            })?;
+        let defaults = SherlockFlags::default().map_err(|e| e)?;
 
         // Helper closure to extract flag values
-        let extract_flag = |flag: &str, default: String| {
+        let extract_flag_value = |flag: &str, default: String| {
             args.iter()
                 .position(|arg| arg == flag)
                 .and_then(|index| args.get(index + 1))
                 .map_or(default,|f| f.replace("~", &home_dir).to_string())
                 .to_string()
         };
-
-        SherlockFlags {
-            config: extract_flag("--config", defaults.config),
-            fallback: extract_flag("--fallback", defaults.fallback),
-            style: extract_flag("--style", defaults.style),
-            ignore: extract_flag("--ignore", defaults.ignore),
-            alias: extract_flag("--alias", defaults.alias),
-        }
+    
+        Ok(SherlockFlags {
+            config: extract_flag_value("--config", defaults.config),
+            fallback: extract_flag_value("--fallback", defaults.fallback),
+            style: extract_flag_value("--style", defaults.style),
+            ignore: extract_flag_value("--ignore", defaults.ignore),
+            alias: extract_flag_value("--alias", defaults.alias),
+        })
     }
 
-    fn default() -> Self {
-        let home_dir = env::var("HOME").unwrap_or_else(|_| String::from("/home/user"));
-        SherlockFlags {
+    fn default() -> Result<SherlockFlags, SherlockError>{
+        let home_dir = env::var("HOME")
+            .map_err(|e| SherlockError {
+                name: "Env Var not Found Err".to_string(),
+                message: format!("Failed to unpack home directory for user."),
+                traceback: e.to_string(),
+            })?;
+        Ok(SherlockFlags {
             config: format!("{}/.config/sherlock/config.toml", home_dir),
             fallback: format!("{}/.config/sherlock/fallback.json", home_dir),
             style: format!("{}/.config/sherlock/main.css", home_dir),
             ignore: format!("{}/.config/sherlock/sherlockignore", home_dir),
             alias: format!("{}/.config/sherlock/sherlock_alias.json", home_dir),
-        }
+        })
     }
+}
+
+pub fn print_version()->Result<(), SherlockError>{
+    let version = env!("CARGO_PKG_VERSION");
+    println!("Sherlock v{}", version);
+    println!("Developed by Skxxtz");
+
+    Ok(())
+}
+pub fn print_help() -> Result<(), SherlockError> {
+    let allowed_flags: Vec<(&str, &str)> = vec![
+        ("--version", "Print the version of the application."),
+        ("--help", "Show this help message with allowed flags."),
+        ("--config", "Specify the configuration file to load."),
+        ("--fallback", "Specify the fallback file to load."),
+        ("--style", "Set the style configuration file."),
+        ("--ignore", "Specify the sherlock ignore file"),
+        ("--alias", "Specify the sherlock alias file (.json)."),
+    ];
+
+    // Print header
+    println!("{:<15} {}", "Flag", "Description");
+
+    for (flag, explanation) in allowed_flags {
+        println!("{:<15} {}", flag, explanation);
+    }
+
+    println!("\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md\n\n");
+
+    Ok(())
 }

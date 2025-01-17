@@ -9,8 +9,8 @@ impl Loader {
     pub fn load_config() -> Result<Config, SherlockError> {
         let home_dir = env::var("HOME")
                 .map_err(|e| SherlockError {
-                    name:format!("Env Var Not Found Error"),
-                    message: format!("Cannot unpack home directory for user."),
+                    name:format!("Env Var not Found Error"),
+                    message: format!("Failed to unpack home directory for user."),
                     traceback: e.to_string(),
                 })?;
         let user_config_path = format!("{}/.config/sherlock/config.toml", home_dir);

@@ -62,7 +62,7 @@ Ensure one of these is installed to avoid the `E5000` error.
 ---
 
 #### Env Var not Found Error
-- Cannot unpack home directory for user.
+- Failed to unpack home directory for user.
 
 #### File Read Error
 - Failed to read the user configuration file: [file]

@@ -32,7 +32,10 @@ async fn main() {
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
 
-    let sherlock_flags = Loader::load_flags();
+    let sherlock_flags = Loader::load_flags()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+
     Loader::load_resources();
 
 
