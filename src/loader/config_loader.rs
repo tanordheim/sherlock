@@ -6,7 +6,8 @@ use super::util::{Config, SherlockError};
 
 
 impl Loader {
-    pub fn load_config() -> Result<Config, SherlockError> {
+    pub fn load_config() -> Result<(Config, Vec<SherlockError>), SherlockError> {
+        let mut non_breaking: Vec<SherlockError> = Vec::new();
         let home_dir = env::var("HOME")
                 .map_err(|e| SherlockError {
                     name:format!("Env Var not Found Error"),
@@ -30,10 +31,13 @@ impl Loader {
                     traceback: e.to_string(),
                 })?
         } else {
-            Config::default()?
+            // Unpack non-breaking errors and default config 
+            let (config, n) = Config::default();
+            non_breaking.extend(n);
+            config
         };
 
-        Ok(user_config)
+        Ok((user_config, non_breaking))
     }
 }
 

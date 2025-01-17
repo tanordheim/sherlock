@@ -57,18 +57,21 @@ pub struct Config{
     pub appearance: ConfigAppearance,
 }
 impl Config {
-    pub fn default()->Result<Self, SherlockError>{
-        Ok(Config {
+    pub fn default()->(Self, Vec<SherlockError>){
+        let mut non_breaking: Vec<SherlockError> = Vec::new();
+        (Config {
             default_apps: ConfigDefaultApps {
                 terminal: get_terminal()
-                    .map_err(|e| e)?,
+                    .map_err(|e| non_breaking.push(e))
+                    .unwrap_or_default(),
             },
             appearance: ConfigAppearance {
                 gsk_renderer: "cairo".to_string(),
                 recolor_icons: false,
                 icon_paths: Default::default(),
             }
-        })
+        }, non_breaking)
+
     }
 }
 

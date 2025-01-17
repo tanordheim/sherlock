@@ -79,3 +79,7 @@ Ensure one of these is installed to avoid the `E5000` error.
 
 #### Display Error
 - Could not connect to a display.
+
+
+#### Resource Parsing Error
+- Failed to parse gresources.

@@ -16,6 +16,7 @@ use loader::{util::SherlockError, Loader};
 #[tokio::main]
 async fn main() {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
+    let mut non_breaking: Vec<SherlockError> = Vec::new();
 
     // Check for file lock to only start a single instance
     let lock_file = "/tmp/sherlock.lock";
@@ -28,15 +29,18 @@ async fn main() {
     };
 
     // Parse configs
-    let app_config = Loader::load_config()
+    let (app_config, n) = Loader::load_config()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
+    non_breaking.extend(n);
+
 
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
 
-    Loader::load_resources();
+    let _ = Loader::load_resources()
+        .map_err(|e| startup_errors.push(e));
 
 
     // Initialize application
