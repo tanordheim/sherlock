@@ -11,7 +11,7 @@
 </div>
 
 <br>
-Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage. To install go [here](https://www.rust-lang.org/tools/install).
+Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage. To install go ![here](https://www.rust-lang.org/tools/install).
 <br><br>
 
 
