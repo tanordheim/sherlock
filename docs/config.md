@@ -4,6 +4,13 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 
 ---
 
+## Default Section `[default]`
+
+| **Keyword**       | **Default**          | **Explanation**                                                                                                                  |
+|-------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `terminal`        | Automatically detected | May be required if the `TERMINAL` environment variable is not set. Specify the executable name of your terminal (e.g., `gnome-terminal`, `konsole`). |
+
+---
 ## Debug Section `[debug]`
 
 | **Keyword**           | **Default** | **Explanation**                                                                 |
