@@ -4,7 +4,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 
 ---
 
-## Default Section `[default]`
+## Default App Section `[default_apps]`
 
 | **Keyword**       | **Default**          | **Explanation**                                                                                                                  |
 |-------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------|

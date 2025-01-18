@@ -1,0 +1,11 @@
+[default_apps]
+terminal="kitty"
+[debug]
+try_surpress_errors=true
+try_surpress_warnings=false
+[appearance]
+gsk_renderer="cairo"
+recolor_icons=false
+icon_paths=["~/.config/sherlock/icons"]
+
+
