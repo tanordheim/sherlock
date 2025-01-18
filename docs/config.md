@@ -1,0 +1,25 @@
+# Configuration File
+
+The configuration file for Sherlock is located at `~/.config/sherlock/config.toml`, unless specified otherwise. This file allows you to customize various parameters to tailor Sherlock to your needs. Below, we will explore the available options and their purposes.
+
+---
+
+## Debug Section `[debug]`
+
+| **Keyword**           | **Default** | **Explanation**                                                                 |
+|-----------------------|-------------|---------------------------------------------------------------------------------|
+| `try_suppress_errors` | `false`     | If set to `true`, errors and warnings will not be displayed when starting the app. |
+| `try_suppress_warnings` | `false`   | If set to `true`, only errors will trigger the error screen at startup, while warnings will be ignored. |
+
+---
+
+## Appearance Section `[appearance]`
+
+| **Keyword**     | **Default** | **Explanation**                                                                                                                 |
+|-----------------|-------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `gsk_renderer`  | `"cairo"`   | Specifies the renderer used to display the Sherlock application. During testing, `cairo` showed the fastest startup times. You can also use `ngl`, `gl`, or `vulkan` based on your system's performance. |
+| `recolor_icons` | `false`     | Appends the `-symbolic` postfix to all icons, allowing them to be colorized. Note: not all icons have a symbolic version.       |
+| `icon_paths`    | `[]`        | Defines custom paths for the application to search for icons. This is useful for adding custom icons for commands or aliases through the `sherlockalias` file. |
+
+---
+
