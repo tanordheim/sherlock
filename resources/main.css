@@ -4,13 +4,11 @@
     --text: 126, 45%, 96%;
     --border: 0, 0%, 19%;
 
-    --success: #60A561;
-    --error: #E3655B;
+    --error: 4, 71%, 62%;;
+    --warning: 55, 100%, 68%;
+    --success: 121, 28%, 51%;
 
 }
-
-
-
 
 overshoot *,
 undershoot *,
@@ -30,17 +28,22 @@ overshoot:backdrop
   background-color: transparent;
 }
 
-scrolledwindow > viewport * , scrolledwindow > viewport, window, box {
-    background: hsl(var(--background));
-}
 *{
-    padding: None;
-    margin: None;
+    padding: 0px;
+    margin: 0px;
     -gtk-secondary-caret-color: hsl(var(--background)); 
     outline-width: 0px;
     outline-offset: -3px;
     outline-style: dashed;
 }
+
+scrolledwindow > viewport *,
+scrolledwindow > viewport,
+window,
+box {
+    background: hsl(var(--background));
+}
+
 
 window {
     color: hsl(var(--text));
@@ -127,9 +130,6 @@ image {
     outline: none;
     border: none;
 }
-.error:selected *:nth-child(2) {
-    min-height: 30px; /*Needed because height bugs*/
-}
 .tile:focus {
     outline: none;
 }
@@ -179,12 +179,6 @@ image {
     color: gray;
 }
 
-/* ABOUT PAGE */
-#title_text {
-    font-size: 20px;
-    color: var(--success);
-    animation: 0.4s ease-in-out slide 1s forwards;
-}
 
 
 /* BULK TEXT TILE */
@@ -216,35 +210,51 @@ image {
 }
 
 
-/*Error*/
-#error-scroll-window {
+/*sError*/
+.error-tile #scroll-window {
     padding: 10px;
     min-height: 50px;
 }
-.error {
-    padding-bottom: 10px;
+.error-tile {
+    border-radius: 4px;
+    padding: 5px 10px 10px 10px;
+    color: white;
+    border: 1px solid transparent;
+    margin-bottom: 10px;
 }
-
-#error-title {
-    padding: 10px 0px;
+.error-tile * {
+    background: transparent;
+}
+.error {
+    border: 1px solid hsla(var(--error), 0.5);
+    background: hsla(var(--error), 0.1);
+}
+.warning{
+    border: 1px solid hsla(var(--warning), 0.5);
+    background: hsla(var(--warning), 0.1);
+}
+/*.error-tile:selected *:nth-child(2) {
+    min-height: 30px; /*Needed because height bugs --fixed (hopefully completely)
+}
+*/
+.error-tile #title {
+    padding: 10px;
     font-size: 10px;
     color: gray;
 }
 
-#error-content-title {
+.error-tile #content-title {
     margin-left: 10px;
     font-size: 16px;
     font-weight: bold;
     color: hsl(var(--text));
-    min-height: 20px;
 }
 
-#error-content-body {
+.error-tile #content-body {
     margin-left: 10px;
     font-size: 14px;
     color: hsl(var(--text));
     line-height: 1.4;
-    min-height: 20px;
     color: gray;
 }
 

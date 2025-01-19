@@ -10,14 +10,12 @@
                     <class name="scrolled-window"/>
                 </style>
                 <property name="vexpand">true</property>
-                <property name="hexpand">false</property>
+                <property name="hexpand">true</property>
                 <property name="name">error-scroll-window</property>
                 <property name="focusable">false</property>
                 <child>
                     <object class="GtkListBox" id="result-frame">
                         <property name="name">list_box</property>
-
-
                     </object>
                 </child>
             </object>

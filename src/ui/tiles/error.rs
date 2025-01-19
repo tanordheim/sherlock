@@ -11,11 +11,21 @@ impl Tile {
                 let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_tile.ui");
                 
                 let holder: ListBoxRow = builder.object("holder").unwrap();
-                let title: Label = builder.object("error-title").unwrap();
+                let title: Label = builder.object("title").unwrap();
                 let content_title: Label = builder.object("content-title").unwrap();
                 let content_body: TextView = builder.object("content-body").unwrap();
+
+                if let Some(class) = match tile_type {
+                    "ERROR" => Some("error"),
+                    "WARNING" => Some("warning"),
+                    _ => None,
+                } {
+                    holder.set_css_classes(&["error-tile", class]);
+                }
+
+
                 
-                title.set_text(format!("{:5}{}  {}", icon, tile_type, &e.name).as_str());
+                title.set_text(format!("{:5}{}:  {}", icon, tile_type, &e.name).as_str());
                 content_title.set_text(&e.message);
                 content_body.buffer().set_text(&e.traceback.trim());
 

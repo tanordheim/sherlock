@@ -1,25 +1,20 @@
 <interface>
     <object class="GtkListBoxRow" id="holder">
-        <style>
-            <class name="tile"/>
-            <class name="error"/>
-        </style>
-
         <child>
             <object class="GtkBox">
                 <property name="orientation">vertical</property>
                 <property name="hexpand">true</property> 
 
                 <child>
-                    <object class="GtkBox" id="error-title-bar">
+                    <object class="GtkBox" id="title-bar">
                         <property name="valign">center</property>
-                        <property name="name">error-title-bar</property>
+                        <property name="name">title-bar</property>
                         <child>
                             <object class="GtkBox">
                                 <property name="valign">center</property>
                                 <child>
-                                    <object class="GtkLabel" id="error-title">
-                                        <property name="name">error-title</property>
+                                    <object class="GtkLabel" id="title">
+                                        <property name="name">title</property>
                                         <property name="xalign">0</property>
                                     </object>
                                 </child>
@@ -30,7 +25,7 @@
 
                 <child>
                     <object class="GtkBox" id="content-holder">
-                        <property name="name">error-content-holder</property>
+                        <property name="name">content-holder</property>
                         <property name="orientation">vertical</property>
                         <property name="spacing">5</property>
                         <property name="valign">center</property>
@@ -38,13 +33,13 @@
 
                         <child>
                             <object class="GtkLabel" id="content-title">
-                                <property name="name">error-content-title</property>
+                                <property name="name">content-title</property>
                                 <property name="xalign">0</property>
                             </object>
                         </child>
                         <child>
                             <object class="GtkTextView" id="content-body">
-                                <property name="name">error-content-body</property>
+                                <property name="name">content-body</property>
                                 <property name="wrap-mode">word</property>
                             </object>
                         </child>

@@ -31,7 +31,7 @@ async fn main() {
     // Parse configs
     let (app_config, n) = Loader::load_config()
         .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
+        .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
 
@@ -72,19 +72,19 @@ async fn main() {
         if !app_config.debug.try_surpress_errors{
             if !app_config.debug.try_surpress_warnings {
                 if !error_list.is_empty() || !non_breaking.is_empty(){
+                    println!("{:?}{:?}", error_list, non_breaking);
                     window = ui::error_view::errors(window, &stack, &error_list, &non_breaking);
                     stack.set_visible_child_name("error-page");
                 }
             } else {
                 if !error_list.is_empty() {
-                    window = ui::error_view::errors(window, &stack, &error_list, &Vec::<SherlockError>::new());
+                    println!("{:?}{:?}", error_list, non_breaking);
+                    window = ui::error_view::errors(window, &stack, &error_list, &non_breaking);
                     stack.set_visible_child_name("error-page");
                 }
             }
         }
-        if !app_config.debug.try_surpress_errors{
-        }
-        window.show();
+        window.present();
     });
 
     application.run();
