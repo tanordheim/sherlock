@@ -141,6 +141,7 @@ image {
 }
 
 
+/*SHORTCUT*/
 #shortcut-holder {
     margin-right: 25px;
     padding: 5px 10px;
@@ -231,6 +232,7 @@ image {
 }
 
 #error-content-title {
+    margin-left: 10px;
     font-size: 16px;
     font-weight: bold;
     color: hsl(var(--text));

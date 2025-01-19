@@ -14,8 +14,8 @@ pub fn errors(window: ApplicationWindow, stack: &Stack, errors: &Vec<SherlockErr
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
     let results: ListBox = builder.object("result-frame").unwrap();
 
-    let (_, breaking_error_tiles)= Tile::error_tile(0, errors, "🚨  BREAKING:  ");
-    let (_, error_tiles)= Tile::error_tile(0, non_breaking, "⚠️   WARNING:  ");
+    let (_, breaking_error_tiles)= Tile::error_tile(0, errors, "🚨", "ERROR:");
+    let (_, error_tiles)= Tile::error_tile(0, non_breaking, "⚠️", "WARNING:");
 
     breaking_error_tiles.iter().for_each(|tile| results.append(tile));
     error_tiles.iter().for_each(|tile| results.append(tile));
