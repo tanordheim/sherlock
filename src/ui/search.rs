@@ -158,7 +158,7 @@ fn change_event(
 
 
     search_bar.connect_changed(move |search_bar| {
-        let current_text = search_bar.text().to_string();
+        let current_text = search_bar.text().trim().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
             task.abort();
         };
