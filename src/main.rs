@@ -62,6 +62,9 @@ async fn main() {
         Loader::load_css(&sherlock_flags)
             .map_err(|e| error_list.push(e))
             .ok();
+
+        let ll = Loader::load_launchers_new(&sherlock_flags, &app_config);
+        println!("{:?}", ll);
         
 
         

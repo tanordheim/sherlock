@@ -25,3 +25,9 @@ pub fn ensure_icon_name(name: String)->String{
     }
 }
 
+pub fn ensure_icon_name_new(name: &String)->Option<String>{
+    if !name.ends_with("-symbolic"){
+        return Some(format!("{}-symbolic", name))
+    }
+    None
+}

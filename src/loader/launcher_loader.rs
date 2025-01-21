@@ -7,7 +7,8 @@ use app_launcher::App;
 use web_launcher::Web;
 use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
-use bulk_text_launcher::BulkText;
+
+
 
 use super::{util::{self, SherlockError}, Loader};
 use util::{CommandConfig, SherlockFlags, AppData, Config};
@@ -15,9 +16,8 @@ use util::{CommandConfig, SherlockFlags, AppData, Config};
 
 impl Loader {
     pub fn load_launchers(sherlock_flags: &SherlockFlags, app_config:&Config)->Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError>{
-        // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
-
+        // Read fallback data here:
         let (config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
 
@@ -47,7 +47,7 @@ impl Loader {
                     Some(Launcher::SystemCommand {common, specific: SystemCommand { commands }})
                 },
                 "bulk_text" => {
-                    Some(Launcher::BulkText{common, specific: BulkText{
+                    Some(Launcher::BulkText{common, specific: bulk_text_launcher::BulkText {
                         icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
                         exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
                         args: cmd.args["exec-args"].as_str().unwrap_or_default().to_string(),

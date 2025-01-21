@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use gtk4::{self, prelude::*, Builder, ListBoxRow, Image, Label, Box};
 
-use crate::loader::util::{Config, AppData};
+use crate::loader::util::{AppData, Config, SherlockError};
 
 use super::Tile;
-use super::util::{ensure_icon_name, insert_attrs};
+use super::util::{ensure_icon_name, ensure_icon_name_new, insert_attrs};
 
 impl Tile{
     pub fn app_tile(index:i32, commands:HashMap<String, AppData>, name:&String, method:&String, keyword:&String, app_config:&Config)->(i32, Vec<ListBoxRow>){
