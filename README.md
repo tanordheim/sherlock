@@ -1,6 +1,6 @@
-<div align="center" style="text-align:center;">
-  # Sherlock Application Launcher for Linux
-</div>
+<h1 align="center" style="text-align:center;">
+ Sherlock Application Launcher for Linux
+</h1>
 
 <div align="center" style="text-align:center;">
   <picture>
