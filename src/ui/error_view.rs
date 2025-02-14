@@ -19,7 +19,7 @@ pub fn errors(window: ApplicationWindow, stack: &Stack, errors: &Vec<SherlockErr
 
     breaking_error_tiles.iter().for_each(|tile| results.append(tile));
     error_tiles.iter().for_each(|tile| results.append(tile));
-    
+
     stack.add_named(&vbox, Some("error-page"));
     nav_event(&window, stack.clone(), results, result_viewport);
 

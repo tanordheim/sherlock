@@ -1,4 +1,4 @@
-use gtk4::{self, prelude::*, Builder, Label, ListBoxRow, TextView};
+use gtk4::{self, prelude::*, Builder, Label, ListBoxRow, TextView, Orientation};
 
 use crate::loader::util::SherlockError;
 use super::Tile;
@@ -13,7 +13,7 @@ impl Tile {
                 let holder: ListBoxRow = builder.object("holder").unwrap();
                 let title: Label = builder.object("title").unwrap();
                 let content_title: Label = builder.object("content-title").unwrap();
-                let content_body: TextView = builder.object("content-body").unwrap();
+                let content_body: Label = builder.object("content-body").unwrap();
 
                 if let Some(class) = match tile_type {
                     "ERROR" => Some("error"),
@@ -27,8 +27,7 @@ impl Tile {
                 
                 title.set_text(format!("{:5}{}:  {}", icon, tile_type, &e.name).as_str());
                 content_title.set_text(&e.message);
-                content_body.buffer().set_text(&e.traceback.trim());
-
+                content_body.set_text(&e.traceback.trim());
                 holder
             })
             .collect();

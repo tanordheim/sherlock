@@ -233,10 +233,6 @@ image {
     border: 1px solid hsla(var(--warning), 0.5);
     background: hsla(var(--warning), 0.1);
 }
-/*.error-tile:selected *:nth-child(2) {
-    min-height: 30px; /*Needed because height bugs --fixed (hopefully completely)
-}
-*/
 .error-tile #title {
     padding: 10px;
     font-size: 10px;
