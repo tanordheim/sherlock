@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::path::Path;
 use std::fs;
 
@@ -25,6 +26,12 @@ impl Loader {
                     traceback: e.to_string(),
                 })?
         } else {
+            non_breaking.push(SherlockError { 
+                name:format!("File not Found") , 
+                message: format!("File \"{}\" does not exist.", user_config_path), 
+                traceback: Default::default()
+            });
+
             // Unpack non-breaking errors and default config 
             let (config, n) = Config::default();
             non_breaking.extend(n);

@@ -31,7 +31,6 @@ async fn main() {
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
-    println!("{:?}", sherlock_flags);
 
     // Parse configs
     let (app_config, n) = Loader::load_config(&sherlock_flags)

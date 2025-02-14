@@ -19,3 +19,6 @@
 
 ### Resource Parsing Error
 - Failed to parse gresources.
+
+### File not Found
+- File [file] does not exist.
