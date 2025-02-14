@@ -69,7 +69,7 @@ impl Config {
             },
             debug: ConfigDebug {
                 try_surpress_errors: false,
-                try_surpress_warnings: true,
+                try_surpress_warnings: false,
             },
             appearance: ConfigAppearance {
                 gsk_renderer: "cairo".to_string(),
