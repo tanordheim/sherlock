@@ -3,6 +3,7 @@
 - [x] Add error tile
 ## Scripts
 - [ ] Custom Spotify (ncspot) script to control it
+- [ ] Startup: check if clipboard contains url and make possible url search from it
 
 ## Functionalities
 - [x] Implement locking mechanism to only have one instance running at a time.
