@@ -1,4 +1,4 @@
-use gtk4::{self, prelude::*, Builder, Label, ListBoxRow, TextView, Orientation};
+use gtk4::{self, prelude::*, Builder, Label, ListBoxRow};
 
 use crate::loader::util::SherlockError;
 use super::Tile;
