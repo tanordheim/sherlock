@@ -47,6 +47,8 @@ async fn main() {
     let application = Application::new(Some("dev.skxxtz.sherlock"), gio::ApplicationFlags::HANDLES_COMMAND_LINE);
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
 
+
+    // Needed to start application without external flag handling
     application.connect_command_line(|app, _|{
         app.activate();
         0
