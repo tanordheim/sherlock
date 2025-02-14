@@ -28,20 +28,20 @@ async fn main() {
         }
     };
 
+    let sherlock_flags = Loader::load_flags()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+    println!("{:?}", sherlock_flags);
+
     // Parse configs
-    let (app_config, n) = Loader::load_config()
+    let (app_config, n) = Loader::load_config(&sherlock_flags)
         .map_err(|e| startup_errors.push(e))
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
-
-
     let _ = Loader::load_resources()
         .map_err(|e| startup_errors.push(e));
 
-    let sherlock_flags = Loader::load_flags()
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
 
     // Initialize application
     let application = Application::new(Some("dev.skxxtz.sherlock"), gio::ApplicationFlags::HANDLES_COMMAND_LINE);

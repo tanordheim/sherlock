@@ -1,20 +1,14 @@
 use std::path::Path;
-use std::{fs, env};
+use std::fs;
 
 use super::Loader;
-use super::util::{Config, SherlockError};
+use super::util::{Config, SherlockError, SherlockFlags};
 
 
 impl Loader {
-    pub fn load_config() -> Result<(Config, Vec<SherlockError>), SherlockError> {
+    pub fn load_config(sherlock_flags: &SherlockFlags) -> Result<(Config, Vec<SherlockError>), SherlockError> {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
-        let home_dir = env::var("HOME")
-                .map_err(|e| SherlockError {
-                    name:format!("Env Var not Found Error"),
-                    message: format!("Failed to unpack home directory for user."),
-                    traceback: e.to_string(),
-                })?;
-        let user_config_path = format!("{}/.config/sherlock/config.toml", home_dir);
+        let user_config_path = sherlock_flags.config.clone();
 
         let user_config = if Path::new(&user_config_path).exists() {
             let config_str = fs::read_to_string(&user_config_path)
