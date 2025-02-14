@@ -65,9 +65,10 @@ async fn main() {
         let n = Loader::load_icon_theme(&app_config.appearance.icon_paths);
         non_breaking.extend(n);
 
-        Loader::load_css(&sherlock_flags)
+        let n = Loader::load_css(&sherlock_flags)
             .map_err(|e| error_list.push(e))
-            .ok();
+            .unwrap_or_default();
+        non_breaking.extend(n);
         
 
         

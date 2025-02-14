@@ -7,7 +7,8 @@ use super::Loader;
 
 
 impl Loader{
-    pub fn load_css(sherlock_flags: &SherlockFlags) -> Result<(), SherlockError>{
+    pub fn load_css(sherlock_flags: &SherlockFlags) -> Result<Vec<SherlockError>, SherlockError>{
+        let mut non_breaking: Vec<SherlockError> = Vec::new();
         let provider = CssProvider::new();
         // Load the default css
         provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
@@ -15,7 +16,14 @@ impl Loader{
         // Load the custom css
         if Path::new(&sherlock_flags.style).exists(){
             provider.load_from_path(&sherlock_flags.style);
-        } 
+        } else {
+            non_breaking.push(
+                SherlockError { 
+                    name: format!("File not Found"),
+                    message: format!("File \"{}\" not found.", &sherlock_flags.style),
+                    traceback: "Using default css".to_string()}
+            );
+        }
         
         let display = Display::default().ok_or_else(|| SherlockError {
                 name: "Display Error".to_string(),
@@ -28,7 +36,7 @@ impl Loader{
             &provider,
             gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
         );
-        Ok(())
+        Ok(non_breaking)
     }
 }
 
