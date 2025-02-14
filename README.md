@@ -153,3 +153,17 @@ Make sure you have the folloing dependencies installed:
 
 After installation, you can enjoy using Sherlock Launcher, which will handle dependencies and installation automatically!
 
+
+
+## Flags
+## Flags
+| Flag         | Description | Note |
+|--------------|----------------------|------------------------------------------------|
+| --version    | Print the version of the application.| None  |
+| --help       | Show this help message with allowed flags.                                        | None                                           |
+| --config     | Specify the configuration file to load. | Recommended location: `~/.config/sherlock/config.toml` |
+| --fallback   | Specify the fallback file to load. | Recommended location: `~/.config/sherlock/fallback.json`             |
+| --style      | Set the style configuration file. | Recommended location: `~/.config/sherlock/style.css`                 |
+| --ignore     | Specify the Sherlock ignore file. | Recommended location: `~/.config/sherlock/sherlockignore`            |
+| --alias      | Specify the Sherlock alias file. |Recommended location: `~/.config/sherlock/sherlock_alias.json`       |
+
