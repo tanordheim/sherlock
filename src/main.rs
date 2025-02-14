@@ -35,17 +35,22 @@ async fn main() {
     non_breaking.extend(n);
 
 
-    let sherlock_flags = Loader::load_flags()
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
 
     let _ = Loader::load_resources()
         .map_err(|e| startup_errors.push(e));
 
+    let sherlock_flags = Loader::load_flags()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
 
     // Initialize application
-    let application = Application::new(Some("dev.skxxtz.sherlock"), Default::default());
+    let application = Application::new(Some("dev.skxxtz.sherlock"), gio::ApplicationFlags::HANDLES_COMMAND_LINE);
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
+
+    application.connect_command_line(|app, _|{
+        app.activate();
+        0
+    });
 
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
