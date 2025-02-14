@@ -87,7 +87,7 @@ pub fn print_help() -> Result<(), SherlockError> {
         println!("{:<15} {}", flag, explanation);
     }
 
-    println!("\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md\n\n");
+    println!("\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md#Flags\n\n");
 
     Ok(())
 }

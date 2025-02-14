@@ -22,3 +22,5 @@
 - [x] Improve sherlock ignore file to use * macro and case sensitivity
 - [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
 
+## Documentation
+- [ ] Implement Flag Heading into README.md
