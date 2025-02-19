@@ -2,7 +2,7 @@ use std::fs;
 use std::collections::HashMap;
 use std::path::Path;
 
-use crate::launcher::{app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, Launcher, LauncherCommons};
+use crate::launcher::{app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, Launcher, LauncherType};
 use app_launcher::App;
 use web_launcher::Web;
 use calc_launcher::Calc;
@@ -11,6 +11,8 @@ use bulk_text_launcher::BulkText;
 
 use super::{util::{self, SherlockError}, Loader};
 use util::{CommandConfig, SherlockFlags, AppData, Config};
+
+
 
 
 impl Loader {
@@ -23,40 +25,41 @@ impl Loader {
 
         // Parse the launchers 
         let mut launchers: Vec<Launcher> = config.iter().filter_map(|cmd|{
-            let common = LauncherCommons {
+
+            let launcher_type: LauncherType = match cmd.r#type.as_str(){
+                "app_launcher" => {
+                    let apps = Loader::load_applications(sherlock_flags, app_config).map_err(|e| non_breaking.push(e)).ok()?;
+                    LauncherType::App(App { apps })
+                }
+                "web_launcher" => LauncherType::Web(Web {
+                    icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
+                    engine: cmd.args["search_engine"].as_str().unwrap_or_default().to_string(),
+                }),
+                "calculation" => LauncherType::Calc(Calc{}),
+                "command" => {
+                    let commands: HashMap<String, AppData> = serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();                
+                    LauncherType::SystemCommand(SystemCommand{commands})
+                },
+                "bulk_text" => {
+                    LauncherType::BulkText(BulkText{
+                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
+                        exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
+                        args: cmd.args["exec-args"].as_str().unwrap_or_default().to_string(),
+                    })
+                }
+                _ => LauncherType::Empty
+            };
+            Some(Launcher {
                 name: cmd.name.to_string(),
                 alias: cmd.alias.clone(),
                 method: cmd.r#type.clone(),
                 priority: cmd.priority,
                 r#async: cmd.r#async,
                 home: cmd.home,
-            };
-
-            match cmd.r#type.as_str(){
-                "app_launcher" => {
-                    let apps = Loader::load_applications(sherlock_flags, app_config).map_err(|e| non_breaking.push(e)).ok()?;
-                    Some(Launcher::App { common, specific: App { apps } })
-                }
-                "web_launcher" => Some(Launcher::Web { common, specific: Web {
-                    icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                    engine: cmd.args["search_engine"].as_str().unwrap_or_default().to_string(),
-                }}),
-                "calculation" => Some(Launcher::Calc{common, specific: Calc {}}),
-                "command" => {
-                    let commands: HashMap<String, AppData> = serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();                
-                    Some(Launcher::SystemCommand {common, specific: SystemCommand { commands }})
-                },
-                "bulk_text" => {
-                    Some(Launcher::BulkText{common, specific: BulkText{
-                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
-                        args: cmd.args["exec-args"].as_str().unwrap_or_default().to_string(),
-                    }})
-                }
-                _ => None
-            }
+                launcher_type
+            })
         }).collect();
-        launchers.sort_by_key(|s| s.priority());
+        launchers.sort_by_key(|s| s.priority);
         Ok((launchers, non_breaking))
     }
 

@@ -52,7 +52,7 @@ pub fn set_home_screen(
     let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
         .clone()
         .into_iter()
-        .partition(|launcher| launcher.show_home());
+        .partition(|launcher| launcher.home);
 
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {

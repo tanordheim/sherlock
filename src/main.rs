@@ -71,6 +71,7 @@ async fn main() {
         non_breaking.extend(n);
         
 
+
         
         let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers, app_config.clone());

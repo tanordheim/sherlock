@@ -52,10 +52,9 @@ fn construct_window(launchers: &Vec<Launcher>)-> (Rc<RefCell<String>>, HashMap<S
     let mode = Rc::new(RefCell::new("all".to_string()));
     let mut modes: HashMap<String, String> = HashMap::new();
     for item in launchers.iter() {
-        let alias = item.alias();
-        if !alias.is_empty() {
-            let name = item.name();
-            modes.insert(format!("{} ", alias), name);
+        let alias = item.alias.clone();
+        if !alias.is_none() {
+            modes.insert(format!("{} ", alias.unwrap()), item.name.clone());
         }
     }
 
@@ -176,7 +175,7 @@ fn change_event(
                                                          launchers_ev_changed
                                                          .clone()
                                                          .into_iter()
-                                                         .partition(|launcher| launcher.is_async());
+                                                         .partition(|launcher| launcher.r#async);
 
             set_results(
                 &current_text,
@@ -191,7 +190,7 @@ fn change_event(
             let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
                 .filter_map(|launcher| {
-                    if current_mode == launcher.alias() {
+                    if current_mode == launcher.alias.as_deref().unwrap_or(""){
                         launcher.get_loader_widget(&current_text).map(
                             |(widget, title, body)| {
                                 AsyncLauncherTile {
