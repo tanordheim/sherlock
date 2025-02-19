@@ -6,7 +6,7 @@ pub mod calc_launcher;
 pub mod bulk_text_launcher;
 pub mod system_cmd_launcher;
 
-use crate::{loader::util::Config, ui::tiles::{bulk_text, Tile}};
+use crate::{loader::util::Config, ui::tiles::Tile};
 
 use app_launcher::App;
 use web_launcher::Web;
@@ -15,6 +15,15 @@ use bulk_text_launcher::BulkText;
 use system_cmd_launcher::SystemCommand;
 
 
+#[derive(Clone, Debug)]
+pub enum LauncherType {
+    App(App),
+    Web(Web),
+    Calc(Calc),
+    BulkText(BulkText),
+    SystemCommand(SystemCommand),
+    Empty
+}
 
 #[derive(Clone, Debug)]
 pub struct Launcher {
@@ -52,15 +61,6 @@ impl Launcher {
 
 }
 
-#[derive(Clone, Debug)]
-pub enum LauncherType {
-    App(App),
-    Web(Web),
-    Calc(Calc),
-    BulkText(BulkText),
-    SystemCommand(SystemCommand),
-    Empty
-}
 
 
 pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String, app_config: &Config)->Vec<ListBoxRow>{
