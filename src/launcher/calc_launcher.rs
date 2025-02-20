@@ -1,5 +1,2 @@
-
 #[derive(Clone, Debug)]
-pub struct Calc{
-}
-
+pub struct Calc {}

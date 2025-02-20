@@ -1,15 +1,18 @@
 use std::env;
 
-use super::{util::{SherlockError, SherlockFlags}, Loader};
+use super::{
+    util::{SherlockError, SherlockFlags},
+    Loader,
+};
 
 impl Loader {
-    pub fn load_flags()->Result<SherlockFlags, SherlockError>{
+    pub fn load_flags() -> Result<SherlockFlags, SherlockError> {
         let args: Vec<String> = env::args().collect();
-        if args.contains(&"--help".to_string()){
+        if args.contains(&"--help".to_string()) {
             let _ = print_help();
             std::process::exit(0);
         }
-        if args.contains(&"--version".to_string()){
+        if args.contains(&"--version".to_string()) {
             let _ = print_version();
             std::process::exit(0);
         }
@@ -18,13 +21,12 @@ impl Loader {
     }
 }
 impl SherlockFlags {
-    fn new(args: Vec<String>) -> Result<Self, SherlockError>{
-        let home_dir = env::var("HOME")
-            .map_err(|e| SherlockError {
-                name: "Env Var not Found Err".to_string(),
-                message: format!("Failed to unpack home directory for user."),
-                traceback: e.to_string(),
-            })?;
+    fn new(args: Vec<String>) -> Result<Self, SherlockError> {
+        let home_dir = env::var("HOME").map_err(|e| SherlockError {
+            name: "Env Var not Found Err".to_string(),
+            message: format!("Failed to unpack home directory for user."),
+            traceback: e.to_string(),
+        })?;
         let defaults = SherlockFlags::default().map_err(|e| e)?;
 
         // Helper closure to extract flag values
@@ -32,10 +34,10 @@ impl SherlockFlags {
             args.iter()
                 .position(|arg| arg == flag)
                 .and_then(|index| args.get(index + 1))
-                .map_or(default,|f| f.replace("~", &home_dir).to_string())
+                .map_or(default, |f| f.replace("~", &home_dir).to_string())
                 .to_string()
         };
-    
+
         Ok(SherlockFlags {
             config: extract_flag_value("--config", defaults.config),
             fallback: extract_flag_value("--fallback", defaults.fallback),
@@ -45,13 +47,12 @@ impl SherlockFlags {
         })
     }
 
-    fn default() -> Result<SherlockFlags, SherlockError>{
-        let home_dir = env::var("HOME")
-            .map_err(|e| SherlockError {
-                name: "Env Var not Found Err".to_string(),
-                message: format!("Failed to unpack home directory for user."),
-                traceback: e.to_string(),
-            })?;
+    fn default() -> Result<SherlockFlags, SherlockError> {
+        let home_dir = env::var("HOME").map_err(|e| SherlockError {
+            name: "Env Var not Found Err".to_string(),
+            message: format!("Failed to unpack home directory for user."),
+            traceback: e.to_string(),
+        })?;
         Ok(SherlockFlags {
             config: format!("{}/.config/sherlock/config.toml", home_dir),
             fallback: format!("{}/.config/sherlock/fallback.json", home_dir),
@@ -62,7 +63,7 @@ impl SherlockFlags {
     }
 }
 
-pub fn print_version()->Result<(), SherlockError>{
+pub fn print_version() -> Result<(), SherlockError> {
     let version = env!("CARGO_PKG_VERSION");
     println!("Sherlock v{}", version);
     println!("Developed by Skxxtz");
@@ -87,7 +88,9 @@ pub fn print_help() -> Result<(), SherlockError> {
         println!("{:<15} {}", flag, explanation);
     }
 
-    println!("\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md#Flags\n\n");
+    println!(
+        "\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md#Flags\n\n"
+    );
 
     Ok(())
 }

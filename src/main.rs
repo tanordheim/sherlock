@@ -2,16 +2,13 @@ use gio::prelude::*;
 use gtk4::{prelude::*, Application};
 use std::{env, process};
 
-
-mod launcher;
-mod ui;
 mod actions;
+mod launcher;
 mod loader;
 mod lock;
+mod ui;
 
 use loader::{util::SherlockError, Loader};
-
-
 
 #[tokio::main]
 async fn main() {
@@ -38,17 +35,17 @@ async fn main() {
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
-    let _ = Loader::load_resources()
-        .map_err(|e| startup_errors.push(e));
-
+    let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
 
     // Initialize application
-    let application = Application::new(Some("dev.skxxtz.sherlock"), gio::ApplicationFlags::HANDLES_COMMAND_LINE);
+    let application = Application::new(
+        Some("dev.skxxtz.sherlock"),
+        gio::ApplicationFlags::HANDLES_COMMAND_LINE,
+    );
     env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
 
-
     // Needed to start application without external flag handling
-    application.connect_command_line(|app, _|{
+    application.connect_command_line(|app, _| {
         app.activate();
         0
     });
@@ -61,7 +58,7 @@ async fn main() {
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);
-        
+
         let n = Loader::load_icon_theme(&app_config.appearance.icon_paths);
         non_breaking.extend(n);
 
@@ -69,17 +66,13 @@ async fn main() {
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);
-        
 
-
-        
         let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers, app_config.clone());
-        
-    
-        if !app_config.debug.try_surpress_errors{
+
+        if !app_config.debug.try_surpress_errors {
             if !app_config.debug.try_surpress_warnings {
-                if !error_list.is_empty() || !non_breaking.is_empty(){
+                if !error_list.is_empty() || !non_breaking.is_empty() {
                     println!("{:?}{:?}", error_list, non_breaking);
                     window = ui::error_view::errors(window, &stack, &error_list, &non_breaking);
                     stack.set_visible_child_name("error-page");
@@ -97,8 +90,3 @@ async fn main() {
 
     application.run();
 }
-
-
-
-
-

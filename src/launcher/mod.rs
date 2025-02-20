@@ -1,19 +1,18 @@
-use gtk4::{Label, ListBoxRow, TextView};
+use gtk4::{Label, ListBoxRow};
 
 pub mod app_launcher;
-pub mod web_launcher;
-pub mod calc_launcher;
 pub mod bulk_text_launcher;
+pub mod calc_launcher;
 pub mod system_cmd_launcher;
+pub mod web_launcher;
 
 use crate::{loader::util::Config, ui::tiles::Tile};
 
 use app_launcher::App;
-use web_launcher::Web;
-use calc_launcher::Calc;
 use bulk_text_launcher::BulkText;
+use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
-
+use web_launcher::Web;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -22,7 +21,7 @@ pub enum LauncherType {
     Calc(Calc),
     BulkText(BulkText),
     SystemCommand(SystemCommand),
-    Empty
+    Empty,
 }
 
 #[derive(Clone, Debug)]
@@ -36,34 +35,67 @@ pub struct Launcher {
     pub launcher_type: LauncherType,
 }
 impl Launcher {
-    pub fn get_patch(&self, index:i32, keyword: &String, app_config: &Config)->(i32, Vec<ListBoxRow>){
+    // TODO: tile method recreates already stored data...
+    pub fn get_patch(
+        &self,
+        index: i32,
+        keyword: &String,
+        app_config: &Config,
+    ) -> (i32, Vec<ListBoxRow>) {
         match &self.launcher_type {
-            LauncherType::App(app) => Tile::app_tile(index, app.apps.clone(), &self.name, &self.method, keyword, app_config),
-            LauncherType::Web(web) => Tile::web_tile(&self.name, &self.method, &web.icon, &web.engine, index, keyword),
+            LauncherType::App(app) => Tile::app_tile(
+                index,
+                app.apps.clone(),
+                &self.name,
+                &self.method,
+                keyword,
+                app_config,
+            ),
+            LauncherType::Web(web) => Tile::web_tile(
+                &self.name,
+                &self.method,
+                &web.icon,
+                &web.engine,
+                index,
+                keyword,
+            ),
             LauncherType::Calc(_) => Tile::calc_tile(index, keyword, &self.method),
-            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword),
-            LauncherType::SystemCommand(cmd) => Tile::app_tile(index, cmd.commands.clone(), &self.name, &self.method, keyword, app_config),
-            _ => (index, Vec::new())
+            LauncherType::BulkText(bulk_text) => {
+                Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
+            }
+            LauncherType::SystemCommand(cmd) => Tile::app_tile(
+                index,
+                cmd.commands.clone(),
+                &self.name,
+                &self.method,
+                keyword,
+                app_config,
+            ),
+            _ => (index, Vec::new()),
         }
     }
-    pub fn get_loader_widget(&self, keyword: &String)-> Option<(ListBoxRow, Label, TextView)>{
+    pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label)> {
         match &self.launcher_type {
-            LauncherType::BulkText(bulk_text)=> Tile::bulk_text_tile_loader(&self.name, &self.method, &bulk_text.icon, keyword),
-            _ => None
+            LauncherType::BulkText(bulk_text) => {
+                Tile::bulk_text_tile_loader(&self.name, &self.method, &bulk_text.icon, keyword)
+            }
+            _ => None,
         }
     }
-    pub async fn get_result(&self, keyword: &String)->Option<(String, String)>{
+    pub async fn get_result(&self, keyword: &String) -> Option<(String, String)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => bulk_text.get_result(keyword).await,
-            _ => None
+            _ => None,
         }
     }
-
 }
 
-
-
-pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String, app_config: &Config)->Vec<ListBoxRow>{
+pub fn construct_tiles(
+    keyword: &String,
+    launchers: &[Launcher],
+    mode: &String,
+    app_config: &Config,
+) -> Vec<ListBoxRow> {
     let mut widgets = Vec::new();
     let mut index: i32 = 0;
     let sel_mode = mode.trim();
@@ -72,15 +104,13 @@ pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String, 
 
         if launcher.priority == 0 && alias != sel_mode {
             continue;
-        } 
+        }
 
         if alias == sel_mode || sel_mode == "all" {
             let (returned_index, result) = launcher.get_patch(index, keyword, app_config);
             index = returned_index;
-            widgets.extend(result); 
-
+            widgets.extend(result);
         }
     }
     widgets
 }
-

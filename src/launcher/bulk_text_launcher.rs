@@ -1,10 +1,10 @@
 use std::process::Stdio;
+use tokio::io::{AsyncReadExt, BufReader};
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
-use tokio::io::{AsyncReadExt, BufReader};
 
 #[derive(Clone, Debug)]
-pub struct BulkText{
+pub struct BulkText {
     pub icon: String,
     pub exec: String,
     pub args: String,
@@ -16,15 +16,17 @@ impl BulkText {
         let args = a.split(" ");
         let mut cmd = Command::new(&self.exec);
         cmd.args(args);
-        cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
 
         // Spawn the child process
         let mut child = match cmd.spawn() {
             Ok(child) => child,
             Err(e) => {
                 return Some((
-                        "Failed to execute script.".to_string(),
-                        format!("Error: {}", e),
+                    "Failed to execute script.".to_string(),
+                    format!("Error: {}", e),
                 ));
             }
         };
@@ -67,23 +69,23 @@ impl BulkText {
                     Some((title.to_string(), body.to_string()))
                 } else {
                     Some((
-                            "Script executed but returned an error.".to_string(),
-                            format!("Status: {:?}", status),
+                        "Script executed but returned an error.".to_string(),
+                        format!("Status: {:?}", status),
                     ))
                 }
             }
             Ok((Err(_), _, _)) => {
                 let _ = child.kill().await; // Kill the process if it fails
                 Some((
-                        "Failed to execute script.".to_string(),
-                        "Error occurred while running the process.".to_string(),
+                    "Failed to execute script.".to_string(),
+                    "Error occurred while running the process.".to_string(),
                 ))
             }
             Err(_) => {
                 let _ = child.kill().await; // Kill the process on timeout
                 Some((
-                        "Failed to execute script.".to_string(),
-                        "Timeout exceeded.".to_string(),
+                    "Failed to execute script.".to_string(),
+                    "Timeout exceeded.".to_string(),
                 ))
             }
         }

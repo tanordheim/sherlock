@@ -1,9 +1,9 @@
 use gtk4::{gdk, Builder, Stack};
-use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey };
+use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-pub fn window(application: &Application)-> (ApplicationWindow, Stack){
-    let window:ApplicationWindow = ApplicationWindow::builder()
+pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
+    let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(900)
         .default_height(583) // 610 with, 583 without notification bar
@@ -16,7 +16,7 @@ pub fn window(application: &Application)-> (ApplicationWindow, Stack){
 
     //Build main frame here that holds logic for stacking
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
-    let holder:Stack = builder.object("stack").unwrap();
+    let holder: Stack = builder.object("stack").unwrap();
 
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
@@ -24,15 +24,12 @@ pub fn window(application: &Application)-> (ApplicationWindow, Stack){
         match key {
             gdk::Key::Escape => {
                 std::process::exit(0);
-            },
+            }
             _ => (),
         }
         false.into()
     });
     window.add_controller(event_controller);
     window.set_child(Some(&holder));
-    return (window, holder)
-
-
+    return (window, holder);
 }
-

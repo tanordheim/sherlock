@@ -59,9 +59,10 @@
 
 
                         <child>
-                            <object class="GtkTextView" id="content-body">
+                            <object class="GtkLabel" id="content-body">
                                 <property name="name">bulk-text-content-body</property>
                                 <property name="wrap-mode">word</property>
+                                <property name="xalign">0</property>
                             </object>
                         </child>
 

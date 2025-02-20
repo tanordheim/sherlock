@@ -17,4 +17,3 @@ pub fn applaunch(exec: &str) {
 
     let _output = command.spawn().expect("Failed to start the application");
 }
-

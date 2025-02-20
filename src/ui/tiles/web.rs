@@ -1,21 +1,28 @@
-use gtk4::{self, prelude::*, Builder, ListBoxRow, Image, Label, Box};
+use gtk4::{self, prelude::*, Box, Builder, Image, Label, ListBoxRow};
 
-use super::Tile;
 use super::util::insert_attrs;
+use super::Tile;
 
-impl Tile{
-    pub fn web_tile(name:&String, method: &String, icon: &String, engine: &String ,index:i32, keyword:&String)->(i32, Vec<ListBoxRow>){
-        if !keyword.is_empty(){
+impl Tile {
+    pub fn web_tile(
+        name: &String,
+        method: &String,
+        icon: &String,
+        engine: &String,
+        index: i32,
+        keyword: &String,
+    ) -> (i32, Vec<ListBoxRow>) {
+        if !keyword.is_empty() {
             let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
-            let holder:ListBoxRow = builder.object("holder").unwrap();
-            let icon_obj:Image = builder.object("icon-name").unwrap();
-            let title_obj:Label = builder.object("app-name").unwrap();
-            let launcher_type:Label = builder.object("launcher-type").unwrap();
-            let attr_holder:Box = builder.object("attrs-holder").unwrap();
+            let holder: ListBoxRow = builder.object("holder").unwrap();
+            let icon_obj: Image = builder.object("icon-name").unwrap();
+            let title_obj: Label = builder.object("app-name").unwrap();
+            let launcher_type: Label = builder.object("launcher-type").unwrap();
+            let attr_holder: Box = builder.object("attrs-holder").unwrap();
 
             if index < 5 {
-                let shortcut_holder:Box = builder.object("shortcut-holder").unwrap();
-                let shortcut:Label = builder.object("shortcut").unwrap();
+                let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
+                let shortcut: Label = builder.object("shortcut").unwrap();
                 shortcut_holder.set_visible(true);
                 shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
             }
@@ -31,7 +38,7 @@ impl Tile{
             ];
             insert_attrs(&attr_holder, attrs);
 
-            return (index + 1, vec![holder])
+            return (index + 1, vec![holder]);
         }
         (index, vec![])
     }

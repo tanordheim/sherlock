@@ -1,9 +1,14 @@
-use gtk4::{self, gdk::{self, Key}, prelude::*, ApplicationWindow, Builder, EventControllerKey, Stack};
+use gtk4::glib;
+use gtk4::{
+    self,
+    gdk::{self, Key},
+    prelude::*,
+    ApplicationWindow, Builder, EventControllerKey, Stack,
+};
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
-use gtk4::glib;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -11,10 +16,15 @@ use crate::actions::execute_from_attrs;
 use crate::launcher::Launcher;
 use crate::loader::util::Config;
 
-
-pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<Launcher>, app_config: Config) -> ApplicationWindow {
+pub fn search(
+    window: ApplicationWindow,
+    search_stack: &Stack,
+    launchers: Vec<Launcher>,
+    app_config: Config,
+) -> ApplicationWindow {
     // Initiallize the view to show all apps
-    let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) = construct_window(&launchers);
+    let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) =
+        construct_window(&launchers);
     result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     set_home_screen("", "all", &*results, &launchers, &app_config);
     results.focus_first();
@@ -27,9 +37,8 @@ pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<La
         &mode,
         &launchers,
         &results,
-        &app_config
-        );
-
+        &app_config,
+    );
 
     nav_event(
         &window,
@@ -39,15 +48,24 @@ pub fn search(window: ApplicationWindow, search_stack: &Stack, launchers: Vec<La
         mode_title,
         mode,
         launchers,
-        app_config);
-
+        app_config,
+    );
 
     search_stack.add_named(&vbox, Some("search-page"));
     return window;
 }
 
-
-fn construct_window(launchers: &Vec<Launcher>)-> (Rc<RefCell<String>>, HashMap<String, String>, HVBox, Entry, ScrolledWindow, Label, Rc<ListBox>){
+fn construct_window(
+    launchers: &Vec<Launcher>,
+) -> (
+    Rc<RefCell<String>>,
+    HashMap<String, String>,
+    HVBox,
+    Entry,
+    ScrolledWindow,
+    Label,
+    Rc<ListBox>,
+) {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
     let mut modes: HashMap<String, String> = HashMap::new();
@@ -68,7 +86,15 @@ fn construct_window(launchers: &Vec<Launcher>)-> (Rc<RefCell<String>>, HashMap<S
     let mode_title: Label = builder.object("category-type-label").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
 
-    (mode, modes, vbox, search_bar, result_viewport, mode_title, results)
+    (
+        mode,
+        modes,
+        vbox,
+        search_bar,
+        result_viewport,
+        mode_title,
+        results,
+    )
 }
 
 fn nav_event(
@@ -76,11 +102,11 @@ fn nav_event(
     results_ev_nav: Rc<ListBox>,
     result_viewport: ScrolledWindow,
     search_bar: Entry,
-    mode_title_ev_nav:Label,
-    mode_ev_nav:Rc<RefCell<String>>,
+    mode_title_ev_nav: Label,
+    mode_ev_nav: Rc<RefCell<String>>,
     launchers_ev_nav: Vec<Launcher>,
-    app_config_ev_nav: Config,){
-
+    app_config_ev_nav: Config,
+) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
@@ -90,7 +116,7 @@ fn nav_event(
             }
             gdk::Key::Down => {
                 results_ev_nav.focus_next(&result_viewport);
-                return true.into()
+                return true.into();
             }
             gdk::Key::BackSpace => {
                 let ctext = &search_bar.text();
@@ -117,14 +143,14 @@ fn nav_event(
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if modifiers.contains(gdk::ModifierType::CONTROL_MASK){
+                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
                         Key::_3 => 3,
                         Key::_4 => 4,
                         Key::_5 => 5,
-                        _ => return false.into()
+                        _ => return false.into(),
                     };
                     execute_by_index(&*results_ev_nav, key_index);
                 }
@@ -143,8 +169,8 @@ fn change_event(
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
     results: &Rc<ListBox>,
-    app_config: &Config){
-    
+    app_config: &Config,
+) {
     //Cloning:
     let app_config_ev_changed = app_config.clone();
     let mode_title_ev_changed = mode_title.clone();
@@ -155,7 +181,6 @@ fn change_event(
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
 
-
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
@@ -164,18 +189,25 @@ fn change_event(
         *cancel_flag.borrow_mut() = true;
 
         if modes.contains_key(&current_text) {
+            // Logic to apply modes
+            
             if let Some(mode_name) = modes.get(&current_text) {
-                set_mode(&mode_title_ev_changed, &mode_ev_changed, &current_text, mode_name);
+                set_mode(
+                    &mode_title_ev_changed,
+                    &mode_ev_changed,
+                    &current_text,
+                    mode_name,
+                );
                 search_bar.set_text("");
             }
         } else {
             *cancel_flag.borrow_mut() = false;
             let cancel_flag = Rc::clone(&cancel_flag);
             let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-                                                         launchers_ev_changed
-                                                         .clone()
-                                                         .into_iter()
-                                                         .partition(|launcher| launcher.r#async);
+                launchers_ev_changed
+                    .clone()
+                    .into_iter()
+                    .partition(|launcher| launcher.r#async);
 
             set_results(
                 &current_text,
@@ -186,26 +218,25 @@ fn change_event(
             );
 
             // Create loader widgets
+            // TODO
             let current_mode = mode_ev_changed.borrow().trim().to_string();
             let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
                 .filter_map(|launcher| {
-                    if current_mode == launcher.alias.as_deref().unwrap_or(""){
-                        launcher.get_loader_widget(&current_text).map(
-                            |(widget, title, body)| {
-                                AsyncLauncherTile {
-                                    launcher: launcher.clone(),
-                                    widget,
-                                    title,
-                                    body,
-                                }
-                            },
-                        )
+                    if current_mode == launcher.alias.as_deref().unwrap_or("") {
+                        launcher
+                            .get_loader_widget(&current_text)
+                            .map(|(widget, title, body)| AsyncLauncherTile {
+                                launcher: launcher.clone(),
+                                widget,
+                                title,
+                                body,
+                            })
                     } else {
                         None
                     }
                 })
-            .collect();
+                .collect();
 
             for widget in widgets.iter() {
                 results_ev_changed.append(&widget.widget);
@@ -220,8 +251,8 @@ fn change_event(
                 for widget in widgets.iter() {
                     if let Some((title, body)) = widget.launcher.get_result(&current_text).await {
                         widget.title.set_text(&title);
-                        widget.body.buffer().set_text(&body);
-                    } 
+                        widget.body.set_text(&body);
+                    }
                 }
             });
             *current_task.borrow_mut() = Some(task);

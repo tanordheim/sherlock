@@ -1,4 +1,4 @@
-use std::fs::{File, remove_file};
+use std::fs::{remove_file, File};
 use std::path::Path;
 
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
@@ -16,7 +16,9 @@ impl LockFile {
         }
 
         match File::create(path) {
-            Ok(_) => Ok(LockFile { path: path.to_string() }),
+            Ok(_) => Ok(LockFile {
+                path: path.to_string(),
+            }),
             Err(e) => Err(format!("Failed to create lock file: {}", e)),
         }
     }
@@ -30,7 +32,6 @@ impl LockFile {
 
 impl Drop for LockFile {
     fn drop(&mut self) {
-        self.remove(); 
+        self.remove();
     }
 }
-

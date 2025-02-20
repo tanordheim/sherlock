@@ -12,7 +12,10 @@ pub fn websearch(engine: &str, query: &str) {
         ("ask", "https://www.ask.com/web?q={keyword}"),
         ("ecosia", "https://www.ecosia.org/search?q={keyword}"),
         ("qwant", "https://www.qwant.com/?q={keyword}"),
-        ("startpage", "https://www.startpage.com/sp/search?q={keyword}"),
+        (
+            "startpage",
+            "https://www.startpage.com/sp/search?q={keyword}",
+        ),
     ]);
     let url_template = if let Some(url) = engines.get(engine) {
         url
@@ -22,8 +25,8 @@ pub fn websearch(engine: &str, query: &str) {
     let url = url_template.replace("{keyword}", query);
     if let Err(e) = Command::new("sh")
         .arg("-c")
-            .arg(format!("xdg-open '{}'", url)) // Linux
-            .spawn()
+        .arg(format!("xdg-open '{}'", url)) // Linux
+        .spawn()
     {
         eprintln!("Failed to open browser: {}", e);
     }
