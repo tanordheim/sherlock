@@ -6,7 +6,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(900)
-        .default_height(583) // 610 with, 583 without notification bar
+        .default_height(591) // 618 with, 591 without notification bar
         .resizable(false)
         .build();
 
