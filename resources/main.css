@@ -266,7 +266,6 @@ image {
 }
 .notifications * {
     background: none;
-    background-color: none;
 }
 .notifications label{
     min-height: 25px;
