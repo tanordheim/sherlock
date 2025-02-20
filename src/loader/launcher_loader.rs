@@ -18,6 +18,9 @@ use super::{
 };
 use util::{AppData, CommandConfig, Config, SherlockFlags};
 
+
+
+
 impl Loader {
     pub fn load_launchers(
         sherlock_flags: &SherlockFlags,
