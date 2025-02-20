@@ -14,13 +14,12 @@ impl Loader {
         sherlock_flags: &SherlockFlags,
         app_config: &util::Config,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
+        // Define required paths for application parsing
         let sherlock_ignore_path = sherlock_flags.ignore.clone();
         let sherlock_alias_path = sherlock_flags.alias.clone();
-
         let system_apps = "/usr/share/applications/";
-        let mut ignore_apps: Vec<Pattern> = Default::default();
-        let mut aliases: HashMap<String, SherlockAlias> = Default::default();
 
+        // Parse needed fields from the '.desktop'
         let (name_re, icon_re, exec_re, display_re, terminal_re, keywords_re) =
             get_regex_patterns().map_err(|e| return e)?;
 
@@ -31,7 +30,8 @@ impl Loader {
                 .unwrap_or_default()
         };
 
-        // Handle user specified ignore file
+        // Parse user-specified 'sherlockignore' file
+        let mut ignore_apps: Vec<Pattern> = Default::default();
         if Path::new(&sherlock_ignore_path).exists() {
             ignore_apps = read_to_string(&sherlock_ignore_path)
                 .map_err(|e| SherlockError {
@@ -47,7 +47,8 @@ impl Loader {
                 .collect::<Vec<Pattern>>();
         }
 
-        // Handle user specified alias file
+        // Parse user-specified 'sherlock_alias.json' file
+        let mut aliases: HashMap<String, SherlockAlias> = Default::default();
         if Path::new(&sherlock_alias_path).exists() {
             let json_data = read_to_string(&sherlock_alias_path).map_err(|e| SherlockError {
                 name: "File Read Error".to_string(),
@@ -60,7 +61,8 @@ impl Loader {
                 traceback: e.to_string(),
             })?
         }
-
+    
+        // Gather '.desktop' files
         let dektop_files: Vec<_> = fs::read_dir(system_apps)
             .expect("Unable to read/access /usr/share/applications directory")
             .filter_map(|entry| entry.ok())
@@ -73,6 +75,7 @@ impl Loader {
             })
             .collect();
 
+        // Parellize opening of all files and reading into vector
         let file_contents: Vec<String> = dektop_files
             .into_par_iter()
             .filter_map(|entry| {
@@ -82,6 +85,7 @@ impl Loader {
             })
             .collect();
 
+        // Pararellize parsing of the '.desktop' files contents
         let apps: HashMap<String, AppData> = file_contents
             .into_par_iter()
             .filter_map(|content| {
@@ -91,13 +95,13 @@ impl Loader {
                 }
 
                 // Extract fields
+                let mut keywords = parse_field(&content, &keywords_re);
+                let mut icon = parse_field(&content, &icon_re);
                 let mut name = parse_field(&content, &name_re);
-                if name.is_empty() || should_ignoe(&ignore_apps, &name) {
+                if name.is_empty() || should_ignore(&ignore_apps, &name) {
                     return None; // Skip entries with empty names
                 }
 
-                let mut keywords = parse_field(&content, &keywords_re);
-                let mut icon = parse_field(&content, &icon_re);
 
                 // Construct the executable command
                 let exec_path = parse_field(&content, &exec_re);
@@ -119,8 +123,8 @@ impl Loader {
                         keywords = alias_keywords.to_string();
                     }
                 };
-
                 let search_string = format!("{};{}", name, keywords);
+
                 // Return the processed app data
                 Some((
                     name,
@@ -136,7 +140,7 @@ impl Loader {
     }
 }
 
-fn should_ignoe(ignore_apps: &Vec<Pattern>, app: &String) -> bool {
+fn should_ignore(ignore_apps: &Vec<Pattern>, app: &String) -> bool {
     let app_name = app.to_lowercase();
     ignore_apps.iter().any(|pattern| pattern.matches(&app_name))
 }
