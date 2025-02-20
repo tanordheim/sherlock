@@ -62,7 +62,7 @@ impl Launcher {
                     index,
                     keyword,
                 ),
-                LauncherType::Calc(_) => Tile::calc_tile(index, keyword, &self.method),
+                LauncherType::Calc(_) => Tile::calc_tile(index, keyword),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
                 }

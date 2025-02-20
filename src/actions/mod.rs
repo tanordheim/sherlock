@@ -28,7 +28,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>){
                 let _ = commandlaunch::command_launch(exec, keyword);
                 exit(0)
             }
-            "calc" => {
+            "copy" => {
                 let string = attrs.get("result").expect("Missing field: result");
                 util::copy_to_clipboard(string);
             }

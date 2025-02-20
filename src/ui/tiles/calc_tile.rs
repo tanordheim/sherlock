@@ -5,7 +5,7 @@ use super::util::insert_attrs;
 use super::Tile;
 
 impl Tile {
-    pub fn calc_tile(index: i32, equation: &str, method: &String) -> (i32, Vec<ListBoxRow>) {
+    pub fn calc_tile(index: i32, equation: &str) -> (i32, Vec<ListBoxRow>) {
         let mut results: Vec<ListBoxRow> = Default::default();
         match eval_str(equation) {
             Ok(result) => {
@@ -21,7 +21,7 @@ impl Tile {
                 result_holder.set_text(format!("= {}", result.to_string()).as_str());
 
                 let attrs: Vec<String> = vec![
-                    format!("{} | {}", "method", method),
+                    format!("{} | {}", "method", "copy"),
                     format!("{} | {}", "result", result),
                 ];
                 insert_attrs(&attr_holder, attrs);
