@@ -22,6 +22,8 @@
 - [x] Implement custom file for aliases and custom icons for apps.
 - [x] Improve sherlock ignore file to use * macro and case sensitivity
 - [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
+- [ ] Make possible to customize height and width of window
+
 
 ## Documentation
 - [ ] Implement Flag Heading into README.md
@@ -30,6 +32,3 @@
 - [ ] Implement tag on command widgets. use custom css classes for it 
 - [ ] Implement possibility to customize cagetories and their ui files. spceify the ui files used for the categories. needed: category config file 
 
-
-implement Launcher Trait
-sorting problem: sorting based on launchers would generally list more probable cases lower. if the most probable cases shuold be shown first, we would need to sort a vec of all cases by its probability. 
