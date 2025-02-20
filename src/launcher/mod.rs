@@ -5,6 +5,7 @@ pub mod bulk_text_launcher;
 pub mod calc_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
+pub mod clipboard_launcher;
 
 use crate::{loader::util::Config, ui::tiles::Tile};
 
@@ -13,6 +14,7 @@ use bulk_text_launcher::BulkText;
 use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
+use clipboard_launcher::Clp;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -21,6 +23,7 @@ pub enum LauncherType {
     Calc(Calc),
     BulkText(BulkText),
     SystemCommand(SystemCommand),
+    Clipboard(Clp),
     Empty,
 }
 
@@ -71,6 +74,10 @@ impl Launcher {
                 keyword,
                 app_config,
             ),
+            LauncherType::Clipboard(clp) => {
+                Tile::clipboard_tile(index, &clp.clipboard_content)
+            },
+
             _ => (index, Vec::new()),
         }
     }

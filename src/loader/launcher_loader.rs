@@ -3,14 +3,17 @@ use std::fs;
 use std::path::Path;
 
 use crate::launcher::{
-    app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, Launcher,
+    app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, clipboard_launcher, Launcher,
     LauncherType,
 };
+use crate::actions::util::read_from_clipboard;
+
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calc;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
+use clipboard_launcher::Clp;
 
 use super::{
     util::{self, SherlockError},
@@ -65,6 +68,16 @@ impl Loader {
                             .unwrap_or_default()
                             .to_string(),
                     }),
+                    "clipboard-execution" => {
+                        let clipboard_content: String = read_from_clipboard();
+                        if clipboard_content.is_empty() {
+                            LauncherType::Empty
+                        } else {
+                            LauncherType::Clipboard(Clp {
+                                clipboard_content
+                            })
+                        }
+                    },
                     _ => LauncherType::Empty,
                 };
                 Some(Launcher {
