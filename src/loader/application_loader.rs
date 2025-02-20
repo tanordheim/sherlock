@@ -14,6 +14,11 @@ impl Loader {
     pub fn load_applications(
         sherlock_flags: &SherlockFlags,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
+        let config = CONFIG.get().ok_or(SherlockError{
+            name: format!("Missing Config"),
+            message: format!("It should never get to this."),
+            traceback: format!("")
+        })?;
         // Define required paths for application parsing
         let sherlock_ignore_path = sherlock_flags.ignore.clone();
         let sherlock_alias_path = sherlock_flags.alias.clone();
@@ -98,23 +103,18 @@ impl Loader {
                 let mut keywords = parse_field(&content, &keywords_re);
                 let mut icon = parse_field(&content, &icon_re);
                 let mut name = parse_field(&content, &name_re);
-                let mut exec: String = String::new();
                 if name.is_empty() || should_ignore(&ignore_apps, &name) {
                     return None; // Skip entries with empty names
                 }
 
 
                 // Construct the executable command
-                if let Some(config) = CONFIG.get() {
-                    let exec_path = parse_field(&content, &exec_re);
-                    exec = if parse_field(&content, &terminal_re) == "true" {
-                        format!("{} {}", &config.default_apps.terminal, exec_path)
-                    } else {
-                        exec_path.to_string()
-                    };
+                let exec_path = parse_field(&content, &exec_re);
+                let exec = if parse_field(&content, &terminal_re) == "true" {
+                    format!("{} {}", &config.default_apps.terminal, exec_path)
                 } else {
-                    return None
-                }
+                    exec_path.to_string()
+                };
 
                 // apply aliases
                 if let Some(alias) = aliases.get(&name) {

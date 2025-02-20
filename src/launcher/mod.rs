@@ -7,7 +7,7 @@ pub mod system_cmd_launcher;
 pub mod web_launcher;
 pub mod clipboard_launcher;
 
-use crate::{loader::util::Config, ui::tiles::Tile, CONFIG};
+use crate::{ui::tiles::Tile, CONFIG};
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;

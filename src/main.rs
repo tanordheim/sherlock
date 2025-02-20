@@ -40,7 +40,16 @@ async fn main() {
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
-    CONFIG.set(app_config.clone());
+    match CONFIG.set(app_config.clone()){
+        Ok(_) => {}
+        Err(_) => {
+            startup_errors.push(SherlockError{
+                name: format!("Missing Config"),
+                message: format!("It should never come to this."),
+                traceback: format!(""),
+            });
+        }
+    };
 
 
     let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
