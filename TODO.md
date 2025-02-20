@@ -1,34 +1,35 @@
 ## UI
-- [x] Improve startup time more by reducing amount of widgets shown in the beginning. Let user configure the launchers shown on startup.
-- [x] Add error tile
+- [x] Improve startup time further by reducing the number of widgets shown initially. Allow the user to configure which launchers are displayed at startup.
+- [x] Add error tile.
+
 ## Scripts
-- [ ] Custom Spotify (ncspot) script to control it
-- [ ] Startup: check if clipboard contains url and make possible url search from it
+- [ ] Create a custom Spotify (ncspot) script to control it.
+- [x] On startup, check if the clipboard contains a URL and enable URL search from it.
+    - [] Improve the functionality further for example display colors
+
 
 ## Functionalities
-- [x] Implement locking mechanism to only have one instance running at a time.
-- [ ] Implement a next() function that adds a layout to the launcher stack.
-- [ ] → Make a widget that uses gtk4::Builder::from_string(ui_string)
-- [ ] Make more widgets async-able 
-- [ ] Maybe change alias for each command in commandlauncher. (if possible)
-- [ ] Add ArgCommand launcher type or convert existsing one to be more versatile
-- [ ] Add callback type for a cmd to execute another one
-- [ ] Add enter command type for a tile
-- [ ] Implement command execution count and sort commands based on that
-- [ ] Finish the setup of the loading animation for async widget(s)
+- [x] Implement a locking mechanism to ensure only one instance is running at a time.
+- [ ] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
+- [ ] → Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
+- [ ] Make more widgets asynchronous.
+- [ ] Consider changing the alias for each command in `commandlauncher` (if possible).
+- [ ] Add an `ArgCommand` launcher type or convert the existing one to be more versatile.
+- [ ] Add a callback type for a command to execute another command.
+- [ ] Add an "enter" command type for a tile.
+- [ ] Implement command execution count and sort commands based on that count.
+- [ ] Finish setting up the loading animation for asynchronous widgets.
 
 ## Configuration
-- [x] Let user set flags such as --config to set the fallbacks-, style-, and config-files
-- [x] Implement custom file for aliases and custom icons for apps.
-- [x] Improve sherlock ignore file to use * macro and case sensitivity
-- [ ] Better user integration from custom scripts. i.e. give control over tiles to spawn
-- [ ] Make possible to customize height and width of window
-
+- [x] Allow the user to set flags such as `--config` to configure fallback, style, and config files.
+- [x] Implement a custom file for aliases and custom icons for apps.
+- [ ] Improve Sherlock ignore file to support `*` macro and case sensitivity.
+- [ ] Provide better user integration from custom scripts, e.g., give control over tiles to spawn.
+- [ ] Make it possible to customize the height and width of the window.
 
 ## Documentation
-- [ ] Implement Flag Heading into README.md
+- [ ] Implement Flag Heading in the README.md.
 
-
-- [ ] Implement tag on command widgets. use custom css classes for it 
-- [ ] Implement possibility to customize cagetories and their ui files. specify the ui files used for the categories. needed: category config file 
+- [ ] Implement tags on command widgets and use custom CSS classes for them.
+- [ ] Implement the possibility to customize categories and their UI files. Allow specifying the UI files used for the categories. Required: category config file.
 
