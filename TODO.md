@@ -30,5 +30,5 @@
 
 
 - [ ] Implement tag on command widgets. use custom css classes for it 
-- [ ] Implement possibility to customize cagetories and their ui files. spceify the ui files used for the categories. needed: category config file 
+- [ ] Implement possibility to customize cagetories and their ui files. specify the ui files used for the categories. needed: category config file 
 
