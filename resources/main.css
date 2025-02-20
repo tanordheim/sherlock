@@ -82,7 +82,7 @@ window {
     font-weight: bold;
     color: hsl(var(--text));
     opacity: 0.3;
-    padding: 2px 20px 0px 20px;
+    padding: 10px 20px 0px 20px;
 }
 
 
