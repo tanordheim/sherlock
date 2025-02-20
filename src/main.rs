@@ -1,6 +1,7 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
 use std::{env, process};
+use std::sync::OnceLock;
 
 mod actions;
 mod launcher;
@@ -8,7 +9,11 @@ mod loader;
 mod lock;
 mod ui;
 
-use loader::{util::SherlockError, Loader};
+use loader::{util::{SherlockError, Config}, Loader};
+
+
+static CONFIG: OnceLock<Config> = OnceLock::new();
+
 
 #[tokio::main]
 async fn main() {
@@ -35,6 +40,9 @@ async fn main() {
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
+    CONFIG.set(app_config.clone());
+
+
     let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
 
     // Initialize application
@@ -42,7 +50,10 @@ async fn main() {
         Some("dev.skxxtz.sherlock"),
         gio::ApplicationFlags::HANDLES_COMMAND_LINE,
     );
-    env::set_var("GSK_RENDERER", &app_config.appearance.gsk_renderer);
+
+    if let Some(config) = CONFIG.get() {
+        env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
+    }
 
     // Needed in order start Sherlock without glib flag handling
     application.connect_command_line(|app, _| {
@@ -55,13 +66,13 @@ async fn main() {
         let mut non_breaking = non_breaking.clone();
 
         // Initialize launchers from 'fallback.json'
-        let (launchers, n) = Loader::load_launchers(&sherlock_flags, &app_config)
+        let (launchers, n) = Loader::load_launchers(&sherlock_flags)
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);
 
         // Load custom icons from icon path specified in 'config.toml'
-        let n = Loader::load_icon_theme(&app_config.appearance.icon_paths);
+        let n = Loader::load_icon_theme();
         non_breaking.extend(n);
 
         // Load CSS Stylesheet
@@ -73,7 +84,7 @@ async fn main() {
 
         // Main logic for the Search-View
         let (mut window, stack) = ui::window::window(&app);
-        window = ui::search::search(window, &stack, launchers, app_config.clone());
+        window = ui::search::search(window, &stack, launchers);
 
         // Logic for the Error-View
         if !app_config.debug.try_surpress_errors {
@@ -94,3 +105,4 @@ async fn main() {
 
     application.run();
 }
+

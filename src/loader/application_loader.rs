@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fs::{self, read_to_string};
 use std::path::Path;
 
+use crate::CONFIG;
 use super::util::{SherlockError, SherlockFlags};
 use super::{util, Loader};
 use util::{read_file, AppData, SherlockAlias};
@@ -12,7 +13,6 @@ use util::{read_file, AppData, SherlockAlias};
 impl Loader {
     pub fn load_applications(
         sherlock_flags: &SherlockFlags,
-        app_config: &util::Config,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         // Define required paths for application parsing
         let sherlock_ignore_path = sherlock_flags.ignore.clone();
@@ -98,18 +98,23 @@ impl Loader {
                 let mut keywords = parse_field(&content, &keywords_re);
                 let mut icon = parse_field(&content, &icon_re);
                 let mut name = parse_field(&content, &name_re);
+                let mut exec: String = String::new();
                 if name.is_empty() || should_ignore(&ignore_apps, &name) {
                     return None; // Skip entries with empty names
                 }
 
 
                 // Construct the executable command
-                let exec_path = parse_field(&content, &exec_re);
-                let exec = if parse_field(&content, &terminal_re) == "true" {
-                    format!("{} {}", &app_config.default_apps.terminal, exec_path)
+                if let Some(config) = CONFIG.get() {
+                    let exec_path = parse_field(&content, &exec_re);
+                    exec = if parse_field(&content, &terminal_re) == "true" {
+                        format!("{} {}", &config.default_apps.terminal, exec_path)
+                    } else {
+                        exec_path.to_string()
+                    };
                 } else {
-                    exec_path.to_string()
-                };
+                    return None
+                }
 
                 // apply aliases
                 if let Some(alias) = aliases.get(&name) {

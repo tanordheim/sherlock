@@ -2453,6 +2453,7 @@ dependencies = [
  "glob",
  "gtk4",
  "gtk4-layer-shell",
+ "lazy_static",
  "meval",
  "once_cell",
  "open",

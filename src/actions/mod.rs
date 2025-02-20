@@ -6,7 +6,7 @@ pub mod commandlaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs(attrs: HashMap<String, String>) {
+pub fn execute_from_attrs(attrs: HashMap<String, String>){
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
             "app_launcher" => {

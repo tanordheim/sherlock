@@ -7,7 +7,7 @@ pub mod system_cmd_launcher;
 pub mod web_launcher;
 pub mod clipboard_launcher;
 
-use crate::{loader::util::Config, ui::tiles::Tile};
+use crate::{loader::util::Config, ui::tiles::Tile, CONFIG};
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
@@ -43,43 +43,46 @@ impl Launcher {
         &self,
         index: i32,
         keyword: &String,
-        app_config: &Config,
     ) -> (i32, Vec<ListBoxRow>) {
-        match &self.launcher_type {
-            LauncherType::App(app) => Tile::app_tile(
-                index,
-                app.apps.clone(),
-                &self.name,
-                &self.method,
-                keyword,
-                app_config,
-            ),
-            LauncherType::Web(web) => Tile::web_tile(
-                &self.name,
-                &self.method,
-                &web.icon,
-                &web.engine,
-                index,
-                keyword,
-            ),
-            LauncherType::Calc(_) => Tile::calc_tile(index, keyword, &self.method),
-            LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
-            }
-            LauncherType::SystemCommand(cmd) => Tile::app_tile(
-                index,
-                cmd.commands.clone(),
-                &self.name,
-                &self.method,
-                keyword,
-                app_config,
-            ),
-            LauncherType::Clipboard(clp) => {
-                Tile::clipboard_tile(index, &clp.clipboard_content, keyword)
-            },
+        if let Some(app_config)  = CONFIG.get() {
+            match &self.launcher_type {
+                LauncherType::App(app) => Tile::app_tile(
+                    index,
+                    app.apps.clone(),
+                    &self.name,
+                    &self.method,
+                    keyword,
+                    app_config,
+                ),
+                LauncherType::Web(web) => Tile::web_tile(
+                    &self.name,
+                    &self.method,
+                    &web.icon,
+                    &web.engine,
+                    index,
+                    keyword,
+                ),
+                LauncherType::Calc(_) => Tile::calc_tile(index, keyword, &self.method),
+                LauncherType::BulkText(bulk_text) => {
+                    Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
+                }
+                LauncherType::SystemCommand(cmd) => Tile::app_tile(
+                    index,
+                    cmd.commands.clone(),
+                    &self.name,
+                    &self.method,
+                    keyword,
+                    app_config,
+                ),
+                LauncherType::Clipboard(clp) => {
+                    Tile::clipboard_tile(index, &clp.clipboard_content, keyword)
+                },
 
-            _ => (index, Vec::new()),
-        }
+                _ => (index, Vec::new()),
+            }
+        } else {
+            (index, Vec::new())
+        } 
     }
     pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label)> {
         match &self.launcher_type {
@@ -101,7 +104,6 @@ pub fn construct_tiles(
     keyword: &String,
     launchers: &[Launcher],
     mode: &String,
-    app_config: &Config,
 ) -> Vec<ListBoxRow> {
     let mut widgets = Vec::new();
     let mut index: i32 = 0;
@@ -114,7 +116,7 @@ pub fn construct_tiles(
         }
 
         if alias == sel_mode || sel_mode == "all" {
-            let (returned_index, result) = launcher.get_patch(index, keyword, app_config);
+            let (returned_index, result) = launcher.get_patch(index, keyword);
             index = returned_index;
             widgets.extend(result);
         }

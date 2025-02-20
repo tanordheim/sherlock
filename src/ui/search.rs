@@ -14,19 +14,17 @@ use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::Launcher;
-use crate::loader::util::Config;
 
 pub fn search(
     window: ApplicationWindow,
     search_stack: &Stack,
     launchers: Vec<Launcher>,
-    app_config: Config,
 ) -> ApplicationWindow {
     // Initiallize the view to show all apps
     let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) =
         construct_window(&launchers);
     result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-    set_home_screen("", "all", &*results, &launchers, &app_config);
+    set_home_screen("", "all", &*results, &launchers);
     results.focus_first();
     search_bar.grab_focus();
 
@@ -37,7 +35,6 @@ pub fn search(
         &mode,
         &launchers,
         &results,
-        &app_config,
     );
 
     nav_event(
@@ -48,7 +45,6 @@ pub fn search(
         mode_title,
         mode,
         launchers,
-        app_config,
     );
 
     search_stack.add_named(&vbox, Some("search-page"));
@@ -105,7 +101,6 @@ fn nav_event(
     mode_title_ev_nav: Label,
     mode_ev_nav: Rc<RefCell<String>>,
     launchers_ev_nav: Vec<Launcher>,
-    app_config_ev_nav: Config,
 ) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
@@ -130,7 +125,6 @@ fn nav_event(
                             &mode_ev_nav.borrow(),
                             &*results_ev_nav,
                             &launchers_ev_nav,
-                            &app_config_ev_nav,
                         );
                     }
                 }
@@ -169,10 +163,8 @@ fn change_event(
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
     results: &Rc<ListBox>,
-    app_config: &Config,
 ) {
     //Cloning:
-    let app_config_ev_changed = app_config.clone();
     let mode_title_ev_changed = mode_title.clone();
     let launchers_ev_changed = launchers.clone();
     let mode_ev_changed = Rc::clone(mode);
@@ -214,7 +206,6 @@ fn change_event(
                 &mode_ev_changed.borrow(),
                 &*results_ev_changed,
                 &non_async_launchers,
-                &app_config_ev_changed,
             );
 
             // Create loader widgets

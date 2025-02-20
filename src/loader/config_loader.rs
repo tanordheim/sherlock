@@ -41,7 +41,6 @@ impl Loader {
             non_breaking.extend(n);
             config
         };
-        println!("{:?}", user_config);
         Ok((user_config, non_breaking))
     }
 }

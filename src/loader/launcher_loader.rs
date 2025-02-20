@@ -19,7 +19,7 @@ use super::{
     util::{self, SherlockError},
     Loader,
 };
-use util::{AppData, CommandConfig, Config, SherlockFlags};
+use util::{AppData, CommandConfig, SherlockFlags};
 
 
 
@@ -27,10 +27,10 @@ use util::{AppData, CommandConfig, Config, SherlockFlags};
 impl Loader {
     pub fn load_launchers(
         sherlock_flags: &SherlockFlags,
-        app_config: &Config,
     ) -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
         // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
+
 
         let (config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
@@ -41,7 +41,7 @@ impl Loader {
             .filter_map(|cmd| {
                 let launcher_type: LauncherType = match cmd.r#type.as_str() {
                     "app_launcher" => {
-                        let apps = Loader::load_applications(sherlock_flags, app_config)
+                        let apps = Loader::load_applications(sherlock_flags)
                             .map_err(|e| non_breaking.push(e))
                             .ok()?;
                         LauncherType::App(App { apps })
@@ -57,7 +57,7 @@ impl Loader {
                     "command" => {
                         let commands: HashMap<String, AppData> =
                             serde_json::from_value(cmd.args["commands"].clone())
-                                .unwrap_or_default();
+                            .unwrap_or_default();
                         LauncherType::SystemCommand(SystemCommand { commands })
                     }
                     "bulk_text" => LauncherType::BulkText(BulkText {
@@ -90,7 +90,7 @@ impl Loader {
                     launcher_type,
                 })
             })
-            .collect();
+        .collect();
         launchers.sort_by_key(|s| s.priority);
         Ok((launchers, non_breaking))
     }
@@ -150,18 +150,18 @@ fn parse_launcher_configs(
             "/dev/skxxtz/sherlock/fallback.json",
             gio::ResourceLookupFlags::NONE,
         )
-        .map_err(|e| SherlockError {
-            name: format!("Resource Lookup Error"),
-            message: format!("Failed to load 'fallback.json' from resource."),
-            traceback: e.to_string(),
-        })?;
+            .map_err(|e| SherlockError {
+                name: format!("Resource Lookup Error"),
+                message: format!("Failed to load 'fallback.json' from resource."),
+                traceback: e.to_string(),
+            })?;
         let string_data = std::str::from_utf8(&data)
             .map_err(|e| SherlockError {
                 name: format!("File Parsing Error"),
                 message: format!("Failed to parse 'fallback.json' as a valid UTF-8 string."),
                 traceback: e.to_string(),
             })?
-            .to_string();
+        .to_string();
         let config = parse_json(string_data)?;
         Ok(config)
     }

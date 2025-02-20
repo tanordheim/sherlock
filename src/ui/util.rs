@@ -46,7 +46,6 @@ pub fn set_home_screen(
     mode: &str,
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
-    app_config: &Config,
 ) {
     // Check if launcher should be shown on home
     let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
@@ -58,7 +57,7 @@ pub fn set_home_screen(
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string(), app_config);
+    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
     for widget in widgets {
         results_frame.append(&widget);
     }
@@ -68,7 +67,6 @@ pub fn set_results(
     mode: &str,
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
-    app_config: &Config,
 ) {
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
@@ -78,7 +76,6 @@ pub fn set_results(
         &keyword.to_string(),
         &launchers,
         &mode.to_string(),
-        app_config,
     );
     for widget in widgets {
         results_frame.append(&widget);
