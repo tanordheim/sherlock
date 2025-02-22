@@ -47,6 +47,7 @@ impl Loader {
                         LauncherType::App(App { apps })
                     }
                     "web_launcher" => LauncherType::Web(Web {
+                        display_name: cmd.display_name.clone().unwrap_or("".to_string()),
                         icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
                         engine: cmd.args["search_engine"]
                             .as_str()

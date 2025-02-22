@@ -1,4 +1,5 @@
 use gio::prelude::*;
+use gtk4::subclass::window;
 use gtk4::{prelude::*, Application};
 use std::{env, process};
 use std::sync::OnceLock;
@@ -91,10 +92,10 @@ async fn main() {
         non_breaking.extend(n);
 
 
+
         // Main logic for the Search-View
         let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers);
-
         // Logic for the Error-View
         if !app_config.debug.try_surpress_errors {
             if !app_config.debug.try_surpress_warnings {
@@ -110,6 +111,7 @@ async fn main() {
             }
         }
         window.present();
+
     });
 
     application.run();

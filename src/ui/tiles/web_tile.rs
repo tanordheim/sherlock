@@ -1,44 +1,33 @@
-use gtk4::{self, prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::ListBoxRow;
 
-use super::util::insert_attrs;
+use super::util::{insert_attrs, get_builder};
 use super::Tile;
+use crate::launcher::web_launcher::Web;
+
 
 impl Tile {
     pub fn web_tile(
         name: &String,
         method: &String,
-        icon: &String,
-        engine: &String,
+        web: &Web,
         index: i32,
         keyword: &String,
     ) -> (i32, Vec<ListBoxRow>) {
         if !keyword.is_empty() {
-            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
-            let holder: ListBoxRow = builder.object("holder").unwrap();
-            let icon_obj: Image = builder.object("icon-name").unwrap();
-            let title_obj: Label = builder.object("app-name").unwrap();
-            let launcher_type: Label = builder.object("launcher-type").unwrap();
-            let attr_holder: Box = builder.object("attrs-holder").unwrap();
+            let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index);
 
-            if index < 5 {
-                let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
-                let shortcut: Label = builder.object("shortcut").unwrap();
-                shortcut_holder.set_visible(true);
-                shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
-            }
-
-            launcher_type.set_text(name);
-            icon_obj.set_icon_name(Some(icon));
-            title_obj.set_text(keyword);
+            builder.category.set_text(name);
+            builder.icon.set_icon_name(Some(&web.icon));
+            builder.title.set_text(keyword);
 
             let attrs: Vec<String> = vec![
                 format!("{} | {}", "method", method),
-                format!("{} | {}", "engine", engine),
+                format!("{} | {}", "engine", web.engine),
                 format!("{} | {}", "keyword", keyword),
             ];
-            insert_attrs(&attr_holder, attrs);
+            insert_attrs(&builder.attrs, attrs);
 
-            return (index + 1, vec![holder]);
+            return (index + 1, vec![builder.object]);
         }
         (index, vec![])
     }

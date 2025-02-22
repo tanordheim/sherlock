@@ -24,11 +24,15 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
+                //TODO Remoce the unwrap and make proper error handling
                 let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
                 let holder: ListBoxRow = builder.object("holder").unwrap();
                 let icon_obj: Image = builder.object("icon-name").unwrap();
                 let title_obj: Label = builder.object("app-name").unwrap();
                 let attr_holder: Box = builder.object("attrs-holder").unwrap();
+
+                let tag_start: Label = builder.object("app-name-tag-start").unwrap();
+                let tag_end: Label = builder.object("app-name-tag-end").unwrap();
 
                 if index_ref < 5 {
                     let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
@@ -42,8 +46,13 @@ impl Tile {
                 } else {
                     value.icon
                 };
+            
+                let tile_name = if key.contains("{keyword}"){
+                    tag_start.set_text(keyword);
+                    tag_start.set_visible(true);
+                    &key.replace("{keyword}", "")
+                } else { &key };
 
-                let tile_name = key.replace("{keyword}", keyword);
 
                 let launcher_type: Label = builder.object("launcher-type").unwrap();
                 if name.is_empty() {
@@ -51,7 +60,7 @@ impl Tile {
                 }
                 launcher_type.set_text(name);
                 icon_obj.set_icon_name(Some(&icon));
-                title_obj.set_text(&tile_name);
+                title_obj.set_markup(tile_name);
 
                 let attrs: Vec<String> = vec![
                     format!("{} | {}", "method", method),

@@ -1,5 +1,5 @@
 use crate::launcher::Launcher;
-use gtk4::{prelude::*, Box, Label, ListBoxRow};
+use gtk4::{prelude::*, Box, Label, ListBoxRow, Image, Builder};
 
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
@@ -23,3 +23,39 @@ pub fn ensure_icon_name(name: String) -> String {
         format!("{}-symbolic", name)
     }
 }
+
+
+pub struct TileBuilder{
+    pub object: ListBoxRow,
+    pub icon: Image,
+    pub title: Label,
+    pub category: Label,
+    pub attrs: Box,
+}
+pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
+    let builder = Builder::from_resource(resource);
+    let object: ListBoxRow = builder.object("holder").unwrap();
+    let icon: Image = builder.object("icon-name").unwrap();
+    let title: Label = builder.object("app-name").unwrap();
+    let category: Label = builder.object("launcher-type").unwrap();
+    let attrs: Box = builder.object("attrs-holder").unwrap();
+
+    if index < 5 {
+        let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
+        let shortcut: Label = builder.object("shortcut").unwrap();
+        shortcut_holder.set_visible(true);
+        shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
+    }
+
+    TileBuilder{
+        object,
+        icon,
+        title,
+        category,
+        attrs
+    }
+
+
+
+}
+

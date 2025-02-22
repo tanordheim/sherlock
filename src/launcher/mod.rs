@@ -57,8 +57,7 @@ impl Launcher {
                 LauncherType::Web(web) => Tile::web_tile(
                     &self.name,
                     &self.method,
-                    &web.icon,
-                    &web.engine,
+                    &web,
                     index,
                     keyword,
                 ),

@@ -4,41 +4,42 @@
     --text: 126, 45%, 96%;
     --border: 0, 0%, 19%;
 
-    --error: 4, 71%, 62%;;
+    --error: 4, 71%, 62%;
     --warning: 55, 100%, 68%;
-    --success: 121, 28%, 51%;
+    --success: 126, 45%, 55%;
 
+    --tag-background: 220, 10%, 25%;
+    --tag-color: 220, 10%, 100%;
 }
+
 
 overshoot *,
 undershoot *,
 overshoot.top,
 overshoot.right,
 overshoot.bottom,
-overshoot.left
-undershoot.top,
+overshoot.left undershoot.top,
 undershoot.right,
 undershoot.bottom,
 undershoot.left,
-.scroll-window > *,
-overshoot:backdrop
-{
-  background: none;
-  border: none;
-  background-color: transparent;
+.scroll-window>*,
+overshoot:backdrop {
+    background: none;
+    border: none;
+    background-color: transparent;
 }
 
-*{
+* {
     padding: 0px;
     margin: 0px;
-    -gtk-secondary-caret-color: hsl(var(--background)); 
+    -gtk-secondary-caret-color: hsl(var(--background));
     outline-width: 0px;
     outline-offset: -3px;
     outline-style: dashed;
 }
 
-scrolledwindow > viewport *,
-scrolledwindow > viewport,
+scrolledwindow>viewport *,
+scrolledwindow>viewport,
 window,
 box {
     background: hsl(var(--background));
@@ -130,6 +131,25 @@ image {
     outline: none;
     border: none;
 }
+
+.tile:selected .tag,
+.tag {
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 2px 8px;
+    color: hsl(var(--tag-color));
+}
+
+.tile:selected .tag-start,
+.tag-start {
+    background: hsla(var(--tag-background), 0.7);
+}
+
+.tile:selected .tag-end,
+.tag-end {
+    background: hsla(var(--success), 0.6);
+}
+
 .tile:focus {
     outline: none;
 }
@@ -215,6 +235,7 @@ image {
     padding: 10px;
     min-height: 50px;
 }
+
 .error-tile {
     border-radius: 4px;
     padding: 5px 10px 10px 10px;
@@ -222,17 +243,21 @@ image {
     border: 1px solid transparent;
     margin-bottom: 10px;
 }
+
 .error-tile * {
     background: transparent;
 }
+
 .error {
     border: 1px solid hsla(var(--error), 0.5);
     background: hsla(var(--error), 0.1);
 }
-.warning{
+
+.warning {
     border: 1px solid hsla(var(--warning), 0.5);
     background: hsla(var(--warning), 0.1);
 }
+
 .error-tile #title {
     padding: 10px;
     font-size: 10px;
@@ -264,17 +289,21 @@ image {
     margin: 0px 2px 2px 2px;
     padding: 0px 10px;
 }
+
 .notifications * {
     background: none;
 }
-.notifications label{
+
+.notifications label {
     min-height: 25px;
     padding: 0px;
     margin: 0px;
 }
-#notification-center-image{
+
+#notification-center-image {
     margin-top: 1px;
 }
+
 @keyframes slide {
     from {
         transform: translate(0px, 0px);
@@ -284,3 +313,4 @@ image {
         transform: translate(-20px, 0px);
     }
 }
+
