@@ -25,12 +25,12 @@
 - [x] Allow the user to set flags such as `--config` to configure fallback, style, and config files.
 - [x] Implement a custom file for aliases and custom icons for apps.
 - [x] Improve Sherlock ignore file to support `*` macro and case sensitivity.
+- [x] Make it possible to customize the height and width of the window.
 - [ ] Provide better user integration from custom scripts, e.g., give control over tiles to spawn.
-- [ ] Make it possible to customize the height and width of the window.
 - [ ] Implement user-defined CSS classes for tile tags.
 - [ ] Implement the possibility to customize categories and their UI files. Allow specifying the UI files used for the categories. Required: category config file. (What ui file should be used for a specific cateogory)
 
 ## Documentation
-- [ ] Implement Flag Heading in the README.md.
+- [x] Add flag section in docs.
 
 
