@@ -1,5 +1,4 @@
 use gio::prelude::*;
-use gtk4::subclass::window;
 use gtk4::{prelude::*, Application};
 use std::{env, process};
 use std::sync::OnceLock;
