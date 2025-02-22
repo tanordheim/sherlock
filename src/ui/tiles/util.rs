@@ -31,6 +31,8 @@ pub struct TileBuilder{
     pub title: Label,
     pub category: Label,
     pub attrs: Box,
+    pub tag_start: Label,
+    pub tag_end: Label,
 }
 pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     let builder = Builder::from_resource(resource);
@@ -39,6 +41,8 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     let title: Label = builder.object("app-name").unwrap();
     let category: Label = builder.object("launcher-type").unwrap();
     let attrs: Box = builder.object("attrs-holder").unwrap();
+    let tag_start: Label = builder.object("app-name-tag-start").unwrap();
+    let tag_end: Label = builder.object("app-name-tag-end").unwrap();
 
     if index < 5 {
         let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
@@ -52,7 +56,9 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
         icon,
         title,
         category,
-        attrs
+        attrs,
+        tag_start,
+        tag_end,
     }
 
 
