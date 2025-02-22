@@ -40,6 +40,7 @@ pub struct SherlockFlags {
 pub struct SherlockAlias {
     pub name: Option<String>,
     pub icon: Option<String>,
+    pub exec: Option<String>,
     pub keywords: Option<String>,
 }
 
@@ -74,6 +75,8 @@ impl Config {
                     try_surpress_warnings: false,
                 },
                 appearance: ConfigAppearance {
+                    width: 900,
+                    height: 593,
                     gsk_renderer: "cairo".to_string(),
                     recolor_icons: false,
                     icon_paths: Default::default(),
@@ -86,14 +89,13 @@ impl Config {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ConfigDefaultApps {
-    #[serde(default="default_terminal")]
+    #[serde(default = "default_terminal")]
     pub terminal: String,
 }
 impl Default for ConfigDefaultApps {
     fn default() -> Self {
         Self {
-            terminal: get_terminal()
-                .unwrap_or_default(), // Should never get to this...
+            terminal: get_terminal().unwrap_or_default(), // Should never get to this...
         }
     }
 }
@@ -106,6 +108,10 @@ pub struct ConfigDebug {
 }
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigAppearance {
+    #[serde(default)]
+    pub width: i32,
+    #[serde(default)]
+    pub height: i32,
     #[serde(default)]
     pub gsk_renderer: String,
     #[serde(default)]
@@ -122,7 +128,7 @@ pub fn read_file(file_path: &str) -> std::io::Result<String> {
     Ok(content)
 }
 
-pub fn default_terminal() -> String{
+pub fn default_terminal() -> String {
     println!("didnt work");
     get_terminal().unwrap_or_default()
 }

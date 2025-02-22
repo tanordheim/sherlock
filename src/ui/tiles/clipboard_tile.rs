@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use gtk4::{prelude::*,ListBoxRow};
+use gtk4::{prelude::*, ListBoxRow};
 use regex::Regex;
+use std::collections::HashMap;
 
 use super::util::{get_builder, insert_attrs};
 use super::Tile;
@@ -15,8 +15,8 @@ impl Tile {
         let mut is_valid: i32 = 0;
 
         //TODO implement searchstring before clipboard content
-        if clipboard_content.contains(keyword){
-            let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index);
+        if clipboard_content.contains(keyword) {
+            let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
 
             let mut name = "";
             let mut method = "";
@@ -25,13 +25,14 @@ impl Tile {
             let known_pages = HashMap::from([
                 ("google", "google"),
                 ("chatgpt", "chat-gpt"),
-                ("youtube", "sherlock-youtube")
+                ("youtube", "sherlock-youtube"),
             ]);
 
             // Check if clipboard content is a url:
-            let re_url_check = r"^(https?:\/\/)?(www.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$";
+            let re_url_check =
+                r"^(https?:\/\/)?(www.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$";
             let re = Regex::new(re_url_check).unwrap();
-            if let Some(captures) = re.captures(clipboard_content){
+            if let Some(captures) = re.captures(clipboard_content) {
                 is_valid = 1;
                 name = "Clipboard Web-Search";
                 method = "web_launcher";
@@ -39,8 +40,7 @@ impl Tile {
                 icon = known_pages.get(main_domain).map_or("google", |m| m);
             }
 
-        
-            if is_valid  == 1{
+            if is_valid == 1 {
                 if name.is_empty() {
                     builder.category.set_visible(false);
                 }

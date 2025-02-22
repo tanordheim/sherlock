@@ -1,7 +1,7 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
-use std::{env, process};
 use std::sync::OnceLock;
+use std::{env, process};
 
 mod actions;
 mod launcher;
@@ -9,11 +9,12 @@ mod loader;
 mod lock;
 mod ui;
 
-use loader::{util::{SherlockError, Config}, Loader};
-
+use loader::{
+    util::{Config, SherlockError},
+    Loader,
+};
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
-
 
 #[tokio::main]
 async fn main() {
@@ -40,17 +41,16 @@ async fn main() {
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
 
-    match CONFIG.set(app_config.clone()){
+    match CONFIG.set(app_config.clone()) {
         Ok(_) => {}
         Err(_) => {
-            startup_errors.push(SherlockError{
+            startup_errors.push(SherlockError {
                 name: format!("Missing Config"),
                 message: format!("It should never come to this."),
                 traceback: format!(""),
             });
         }
     };
-
 
     let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
 
@@ -90,8 +90,6 @@ async fn main() {
             .unwrap_or_default();
         non_breaking.extend(n);
 
-
-
         // Main logic for the Search-View
         let (mut window, stack) = ui::window::window(&app);
         window = ui::search::search(window, &stack, launchers);
@@ -110,9 +108,7 @@ async fn main() {
             }
         }
         window.present();
-
     });
 
     application.run();
 }
-

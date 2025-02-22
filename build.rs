@@ -15,5 +15,4 @@ fn main() {
         panic!("glib-compile-resources failed");
     }
     println!("Resources compiled!!");
-
 }

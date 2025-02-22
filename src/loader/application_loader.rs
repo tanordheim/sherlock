@@ -5,19 +5,19 @@ use std::collections::HashMap;
 use std::fs::{self, read_to_string};
 use std::path::Path;
 
-use crate::CONFIG;
 use super::util::{SherlockError, SherlockFlags};
 use super::{util, Loader};
+use crate::CONFIG;
 use util::{read_file, AppData, SherlockAlias};
 
 impl Loader {
     pub fn load_applications(
         sherlock_flags: &SherlockFlags,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
-        let config = CONFIG.get().ok_or(SherlockError{
+        let config = CONFIG.get().ok_or(SherlockError {
             name: format!("Missing Config"),
             message: format!("It should never get to this."),
-            traceback: format!("")
+            traceback: format!(""),
         })?;
         // Define required paths for application parsing
         let sherlock_ignore_path = sherlock_flags.ignore.clone();
@@ -66,7 +66,7 @@ impl Loader {
                 traceback: e.to_string(),
             })?
         }
-    
+
         // Gather '.desktop' files
         let dektop_files: Vec<_> = fs::read_dir(system_apps)
             .expect("Unable to read/access /usr/share/applications directory")
@@ -107,10 +107,9 @@ impl Loader {
                     return None; // Skip entries with empty names
                 }
 
-
                 // Construct the executable command
                 let exec_path = parse_field(&content, &exec_re);
-                let exec = if parse_field(&content, &terminal_re) == "true" {
+                let mut exec = if parse_field(&content, &terminal_re) == "true" {
                     format!("{} {}", &config.default_apps.terminal, exec_path)
                 } else {
                     exec_path.to_string()
@@ -126,6 +125,9 @@ impl Loader {
                     }
                     if let Some(alias_keywords) = alias.keywords.as_ref() {
                         keywords = alias_keywords.to_string();
+                    }
+                    if let Some(alias_exec) = alias.exec.as_ref() {
+                        exec = alias_exec.to_string();
                     }
                 };
                 let search_string = format!("{};{}", name, keywords);

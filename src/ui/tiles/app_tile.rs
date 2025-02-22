@@ -24,20 +24,21 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
-                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index);
+                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
                 } else {
                     value.icon
                 };
-            
-                let tile_name = if key.contains("{keyword}"){
+
+                let tile_name = if key.contains("{keyword}") {
                     builder.tag_start.set_text(keyword);
                     builder.tag_start.set_visible(true);
                     &key.replace("{keyword}", "")
-                } else { &key };
-
+                } else {
+                    &key
+                };
 
                 if name.is_empty() {
                     builder.category.set_visible(false);

@@ -28,14 +28,7 @@ pub fn search(
     results.focus_first();
     search_bar.grab_focus();
 
-    change_event(
-        &search_bar,
-        modes,
-        &mode_title,
-        &mode,
-        &launchers,
-        &results,
-    );
+    change_event(&search_bar, modes, &mode_title, &mode, &launchers, &results);
 
     nav_event(
         &window,
@@ -182,7 +175,7 @@ fn change_event(
 
         if modes.contains_key(&current_text) {
             // Logic to apply modes
-            
+
             if let Some(mode_name) = modes.get(&current_text) {
                 set_mode(
                     &mode_title_ev_changed,

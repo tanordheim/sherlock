@@ -3,18 +3,18 @@ use gtk4::{Label, ListBoxRow};
 pub mod app_launcher;
 pub mod bulk_text_launcher;
 pub mod calc_launcher;
+pub mod clipboard_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
-pub mod clipboard_launcher;
 
 use crate::{ui::tiles::Tile, CONFIG};
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calc;
+use clipboard_launcher::Clp;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
-use clipboard_launcher::Clp;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -39,12 +39,8 @@ pub struct Launcher {
 }
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(
-        &self,
-        index: i32,
-        keyword: &String,
-    ) -> (i32, Vec<ListBoxRow>) {
-        if let Some(app_config)  = CONFIG.get() {
+    pub fn get_patch(&self, index: i32, keyword: &String) -> (i32, Vec<ListBoxRow>) {
+        if let Some(app_config) = CONFIG.get() {
             match &self.launcher_type {
                 LauncherType::App(app) => Tile::app_tile(
                     index,
@@ -54,13 +50,9 @@ impl Launcher {
                     keyword,
                     app_config,
                 ),
-                LauncherType::Web(web) => Tile::web_tile(
-                    &self.name,
-                    &self.method,
-                    &web,
-                    index,
-                    keyword,
-                ),
+                LauncherType::Web(web) => {
+                    Tile::web_tile(&self.name, &self.method, &web, index, keyword)
+                }
                 LauncherType::Calc(_) => Tile::calc_tile(index, keyword),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
@@ -75,13 +67,13 @@ impl Launcher {
                 ),
                 LauncherType::Clipboard(clp) => {
                     Tile::clipboard_tile(index, &clp.clipboard_content, keyword)
-                },
+                }
 
                 _ => (index, Vec::new()),
             }
         } else {
             (index, Vec::new())
-        } 
+        }
     }
     pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label)> {
         match &self.launcher_type {
@@ -99,11 +91,7 @@ impl Launcher {
     }
 }
 
-pub fn construct_tiles(
-    keyword: &String,
-    launchers: &[Launcher],
-    mode: &String,
-) -> Vec<ListBoxRow> {
+pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String) -> Vec<ListBoxRow> {
     let mut widgets = Vec::new();
     let mut index: i32 = 0;
     let sel_mode = mode.trim();

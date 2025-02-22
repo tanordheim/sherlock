@@ -1,5 +1,5 @@
 use crate::launcher::Launcher;
-use gtk4::{prelude::*, Box, Label, ListBoxRow, Image, Builder};
+use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow};
 
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
@@ -24,8 +24,7 @@ pub fn ensure_icon_name(name: String) -> String {
     }
 }
 
-
-pub struct TileBuilder{
+pub struct TileBuilder {
     pub object: ListBoxRow,
     pub icon: Image,
     pub title: Label,
@@ -37,10 +36,10 @@ pub struct TileBuilder{
     pub content_title: Label,
     pub content_body: Label,
     // Specific to 'calc_tile'
-    pub equation_holder: Label, 
+    pub equation_holder: Label,
     pub result_holder: Label,
 }
-pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
+pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuilder {
     let builder = Builder::from_resource(resource);
     let object: ListBoxRow = builder.object("holder").unwrap_or_default();
     let icon: Image = builder.object("icon-name").unwrap_or_default();
@@ -53,19 +52,19 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     // Specific to 'bulk_text_tile' and 'error_tile'
     let content_title: Label = builder.object("content-title").unwrap_or_default();
     let content_body: Label = builder.object("content-body").unwrap_or_default();
-    
+
     // Specific to 'calc_tile'
     let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
     let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
-    if index < 5 {
+    if show_shortcut && index < 5 {
         let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
         let shortcut: Label = builder.object("shortcut").unwrap_or_default();
         shortcut_holder.set_visible(true);
         shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
     }
 
-    TileBuilder{
+    TileBuilder {
         object,
         icon,
         title,

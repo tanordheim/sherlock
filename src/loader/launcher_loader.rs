@@ -2,18 +2,18 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::launcher::{
-    app_launcher, bulk_text_launcher, calc_launcher, system_cmd_launcher, web_launcher, clipboard_launcher, Launcher,
-    LauncherType,
-};
 use crate::actions::util::read_from_clipboard;
+use crate::launcher::{
+    app_launcher, bulk_text_launcher, calc_launcher, clipboard_launcher, system_cmd_launcher,
+    web_launcher, Launcher, LauncherType,
+};
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calc;
+use clipboard_launcher::Clp;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
-use clipboard_launcher::Clp;
 
 use super::{
     util::{self, SherlockError},
@@ -21,16 +21,12 @@ use super::{
 };
 use util::{AppData, CommandConfig, SherlockFlags};
 
-
-
-
 impl Loader {
     pub fn load_launchers(
         sherlock_flags: &SherlockFlags,
     ) -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
         // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
-
 
         let (config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
@@ -58,7 +54,7 @@ impl Loader {
                     "command" => {
                         let commands: HashMap<String, AppData> =
                             serde_json::from_value(cmd.args["commands"].clone())
-                            .unwrap_or_default();
+                                .unwrap_or_default();
                         LauncherType::SystemCommand(SystemCommand { commands })
                     }
                     "bulk_text" => LauncherType::BulkText(BulkText {
@@ -74,11 +70,9 @@ impl Loader {
                         if clipboard_content.is_empty() {
                             LauncherType::Empty
                         } else {
-                            LauncherType::Clipboard(Clp {
-                                clipboard_content
-                            })
+                            LauncherType::Clipboard(Clp { clipboard_content })
                         }
-                    },
+                    }
                     _ => LauncherType::Empty,
                 };
                 Some(Launcher {
@@ -91,7 +85,7 @@ impl Loader {
                     launcher_type,
                 })
             })
-        .collect();
+            .collect();
         launchers.sort_by_key(|s| s.priority);
         Ok((launchers, non_breaking))
     }
@@ -151,18 +145,18 @@ fn parse_launcher_configs(
             "/dev/skxxtz/sherlock/fallback.json",
             gio::ResourceLookupFlags::NONE,
         )
-            .map_err(|e| SherlockError {
-                name: format!("Resource Lookup Error"),
-                message: format!("Failed to load 'fallback.json' from resource."),
-                traceback: e.to_string(),
-            })?;
+        .map_err(|e| SherlockError {
+            name: format!("Resource Lookup Error"),
+            message: format!("Failed to load 'fallback.json' from resource."),
+            traceback: e.to_string(),
+        })?;
         let string_data = std::str::from_utf8(&data)
             .map_err(|e| SherlockError {
                 name: format!("File Parsing Error"),
                 message: format!("Failed to parse 'fallback.json' as a valid UTF-8 string."),
                 traceback: e.to_string(),
             })?
-        .to_string();
+            .to_string();
         let config = parse_json(string_data)?;
         Ok(config)
     }

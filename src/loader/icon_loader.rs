@@ -1,8 +1,8 @@
 use super::util::SherlockError;
 use super::Loader;
+use crate::CONFIG;
 use gtk4::{gdk::Display, IconTheme};
 use std::env;
-use crate::CONFIG;
 
 impl Loader {
     pub fn load_icon_theme() -> Vec<SherlockError> {
@@ -18,7 +18,7 @@ impl Loader {
                         traceback: e.to_string(),
                     });
                 })
-            .ok();
+                .ok();
 
             if let Some(h) = home_dir {
                 icon_paths

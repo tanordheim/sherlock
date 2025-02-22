@@ -61,21 +61,12 @@ pub fn set_home_screen(
         results_frame.append(&widget);
     }
 }
-pub fn set_results(
-    keyword: &str,
-    mode: &str,
-    results_frame: &ListBox,
-    launchers: &Vec<Launcher>,
-) {
+pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers: &Vec<Launcher>) {
     // Remove all elements inside to avoid duplicates
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    let widgets = construct_tiles(
-        &keyword.to_string(),
-        &launchers,
-        &mode.to_string(),
-    );
+    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
     for widget in widgets {
         results_frame.append(&widget);
     }

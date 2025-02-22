@@ -2,12 +2,20 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
+use crate::CONFIG;
+
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
+     // 618 with, 591 without notification bar
+    let (width, height) = if let Some(config) = CONFIG.get() {
+        (config.appearance.width, config.appearance.height)
+    } else {
+        (900, 591)
+    };
+
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
-        .default_width(900)
-        .default_height(591) // 618 with, 591 without notification bar
-        .resizable(false)
+        .default_width(width)
+        .default_height(height)        .resizable(false)
         .build();
 
     window.init_layer_shell();
