@@ -83,7 +83,11 @@ window {
     font-weight: bold;
     color: hsl(var(--text));
     opacity: 0.3;
+<<<<<<< HEAD
     padding: 10px 20px 0px 20px;
+=======
+    padding: 5px 20px 0px 20px;
+>>>>>>> 83ef08a9774b02173561f409cc289730a709dea0
 }
 
 

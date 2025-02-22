@@ -27,7 +27,7 @@ impl Loader {
     ) -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
         // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
-
+        // Read fallback data here:
         let (config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
 
