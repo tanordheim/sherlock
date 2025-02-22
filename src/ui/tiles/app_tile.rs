@@ -62,11 +62,11 @@ impl Tile {
                 icon_obj.set_icon_name(Some(&icon));
                 title_obj.set_markup(tile_name);
 
-                let attrs: Vec<String> = vec![
-                    format!("{} | {}", "method", method),
-                    format!("{} | {}", "app_name", &key),
-                    format!("{} | {}", "exec", &value.exec),
-                    format!("{} | {}", "keyword", keyword),
+                let attrs: Vec<(&str, &str)> = vec![
+                    ("method", method),
+                    ("app_name", &key),
+                    ("exec", &value.exec),
+                    ("keyword", keyword),
                 ];
 
                 insert_attrs(&attr_holder, attrs);
