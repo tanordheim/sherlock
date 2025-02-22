@@ -1,6 +1,6 @@
-use gtk4::{self, prelude::*, Builder, Label, ListBoxRow};
+use gtk4::{prelude::*, ListBoxRow};
 
-use super::Tile;
+use super::{util::get_builder, Tile};
 use crate::loader::util::SherlockError;
 
 impl Tile {
@@ -13,25 +13,21 @@ impl Tile {
         let widgets: Vec<ListBoxRow> = errors
             .iter()
             .map(|e| {
-                let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_tile.ui");
 
-                let holder: ListBoxRow = builder.object("holder").unwrap();
-                let title: Label = builder.object("title").unwrap();
-                let content_title: Label = builder.object("content-title").unwrap();
-                let content_body: Label = builder.object("content-body").unwrap();
+                let builder = get_builder("/dev/skxxtz/sherlock/ui/error_tile.ui", index);
 
                 if let Some(class) = match tile_type {
                     "ERROR" => Some("error"),
                     "WARNING" => Some("warning"),
                     _ => None,
                 } {
-                    holder.set_css_classes(&["error-tile", class]);
+                    builder.object.set_css_classes(&["error-tile", class]);
                 }
 
-                title.set_text(format!("{:5}{}:  {}", icon, tile_type, &e.name).as_str());
-                content_title.set_text(&e.message);
-                content_body.set_text(&e.traceback.trim());
-                holder
+                builder.title.set_text(format!("{:5}{}:  {}", icon, tile_type, &e.name).as_str());
+                builder.content_title.set_text(&e.message);
+                builder.content_body.set_text(&e.traceback.trim());
+                builder.object
             })
             .collect();
 

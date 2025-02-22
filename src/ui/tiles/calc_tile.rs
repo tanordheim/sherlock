@@ -1,4 +1,4 @@
-use gtk4::{self, Box, Builder, Label, ListBoxRow};
+use gtk4::ListBoxRow;
 use meval::eval_str;
 
 use super::util::{get_builder, insert_attrs};

@@ -1,4 +1,4 @@
-use gtk4::{self, builders, prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::{prelude::*, ListBoxRow};
 use std::collections::HashMap;
 
 use crate::loader::util::{AppData, Config};

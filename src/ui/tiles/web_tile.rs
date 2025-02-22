@@ -1,3 +1,4 @@
+use gtk4::prelude::WidgetExt;
 use gtk4::ListBoxRow;
 
 use super::util::{insert_attrs, get_builder};
@@ -18,7 +19,13 @@ impl Tile {
 
             builder.category.set_text(name);
             builder.icon.set_icon_name(Some(&web.icon));
-            builder.title.set_text(keyword);
+            if web.display_name.contains("{keyword}") {
+                builder.title.set_text(&web.display_name.replace("{keyword}", ""));
+                builder.tag_start.set_text(keyword);
+                builder.tag_start.set_visible(true);
+            } else {
+                builder.title.set_text(keyword);
+            }
 
             let attrs: Vec<(&str, &str)> = vec![
                 ("method", method),

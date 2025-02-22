@@ -1,9 +1,8 @@
 use std::collections::HashMap;
-
-use gtk4::{self, prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::{prelude::*,ListBoxRow};
 use regex::Regex;
 
-use super::util::insert_attrs;
+use super::util::{get_builder, insert_attrs};
 use super::Tile;
 
 impl Tile {
@@ -17,19 +16,7 @@ impl Tile {
 
         //TODO implement searchstring before clipboard content
         if clipboard_content.contains(keyword){
-            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
-            let holder: ListBoxRow = builder.object("holder").unwrap();
-            let icon_obj: Image = builder.object("icon-name").unwrap();
-            let title_obj: Label = builder.object("app-name").unwrap();
-            let attr_holder: Box = builder.object("attrs-holder").unwrap();
-            let launcher_type: Label = builder.object("launcher-type").unwrap();
-
-            if index < 5 {
-                let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
-                let shortcut: Label = builder.object("shortcut").unwrap();
-                shortcut_holder.set_visible(true);
-                shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
-            }
+            let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index);
 
             let mut name = "";
             let mut method = "";
@@ -55,21 +42,21 @@ impl Tile {
         
             if is_valid  == 1{
                 if name.is_empty() {
-                    launcher_type.set_visible(false);
+                    builder.category.set_visible(false);
                 }
 
-                launcher_type.set_text(name);
-                title_obj.set_text(clipboard_content);
-                icon_obj.set_icon_name(Some(&icon));
+                builder.category.set_text(name);
+                builder.title.set_text(clipboard_content);
+                builder.icon.set_icon_name(Some(&icon));
 
-                let attrs: Vec<String> = vec![
-                    format!("{} | {}", "method", method),
-                    format!("{} | {}", "keyword", clipboard_content),
-                    format!("{} | {}", "engine", "plain"),
+                let attrs: Vec<(&str, &str)> = vec![
+                    ("method", method),
+                    ("keyword", clipboard_content.as_str()),
+                    ("engine", "plain"),
                 ];
 
-                insert_attrs(&attr_holder, attrs);
-                results.push(holder);
+                insert_attrs(&builder.attrs, attrs);
+                results.push(builder.object);
             }
         }
 

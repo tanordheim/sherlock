@@ -50,17 +50,17 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
     let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
 
-    // Specific to 'bulk_text_tile'
+    // Specific to 'bulk_text_tile' and 'error_tile'
     let content_title: Label = builder.object("content-title").unwrap_or_default();
     let content_body: Label = builder.object("content-body").unwrap_or_default();
     
     // Specific to 'calc_tile'
-    let equation_holder: Label = builder.object("equation-holder").unwrap();
-    let result_holder: Label = builder.object("result-holder").unwrap();
+    let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
+    let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
     if index < 5 {
-        let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
-        let shortcut: Label = builder.object("shortcut").unwrap();
+        let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
+        let shortcut: Label = builder.object("shortcut").unwrap_or_default();
         shortcut_holder.set_visible(true);
         shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
     }

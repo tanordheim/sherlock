@@ -35,6 +35,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>){
             "bulk_text" => {
                 let string = attrs.get("result").expect("Missing field: result");
                 util::copy_to_clipboard(string);
+                exit(0)
             }
             _ => {
                 eprint!("Invalid method: {}", method)
