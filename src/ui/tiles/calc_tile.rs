@@ -1,7 +1,7 @@
 use gtk4::{self, Box, Builder, Label, ListBoxRow};
 use meval::eval_str;
 
-use super::util::insert_attrs;
+use super::util::{get_builder, insert_attrs};
 use super::Tile;
 
 impl Tile {
@@ -9,24 +9,19 @@ impl Tile {
         let mut results: Vec<ListBoxRow> = Default::default();
         match eval_str(equation) {
             Ok(result) => {
-                let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/calc_tile.ui");
+                let builder = get_builder("/dev/skxxtz/sherlock/ui/calc_tile.ui", index);
+                builder.equation_holder.set_text(&equation);
+                builder.result_holder.set_text(format!("= {}", result.to_string()).as_str());
 
-                let holder: ListBoxRow = builder.object("holder").unwrap();
-                let attr_holder: Box = builder.object("attrs-holder").unwrap();
+                let result = result.to_string();
 
-                let equation_holder: Label = builder.object("equation-holder").unwrap();
-                let result_holder: Label = builder.object("result-holder").unwrap();
-
-                equation_holder.set_text(&equation);
-                result_holder.set_text(format!("= {}", result.to_string()).as_str());
-
-                let attrs: Vec<String> = vec![
-                    format!("{} | {}", "method", "copy"),
-                    format!("{} | {}", "result", result),
+                let attrs: Vec<(&str, &str)> = vec![
+                    ("method", "copy"),
+                    ("result", result.as_str()),
                 ];
-                insert_attrs(&attr_holder, attrs);
+                insert_attrs(&builder.attrs, attrs);
 
-                results.push(holder);
+                results.push(builder.object);
             }
             _ => {}
         }

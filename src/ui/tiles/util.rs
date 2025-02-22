@@ -33,8 +33,12 @@ pub struct TileBuilder{
     pub attrs: Box,
     pub tag_start: Label,
     pub tag_end: Label,
+    // Specific to 'bulk_text_tile'
     pub content_title: Label,
     pub content_body: Label,
+    // Specific to 'calc_tile'
+    pub equation_holder: Label, 
+    pub result_holder: Label,
 }
 pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     let builder = Builder::from_resource(resource);
@@ -49,6 +53,10 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     // Specific to 'bulk_text_tile'
     let content_title: Label = builder.object("content-title").unwrap_or_default();
     let content_body: Label = builder.object("content-body").unwrap_or_default();
+    
+    // Specific to 'calc_tile'
+    let equation_holder: Label = builder.object("equation-holder").unwrap();
+    let result_holder: Label = builder.object("result-holder").unwrap();
 
     if index < 5 {
         let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
@@ -65,7 +73,11 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
         attrs,
         tag_start,
         tag_end,
+
         content_body,
         content_title,
+
+        equation_holder,
+        result_holder,
     }
 }
