@@ -33,16 +33,22 @@ pub struct TileBuilder{
     pub attrs: Box,
     pub tag_start: Label,
     pub tag_end: Label,
+    pub content_title: Label,
+    pub content_body: Label,
 }
 pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
     let builder = Builder::from_resource(resource);
-    let object: ListBoxRow = builder.object("holder").unwrap();
-    let icon: Image = builder.object("icon-name").unwrap();
-    let title: Label = builder.object("app-name").unwrap();
-    let category: Label = builder.object("launcher-type").unwrap();
-    let attrs: Box = builder.object("attrs-holder").unwrap();
-    let tag_start: Label = builder.object("app-name-tag-start").unwrap();
-    let tag_end: Label = builder.object("app-name-tag-end").unwrap();
+    let object: ListBoxRow = builder.object("holder").unwrap_or_default();
+    let icon: Image = builder.object("icon-name").unwrap_or_default();
+    let title: Label = builder.object("app-name").unwrap_or_default();
+    let category: Label = builder.object("launcher-type").unwrap_or_default();
+    let attrs: Box = builder.object("attrs-holder").unwrap_or_default();
+    let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
+    let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
+
+    // Specific to 'bulk_text_tile'
+    let content_title: Label = builder.object("content-title").unwrap_or_default();
+    let content_body: Label = builder.object("content-body").unwrap_or_default();
 
     if index < 5 {
         let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
@@ -59,9 +65,7 @@ pub fn get_builder(resource: &str, index: i32)-> TileBuilder{
         attrs,
         tag_start,
         tag_end,
+        content_body,
+        content_title,
     }
-
-
-
 }
-

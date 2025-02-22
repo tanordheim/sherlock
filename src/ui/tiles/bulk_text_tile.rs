@@ -1,7 +1,8 @@
-use gtk4::{self, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::{Label, ListBoxRow};
 
-use super::util::insert_attrs;
+use super::util::{get_builder, insert_attrs};
 use super::Tile;
+
 
 impl Tile {
     pub fn bulk_text_tile_loader(
@@ -11,26 +12,20 @@ impl Tile {
         keyword: &String,
     ) -> Option<(ListBoxRow, Label, Label)> {
         if !keyword.is_empty() {
-            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
-            let holder: ListBoxRow = builder.object("holder").unwrap();
-            let launcher_type: Label = builder.object("launcher-type").unwrap();
-            let icon_obj: Image = builder.object("icon-name").unwrap();
-            let content_title: Label = builder.object("content-title").unwrap();
-            let content_body: Label = builder.object("content-body").unwrap();
-            let attr_holder: Box = builder.object("attrs-holder").unwrap();
+            let builder = get_builder("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0);
 
-            launcher_type.set_text(name);
-            icon_obj.set_icon_name(Some(icon));
-            content_title.set_text(keyword);
-            content_body.set_text("Loading...");
+            builder.category.set_text(name);
+            builder.icon.set_icon_name(Some(icon));
+            builder.content_title.set_text(keyword);
+            builder.content_body.set_text("Loading...");
 
-            let attrs: Vec<String> = vec![
-                format!("{} | {}", "method", method),
-                format!("{} | {}", "keyword", keyword),
+            let attrs: Vec<(&str, &str)> = vec![
+                ("method", method),
+                ("keyword", keyword),
             ];
-            insert_attrs(&attr_holder, attrs);
+            insert_attrs(&builder.attrs, attrs);
 
-            return Some((holder, content_title, content_body));
+            return Some((builder.object, builder.content_title, builder.content_body));
         }
         return None;
     }
@@ -42,24 +37,19 @@ impl Tile {
         keyword: &String,
     ) -> (i32, Vec<ListBoxRow>) {
         if !keyword.is_empty() {
-            let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
-            let holder: ListBoxRow = builder.object("holder").unwrap();
-            let launcher_type: Label = builder.object("launcher-type").unwrap();
-            let icon_obj: Image = builder.object("icon-name").unwrap();
-            let title_obj: Label = builder.object("content-title").unwrap();
-            let attr_holder: Box = builder.object("attrs-holder").unwrap();
 
-            launcher_type.set_text(name);
-            icon_obj.set_icon_name(Some(icon));
-            title_obj.set_text(keyword);
+            let builder = get_builder("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index);
+            builder.category.set_text(name);
+            builder.icon.set_icon_name(Some(icon));
+            builder.title.set_text(keyword);
 
-            let attrs: Vec<String> = vec![
-                format!("{} | {}", "method", method),
-                format!("{} | {}", "keyword", keyword),
+            let attrs: Vec<(&str, &str)> = vec![
+                ("method", method),
+                ("keyword", keyword),
             ];
-            insert_attrs(&attr_holder, attrs);
+            insert_attrs(&builder.attrs, attrs);
 
-            return (index + 1, vec![holder]);
+            return (index + 1, vec![builder.object]);
         }
         (index, vec![])
     }
