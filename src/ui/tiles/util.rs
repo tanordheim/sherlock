@@ -8,10 +8,10 @@ pub struct AsyncLauncherTile {
     pub body: Label,
 }
 
-pub fn insert_attrs(attr_holder: &Box, attrs: Vec<String>) {
+pub fn insert_attrs(attr_holder: &Box, attrs: Vec<(&str, &str)>) {
     for item in attrs {
-        let label = Label::new(None);
-        label.set_text(&item);
+        let (key, value, ..) = item;
+        let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
         attr_holder.append(&label);
     }
 }

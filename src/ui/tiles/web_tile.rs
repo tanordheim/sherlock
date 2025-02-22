@@ -20,10 +20,10 @@ impl Tile {
             builder.icon.set_icon_name(Some(&web.icon));
             builder.title.set_text(keyword);
 
-            let attrs: Vec<String> = vec![
-                format!("{} | {}", "method", method),
-                format!("{} | {}", "engine", web.engine),
-                format!("{} | {}", "keyword", keyword),
+            let attrs: Vec<(&str, &str)> = vec![
+                ("method", method),
+                ("engine", &web.engine),
+                ("keyword", keyword),
             ];
             insert_attrs(&builder.attrs, attrs);
 
