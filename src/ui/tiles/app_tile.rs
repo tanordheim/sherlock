@@ -1,9 +1,9 @@
-use gtk4::{self, prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::{self, builders, prelude::*, Box, Builder, Image, Label, ListBoxRow};
 use std::collections::HashMap;
 
 use crate::loader::util::{AppData, Config};
 
-use super::util::{ensure_icon_name, insert_attrs};
+use super::util::{ensure_icon_name, get_builder, insert_attrs};
 use super::Tile;
 
 impl Tile {
@@ -24,22 +24,7 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
-                //TODO Remoce the unwrap and make proper error handling
-                let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/tile.ui");
-                let holder: ListBoxRow = builder.object("holder").unwrap();
-                let icon_obj: Image = builder.object("icon-name").unwrap();
-                let title_obj: Label = builder.object("app-name").unwrap();
-                let attr_holder: Box = builder.object("attrs-holder").unwrap();
-
-                let tag_start: Label = builder.object("app-name-tag-start").unwrap();
-                let tag_end: Label = builder.object("app-name-tag-end").unwrap();
-
-                if index_ref < 5 {
-                    let shortcut_holder: Box = builder.object("shortcut-holder").unwrap();
-                    let shortcut: Label = builder.object("shortcut").unwrap();
-                    shortcut_holder.set_visible(true);
-                    shortcut.set_text(format!("ctrl + {}", index_ref + 1).as_str());
-                }
+                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
@@ -48,19 +33,18 @@ impl Tile {
                 };
             
                 let tile_name = if key.contains("{keyword}"){
-                    tag_start.set_text(keyword);
-                    tag_start.set_visible(true);
+                    builder.tag_start.set_text(keyword);
+                    builder.tag_start.set_visible(true);
                     &key.replace("{keyword}", "")
                 } else { &key };
 
 
-                let launcher_type: Label = builder.object("launcher-type").unwrap();
                 if name.is_empty() {
-                    launcher_type.set_visible(false);
+                    builder.category.set_visible(false);
                 }
-                launcher_type.set_text(name);
-                icon_obj.set_icon_name(Some(&icon));
-                title_obj.set_markup(tile_name);
+                builder.category.set_text(name);
+                builder.icon.set_icon_name(Some(&icon));
+                builder.title.set_markup(tile_name);
 
                 let attrs: Vec<(&str, &str)> = vec![
                     ("method", method),
@@ -69,9 +53,9 @@ impl Tile {
                     ("keyword", keyword),
                 ];
 
-                insert_attrs(&attr_holder, attrs);
+                insert_attrs(&builder.attrs, attrs);
                 index_ref += 1;
-                results.push(holder);
+                results.push(builder.object);
             }
         }
         return (index_ref, results);
