@@ -6,32 +6,31 @@ pub mod commandlaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs(attrs: HashMap<String, String>) {
+pub fn execute_from_attrs(attrs: HashMap<String, String>){
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
             "app_launcher" => {
-                let exec = attrs.get("exec").expect("Missing field: exec");
+                let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
                 exit(0);
             }
             "web_launcher" => {
-                let query = attrs
-                    .get("keyword")
-                    .expect("Missing field: keyword (query)");
-                let engine = attrs.get("engine").expect("Missing field: engine (query)");
+                let query = attrs.get("keyword").map_or("", |s| s.as_str());
+                let engine = attrs.get("engine").map_or("", |s| s.as_str());
                 websearch::websearch(engine, query);
                 exit(0);
             }
             "command" => {
-                let exec = attrs.get("exec").expect("Missing field: exec");
-                let keyword = attrs.get("keyword").expect("Missing field: keyword");
+                let exec = attrs.get("exec").map_or("", |s| s.as_str());
+                let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
                 exit(0)
             }
             "copy" => {
-                let string = attrs.get("result").expect("Missing field: result");
-                let _ = util::copy_to_clipboard(string);
-                exit(0)
+                if let Some(result) = attrs.get("result"){
+                    let _ = util::copy_to_clipboard(result);
+                    exit(0)
+                }
             }
             _ => {
                 eprint!("Invalid method: {}", method)

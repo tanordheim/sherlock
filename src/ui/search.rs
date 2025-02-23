@@ -167,15 +167,13 @@ fn change_event(
     let cancel_flag = Rc::new(RefCell::new(false));
 
     search_bar.connect_changed(move |search_bar| {
-        let current_text = search_bar.text().trim().to_string();
+        let current_text = search_bar.text().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
             task.abort();
         };
         *cancel_flag.borrow_mut() = true;
-
-        if modes.contains_key(&current_text) {
+        if modes.contains_key(&current_text){
             // Logic to apply modes
-
             if let Some(mode_name) = modes.get(&current_text) {
                 set_mode(
                     &mode_title_ev_changed,
