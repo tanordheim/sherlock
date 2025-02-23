@@ -162,7 +162,5 @@ trait SherlockSearch {
         let concat_str: String = self.as_ref().chars().filter(|s| char_pattern.contains(s)).collect();
         concat_str.contains(substring.as_ref())
     }
-
 }
 impl SherlockSearch for String{}
-
