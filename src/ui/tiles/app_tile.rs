@@ -24,7 +24,7 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
-                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index_ref, true);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
