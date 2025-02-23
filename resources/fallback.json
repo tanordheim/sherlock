@@ -1,5 +1,12 @@
 [
     {
+        "name": "Clipboard",
+        "type": "clipboard-execution",
+        "args": {},
+        "priority": 1,
+        "home": true
+    },
+    {
         "name": "Calculator",
         "type": "calculation",
         "args": {},
@@ -27,8 +34,8 @@
         "alias": "nm",
         "type": "command",
         "args": {"commands": {
-            "Waves": {"icon": "network-connect", "exec": "nmcli d wifi c Waves &", "search_string": "wifi;waves"},
-            "Waves-AP": {"icon": "network-connect", "exec": "nmcli d wifi c Waves-AP &", "search_string": "wifi;wavesap"}
+            "Waves": {"icon": "network-connect", "exec": "nmcli d wifi c SSID &", "search_string": "wifi"},
+            "Waves-AP": {"icon": "network-connect", "exec": "nmcli d wifi c SSID &", "search_string": "wifi"}
         }},
         "priority": 4
     },
@@ -53,12 +60,23 @@
         }},
         "priority": 5
     },
+    {
+        "name": "Utilities",
+        "alias": "",
+        "type": "command",
+        "args": {"commands": {
+            "Color Picker": {"icon": "colorgrab", "exec": "hyprpicker -a &", "search_string": "colorpicker"}
+        }},
+        "priority": 5
+    },
 
 
 
 
     {
         "name": "Web Search",
+        "display_name": "Google Search {keyword}",
+        "on_return": "copy",
         "alias": "gg",
         "type": "web_launcher",
         "args": {"search_engine": "google", "icon": "google"},
@@ -67,7 +85,7 @@
     {
         "name": "YouTube Search",
         "alias": "yt",
-        "type": "web_search",
+        "type": "web_launcher",
         "args": {"search_engine": "https://www.youtube.com/results?search_query={keyword}", "icon": "sherlock-youtube"},
         "priority": 100
     },
@@ -75,9 +93,13 @@
         "name": "Wikipedia Search",
         "alias": "wiki",
         "type": "bulk_text",
+        "on_return": "copy",
         "async": true, 
-        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "{keyword}"},
+        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "'{keyword}'"},
         "priority": 0 
     }
 ]
+
+
+
 
