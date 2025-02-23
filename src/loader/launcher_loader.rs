@@ -66,7 +66,7 @@ impl Loader {
                             .to_string(),
                     }),
                     "clipboard-execution" => {
-                        let clipboard_content: String = read_from_clipboard();
+                        let clipboard_content: String = read_from_clipboard().map_err(|e| non_breaking.push(e)).unwrap_or_default();
                         if clipboard_content.is_empty() {
                             LauncherType::Empty
                         } else {
