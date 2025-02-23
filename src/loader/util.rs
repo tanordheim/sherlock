@@ -9,7 +9,7 @@ pub struct CommandConfig {
     pub name: String,
     pub alias: Option<String>,
     pub display_name: Option<String>,
-    pub on_enter: Option<String>,
+    pub on_return: Option<String>,
     pub r#type: String,
     pub priority: u32,
 

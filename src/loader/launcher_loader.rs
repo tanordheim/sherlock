@@ -75,7 +75,7 @@ impl Loader {
                     }
                     _ => LauncherType::Empty,
                 };
-                let method:String = if let Some(value) = &cmd.on_enter {
+                let method:String = if let Some(value) = &cmd.on_return {
                     value.to_string()
                 } else {
                     cmd.r#type.clone()
