@@ -1,5 +1,6 @@
 use crate::launcher::Launcher;
 use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
@@ -80,3 +81,20 @@ pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuild
         result_holder,
     }
 }
+
+pub trait SherlockSearch {
+    fn fuzzy_match<T>(&self, substring: T) -> bool
+    where
+        Self: AsRef<str>,
+        T: AsRef<str>,
+    {
+        let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
+        let concat_str: String = self
+            .as_ref()
+            .chars()
+            .filter(|s| char_pattern.contains(s))
+            .collect();
+        concat_str.contains(substring.as_ref())
+    }
+}
+impl SherlockSearch for String {}

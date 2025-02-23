@@ -1,10 +1,7 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
-use loader::flag_loader::print_help;
-use std::collections::HashSet;
 use std::sync::OnceLock;
 use std::{env, process};
-use std::io::{self, Read};
 
 mod actions;
 mod launcher;
@@ -12,36 +9,10 @@ mod loader;
 mod lock;
 mod ui;
 
-
 use loader::{
     util::{Config, SherlockError},
     Loader,
 };
-
-use std::os::unix::io::AsRawFd;
-use nix::fcntl::{fcntl, FcntlArg, OFlag};
-
-
-fn pipe_content() -> String {
-    let mut stdin = io::stdin();
-    let mut buffer = String::new();
-
-    let fd = stdin.lock().as_raw_fd();  
-
-    match fcntl(fd, FcntlArg::F_GETFL) {
-        Ok(flags) => {
-            let flags = OFlag::from_bits_truncate(flags);
-            if let Ok(_) = fcntl(fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK | flags)) {
-
-                let _  = stdin.read_to_string(&mut buffer);
-                
-                return buffer;
-            }
-        }
-        Err(_) => {}
-    }
-    String::new()
-}
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
 
@@ -49,7 +20,6 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 async fn main() {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
-
 
     // Check for '.lock'-file to only start a single instance
     let lock_file = "/tmp/sherlock.lock";
@@ -82,9 +52,7 @@ async fn main() {
         }
     };
 
-
     let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
-
 
     // Initialize application
     let application = Application::new(
@@ -127,11 +95,15 @@ async fn main() {
 
         // Either show user-specified content or show normal search
         window = {
-            let pipe = pipe_content();
-            if pipe.is_empty(){
+            let pipe = Loader::load_pipe_args();
+            if pipe.is_empty() {
                 ui::search::search(window, &stack, launchers)
             } else {
-                let lines:Vec<String> = pipe.split("\n").filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
+                let lines: Vec<String> = pipe
+                    .split("\n")
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect();
                 ui::user::display_pipe(window, &stack, lines)
             }
         };
@@ -156,15 +128,3 @@ async fn main() {
     application.run();
 }
 
-trait SherlockSearch {
-    fn fuzzy_match<T>(&self, substring: T)->bool
-    where
-        Self: AsRef<str>,
-        T: AsRef<str>
-    {
-        let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
-        let concat_str: String = self.as_ref().chars().filter(|s| char_pattern.contains(s)).collect();
-        concat_str.contains(substring.as_ref())
-    }
-}
-impl SherlockSearch for String{}

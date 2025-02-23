@@ -1,7 +1,7 @@
 use gtk4::gdk::Rectangle;
 use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, Widget};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
@@ -134,3 +134,5 @@ impl RowOperations for ListBox {
         return ListBoxRow::new();
     }
 }
+
+

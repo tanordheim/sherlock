@@ -1,6 +1,6 @@
 
 use gtk4::ListBoxRow;
-use crate::SherlockSearch;
+use super::util::SherlockSearch;
 
 use super::util::{get_builder, insert_attrs};
 use super::Tile;
