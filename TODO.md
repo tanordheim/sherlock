@@ -11,6 +11,7 @@
 ## Functionalities
 - [x] Implement a locking mechanism to ensure only one instance is running at a time.
 - [x] Implement tags on command widgets 
+- [x] Implement piping into sherlock
 - [ ] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
 - [ ] → Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Make more widgets asynchronous.
