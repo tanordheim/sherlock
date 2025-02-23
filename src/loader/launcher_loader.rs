@@ -66,7 +66,9 @@ impl Loader {
                             .to_string(),
                     }),
                     "clipboard-execution" => {
-                        let clipboard_content: String = read_from_clipboard().map_err(|e| non_breaking.push(e)).unwrap_or_default();
+                        let clipboard_content: String = read_from_clipboard()
+                            .map_err(|e| non_breaking.push(e))
+                            .unwrap_or_default();
                         if clipboard_content.is_empty() {
                             LauncherType::Empty
                         } else {
@@ -75,7 +77,7 @@ impl Loader {
                     }
                     _ => LauncherType::Empty,
                 };
-                let method:String = if let Some(value) = &cmd.on_return {
+                let method: String = if let Some(value) = &cmd.on_return {
                     value.to_string()
                 } else {
                     cmd.r#type.clone()

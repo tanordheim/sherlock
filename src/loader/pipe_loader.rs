@@ -1,9 +1,8 @@
-use std::io::{self, Read};
 use nix::fcntl::{fcntl, FcntlArg, OFlag};
+use std::io::{self, Read};
 use std::os::unix::io::AsRawFd;
 
 use super::Loader;
-
 
 impl Loader {
     pub fn load_pipe_args() -> String {
@@ -26,4 +25,3 @@ impl Loader {
         String::new()
     }
 }
-

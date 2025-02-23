@@ -127,4 +127,3 @@ async fn main() {
 
     application.run();
 }
-

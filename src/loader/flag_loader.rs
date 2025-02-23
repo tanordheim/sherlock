@@ -94,5 +94,3 @@ pub fn print_help() -> Result<(), SherlockError> {
 
     Ok(())
 }
-
-

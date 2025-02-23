@@ -5,7 +5,7 @@ use gtk4_layer_shell::{Layer, LayerShell};
 use crate::CONFIG;
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
-     // 618 with, 591 without notification bar
+    // 618 with, 591 without notification bar
     let (width, height) = if let Some(config) = CONFIG.get() {
         (config.appearance.width, config.appearance.height)
     } else {
@@ -15,7 +15,8 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(width)
-        .default_height(height)        .resizable(false)
+        .default_height(height)
+        .resizable(false)
         .build();
 
     window.init_layer_shell();
