@@ -52,6 +52,7 @@ impl Tile {
                     ("app_name", &key),
                     ("exec", &value.exec),
                     ("keyword", keyword),
+                    ("result", keyword),
                 ];
 
                 insert_attrs(&builder.attrs, attrs);

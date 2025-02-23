@@ -32,6 +32,7 @@ impl Tile {
                 ("method", method),
                 ("engine", &web.engine),
                 ("keyword", keyword),
+                ("result", keyword),
             ];
             insert_attrs(&builder.attrs, attrs);
 

@@ -13,7 +13,7 @@ use std::rc::Rc;
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
-use crate::launcher::Launcher;
+use crate::launcher::{construct_tiles, Launcher};
 
 pub fn search(
     window: ApplicationWindow,
@@ -240,4 +240,15 @@ fn change_event(
             *current_task.borrow_mut() = Some(task);
         }
     });
+}
+
+pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers: &Vec<Launcher>) {
+    // Remove all elements inside to avoid duplicates
+    while let Some(row) = results_frame.last_child() {
+        results_frame.remove(&row);
+    }
+    let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
+    for widget in widgets {
+        results_frame.append(&widget);
+    }
 }

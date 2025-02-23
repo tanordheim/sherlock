@@ -6,7 +6,7 @@ pub mod commandlaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs(attrs: HashMap<String, String>){
+pub fn execute_from_attrs(attrs: HashMap<String, String>) {
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
             "app_launcher" => {
@@ -27,9 +27,8 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>){
                 exit(0)
             }
             "copy" => {
-                if let Some(result) = attrs.get("result"){
-                    let _ = util::copy_to_clipboard(result);
-                    exit(0)
+                if let Some(result) = attrs.get("result") {
+                    let _ = util::copy_to_clipboard(result.as_str());
                 }
             }
             _ => {

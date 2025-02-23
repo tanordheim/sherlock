@@ -2,6 +2,7 @@ use gio::prelude::*;
 use gtk4::{prelude::*, Application};
 use std::sync::OnceLock;
 use std::{env, process};
+use std::io::{self, Read};
 
 mod actions;
 mod launcher;
@@ -9,10 +10,36 @@ mod loader;
 mod lock;
 mod ui;
 
+
 use loader::{
     util::{Config, SherlockError},
     Loader,
 };
+
+use std::os::unix::io::AsRawFd;
+use nix::fcntl::{fcntl, FcntlArg, OFlag};
+
+
+fn pipe_content() -> Option<String> {
+    let mut stdin = io::stdin();
+    let mut buffer = String::new();
+
+    let fd = stdin.lock().as_raw_fd();  
+
+    match fcntl(fd, FcntlArg::F_GETFL) {
+        Ok(flags) => {
+            let flags = OFlag::from_bits_truncate(flags);
+            if let Ok(_) = fcntl(fd, FcntlArg::F_SETFL(OFlag::O_NONBLOCK | flags)) {
+
+                let _  = stdin.read_to_string(&mut buffer);
+                
+                return Some(buffer);
+            }
+        }
+        Err(_) => {}
+    }
+    None
+}
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
 
@@ -20,6 +47,8 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 async fn main() {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
+
+
 
     // Check for '.lock'-file to only start a single instance
     let lock_file = "/tmp/sherlock.lock";
@@ -92,7 +121,15 @@ async fn main() {
 
         // Main logic for the Search-View
         let (mut window, stack) = ui::window::window(&app);
-        window = ui::search::search(window, &stack, launchers);
+
+        // Either show user-specified content or show normal search
+        window = if let Some(pipe) = pipe_content(){
+            let lines:Vec<String> = pipe.split("\n").filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
+            ui::user::display_pipe(window, &stack, lines)
+        } else {
+            ui::search::search(window, &stack, launchers)
+        };
+
         // Logic for the Error-View
         if !app_config.debug.try_surpress_errors {
             if !app_config.debug.try_surpress_warnings {
