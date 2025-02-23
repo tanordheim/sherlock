@@ -75,10 +75,15 @@ impl Loader {
                     }
                     _ => LauncherType::Empty,
                 };
+                let method:String = if let Some(value) = &cmd.on_enter {
+                    value.to_string()
+                } else {
+                    cmd.r#type.clone()
+                };
                 Some(Launcher {
                     name: cmd.name.to_string(),
                     alias: cmd.alias.clone(),
-                    method: cmd.r#type.clone(),
+                    method,
                     priority: cmd.priority,
                     r#async: cmd.r#async,
                     home: cmd.home,
