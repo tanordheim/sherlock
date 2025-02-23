@@ -1,7 +1,10 @@
 
 use gtk4::ListBoxRow;
+use crate::SherlockSearch;
+
 use super::util::{get_builder, insert_attrs};
 use super::Tile;
+
 
 impl Tile {
     pub fn simple_text_tile(
@@ -14,7 +17,7 @@ impl Tile {
         let mut index_ref = index;
 
         for item in lines {
-            if item.contains(keyword) {
+            if item.fuzzy_match(keyword){
                 let builder = get_builder("/dev/skxxtz/sherlock/ui/simple_text_tile.ui", index_ref, true);
 
                 builder.title.set_text(item);
@@ -29,6 +32,7 @@ impl Tile {
                 results.push(builder.object);
             }
         }
+
 
         return (index_ref, results);
     }

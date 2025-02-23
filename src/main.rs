@@ -1,5 +1,6 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 use std::{env, process};
 use std::io::{self, Read};
@@ -49,7 +50,6 @@ async fn main() {
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
 
-
     // Check for '.lock'-file to only start a single instance
     let lock_file = "/tmp/sherlock.lock";
     let _ = match lock::ensure_single_instance(lock_file) {
@@ -81,7 +81,9 @@ async fn main() {
         }
     };
 
+
     let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
+
 
     // Initialize application
     let application = Application::new(
@@ -149,3 +151,18 @@ async fn main() {
 
     application.run();
 }
+
+trait SherlockSearch {
+    fn fuzzy_match<T>(&self, substring: T)->bool
+    where
+        Self: AsRef<str>,
+        T: AsRef<str>
+    {
+        let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
+        let concat_str: String = self.as_ref().chars().filter(|s| char_pattern.contains(s)).collect();
+        concat_str.contains(substring.as_ref())
+    }
+
+}
+impl SherlockSearch for String{}
+
