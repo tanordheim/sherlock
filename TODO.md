@@ -5,15 +5,14 @@
 ## Scripts
 - [ ] Create a custom Spotify (ncspot) script to control it.
 - [x] On startup, check if the clipboard contains a URL and enable URL search from it.
-    - [] Improve the functionality further for example display colors
+    - [ ] Improve the functionality further for example display colors
 
 
 ## Functionalities
 - [x] Implement a locking mechanism to ensure only one instance is running at a time.
 - [x] Implement tags on command widgets 
-- [x] Implement piping into sherlock
 - [ ] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
-- [ ] → Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
+    - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Make more widgets asynchronous.
 - [ ] Consider changing the alias for each command in `commandlauncher` (if possible).
 - [ ] Add an `ArgCommand` launcher type or convert the existing one to be more versatile.
@@ -28,6 +27,7 @@
 - [x] Improve Sherlock ignore file to support `*` macro and case sensitivity.
 - [x] Make it possible to customize the height and width of the window.
 - [ ] Provide better user integration from custom scripts, e.g., give control over tiles to spawn.
+    - [x] Implement piping into sherlock
 - [ ] Implement user-defined CSS classes for tile tags.
 - [ ] Implement the possibility to customize categories and their UI files. Allow specifying the UI files used for the categories. Required: category config file. (What ui file should be used for a specific cateogory)
 
