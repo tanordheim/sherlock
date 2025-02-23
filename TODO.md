@@ -32,6 +32,9 @@
 - [ ] Implement user-defined CSS classes for tile tags.
 - [ ] Implement the possibility to customize categories and their UI files. Allow specifying the UI files used for the categories. Required: category config file. (What ui file should be used for a specific cateogory)
 
+## Refactoring
+- [ ] Take a look at the search/user-display functions and extract common functionalities
+
 ## Documentation
 - [x] Add flag section in docs.
 
