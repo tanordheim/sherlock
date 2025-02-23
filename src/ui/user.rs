@@ -105,6 +105,9 @@ fn change_event(
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text();
 
+        while let Some(row) = results_ev_changed.last_child() {
+            results_ev_changed.remove(&row);
+        }
         let (_, tiles) = Tile::simple_text_tile(0, &pipe_content_clone, "", &current_text);
         for item in tiles{
             results_ev_changed.append(&item);
