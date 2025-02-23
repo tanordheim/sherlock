@@ -28,6 +28,7 @@
 - [x] Make it possible to customize the height and width of the window.
 - [ ] Provide better user integration from custom scripts, e.g., give control over tiles to spawn.
     - [x] Implement piping into sherlock
+    - [ ] Use flag to specify what type of piping input - e.g. json for more control over what to display (or what not)
 - [ ] Implement user-defined CSS classes for tile tags.
 - [ ] Implement the possibility to customize categories and their UI files. Allow specifying the UI files used for the categories. Required: category config file. (What ui file should be used for a specific cateogory)
 
