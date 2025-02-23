@@ -1,5 +1,6 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
+use loader::flag_loader::print_help;
 use std::collections::HashSet;
 use std::sync::OnceLock;
 use std::{env, process};
@@ -21,7 +22,7 @@ use std::os::unix::io::AsRawFd;
 use nix::fcntl::{fcntl, FcntlArg, OFlag};
 
 
-fn pipe_content() -> Option<String> {
+fn pipe_content() -> String {
     let mut stdin = io::stdin();
     let mut buffer = String::new();
 
@@ -34,12 +35,12 @@ fn pipe_content() -> Option<String> {
 
                 let _  = stdin.read_to_string(&mut buffer);
                 
-                return Some(buffer);
+                return buffer;
             }
         }
         Err(_) => {}
     }
-    None
+    String::new()
 }
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
@@ -125,11 +126,14 @@ async fn main() {
         let (mut window, stack) = ui::window::window(&app);
 
         // Either show user-specified content or show normal search
-        window = if let Some(pipe) = pipe_content(){
-            let lines:Vec<String> = pipe.split("\n").filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
-            ui::user::display_pipe(window, &stack, lines)
-        } else {
-            ui::search::search(window, &stack, launchers)
+        window = {
+            let pipe = pipe_content();
+            if pipe.is_empty(){
+                ui::search::search(window, &stack, launchers)
+            } else {
+                let lines:Vec<String> = pipe.split("\n").filter(|s| !s.is_empty()).map(|s| s.to_string()).collect();
+                ui::user::display_pipe(window, &stack, lines)
+            }
         };
 
         // Logic for the Error-View
