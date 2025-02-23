@@ -1,6 +1,6 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::OnceLock;
 use std::{env, process};
 use std::io::{self, Read};
