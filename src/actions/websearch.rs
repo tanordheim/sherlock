@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::fmt::Result;
 use std::process::Command;
 
-use crate::loader::util::SherlockError;
+use crate::loader::util::{SherlockError, SherlockErrorType};
 
-pub fn websearch(engine: &str, query: &str)->Result<(), SherlockError>{
+pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError>{
     let engines: HashMap<&str, &str> = HashMap::from([
         ("google", "https://www.google.com/search?q={keyword}"),
         ("bing", "https://www.bing.com/search?q={keyword}"),
@@ -32,17 +31,10 @@ pub fn websearch(engine: &str, query: &str)->Result<(), SherlockError>{
         .arg(format!("xdg-open '{}'", url)) // Linux
         .spawn()
     {
-        Ok(_) => Ok(())
-        Err(e) => SherlockError{
-            name::
-        }
-    }
-
-    if let Err(e) = Command::new("sh")
-        .arg("-c")
-        .arg(format!("xdg-open '{}'", url)) // Linux
-        .spawn()
-    {
-        eprintln!("Failed to open browser: {}", e);
+        Ok(_) => Ok(()),
+        Err(e) => Err(SherlockError{
+            error: SherlockErrorType::CommandExecutionError("xdg-open".to_string()),
+            traceback: e.to_string(),
+        })
     }
 }
