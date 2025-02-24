@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::{fmt, env};
+use std::env;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::process::Command;
