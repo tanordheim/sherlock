@@ -54,7 +54,7 @@ impl Launcher {
                 LauncherType::Web(web) => {
                     Tile::web_tile(self, index, keyword, &web)
                 }
-                LauncherType::Calc(_) => Tile::calc_tile(index, keyword),
+                LauncherType::Calc(_) => Tile::calc_tile(self, index, keyword, None),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
                 }

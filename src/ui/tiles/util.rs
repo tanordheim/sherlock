@@ -42,7 +42,7 @@ pub struct TileBuilder {
     pub result_holder: Label,
 }
 impl TileBuilder {
-    pub fn new(&self)->Self{
+    pub fn new()->Self{
         TileBuilder {
             object: ListBoxRow::new(),
             icon: Image::new(),

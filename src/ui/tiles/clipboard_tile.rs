@@ -1,9 +1,10 @@
-use gtk4::{prelude::*, ListBoxRow};
+use gtk4::{builders, prelude::*, ListBoxRow};
 use regex::Regex;
 use std::collections::HashMap;
+use meval::eval_str;
 
-use super::util::{get_builder, insert_attrs};
-use super::Tile;
+use super::util::{get_builder, insert_attrs, TileBuilder};
+use super::{calc_tile, Tile};
 
 impl Tile {
     pub fn clipboard_tile(
@@ -16,7 +17,7 @@ impl Tile {
 
         //TODO implement searchstring before clipboard content
         if clipboard_content.contains(keyword) {
-            let mut builder: super::util::TileBuilder::new();
+            let mut builder = TileBuilder::new();
             let mut name = "";
             let mut method = "";
             let mut icon = "";
@@ -38,6 +39,11 @@ impl Tile {
                 method = "web_launcher";
                 let main_domain = captures.get(3).map_or("", |m| m.as_str());
                 icon = known_pages.get(main_domain).map_or("google", |m| m);
+            } else {
+
+                if eval_str(clipboard_content).is_ok(){
+                    return Tile::calc_tile(index, clipboard_content);
+                }
             }
 
             if is_valid == 1 {
