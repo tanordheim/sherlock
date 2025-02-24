@@ -2,17 +2,17 @@ use gtk4::{prelude::*, ListBoxRow};
 use std::collections::HashMap;
 
 use crate::loader::util::{AppData, Config};
+use crate::launcher::Launcher;
 
 use super::util::{ensure_icon_name, get_builder, insert_attrs};
 use super::Tile;
 
 impl Tile {
     pub fn app_tile(
+        launcher: &Launcher,
         index: i32,
-        commands: HashMap<String, AppData>,
-        name: &String,
-        method: &String,
         keyword: &String,
+        commands: HashMap<String, AppData>,
         app_config: &Config,
     ) -> (i32, Vec<ListBoxRow>) {
         let mut results: Vec<ListBoxRow> = Default::default();
@@ -31,24 +31,27 @@ impl Tile {
                 } else {
                     value.icon
                 };
-
-                let tile_name = if key.contains("{keyword}") {
-                    builder.tag_start.set_text(keyword);
+                let tile_name = key.replace("{keyword}", keyword);
+                if let Some(start_tag) = &launcher.start_tag {
+                    let text = start_tag.replace("{keyword}", keyword);
+                    builder.tag_start.set_text(&text);
                     builder.tag_start.set_visible(true);
-                    &key.replace("{keyword}", "")
-                } else {
-                    &key
-                };
+                }
+                if let Some(end_tag) = &launcher.end_tag {
+                    let text = end_tag.replace("{keyword}", keyword);
+                    builder.tag_end.set_text(&text);
+                    builder.tag_end.set_visible(true);
+                }
 
-                if name.is_empty() {
+                if launcher.name.is_empty() {
                     builder.category.set_visible(false);
                 }
-                builder.category.set_text(name);
+                builder.category.set_text(&launcher.name);
                 builder.icon.set_icon_name(Some(&icon));
-                builder.title.set_markup(tile_name);
+                builder.title.set_markup(&tile_name);
 
                 let attrs: Vec<(&str, &str)> = vec![
-                    ("method", method),
+                    ("method", &launcher.method),
                     ("app_name", &key),
                     ("exec", &value.exec),
                     ("keyword", keyword),

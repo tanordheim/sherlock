@@ -31,6 +31,8 @@ pub enum LauncherType {
 pub struct Launcher {
     pub name: String,
     pub alias: Option<String>,
+    pub start_tag: Option<String>,
+    pub end_tag: Option<String>,
     pub method: String,
     pub priority: u32,
     pub r#async: bool,
@@ -43,11 +45,10 @@ impl Launcher {
         if let Some(app_config) = CONFIG.get() {
             match &self.launcher_type {
                 LauncherType::App(app) => Tile::app_tile(
+                    self,
                     index,
-                    app.apps.clone(),
-                    &self.name,
-                    &self.method,
                     keyword,
+                    app.apps.clone(),
                     app_config,
                 ),
                 LauncherType::Web(web) => {
