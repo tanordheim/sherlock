@@ -22,11 +22,11 @@ impl Tile {
                 } {
                     builder.object.set_css_classes(&["error-tile", class]);
                 }
-
+                let (name, message) = e.error.get_message();
                 builder
                     .title
-                    .set_text(format!("{:5}{}:  {}", icon, tile_type, &e.name).as_str());
-                builder.content_title.set_text(&e.message);
+                    .set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str());
+                builder.content_title.set_text(&message);
                 builder.content_body.set_text(&e.traceback.trim());
                 builder.object
             })
