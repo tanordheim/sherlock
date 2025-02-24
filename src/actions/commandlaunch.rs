@@ -15,7 +15,6 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
 
             if num_cmds > 1 {
                 let output = asynchronous_execution(execute, args)?;
-                println!("{}", output);
             } else {
                 // Synchronous execution (output)
                 synchronous_execution(execute, args)?;
