@@ -53,6 +53,7 @@ pub enum SherlockErrorType {
     ResourceParseError(String),
     ResourceLookupError(String),
     DisplayError,
+    ConfigError,
 }
 
 impl SherlockErrorType {
@@ -85,6 +86,10 @@ impl SherlockErrorType {
             SherlockErrorType::DisplayError => (
                 "DisplayError".to_string(),
                 "Could not connect to a display".to_string(),
+            ),
+            SherlockErrorType::ConfigError => (
+                "ConfigError".to_string(),
+                "It should never come to this".to_string(),
             ),
         }
     }
