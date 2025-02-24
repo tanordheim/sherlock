@@ -66,7 +66,7 @@ impl Launcher {
                     app_config,
                 ),
                 LauncherType::Clipboard(clp) => {
-                    Tile::clipboard_tile(index, &clp.clipboard_content, keyword)
+                    Tile::clipboard_tile(self, index, &clp.clipboard_content, keyword)
                 }
 
                 _ => (index, Vec::new()),

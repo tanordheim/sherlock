@@ -3,11 +3,14 @@ use regex::Regex;
 use std::collections::HashMap;
 use meval::eval_str;
 
+use crate::launcher::Launcher;
+
 use super::util::{get_builder, insert_attrs, TileBuilder};
 use super::{calc_tile, Tile};
 
 impl Tile {
     pub fn clipboard_tile(
+        launcher: &Launcher,
         index: i32,
         clipboard_content: &String,
         keyword: &String,
@@ -41,8 +44,8 @@ impl Tile {
                 icon = known_pages.get(main_domain).map_or("google", |m| m);
             } else {
 
-                if eval_str(clipboard_content).is_ok(){
-                    return Tile::calc_tile(index, clipboard_content);
+                if let Ok(r) = eval_str(clipboard_content){
+                    return Tile::calc_tile(launcher, index, clipboard_content, Some(r));
                 }
             }
 
