@@ -32,8 +32,8 @@ impl Tile {
                     value.icon
                 };
                 let tile_name = key.replace("{keyword}", keyword);
-                builder.display_tag_start(&launcher.tag_start, keyword);
-                builder.display_tag_end(&launcher.tag_start, keyword);
+                builder.display_tag_start(&value.tag_start, keyword);
+                builder.display_tag_end(&value.tag_end, keyword);
 
                 if launcher.name.is_empty() {
                     builder.category.set_visible(false);
