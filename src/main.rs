@@ -46,7 +46,7 @@ async fn main() {
         Ok(_) => {}
         Err(_) => {
             startup_errors.push(SherlockError {
-                error: SherlockErrorType::ConfigError,
+                error: SherlockErrorType::ConfigError(None),
                 traceback: format!(""),
             });
         }
