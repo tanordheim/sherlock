@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::Path;
 
-use super::util::{Config, SherlockError, SherlockFlags};
+use super::util::{Config, SherlockError, SherlockFlags, SherlockErrorType};
 use super::Loader;
 
 impl Loader {
@@ -13,26 +13,17 @@ impl Loader {
 
         let user_config: Config = if Path::new(&user_config_path).exists() {
             let config_str = fs::read_to_string(&user_config_path).map_err(|e| SherlockError {
-                name: format!("File Read Error"),
-                message: format!(
-                    "Failed to read the user configuration file: {}",
-                    user_config_path
-                ),
+                error: SherlockErrorType::FileReadError(user_config_path.clone()),
                 traceback: e.to_string(),
             })?;
 
-            toml::de::from_str(&config_str).map_err(|e| SherlockError {
-                name: format!("File Parse Error"),
-                message: format!(
-                    "Failed to parse the user configuration from the file: {}",
-                    user_config_path
-                ),
+            toml::de::from_str(&config_str).map_err(move |e| SherlockError {
+                error: SherlockErrorType::FileParseError(user_config_path),
                 traceback: e.to_string(),
             })?
         } else {
             non_breaking.push(SherlockError {
-                name: format!("File not Found"),
-                message: format!("File \"{}\" does not exist.", user_config_path),
+                error: SherlockErrorType::FileExistError(user_config_path),
                 traceback: Default::default(),
             });
 
