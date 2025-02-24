@@ -40,6 +40,26 @@ pub struct TileBuilder {
     pub equation_holder: Label,
     pub result_holder: Label,
 }
+impl TileBuilder {
+    pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
+    where T: AsRef<str>
+    {
+        if let Some(start_tag) = content {
+            let text = start_tag.replace("{keyword}", keyword.as_ref());
+            self.tag_start.set_text(&text);
+            self.tag_start.set_visible(true);
+        }
+    }
+    pub fn display_tag_end<T>(&self, content: &Option<String>, keyword: T)
+    where T: AsRef<str>
+    {
+        if let Some(start_tag) = content {
+            let text = start_tag.replace("{keyword}", keyword.as_ref());
+            self.tag_end.set_text(&text);
+            self.tag_end.set_visible(true);
+        }
+    }
+}
 pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuilder {
     let builder = Builder::from_resource(resource);
     let object: ListBoxRow = builder.object("holder").unwrap_or_default();
@@ -79,17 +99,6 @@ pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuild
 
         equation_holder,
         result_holder,
-    }
-}
-impl TileBuilder {
-    pub fn display_tag<T>(&self, tag: Label, content: &Option<String>, keyword: T)
-    where T: AsRef<str>
-    {
-        if let Some(start_tag) = content {
-            let text = start_tag.replace("{keyword}", keyword.as_ref());
-            tag.set_text(&text);
-            tag.set_visible(true);
-        }
     }
 }
 
