@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::env;
+use std::{fmt, env};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::process::Command;
@@ -45,7 +45,7 @@ pub struct SherlockAlias {
     pub keywords: Option<String>,
 }
 #[derive(Debug, Clone)]
-pub enum SherlockErrorType{
+pub enum SherlockErrorType {
     EnvVarNotFoundError(String),
     FileExistError(String),
     FileReadError(String),
@@ -54,24 +54,44 @@ pub enum SherlockErrorType{
     ResourceLookupError(String),
     DisplayError,
 }
+
 impl SherlockErrorType {
-    pub fn get_message(self)->String{
+    pub fn get_message(&self) -> (String, String) {
         match self {
-            SherlockErrorType::EnvVarNotFoundError(var) => format!("Failed to unpack environment variable \"{}\"", var),
-            SherlockErrorType::FileExistError(file) => format!("File \"{}\" does not exist", file),
-            SherlockErrorType::FileReadError(file) => format!("Failed to read file \"{}\"", file),
-            SherlockErrorType::FileParseError(file) => format!("Failed to parse file \"{}\"", file),
-            SherlockErrorType::ResourceParseError(resource) => format!("Failed to parse resource \"{}\"", resource),
-            SherlockErrorType::ResourceLookupError(resource) => format!("Failed to find resource \"{}\"", resource),
-            SherlockErrorType::DisplayError => format!("Could not connect to a display"),
+            SherlockErrorType::EnvVarNotFoundError(var) => (
+                "EnvVarNotFoundError".to_string(),
+                format!("Failed to unpack environment variable \"{}\"", var),
+            ),
+            SherlockErrorType::FileExistError(file) => (
+                "FileExistError".to_string(),
+                format!("File \"{}\" does not exist", file),
+            ),
+            SherlockErrorType::FileReadError(file) => (
+                "FileReadError".to_string(),
+                format!("Failed to read file \"{}\"", file),
+            ),
+            SherlockErrorType::FileParseError(file) => (
+                "FileParseError".to_string(),
+                format!("Failed to parse file \"{}\"", file),
+            ),
+            SherlockErrorType::ResourceParseError(resource) => (
+                "ResourceParseError".to_string(),
+                format!("Failed to parse resource \"{}\"", resource),
+            ),
+            SherlockErrorType::ResourceLookupError(resource) => (
+                "ResourceLookupError".to_string(),
+                format!("Failed to find resource \"{}\"", resource),
+            ),
+            SherlockErrorType::DisplayError => (
+                "DisplayError".to_string(),
+                "Could not connect to a display".to_string(),
+            ),
         }
     }
 }
-
 #[derive(Clone, Debug)]
 pub struct SherlockError {
     pub name: SherlockErrorType,
-    pub message: String,
     pub traceback: String,
 }
 
