@@ -1,7 +1,7 @@
 use std::env;
 
 use super::{
-    util::{SherlockError, SherlockFlags},
+    util::{SherlockError, SherlockFlags, SherlockErrorType},
     Loader,
 };
 
@@ -23,8 +23,7 @@ impl Loader {
 impl SherlockFlags {
     fn new(args: Vec<String>) -> Result<Self, SherlockError> {
         let home_dir = env::var("HOME").map_err(|e| SherlockError {
-            name: "Env Var not Found Err".to_string(),
-            message: format!("Failed to unpack home directory for user."),
+            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
             traceback: e.to_string(),
         })?;
         let defaults = SherlockFlags::default().map_err(|e| e)?;
@@ -49,8 +48,7 @@ impl SherlockFlags {
 
     fn default() -> Result<SherlockFlags, SherlockError> {
         let home_dir = env::var("HOME").map_err(|e| SherlockError {
-            name: "Env Var not Found Err".to_string(),
-            message: format!("Failed to unpack home directory for user."),
+            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
             traceback: e.to_string(),
         })?;
         Ok(SherlockFlags {
