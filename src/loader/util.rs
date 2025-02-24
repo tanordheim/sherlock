@@ -44,10 +44,33 @@ pub struct SherlockAlias {
     pub exec: Option<String>,
     pub keywords: Option<String>,
 }
+#[derive(Debug, Clone)]
+pub enum SherlockErrorType{
+    EnvVarNotFoundError(String),
+    FileExistError(String),
+    FileReadError(String),
+    FileParseError(String),
+    ResourceParseError(String),
+    ResourceLookupError(String),
+    DisplayError,
+}
+impl SherlockErrorType {
+    pub fn get_message(self)->String{
+        match self {
+            SherlockErrorType::EnvVarNotFoundError(var) => format!("Failed to unpack environment variable \"{}\"", var),
+            SherlockErrorType::FileExistError(file) => format!("File \"{}\" does not exist", file),
+            SherlockErrorType::FileReadError(file) => format!("Failed to read file \"{}\"", file),
+            SherlockErrorType::FileParseError(file) => format!("Failed to parse file \"{}\"", file),
+            SherlockErrorType::ResourceParseError(resource) => format!("Failed to parse resource \"{}\"", resource),
+            SherlockErrorType::ResourceLookupError(resource) => format!("Failed to find resource \"{}\"", resource),
+            SherlockErrorType::DisplayError => format!("Could not connect to a display"),
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct SherlockError {
-    pub name: String,
+    pub name: SherlockErrorType,
     pub message: String,
     pub traceback: String,
 }

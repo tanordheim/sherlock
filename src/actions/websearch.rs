@@ -1,7 +1,10 @@
 use std::collections::HashMap;
+use std::fmt::Result;
 use std::process::Command;
 
-pub fn websearch(engine: &str, query: &str) {
+use crate::loader::util::SherlockError;
+
+pub fn websearch(engine: &str, query: &str)->Result<(), SherlockError>{
     let engines: HashMap<&str, &str> = HashMap::from([
         ("google", "https://www.google.com/search?q={keyword}"),
         ("bing", "https://www.bing.com/search?q={keyword}"),
@@ -24,6 +27,17 @@ pub fn websearch(engine: &str, query: &str) {
         engine
     };
     let url = url_template.replace("{keyword}", query);
+    match Command::new("sh")
+        .arg("-c")
+        .arg(format!("xdg-open '{}'", url)) // Linux
+        .spawn()
+    {
+        Ok(_) => Ok(())
+        Err(e) => SherlockError{
+            name::
+        }
+    }
+
     if let Err(e) = Command::new("sh")
         .arg("-c")
         .arg(format!("xdg-open '{}'", url)) // Linux
