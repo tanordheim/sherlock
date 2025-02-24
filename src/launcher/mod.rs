@@ -31,8 +31,8 @@ pub enum LauncherType {
 pub struct Launcher {
     pub name: String,
     pub alias: Option<String>,
-    pub start_tag: Option<String>,
-    pub end_tag: Option<String>,
+    pub tag_start: Option<String>,
+    pub tag_end: Option<String>,
     pub method: String,
     pub priority: u32,
     pub r#async: bool,

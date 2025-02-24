@@ -1,4 +1,3 @@
-use gtk4::prelude::WidgetExt;
 use gtk4::ListBoxRow;
 
 use super::util::{get_builder, insert_attrs};
@@ -26,8 +25,8 @@ impl Tile {
             };
 
             builder.title.set_text(&tile_name);
-            builder.display_tag_start(&launcher.start_tag, keyword);
-            builder.display_tag_end(&launcher.end_tag, keyword);
+            builder.display_tag_start(&launcher.tag_start, keyword);
+            builder.display_tag_end(&launcher.tag_end, keyword);
 
             let attrs: Vec<(&str, &str)> = vec![
                 ("method", &launcher.method),
