@@ -11,11 +11,11 @@
   <picture>
     <img alt="application screenshot" width="100%" src="images/home-screen.png">
   </picture>
-  <video width="100%" controls>
-    <source src="images/showcase.mp4" type="video/mp4">
-    <p>Your browser does not support the video tag.</p>
-  </video>
 </div>
+<video width="100%" controls>
+<source src="images/showcase.mp4" type="video/mp4">
+<p>Your browser does not support the video tag.</p>
+</video>
 
 <br>
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage..
