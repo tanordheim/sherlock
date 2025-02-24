@@ -59,11 +59,10 @@ impl Launcher {
                     Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
                 }
                 LauncherType::SystemCommand(cmd) => Tile::app_tile(
+                    self,
                     index,
-                    cmd.commands.clone(),
-                    &self.name,
-                    &self.method,
                     keyword,
+                    cmd.commands.clone(),
                     app_config,
                 ),
                 LauncherType::Clipboard(clp) => {
