@@ -1,5 +1,6 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application};
+use loader::util::SherlockErrorType;
 use std::sync::OnceLock;
 use std::{env, process};
 
@@ -45,8 +46,7 @@ async fn main() {
         Ok(_) => {}
         Err(_) => {
             startup_errors.push(SherlockError {
-                name: format!("Missing Config"),
-                message: format!("It should never come to this."),
+                error: SherlockErrorType::ConfigError,
                 traceback: format!(""),
             });
         }
