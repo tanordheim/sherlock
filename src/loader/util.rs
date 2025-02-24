@@ -8,8 +8,8 @@ use std::process::Command;
 pub struct CommandConfig {
     pub name: String,
     pub alias: Option<String>,
-    pub start_tag: Option<String>,
-    pub end_tag: Option<String>,
+    pub tag_start: Option<String>,
+    pub tag_end: Option<String>,
     pub display_name: Option<String>,
     pub on_return: Option<String>,
     pub r#type: String,
@@ -28,6 +28,8 @@ pub struct AppData {
     pub icon: String,
     pub exec: String,
     pub search_string: String,
+    pub tag_start: Option<String>,
+    pub tag_end: Option<String>,
 }
 
 #[derive(Debug, Default)]

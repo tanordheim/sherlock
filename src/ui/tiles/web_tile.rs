@@ -19,7 +19,12 @@ impl Tile {
             builder.category.set_text(&launcher.name);
             builder.icon.set_icon_name(Some(&web.icon));
             
-            let tile_name = web.display_name.replace("{keyword}", keyword);
+            let tile_name = if web.display_name.contains("{keyword}"){
+                web.display_name.replace("{keyword}", keyword)
+            }else {
+                keyword.to_string()
+            };
+
             builder.title.set_text(&tile_name);
             builder.display_tag_start(&launcher.start_tag, keyword);
             builder.display_tag_end(&launcher.end_tag, keyword);
