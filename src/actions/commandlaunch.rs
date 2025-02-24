@@ -13,7 +13,7 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
             let execute = parts.next().expect("No command found");
             let args: Vec<&str> = parts.collect();
 
-            let output = if num_cmds > 1 {
+            let _output = if num_cmds > 1 {
                 // Asynchronous execution (output)
                 asynchronous_execution(execute, args)?;
             } else {
