@@ -135,6 +135,8 @@ impl Loader {
                         icon,
                         exec,
                         search_string,
+                        tag_start: None,
+                        tag_end: None,
                     },
                 ))
             })
