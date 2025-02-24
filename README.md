@@ -11,6 +11,10 @@
   <picture>
     <img alt="application screenshot" width="100%" src="images/home-screen.png">
   </picture>
+  <video width="100%" controls>
+    <source src="images/showcase.mp4" type="video/mp4">
+    <p>Your browser does not support the video tag.</p>
+  </video>
 </div>
 
 <br>
