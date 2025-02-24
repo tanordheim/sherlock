@@ -17,7 +17,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
                 let engine = attrs.get("engine").map_or("", |s| s.as_str());
-                websearch::websearch(engine, query);
+                let _  = websearch::websearch(engine, query);
                 exit(0);
             }
             "command" => {
