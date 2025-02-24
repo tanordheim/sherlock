@@ -15,8 +15,9 @@ use clipboard_launcher::Clp;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
+
 use super::{
-    util::{self, SherlockError},
+    util::{self, SherlockError, SherlockErrorType},
     Loader,
 };
 use util::{AppData, CommandConfig, SherlockFlags};
@@ -106,15 +107,14 @@ fn parse_launcher_configs(
 
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
-    fn parse_json(json_str: String) -> Result<Vec<CommandConfig>, SherlockError> {
+    fn parse_json(json_str: String, file:String) -> Result<Vec<CommandConfig>, SherlockError> {
         if json_str.is_empty() {
             return Ok(Vec::new());
         };
 
         let config: Vec<CommandConfig> =
             serde_json::from_str(&json_str.as_str()).map_err(|e| SherlockError {
-                name: format!("File Parse Error"),
-                message: format!("Failed to parse fallback file as valid json."),
+                error: SherlockErrorType::FileParseError(file),
                 traceback: e.to_string(),
             })?;
         Ok(config)
@@ -128,20 +128,15 @@ fn parse_launcher_configs(
         if Path::new(&sherlock_flags.fallback).exists() {
             let json_str =
                 fs::read_to_string(&sherlock_flags.fallback).map_err(|e| SherlockError {
-                    name: format!("File Read Error"),
-                    message: format!(
-                        "Failed to load provided fallback file: {}",
-                        sherlock_flags.fallback
-                    ),
+                    error: SherlockErrorType::FileReadError(sherlock_flags.fallback.clone()),
                     traceback: e.to_string(),
                 })?;
-            let config = parse_json(json_str)?;
+            let config = parse_json(json_str, sherlock_flags.fallback.clone())?;
             Ok(config)
         } else {
             Err(SherlockError{
-                name: "Config not Provided".to_string(),
-                message: format!("No launchers were provided. Continuing with default launchers."),
-                traceback: format!("Try adding a 'fallback.json' file into '~/.config/sherlock/'. Or specify a custom one using the --falback flag.")
+                error: SherlockErrorType::FileExistError(sherlock_flags.fallback.clone()),
+                traceback: format!("The file \"{}\" does not exist in the specified location.", sherlock_flags.fallback)
             })
         }
     }
@@ -153,18 +148,16 @@ fn parse_launcher_configs(
             gio::ResourceLookupFlags::NONE,
         )
         .map_err(|e| SherlockError {
-            name: format!("Resource Lookup Error"),
-            message: format!("Failed to load 'fallback.json' from resource."),
+            error: SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
             traceback: e.to_string(),
         })?;
         let string_data = std::str::from_utf8(&data)
             .map_err(|e| SherlockError {
-                name: format!("File Parsing Error"),
-                message: format!("Failed to parse 'fallback.json' as a valid UTF-8 string."),
+                error: SherlockErrorType::FileParseError("fallback.json".to_string()),
                 traceback: e.to_string(),
             })?
             .to_string();
-        let config = parse_json(string_data)?;
+        let config = parse_json(string_data, "fallback.json".to_string())?;
         Ok(config)
     }
 
