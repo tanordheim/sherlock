@@ -54,7 +54,7 @@ pub enum SherlockErrorType {
     ResourceLookupError(String),
     DisplayError,
     ConfigError(Option<String>),
-
+    RegexError(String),
 }
 
 impl SherlockErrorType {
@@ -98,7 +98,11 @@ impl SherlockErrorType {
                     "ConfigError".to_string(),
                     message
                 )
-            }
+            },
+            SherlockErrorType::RegexError(key) => (
+                format!("RegexError"),
+                format!("Failed to compile the regular expression for \"{}\"", key),
+            ),
         }
     }
 }
