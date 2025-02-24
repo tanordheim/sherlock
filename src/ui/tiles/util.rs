@@ -81,6 +81,17 @@ pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuild
         result_holder,
     }
 }
+impl TileBuilder {
+    pub fn display_tag<T>(&self, tag: Label, content: &Option<String>, keyword: T)
+    where T: AsRef<str>
+    {
+        if let Some(start_tag) = content {
+            let text = start_tag.replace("{keyword}", keyword.as_ref());
+            tag.set_text(&text);
+            tag.set_visible(true);
+        }
+    }
+}
 
 pub trait SherlockSearch {
     fn fuzzy_match<T>(&self, substring: T) -> bool
