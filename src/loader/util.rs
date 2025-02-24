@@ -56,6 +56,7 @@ pub enum SherlockErrorType {
     ConfigError(Option<String>),
     RegexError(String),
     CommandExecutionError(String),
+    ClipboardError,
 }
 
 impl SherlockErrorType {
@@ -107,6 +108,10 @@ impl SherlockErrorType {
             SherlockErrorType::CommandExecutionError(cmd) => (
                 format!("CommandExecutionError"),
                 format!("Failed to execute command \"{}\"", cmd),
+            ),
+            SherlockErrorType::ClipboardError => (
+                format!("ClipboardError"),
+                format!("Failed to get system clipboard"),
             ),
         }
     }
