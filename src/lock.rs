@@ -23,9 +23,9 @@ impl LockFile {
         }
     }
 
-    pub fn remove(&self) -> Result<(), String>{
+    pub fn remove(&self) -> Result<(), String> {
         if let Err(e) = remove_file(&self.path) {
-            return Err(format!("Failed to remove lock file: {}", e))
+            return Err(format!("Failed to remove lock file: {}", e));
         }
         Ok(())
     }
