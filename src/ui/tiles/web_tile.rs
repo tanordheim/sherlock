@@ -4,32 +4,28 @@ use gtk4::ListBoxRow;
 use super::util::{get_builder, insert_attrs};
 use super::Tile;
 use crate::launcher::web_launcher::Web;
+use crate::launcher::Launcher;
 
 impl Tile {
     pub fn web_tile(
-        name: &String,
-        method: &String,
-        web: &Web,
+        launcher: &Launcher,
         index: i32,
         keyword: &String,
+        web: &Web,
     ) -> (i32, Vec<ListBoxRow>) {
         if !keyword.is_empty() {
             let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
 
-            builder.category.set_text(name);
+            builder.category.set_text(&launcher.name);
             builder.icon.set_icon_name(Some(&web.icon));
-            if web.display_name.contains("{keyword}") {
-                builder
-                    .title
-                    .set_text(&web.display_name.replace("{keyword}", ""));
-                builder.tag_start.set_text(keyword);
-                builder.tag_start.set_visible(true);
-            } else {
-                builder.title.set_text(keyword);
-            }
+            
+            let tile_name = web.display_name.replace("{keyword}", keyword);
+            builder.title.set_text(&tile_name);
+            builder.display_tag_start(&launcher.start_tag, keyword);
+            builder.display_tag_end(&launcher.end_tag, keyword);
 
             let attrs: Vec<(&str, &str)> = vec![
-                ("method", method),
+                ("method", &launcher.method),
                 ("engine", &web.engine),
                 ("keyword", keyword),
                 ("result", keyword),

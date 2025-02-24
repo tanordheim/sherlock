@@ -52,7 +52,7 @@ impl Launcher {
                     app_config,
                 ),
                 LauncherType::Web(web) => {
-                    Tile::web_tile(&self.name, &self.method, &web, index, keyword)
+                    Tile::web_tile(self, index, keyword, &web)
                 }
                 LauncherType::Calc(_) => Tile::calc_tile(index, keyword),
                 LauncherType::BulkText(bulk_text) => {
