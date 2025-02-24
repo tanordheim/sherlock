@@ -1,5 +1,5 @@
 use crate::launcher::Launcher;
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow};
+use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Orientation};
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -25,6 +25,7 @@ pub fn ensure_icon_name(name: String) -> String {
     }
 }
 
+#[derive(Default)]
 pub struct TileBuilder {
     pub object: ListBoxRow,
     pub icon: Image,
@@ -41,6 +42,21 @@ pub struct TileBuilder {
     pub result_holder: Label,
 }
 impl TileBuilder {
+    pub fn new(&self)->Self{
+        TileBuilder {
+            object: ListBoxRow::new(),
+            icon: Image::new(),
+            title: Label::new(None),
+            category: Label::new(None),
+            attrs: Box::new(Orientation::Vertical, 0),
+            tag_start: Label::new(None),
+            tag_end: Label::new(None),
+            content_title: Label::new(None),
+            content_body: Label::new(None),
+            equation_holder: Label::new(None),
+            result_holder: Label::new(None),
+        }
+    }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
     where T: AsRef<str>
     {

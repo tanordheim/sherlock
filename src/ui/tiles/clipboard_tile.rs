@@ -16,8 +16,7 @@ impl Tile {
 
         //TODO implement searchstring before clipboard content
         if clipboard_content.contains(keyword) {
-            let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
-
+            let mut builder: super::util::TileBuilder::new();
             let mut name = "";
             let mut method = "";
             let mut icon = "";
@@ -33,6 +32,7 @@ impl Tile {
                 r"^(https?:\/\/)?(www.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$";
             let re = Regex::new(re_url_check).unwrap();
             if let Some(captures) = re.captures(clipboard_content) {
+                builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
                 is_valid = 1;
                 name = "Clipboard Web-Search";
                 method = "web_launcher";
