@@ -21,7 +21,7 @@ impl Tile {
             let tile_name = if web.display_name.contains("{keyword}"){
                 web.display_name.replace("{keyword}", keyword)
             }else {
-                keyword.to_string()
+                web.display_name.clone()
             };
 
             builder.title.set_text(&tile_name);

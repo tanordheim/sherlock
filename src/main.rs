@@ -19,6 +19,7 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
+
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
@@ -59,6 +60,7 @@ async fn main() {
         Some("dev.skxxtz.sherlock"),
         gio::ApplicationFlags::HANDLES_COMMAND_LINE,
     );
+
 
     if let Some(config) = CONFIG.get() {
         env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
