@@ -86,6 +86,8 @@ impl Loader {
                 Some(Launcher {
                     name: cmd.name.to_string(),
                     alias: cmd.alias.clone(),
+                    start_tag: cmd.start_tag,
+                    end_tag: cmd.end_tag,
                     method,
                     priority: cmd.priority,
                     r#async: cmd.r#async,
