@@ -32,7 +32,11 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             }
             _ => {
-                eprint!("Invalid method: {}", method)
+                if let Some(out) = attrs.get("text_content"){
+                    print!("{}", out);
+                }
+                exit(0)
+
             }
         }
     }

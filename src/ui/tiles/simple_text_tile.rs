@@ -24,7 +24,11 @@ impl Tile {
 
                 builder.title.set_text(item);
 
-                let attrs: Vec<(&str, &str)> = vec![("method", method), ("keyword", keyword)];
+                let attrs: Vec<(&str, &str)> = vec![
+                    ("method", method),
+                    ("keyword", keyword),
+                    ("text_content", item),
+                ];
 
                 insert_attrs(&builder.attrs, attrs);
                 index_ref += 1;
