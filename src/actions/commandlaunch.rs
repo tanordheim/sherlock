@@ -19,7 +19,7 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
             } else {
                 // Synchronous execution (output)
                 synchronous_execution(execute, args)?;
-            }
+            };
         }
     }
     Ok(())
