@@ -55,6 +55,7 @@ pub enum SherlockErrorType {
     DisplayError,
     ConfigError(Option<String>),
     RegexError(String),
+    CommandExecutionError(String),
 }
 
 impl SherlockErrorType {
@@ -102,6 +103,10 @@ impl SherlockErrorType {
             SherlockErrorType::RegexError(key) => (
                 format!("RegexError"),
                 format!("Failed to compile the regular expression for \"{}\"", key),
+            ),
+            SherlockErrorType::CommandExecutionError(cmd) => (
+                format!("CommandExecutionError"),
+                format!("Failed to execute command \"{}\"", cmd),
             ),
         }
     }
