@@ -8,7 +8,7 @@ impl Loader {
         let resource =
             gio::Resource::from_data(&glib::Bytes::from_static(res_bytes)).map_err(|e| {
                 SherlockError {
-                    error: SherlockErrorType::ResourceParseError(),
+                    error: SherlockErrorType::ResourceParseError,
                     traceback: e.to_string(),
                 }
             })?;
