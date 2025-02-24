@@ -233,8 +233,7 @@ pub fn get_terminal() -> Result<String, SherlockError> {
         Ok(t)
     } else {
         Err(SherlockError{
-                name: "Terminal not Found Error".to_string(),
-                message: "Failed to parse default app 'Terminal'.".to_string(),
+                error: SherlockErrorType::ConfigError(Some("Failed to get terminal".to_string())),
                 traceback: "Unable to locate or parse a valid terminal app. Ensure that the terminal app is correctly specified in the configuration file or environment variables.".to_string(),
             })
     }
