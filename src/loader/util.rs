@@ -91,7 +91,7 @@ impl SherlockErrorType {
 }
 #[derive(Clone, Debug)]
 pub struct SherlockError {
-    pub name: SherlockErrorType,
+    pub error: SherlockErrorType,
     pub traceback: String,
 }
 
