@@ -1,4 +1,4 @@
-use crate::launcher::Launcher;
+use crate::{launcher::Launcher, loader::icon_loader};
 use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Orientation};
 use std::collections::HashSet;
 
@@ -29,6 +29,7 @@ pub fn ensure_icon_name(name: String) -> String {
 pub struct TileBuilder {
     pub object: ListBoxRow,
     pub icon: Image,
+    pub icon_holder: Box,
     pub title: Label,
     pub category: Label,
     pub attrs: Box,
@@ -46,6 +47,7 @@ impl TileBuilder {
         TileBuilder {
             object: ListBoxRow::new(),
             icon: Image::new(),
+            icon_holder: Box::new(Orientation::Vertical, 0),
             title: Label::new(None),
             category: Label::new(None),
             attrs: Box::new(Orientation::Vertical, 0),
@@ -83,6 +85,7 @@ pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuild
     let title: Label = builder.object("app-name").unwrap_or_default();
     let category: Label = builder.object("launcher-type").unwrap_or_default();
     let attrs: Box = builder.object("attrs-holder").unwrap_or_default();
+    let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
     let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
     let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
 
@@ -104,6 +107,7 @@ pub fn get_builder(resource: &str, index: i32, show_shortcut: bool) -> TileBuild
     TileBuilder {
         object,
         icon,
+        icon_holder,
         title,
         category,
         attrs,
