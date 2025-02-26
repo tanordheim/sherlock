@@ -1,5 +1,5 @@
 use gio::glib::Bytes;
-use gtk4::{builders, gdk, prelude::*, Image, ListBoxRow};
+use gtk4::{gdk, prelude::*, Image, ListBoxRow};
 use regex::Regex;
 use std::collections::HashMap;
 use meval::eval_str;
@@ -7,7 +7,7 @@ use meval::eval_str;
 use crate::launcher::Launcher;
 
 use super::util::{get_builder, insert_attrs, TileBuilder};
-use super::{calc_tile, Tile};
+use super::Tile;
 fn hex_to_rgb(hex_color: &str)->(u8, u8, u8){
     let default = (0, 0, 0);
     if hex_color.len() >= 6 {
@@ -47,10 +47,10 @@ impl Tile {
             let checker = r"^(https?:\/\/)?(www\.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$|^#([A-Za-z0-9]{6,8})$";
             let re = Regex::new(checker).unwrap();
             if let Some(captures) = re.captures(clipboard_content) {
+                name = "From Clipboard";
                 if let Some(main_domain) = captures.get(3) {
                     builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
                     is_valid = 1;
-                    name = "Clipboard Web-Search";
                     method = "web_launcher";
                     let main_domain = main_domain.as_str();
                     icon = known_pages.get(main_domain).map_or("google", |m| m);

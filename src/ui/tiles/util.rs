@@ -1,4 +1,4 @@
-use crate::{launcher::Launcher, loader::icon_loader};
+use crate::launcher::Launcher; 
 use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Orientation};
 use std::collections::HashSet;
 
