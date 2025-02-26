@@ -32,21 +32,21 @@ impl Tile {
             ]);
 
             // Check if clipboard content is a url:
-            let re_url_check =
-                r"^(https?:\/\/)?(www.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$";
-            let re = Regex::new(re_url_check).unwrap();
+            let checker = r"^(https?:\/\/)?(www\.)?([\da-z\.-]+)\.([a-z]{2,6})([\/\w\.-]*)*\/?$|^(#[A-Za-z0-9]{6,8})$";
+            let re = Regex::new(checker).unwrap();
             if let Some(captures) = re.captures(clipboard_content) {
-                builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
-                is_valid = 1;
-                name = "Clipboard Web-Search";
-                method = "web_launcher";
-                let main_domain = captures.get(3).map_or("", |m| m.as_str());
-                icon = known_pages.get(main_domain).map_or("google", |m| m);
-            } else {
-
-                if let Ok(r) = eval_str(clipboard_content){
-                    return Tile::calc_tile(launcher, index, clipboard_content, Some(r));
+                if let Some(main_domain) = captures.get(3) {
+                    builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+                    is_valid = 1;
+                    name = "Clipboard Web-Search";
+                    method = "web_launcher";
+                    let main_domain = main_domain.as_str();
+                    icon = known_pages.get(main_domain).map_or("google", |m| m);
+                } else if let Some(color) = captures.get(6) {
+                    // Clipboard matches a hex color
                 }
+            } else if let Ok(result) = eval_str(clipboard_content){
+                return Tile::calc_tile(launcher, index, clipboard_content, Some(result));
             }
 
             if is_valid == 1 {
