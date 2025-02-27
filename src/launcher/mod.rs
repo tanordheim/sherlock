@@ -34,6 +34,7 @@ pub struct Launcher {
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
     pub method: String,
+    pub next_content: Option<String>,
     pub priority: u32,
     pub r#async: bool,
     pub home: bool,

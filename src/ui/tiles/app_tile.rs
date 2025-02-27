@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::loader::util::{AppData, Config};
 use crate::launcher::Launcher;
 
-use super::util::{ensure_icon_name, get_builder, insert_attrs};
+use super::util::{ensure_icon_name, TileBuilder, insert_attrs};
 use super::Tile;
 
 impl Tile {
@@ -24,7 +24,7 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
-                let builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index_ref, true);
+                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index_ref, true);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
@@ -41,16 +41,14 @@ impl Tile {
                 builder.category.set_text(&launcher.name);
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
+                builder.add_default_attrs(
+                    Some(&launcher.method), 
+                    Some(&keyword),
+                    Some(&keyword),
+                    Some(&value.exec),
+                    None
+                );
 
-                let attrs: Vec<(&str, &str)> = vec![
-                    ("method", &launcher.method),
-                    ("app_name", &key),
-                    ("exec", &value.exec),
-                    ("keyword", keyword),
-                    ("result", keyword),
-                ];
-
-                insert_attrs(&builder.attrs, attrs);
                 index_ref += 1;
                 results.push(builder.object);
             }

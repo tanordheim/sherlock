@@ -2,7 +2,7 @@ use gtk4::{
     self,
     gdk::{self, Key},
     prelude::*,
-    ApplicationWindow, Builder, EventControllerKey, Stack,
+    Builder, EventControllerKey,
 };
 use gtk4::{Box as HVBox, Entry, ListBox, ScrolledWindow};
 use std::collections::HashMap;
@@ -11,15 +11,14 @@ use std::rc::Rc;
 use super::tiles::Tile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
+use crate::APP_STATE;
 
 pub fn display_pipe(
-    window: ApplicationWindow,
-    search_stack: &Stack,
     pipe_content: Vec<String>,
-) -> ApplicationWindow {
+){
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
-
+    
     // Get the requred object references
     let vbox: HVBox = builder.object("vbox").unwrap();
     let search_bar: Entry = builder.object("search-bar").unwrap();
@@ -39,14 +38,15 @@ pub fn display_pipe(
 
     change_event(&search_bar, &results, pipe_content);
 
-    nav_event(&window, results, result_viewport);
-
-    search_stack.add_named(&vbox, Some("search-page"));
-    return window;
+    nav_event(results, result_viewport);
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow(){
+            state.add_stack_page(vbox, "search-page");
+        }
+    });
 }
 
 fn nav_event(
-    window: &ApplicationWindow,
     results_ev_nav: Rc<ListBox>,
     result_viewport: ScrolledWindow,
 ) {
@@ -84,7 +84,12 @@ fn nav_event(
         }
         false.into()
     });
-    window.add_controller(event_controller);
+
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow(){
+            state.add_event_listener(event_controller);
+        }
+    });
 }
 
 fn change_event(search_bar: &Entry, results: &Rc<ListBox>, pipe_content: Vec<String>) {

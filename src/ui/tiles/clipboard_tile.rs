@@ -6,7 +6,7 @@ use meval::eval_str;
 
 use crate::launcher::Launcher;
 
-use super::util::{get_builder, insert_attrs, TileBuilder};
+use super::util::{insert_attrs, TileBuilder};
 use super::Tile;
 fn hex_to_rgb(hex_color: &str)->(u8, u8, u8){
     let default = (0, 0, 0);
@@ -32,7 +32,7 @@ impl Tile {
 
         //TODO implement searchstring before clipboard content
         if clipboard_content.contains(keyword) {
-            let mut builder = TileBuilder::new();
+            let mut builder = TileBuilder::default();
             let mut name = "";
             let mut method = "";
             let mut icon = "";
@@ -49,13 +49,13 @@ impl Tile {
             if let Some(captures) = re.captures(clipboard_content) {
                 name = "From Clipboard";
                 if let Some(main_domain) = captures.get(3) {
-                    builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
                     is_valid = 1;
                     method = "web_launcher";
                     let main_domain = main_domain.as_str();
                     icon = known_pages.get(main_domain).map_or("google", |m| m);
                 } else if let Some(hex_color) = captures.get(6) {
-                    builder = get_builder("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
                     let (r, g, b) = hex_to_rgb(hex_color.as_str());
                     let pix_buf = vec![r,g,b];
                     let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -95,12 +95,9 @@ impl Tile {
                 builder.icon.set_icon_name(Some(&icon));
 
                 let attrs: Vec<(&str, &str)> = vec![
-                    ("method", method),
-                    ("keyword", clipboard_content.as_str()),
                     ("engine", "plain"),
                 ];
-
-                insert_attrs(&builder.attrs, attrs);
+                builder.add_default_attrs(Some(method), None, Some(clipboard_content), None, Some(attrs));
                 results.push(builder.object);
             }
         }

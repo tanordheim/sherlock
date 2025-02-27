@@ -1,6 +1,6 @@
 use gtk4::{Label, ListBoxRow};
 
-use super::util::{get_builder, insert_attrs};
+use super::util::{TileBuilder, insert_attrs};
 use super::Tile;
 
 impl Tile {
@@ -11,7 +11,7 @@ impl Tile {
         keyword: &String,
     ) -> Option<(ListBoxRow, Label, Label)> {
         if !keyword.is_empty() {
-            let builder = get_builder("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
+            let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
 
             builder.category.set_text(name);
             builder.icon.set_icon_name(Some(icon));
@@ -33,13 +33,12 @@ impl Tile {
         keyword: &String,
     ) -> (i32, Vec<ListBoxRow>) {
         if !keyword.is_empty() {
-            let builder = get_builder("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index, false);
+            let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index, false);
             builder.category.set_text(name);
             builder.icon.set_icon_name(Some(icon));
             builder.title.set_text(keyword);
+            builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
 
-            let attrs: Vec<(&str, &str)> = vec![("method", method), ("keyword", keyword)];
-            insert_attrs(&builder.attrs, attrs);
 
             return (index + 1, vec![builder.object]);
         }

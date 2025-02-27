@@ -89,6 +89,7 @@ impl Loader {
                     tag_start: cmd.tag_start.clone(),
                     tag_end: cmd.tag_end.clone(),
                     method,
+                    next_content: cmd.next_content.clone(),
                     priority: cmd.priority,
                     r#async: cmd.r#async,
                     home: cmd.home,

@@ -1,7 +1,7 @@
 use gtk4::ListBoxRow;
 use meval::eval_str;
 
-use super::util::{get_builder, insert_attrs};
+use super::util::{TileBuilder, insert_attrs};
 use super::Tile;
 use crate::launcher::Launcher;
 
@@ -17,18 +17,14 @@ impl Tile {
         };
 
 
-        let builder = get_builder("/dev/skxxtz/sherlock/ui/calc_tile.ui", index, true);
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui", index, true);
         builder.equation_holder.set_text(&equation);
         builder
             .result_holder
             .set_text(format!("= {}", result.to_string()).as_str());
 
         let result = result.to_string();
-
-        let attrs: Vec<(&str, &str)> =
-            vec![("method", &launcher.method), ("result", result.as_str())];
-        insert_attrs(&builder.attrs, attrs);
-
+        builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, None);
         results.push(builder.object);
 
         (index, results)

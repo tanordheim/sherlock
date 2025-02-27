@@ -12,6 +12,7 @@ pub struct CommandConfig {
     pub tag_end: Option<String>,
     pub display_name: Option<String>,
     pub on_return: Option<String>,
+    pub next_content: Option<String>,
     pub r#type: String,
     pub priority: u32,
 

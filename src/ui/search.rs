@@ -3,7 +3,7 @@ use gtk4::{
     self,
     gdk::{self, Key},
     prelude::*,
-    ApplicationWindow, Builder, EventControllerKey, Stack,
+    Builder, EventControllerKey,
 };
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
@@ -14,12 +14,11 @@ use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
+use crate::APP_STATE;
 
 pub fn search(
-    window: ApplicationWindow,
-    search_stack: &Stack,
     launchers: Vec<Launcher>,
-) -> ApplicationWindow {
+) {
     // Initiallize the view to show all apps
     let (mode, modes, vbox, search_bar, result_viewport, mode_title, results) =
         construct_window(&launchers);
@@ -31,7 +30,6 @@ pub fn search(
     change_event(&search_bar, modes, &mode_title, &mode, &launchers, &results);
 
     nav_event(
-        &window,
         results,
         result_viewport,
         search_bar,
@@ -39,9 +37,11 @@ pub fn search(
         mode,
         launchers,
     );
-
-    search_stack.add_named(&vbox, Some("search-page"));
-    return window;
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.add_stack_page(vbox, "search-page");
+        }
+    });
 }
 
 fn construct_window(
@@ -87,7 +87,6 @@ fn construct_window(
 }
 
 fn nav_event(
-    window: &ApplicationWindow,
     results_ev_nav: Rc<ListBox>,
     result_viewport: ScrolledWindow,
     search_bar: Entry,
@@ -146,7 +145,11 @@ fn nav_event(
         }
         false.into()
     });
-    window.add_controller(event_controller);
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.add_event_listener(event_controller);
+        }
+    });
 }
 
 fn change_event(

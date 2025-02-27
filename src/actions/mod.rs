@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 use std::process::exit;
 
+use gtk4::Box;
+
+use crate::ui::util::show_stack_page;
+use crate::APP_STATE;
+
 pub mod applaunch;
 pub mod commandlaunch;
 pub mod util;
@@ -29,6 +34,19 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "copy" => {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
+                }
+            },
+            "next" => {
+                if let Some(next_content) = attrs.get("next_content") {
+                    APP_STATE.with(|state|{
+                        if let Some(ref state) = *state.borrow(){
+                            let wid = Box::new(gtk4::Orientation::Vertical, 5);
+                            if let Some(stack) = &state.stack{
+                                stack.add_named(&wid, Some("next-page"));
+                            }
+                        }
+                    });
+                    show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
                 }
             }
             _ => {
