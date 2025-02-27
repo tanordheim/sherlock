@@ -1,4 +1,4 @@
-use gtk4::{Label, ListBoxRow};
+use gtk4::{Label, ListBoxRow, Box};
 
 pub mod app_launcher;
 pub mod bulk_text_launcher;
@@ -76,7 +76,7 @@ impl Launcher {
             (index, Vec::new())
         }
     }
-    pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label)> {
+    pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label, Box)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(&self.name, &self.method, &bulk_text.icon, keyword)
@@ -84,7 +84,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_result(&self, keyword: &String) -> Option<(String, String)> {
+    pub async fn get_result(&self, keyword: &String) -> Option<(String, String, Option<String>)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => bulk_text.get_result(keyword).await,
             _ => None,

@@ -1,4 +1,4 @@
-use gtk4::{Label, ListBoxRow};
+use gtk4::{Label, ListBoxRow, Box};
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -9,7 +9,7 @@ impl Tile {
         method: &String,
         icon: &String,
         keyword: &String,
-    ) -> Option<(ListBoxRow, Label, Label)> {
+    ) -> Option<(ListBoxRow, Label, Label, Box)> {
         if !keyword.is_empty() {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
 
@@ -19,7 +19,7 @@ impl Tile {
             builder.content_body.set_text("Loading...");
             builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
 
-            return Some((builder.object, builder.content_title, builder.content_body));
+            return Some((builder.object, builder.content_title, builder.content_body, builder.attrs));
         }
         return None;
     }

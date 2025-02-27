@@ -217,11 +217,12 @@ fn change_event(
                     if current_mode == launcher.alias.as_deref().unwrap_or("") {
                         launcher
                             .get_loader_widget(&current_text)
-                            .map(|(widget, title, body)| AsyncLauncherTile {
+                            .map(|(widget, title, body, attrs)| AsyncLauncherTile {
                                 launcher: launcher.clone(),
                                 widget,
                                 title,
                                 body,
+                                attrs,
                             })
                     } else {
                         None
@@ -240,9 +241,13 @@ fn change_event(
                     return;
                 }
                 for widget in widgets.iter() {
-                    if let Some((title, body)) = widget.launcher.get_result(&current_text).await {
+                    if let Some((title, body, next_content)) = widget.launcher.get_result(&current_text).await {
                         widget.title.set_text(&title);
                         widget.body.set_text(&body);
+                        if let Some(next_content) = next_content {
+                            let label = Label::new(Some(format!("next_content|{}", next_content).as_str()));
+                            widget.attrs.append(&label);
+                        }
                     }
                 }
             });

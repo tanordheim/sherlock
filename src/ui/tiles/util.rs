@@ -7,6 +7,7 @@ pub struct AsyncLauncherTile {
     pub widget: ListBoxRow,
     pub title: Label,
     pub body: Label,
+    pub attrs: Box,
 }
 
 pub fn ensure_icon_name(name: String) -> String {
