@@ -146,20 +146,19 @@ async fn main() {
                 .collect();
             ui::user::display_pipe(lines);
         };
+    
 
         // Logic for the Error-View
+        
         if !app_config.debug.try_surpress_errors {
-            if !app_config.debug.try_surpress_warnings {
-                if !error_list.is_empty() || !non_breaking.is_empty() {
-                    ui::error_view::errors(&error_list, &non_breaking);
-                }
-            } else {
-                if !error_list.is_empty() {
-                    ui::error_view::errors(&error_list, &non_breaking);
-                }
+            let show_errors = !error_list.is_empty();
+            let show_warnings = !app_config.debug.try_surpress_warnings && !non_breaking.is_empty();
+            if show_errors || show_warnings {
+                ui::error_view::errors(&error_list, &non_breaking);
+                show_stack_page("error-page", None);
             }
-            show_stack_page("error-page", None);
         }
+
         APP_STATE.with(|state|{
             if let Some(ref state) = *state.borrow(){
                 state.window.as_ref().map(|window| window.present());

@@ -29,22 +29,36 @@
             </object>
         </child>
 
+
         <child>
-            <object class="GtkScrolledWindow" id="scrolled-window">
-                <style>
-                    <class name="scrolled-window"/>
-                </style>
-                <property name="vexpand">true</property>
-                <property name="hexpand">false</property>
-                <property name="name">scroll-window</property>
-                <property name="focusable">false</property>
+            <object class="GtkBox" id="split_view">
+                <property name="orientation">horizontal</property>
+                <property name="hexpand">True</property>
                 <child>
-                    <object class="GtkListBox" id="result-frame">
-                        <property name="name">list_box</property>
-
+                    <object class="GtkScrolledWindow" id="scrolled-window">
+                        <style>
+                            <class name="scrolled-window"/>
+                        </style>
+                        <property name="vexpand">true</property>
+                        <property name="hexpand">true</property>
+                        <property name="name">scroll-window</property>
+                        <property name="focusable">false</property>
                         <child>
-                        </child>
+                            <object class="GtkListBox" id="result-frame">
+                                <property name="name">list_box</property>
 
+                                <child>
+                                </child>
+
+                            </object>
+                        </child>
+                    </object>
+                </child>
+
+                <child>
+                    <object class="GtkBox" id="preview_box">
+                        <property name="orientation">vertical</property>
+                        <property name="name">preview_box</property>
                     </object>
                 </child>
             </object>
