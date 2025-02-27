@@ -1,6 +1,6 @@
 use gtk4::ListBoxRow;
 
-use super::util::{insert_attrs, TileBuilder};
+use super::util::TileBuilder;
 use super::Tile;
 use crate::launcher::web_launcher::Web;
 use crate::launcher::Launcher;

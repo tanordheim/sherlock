@@ -1,7 +1,7 @@
 use gtk4::ListBoxRow;
 use meval::eval_str;
 
-use super::util::{TileBuilder, insert_attrs};
+use super::util::TileBuilder;
 use super::Tile;
 use crate::launcher::Launcher;
 

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::loader::util::{AppData, Config};
 use crate::launcher::Launcher;
 
-use super::util::{ensure_icon_name, TileBuilder, insert_attrs};
+use super::util::{ensure_icon_name, TileBuilder};
 use super::Tile;
 
 impl Tile {

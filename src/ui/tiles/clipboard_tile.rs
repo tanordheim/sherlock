@@ -6,7 +6,7 @@ use meval::eval_str;
 
 use crate::launcher::Launcher;
 
-use super::util::{insert_attrs, TileBuilder};
+use super::util::TileBuilder;
 use super::Tile;
 fn hex_to_rgb(hex_color: &str)->(u8, u8, u8){
     let default = (0, 0, 0);

@@ -1,5 +1,5 @@
 use crate::launcher::Launcher; 
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Orientation};
+use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow };
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -7,14 +7,6 @@ pub struct AsyncLauncherTile {
     pub widget: ListBoxRow,
     pub title: Label,
     pub body: Label,
-}
-
-pub fn insert_attrs(attr_holder: &Box, attrs: Vec<(&str, &str)>) {
-    for item in attrs {
-        let (key, value, ..) = item;
-        let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
-        attr_holder.append(&label);
-    }
 }
 
 pub fn ensure_icon_name(name: String) -> String {

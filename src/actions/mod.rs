@@ -37,7 +37,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             },
             "next" => {
-                if let Some(next_content) = attrs.get("next_content") {
+                if let Some(_next_content) = attrs.get("next_content") {
                     APP_STATE.with(|state|{
                         if let Some(ref state) = *state.borrow(){
                             let wid = Box::new(gtk4::Orientation::Vertical, 5);

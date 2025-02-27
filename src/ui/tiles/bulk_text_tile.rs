@@ -1,6 +1,6 @@
 use gtk4::{Label, ListBoxRow};
 
-use super::util::{TileBuilder, insert_attrs};
+use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
@@ -17,9 +17,7 @@ impl Tile {
             builder.icon.set_icon_name(Some(icon));
             builder.content_title.set_text(keyword);
             builder.content_body.set_text("Loading...");
-
-            let attrs: Vec<(&str, &str)> = vec![("method", method), ("keyword", keyword)];
-            insert_attrs(&builder.attrs, attrs);
+            builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
 
             return Some((builder.object, builder.content_title, builder.content_body));
         }

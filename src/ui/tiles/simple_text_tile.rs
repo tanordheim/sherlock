@@ -1,7 +1,7 @@
 use super::util::SherlockSearch;
 use gtk4::ListBoxRow;
 
-use super::util::{TileBuilder, insert_attrs};
+use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
