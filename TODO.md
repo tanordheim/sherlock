@@ -16,12 +16,14 @@
     - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Make more widgets asynchronous.
     - [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
-- [ ] Consider changing the alias for each command in `commandlauncher` (if possible).
 - [ ] Add an `ArgCommand` launcher type or convert the existing one to be more versatile.
 - [ ] Add a callback type for a command to execute another command.
 - [ ] Implement command execution count and sort commands based on that count.
-- [ ] Finish setting up the loading animation for asynchronous widgets.
+- [ ] Finish setting up the loading animation for asynchronous widgets
+- [ ] Property/Detail tab on the right side of the screen to display application information
 - [ ] Markdown parser: Markdown > GTK ui
+
+- X Consider changing the alias for each command in `commandlauncher` (if possible). -> Not viable
 
 ## Configuration
 - [x] Allow the user to set flags such as `--config` to configure fallback, style, and config files.
