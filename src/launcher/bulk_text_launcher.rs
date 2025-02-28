@@ -73,7 +73,6 @@ impl BulkText {
             Ok((Ok(status), stdout, _stderr)) => {
                 if status.success() {
                     let output = String::from_utf8_lossy(stdout.as_bytes());
-                    println!("{}", output);
                     let response: AsyncCommandResponse = serde_json::from_str(&output).unwrap_or(AsyncCommandResponse::new());
 
                     let title = response.title.unwrap_or(keyword.to_string());

@@ -245,7 +245,7 @@ fn change_event(
                         widget.title.set_text(&title);
                         widget.body.set_text(&body);
                         if let Some(next_content) = next_content {
-                            let label = Label::new(Some(format!("next_content|{}", next_content).as_str()));
+                            let label = Label::new(Some(format!("next_content | {}", next_content).as_str()));
                             widget.attrs.append(&label);
                         }
                     }

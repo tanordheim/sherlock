@@ -1,5 +1,5 @@
 use crate::launcher::Launcher; 
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow };
+use gtk4::{ prelude::*, Box, Builder, Image, Label, ListBoxRow };
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -15,6 +15,22 @@ pub fn ensure_icon_name(name: String) -> String {
         name
     } else {
         format!("{}-symbolic", name)
+    }
+}
+
+
+#[derive(Default)]
+pub struct TextViewTileBuilder {
+    pub object: Box,
+    pub content: Label,
+}
+impl TextViewTileBuilder {
+    pub fn new(resource: &str)->Self{
+        let builder = Builder::from_resource(resource);
+        TextViewTileBuilder {
+            object: builder.object("next_tile").unwrap_or_default(),
+            content: builder.object("content").unwrap_or_default(),
+        }
     }
 }
 
@@ -35,6 +51,8 @@ pub struct TileBuilder {
     pub equation_holder: Label,
     pub result_holder: Label,
 }
+
+
 impl TileBuilder {
     pub fn new(resource: &str, index: i32, show_shortcut: bool)->Self{
         let builder = Builder::from_resource(resource);
@@ -116,6 +134,8 @@ impl TileBuilder {
         }
     }
 }
+
+
 
 pub trait SherlockSearch {
     fn fuzzy_match<T>(&self, substring: T) -> bool

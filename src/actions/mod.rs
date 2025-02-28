@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-use gtk4::Box;
-
+use crate::ui::tiles::util::TextViewTileBuilder;
 use crate::ui::util::show_stack_page;
 use crate::APP_STATE;
 
@@ -37,16 +36,18 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             },
             "next" => {
-                if let Some(_next_content) = attrs.get("next_content") {
+                if let Some(next_content) = attrs.get("next_content") {
                     APP_STATE.with(|state|{
                         if let Some(ref state) = *state.borrow(){
-                            let wid = Box::new(gtk4::Orientation::Vertical, 5);
+                            let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+                            builder.content.set_text(&next_content);
+
                             if let Some(stack) = &state.stack{
-                                stack.add_named(&wid, Some("next-page"));
+                                stack.add_named(&builder.object, Some("next-page"));
+                                show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
                             }
                         }
                     });
-                    show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
                 }
             }
             _ => {
