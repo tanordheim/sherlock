@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use gtk4::prelude::*;
 use std::process::exit;
+
+use gtk4::prelude::TextViewExt;
 
 use crate::ui::tiles::util::TextViewTileBuilder;
 use crate::ui::util::show_stack_page;
@@ -40,7 +43,8 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                     APP_STATE.with(|state|{
                         if let Some(ref state) = *state.borrow(){
                             let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
-                            builder.content.set_text(&next_content);
+                            let buf = builder.content.buffer();
+                            buf.set_text(&next_content);
 
                             if let Some(stack) = &state.stack{
                                 stack.add_named(&builder.object, Some("next-page"));

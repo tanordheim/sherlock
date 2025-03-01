@@ -1,14 +1,12 @@
 use gtk4::{
-    self,
-    gdk::{self, Key},
-    prelude::*,
-    Builder, EventControllerKey,
+    self, gdk::{self, Key}, prelude::*, Builder, EventControllerKey, Justification 
 };
+
 use gtk4::{Box as HVBox, Entry, ListBox, ScrolledWindow};
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::Tile;
+use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::APP_STATE;
@@ -44,6 +42,21 @@ pub fn display_pipe(
             state.add_stack_page(vbox, "search-page");
         }
     });
+}
+pub fn display_raw(content: String, center:bool){
+    let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+    let buffer = builder.content.buffer();
+    buffer.set_text(&content);
+    if center {
+        builder.content.set_justification(Justification::Center);
+    }
+
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.add_stack_page(builder.object, "search-page");
+        }
+    });
+
 }
 
 fn nav_event(

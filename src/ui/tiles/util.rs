@@ -1,5 +1,5 @@
 use crate::launcher::Launcher; 
-use gtk4::{ prelude::*, Box, Builder, Image, Label, ListBoxRow };
+use gtk4::{ prelude::*, Box, Builder,TextView, Image, Label, ListBoxRow };
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -22,7 +22,7 @@ pub fn ensure_icon_name(name: String) -> String {
 #[derive(Default)]
 pub struct TextViewTileBuilder {
     pub object: Box,
-    pub content: Label,
+    pub content: TextView,
 }
 impl TextViewTileBuilder {
     pub fn new(resource: &str)->Self{

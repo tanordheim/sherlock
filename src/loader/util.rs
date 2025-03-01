@@ -40,6 +40,8 @@ pub struct SherlockFlags {
     pub style: String,
     pub ignore: String,
     pub alias: String,
+    pub display_raw: bool,
+    pub center_raw: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -205,7 +207,6 @@ pub fn read_file(file_path: &str) -> std::io::Result<String> {
 }
 
 pub fn default_terminal() -> String {
-    println!("didnt work");
     get_terminal().unwrap_or_default()
 }
 pub fn get_terminal() -> Result<String, SherlockError> {

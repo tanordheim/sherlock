@@ -36,6 +36,10 @@ impl SherlockFlags {
                 .map_or(default, |f| f.replace("~", &home_dir).to_string())
                 .to_string()
         };
+        let check_flag_existance = |flag: &str| {
+            args.iter()
+                .position(|arg| arg == flag).map_or(false, |_| true)
+        };
 
         Ok(SherlockFlags {
             config: extract_flag_value("--config", defaults.config),
@@ -43,6 +47,8 @@ impl SherlockFlags {
             style: extract_flag_value("--style", defaults.style),
             ignore: extract_flag_value("--ignore", defaults.ignore),
             alias: extract_flag_value("--alias", defaults.alias),
+            display_raw: check_flag_existance("--display-raw"),
+            center_raw: check_flag_existance("--center"),
         })
     }
 
@@ -57,6 +63,8 @@ impl SherlockFlags {
             style: format!("{}/.config/sherlock/main.css", home_dir),
             ignore: format!("{}/.config/sherlock/sherlockignore", home_dir),
             alias: format!("{}/.config/sherlock/sherlock_alias.json", home_dir),
+            display_raw: false,
+            center_raw: false,
         })
     }
 }
@@ -77,6 +85,7 @@ pub fn print_help() -> Result<(), SherlockError> {
         ("--style", "Set the style configuration file."),
         ("--ignore", "Specify the sherlock ignore file"),
         ("--alias", "Specify the sherlock alias file (.json)."),
+        ("--display-raw", "Force Sherlock to use a singular tile to display the piped content")
     ];
 
     // Print header

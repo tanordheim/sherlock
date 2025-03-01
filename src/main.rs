@@ -1,5 +1,5 @@
 use gio::prelude::*;
-use gtk4::{gdk, EventController, Stack, Widget};
+use gtk4::{EventController, Stack, Widget};
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use loader::util::SherlockErrorType;
 use std::cell::RefCell;
@@ -139,12 +139,16 @@ async fn main() {
         if pipe.is_empty() {
             ui::search::search(launchers);
         } else {
-            let lines: Vec<String> = pipe
-                .split("\n")
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string())
-                .collect();
-            ui::user::display_pipe(lines);
+            if sherlock_flags.display_raw{
+                ui::user::display_raw(pipe, sherlock_flags.center_raw);
+            } else {
+                let lines: Vec<String> = pipe
+                    .split("\n")
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect();
+                ui::user::display_pipe(lines);
+            }
         };
     
 
