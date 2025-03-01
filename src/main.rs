@@ -1,5 +1,5 @@
 use gio::prelude::*;
-use gtk4::{EventController, Stack, Widget};
+use gtk4::{gdk, EventController, Stack, Widget};
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use loader::util::SherlockErrorType;
 use std::cell::RefCell;
