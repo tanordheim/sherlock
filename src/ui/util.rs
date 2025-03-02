@@ -71,8 +71,10 @@ pub fn set_home_screen(
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
+
     let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
     for widget in widgets {
+        widget.add_css_class("animate");
         results_frame.append(&widget);
     }
 }

@@ -47,6 +47,7 @@ pub fn search(
             state.add_stack_page(vbox, "search-page");
         }
     });
+
 }
 
 
