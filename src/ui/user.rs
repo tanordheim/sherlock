@@ -43,10 +43,12 @@ pub fn display_pipe(
         }
     });
 }
-pub fn display_raw(content: String, center:bool){
+pub fn display_raw<T: AsRef<str>>(content: T, center:bool){
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
     let buffer = builder.content.buffer();
-    buffer.set_text(&content);
+    builder.content.add_css_class("raw_text");
+    builder.content.set_monospace(true);
+    buffer.set_text(content.as_ref());
     if center {
         builder.content.set_justification(Justification::Center);
     }
@@ -57,6 +59,21 @@ pub fn display_raw(content: String, center:bool){
         }
     });
 
+}
+pub fn display_next<T: AsRef<str>>(content:T){
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+            builder.content.set_wrap_mode(gtk4::WrapMode::Word);
+            let buf = builder.content.buffer();
+            buf.set_text(content.as_ref());
+
+            if let Some(stack) = &state.stack{
+                stack.add_named(&builder.object, Some("next-page"));
+                show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
+            }
+        }
+    });
 }
 
 fn nav_event(

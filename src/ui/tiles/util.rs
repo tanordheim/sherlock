@@ -1,5 +1,6 @@
 use crate::launcher::Launcher; 
 use gtk4::{ prelude::*, Box, Builder,TextView, Image, Label, ListBoxRow };
+use nix::NixPath;
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -120,8 +121,10 @@ impl TileBuilder {
     {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
-            self.tag_start.set_text(&text);
-            self.tag_start.set_visible(true);
+            if !text.is_empty(){
+                self.tag_start.set_text(&text);
+                self.tag_start.set_visible(true);
+            }
         }
     }
     pub fn display_tag_end<T>(&self, content: &Option<String>, keyword: T)
@@ -129,8 +132,10 @@ impl TileBuilder {
     {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
-            self.tag_end.set_text(&text);
-            self.tag_end.set_visible(true);
+            if !text.is_empty(){
+                self.tag_end.set_text(&text);
+                self.tag_end.set_visible(true);
+            }
         }
     }
 }

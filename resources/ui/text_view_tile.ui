@@ -12,7 +12,6 @@
         <child>
             <object class="GtkTextView" id="content">
                 <property name="name">content-body</property>
-                <property name="monospace">true</property>
             </object>
         </child>
 

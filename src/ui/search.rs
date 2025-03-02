@@ -191,6 +191,14 @@ fn change_event(
                     mode_name,
                 );
                 search_bar.set_text("");
+
+                set_results(
+                    "",
+                    &mode_ev_changed.borrow(),
+                    &*results_ev_changed,
+                    &launchers_ev_changed,
+                );
+
             }
         } else {
             *cancel_flag.borrow_mut() = false;
@@ -265,4 +273,5 @@ pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers
     for widget in widgets {
         results_frame.append(&widget);
     }
+    results_frame.focus_first();
 }

@@ -10,7 +10,6 @@ impl Tile {
         icon: &String,
         keyword: &String,
     ) -> Option<(ListBoxRow, Label, Label, Box)> {
-        if !keyword.is_empty() {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
 
             builder.category.set_text(name);
@@ -20,8 +19,6 @@ impl Tile {
             builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
 
             return Some((builder.object, builder.content_title, builder.content_body, builder.attrs));
-        }
-        return None;
     }
     pub fn bulk_text_tile(
         name: &String,
@@ -30,8 +27,8 @@ impl Tile {
         index: i32,
         keyword: &String,
     ) -> (i32, Vec<ListBoxRow>) {
-        if !keyword.is_empty() {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index, false);
+
             builder.category.set_text(name);
             builder.icon.set_icon_name(Some(icon));
             builder.title.set_text(keyword);
@@ -39,7 +36,5 @@ impl Tile {
 
 
             return (index + 1, vec![builder.object]);
-        }
-        (index, vec![])
     }
 }
