@@ -153,7 +153,6 @@ async fn main() {
     
 
         // Logic for the Error-View
-        
         if !app_config.debug.try_surpress_errors {
             let show_errors = !error_list.is_empty();
             let show_warnings = !app_config.debug.try_surpress_warnings && !non_breaking.is_empty();
@@ -162,7 +161,8 @@ async fn main() {
                 show_stack_page("error-page", None);
             }
         }
-
+    
+        // Show window
         APP_STATE.with(|state|{
             if let Some(ref state) = *state.borrow(){
                 state.window.as_ref().map(|window| window.present());

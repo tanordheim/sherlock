@@ -13,9 +13,10 @@
 - [x] Implement tags on command widgets 
 - [x] Add an "return" command type for a tile.
 - [x] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
-    - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
+- [x] Startup animation
+- [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
+- [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
 - [ ] Make more widgets asynchronous.
-    - [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
 - [ ] Add an `ArgCommand` launcher type or convert the existing one to be more versatile.
 - [ ] Add a callback type for a command to execute another command.
 - [ ] Implement command execution count and sort commands based on that count.
