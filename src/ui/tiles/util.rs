@@ -1,4 +1,4 @@
-use crate::launcher::Launcher; 
+use crate::{launcher::Launcher, CONFIG}; 
 use gtk4::{ prelude::*, Box, Builder,TextView, Image, Label, ListBoxRow };
 use std::collections::HashSet;
 
@@ -72,12 +72,18 @@ impl TileBuilder {
         // Specific to 'calc_tile'
         let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
-
+    
+        // Implement the shortcuts
         if show_shortcut && index < 5 {
             let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
             let shortcut: Label = builder.object("shortcut").unwrap_or_default();
             shortcut_holder.set_visible(true);
             shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
+        }
+
+        // Set the icon size to the user-specified one
+        if let Some(c) = CONFIG.get(){
+            icon.set_pixel_size(c.appearance.icon_size);
         }
 
         TileBuilder {

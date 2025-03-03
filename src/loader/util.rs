@@ -196,6 +196,8 @@ pub struct ConfigAppearance {
     pub recolor_icons: bool,
     #[serde(default)]
     pub icon_paths: Vec<String>,
+    #[serde(default="default_icon_size")]
+    pub icon_size: i32,
 }
 
 pub fn read_file(file_path: &str) -> std::io::Result<String> {
@@ -208,6 +210,9 @@ pub fn read_file(file_path: &str) -> std::io::Result<String> {
 
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
+}
+pub fn default_icon_size()->i32{
+    22
 }
 pub fn get_terminal() -> Result<String, SherlockError> {
     let mut terminal = None;
