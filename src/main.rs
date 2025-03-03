@@ -19,6 +19,7 @@ use loader::{
 };
 use ui::util::show_stack_page;
 
+
 struct AppState{
     window: Option<ApplicationWindow>,
     stack: Option<Stack>,
@@ -106,6 +107,7 @@ async fn main() {
         0
     });
 
+
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
@@ -169,6 +171,7 @@ async fn main() {
             }
         });
     });
+
 
     application.run();
 }

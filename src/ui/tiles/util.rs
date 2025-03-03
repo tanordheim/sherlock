@@ -1,6 +1,5 @@
 use crate::launcher::Launcher; 
 use gtk4::{ prelude::*, Box, Builder,TextView, Image, Label, ListBoxRow };
-use nix::NixPath;
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {

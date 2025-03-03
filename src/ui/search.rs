@@ -199,7 +199,6 @@ fn change_event(
                     &*results_ev_changed,
                     &launchers_ev_changed,
                 );
-
             }
         } else {
             *cancel_flag.borrow_mut() = false;
