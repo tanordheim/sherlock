@@ -158,6 +158,7 @@ impl Config {
                     gsk_renderer: "cairo".to_string(),
                     recolor_icons: false,
                     icon_paths: Default::default(),
+                    icon_size: default_icon_size(),
                 },
             },
             non_breaking,
