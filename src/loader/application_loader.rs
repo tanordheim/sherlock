@@ -2,12 +2,12 @@ use glob::Pattern;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs::{self, File};
+use std::fs::{self,  File};
 
-use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
+use super::util::{SherlockError, SherlockFlags, SherlockErrorType, read_lines};
 use super::{util, Loader};
 use crate::CONFIG;
-use util::{read_file, read_lines, AppData, SherlockAlias};
+use util::{read_file, AppData, SherlockAlias};
 
 impl Loader {
     pub fn load_applications(
@@ -31,7 +31,7 @@ impl Loader {
         };
 
         // Parse user-specified 'sherlockignore' file
-        let ignore_apps: Vec<Pattern> = match read_lines(&sherlock_flags.ignore) {
+        let ignore_apps: Vec<Pattern> = match read_lines(&sherlock_flags.ignore){
             Ok(lines) => lines
                 .map_while(Result::ok)
                 .filter_map(|line| Pattern::new(&line.to_lowercase()).ok())

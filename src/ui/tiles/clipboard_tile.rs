@@ -31,7 +31,7 @@ impl Tile {
         let mut is_valid: i32 = 0;
 
         //TODO implement searchstring before clipboard content
-        if clipboard_content.contains(keyword) {
+        if !clipboard_content.is_empty() && clipboard_content.contains(keyword) {
             let mut builder = TileBuilder::default();
             let mut name = "";
             let mut method = "";

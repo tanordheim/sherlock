@@ -1,7 +1,7 @@
 use serde::Deserialize;
-use std::env;
+use std::{env, io};
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, Read};
+use std::io::{BufReader, BufRead, Read};
 use std::path::Path;
 use std::process::Command;
 

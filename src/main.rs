@@ -54,7 +54,6 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
-
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
