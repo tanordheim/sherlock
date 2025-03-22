@@ -49,7 +49,7 @@ pub fn get_row_attrs(selected_row: ListBoxRow) -> HashMap<String, String> {
     attrs
 }
 
-pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, mode_name: &String) {
+pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, mode_name: &str) {
     let new_mode = ctext.to_string();
     mode_title.set_text(mode_name);
     *mode_c.borrow_mut() = new_mode;

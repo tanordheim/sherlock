@@ -42,7 +42,7 @@ pub struct Launcher {
 }
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(&self, index: i32, keyword: &String) -> (i32, Vec<ListBoxRow>) {
+    pub fn get_patch(&self, index: i32, keyword: &str) -> (i32, Vec<ListBoxRow>) {
         if let Some(app_config) = CONFIG.get() {
             match &self.launcher_type {
                 LauncherType::App(app) => Tile::app_tile(
@@ -76,7 +76,7 @@ impl Launcher {
             (index, Vec::new())
         }
     }
-    pub fn get_loader_widget(&self, keyword: &String) -> Option<(ListBoxRow, Label, Label, Box)> {
+    pub fn get_loader_widget(&self, keyword: &str) -> Option<(ListBoxRow, Label, Label, Box)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(&self.name, &self.method, &bulk_text.icon, keyword)
@@ -84,7 +84,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_result(&self, keyword: &String) -> Option<(String, String, Option<String>)> {
+    pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => bulk_text.get_result(keyword).await,
             _ => None,
@@ -92,7 +92,7 @@ impl Launcher {
     }
 }
 
-pub fn construct_tiles(keyword: &String, launchers: &[Launcher], mode: &String) -> Vec<ListBoxRow> {
+pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec<ListBoxRow> {
     let mut widgets = Vec::new();
     let mut index: i32 = 0;
     let sel_mode = mode.trim();

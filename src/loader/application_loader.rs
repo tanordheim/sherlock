@@ -140,7 +140,7 @@ impl Loader {
     }
 }
 
-fn should_ignore(ignore_apps: &Vec<Pattern>, app: &String) -> bool {
+fn should_ignore(ignore_apps: &Vec<Pattern>, app: &str) -> bool {
     let app_name = app.to_lowercase();
     ignore_apps.iter().any(|pattern| pattern.matches(&app_name))
 }

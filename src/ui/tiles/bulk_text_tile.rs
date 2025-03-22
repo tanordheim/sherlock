@@ -5,10 +5,10 @@ use super::Tile;
 
 impl Tile {
     pub fn bulk_text_tile_loader(
-        name: &String,
-        method: &String,
-        icon: &String,
-        keyword: &String,
+        name: &str,
+        method: &str,
+        icon: &str,
+        keyword: &str,
     ) -> Option<(ListBoxRow, Label, Label, Box)> {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
 
@@ -21,11 +21,11 @@ impl Tile {
             return Some((builder.object, builder.content_title, builder.content_body, builder.attrs));
     }
     pub fn bulk_text_tile(
-        name: &String,
-        method: &String,
-        icon: &String,
+        name: &str,
+        method: &str,
+        icon: &str,
         index: i32,
-        keyword: &String,
+        keyword: &str,
     ) -> (i32, Vec<ListBoxRow>) {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index, false);
 

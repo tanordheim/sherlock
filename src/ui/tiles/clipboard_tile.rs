@@ -24,8 +24,8 @@ impl Tile {
     pub fn clipboard_tile(
         launcher: &Launcher,
         index: i32,
-        clipboard_content: &String,
-        keyword: &String,
+        clipboard_content: &str,
+        keyword: &str,
     ) -> (i32, Vec<ListBoxRow>) {
         let mut results: Vec<ListBoxRow> = Default::default();
         let mut is_valid: i32 = 0;
