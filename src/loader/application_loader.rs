@@ -44,13 +44,13 @@ impl Loader {
         };
 
         // Parse user-specified 'sherlock_alias.json' file
-        let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias) {
+        let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias){
             Ok(f) => serde_json::from_reader(f).map_err(|e| SherlockError {
                 error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
                 traceback: e.to_string(),
             })?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
-            Err(e) => Err(SherlockError {
+            Err(e) => Err(SherlockError{
                 error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
                 traceback: e.to_string(),
             })?,
