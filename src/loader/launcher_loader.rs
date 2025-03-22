@@ -1,10 +1,5 @@
 use std::collections::HashMap;
-<<<<<<< HEAD
 use std::fs::File;
-=======
-use std::fs::{self, File};
-use std::path::Path;
->>>>>>> 481e46a (perf: switched to bufreader for fallback reading)
 
 use crate::actions::util::read_from_clipboard;
 use crate::launcher::{
