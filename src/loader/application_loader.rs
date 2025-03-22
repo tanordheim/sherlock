@@ -17,6 +17,8 @@ impl Loader {
             error: SherlockErrorType::ConfigError(None),
             traceback: format!(""),
         })?;
+
+        // Define required paths for application parsing
         let system_apps = "/usr/share/applications/";
 
         // Parse needed fields from the '.desktop'
