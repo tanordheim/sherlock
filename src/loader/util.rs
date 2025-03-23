@@ -1,9 +1,9 @@
 use serde::Deserialize;
-use std::{env, io};
 use std::fs::File;
-use std::io::{BufReader, BufRead, Read};
+use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::process::Command;
+use std::{env, io};
 
 #[derive(Deserialize, Debug)]
 pub struct CommandConfig {
@@ -104,11 +104,8 @@ impl SherlockErrorType {
                 } else {
                     "It should never come to this".to_string()
                 };
-                (
-                    "ConfigError".to_string(),
-                    message
-                )
-            },
+                ("ConfigError".to_string(), message)
+            }
             SherlockErrorType::RegexError(key) => (
                 format!("RegexError"),
                 format!("Failed to compile the regular expression for \"{}\"", key),
@@ -198,7 +195,7 @@ pub struct ConfigAppearance {
     pub recolor_icons: bool,
     #[serde(default)]
     pub icon_paths: Vec<String>,
-    #[serde(default="default_icon_size")]
+    #[serde(default = "default_icon_size")]
     pub icon_size: i32,
 }
 
@@ -221,7 +218,7 @@ where
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
 }
-pub fn default_icon_size()->i32{
+pub fn default_icon_size() -> i32 {
     22
 }
 pub fn get_terminal() -> Result<String, SherlockError> {

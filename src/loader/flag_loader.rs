@@ -1,7 +1,7 @@
 use std::env;
 
 use super::{
-    util::{SherlockError, SherlockFlags, SherlockErrorType},
+    util::{SherlockError, SherlockErrorType, SherlockFlags},
     Loader,
 };
 
@@ -38,7 +38,8 @@ impl SherlockFlags {
         };
         let check_flag_existance = |flag: &str| {
             args.iter()
-                .position(|arg| arg == flag).map_or(false, |_| true)
+                .position(|arg| arg == flag)
+                .map_or(false, |_| true)
         };
 
         Ok(SherlockFlags {
@@ -85,7 +86,10 @@ pub fn print_help() -> Result<(), SherlockError> {
         ("--style", "Set the style configuration file."),
         ("--ignore", "Specify the sherlock ignore file"),
         ("--alias", "Specify the sherlock alias file (.json)."),
-        ("--display-raw", "Force Sherlock to use a singular tile to display the piped content")
+        (
+            "--display-raw",
+            "Force Sherlock to use a singular tile to display the piped content",
+        ),
     ];
 
     // Print header

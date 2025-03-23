@@ -1,8 +1,8 @@
 use gtk4::{prelude::*, ListBoxRow};
 use std::collections::HashMap;
 
-use crate::loader::util::{AppData, Config};
 use crate::launcher::Launcher;
+use crate::loader::util::{AppData, Config};
 
 use super::util::{ensure_icon_name, TileBuilder};
 use super::Tile;

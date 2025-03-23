@@ -14,7 +14,6 @@ use clipboard_launcher::Clp;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
-
 use super::{
     util::{self, SherlockError, SherlockErrorType},
     Loader,

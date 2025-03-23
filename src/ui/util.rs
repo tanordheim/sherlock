@@ -8,11 +8,10 @@ use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
 use crate::APP_STATE;
 
-
-pub fn show_stack_page<T:AsRef<str>>(page_name:T, transition:Option<StackTransitionType>){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
-            state.stack.as_ref().map(|stack|{
+pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
+            state.stack.as_ref().map(|stack| {
                 if let Some(transition) = transition {
                     stack.set_transition_type(transition);
                 };

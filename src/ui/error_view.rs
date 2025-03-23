@@ -8,10 +8,7 @@ use super::util::*;
 use crate::APP_STATE;
 use crate::{loader::util::SherlockError, ui::tiles::Tile};
 
-pub fn errors(
-    errors: &Vec<SherlockError>,
-    non_breaking: &Vec<SherlockError>,
-) {
+pub fn errors(errors: &Vec<SherlockError>, non_breaking: &Vec<SherlockError>) {
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_view.ui");
 
     let vbox: HVBox = builder.object("vbox").unwrap();
@@ -25,19 +22,15 @@ pub fn errors(
         .iter()
         .for_each(|tile| results.append(tile));
     error_tiles.iter().for_each(|tile| results.append(tile));
-    
+
     APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow(){
+        if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "error-page");
         }
     });
     nav_event(results, result_viewport);
-
 }
-fn nav_event(
-    result_holder: ListBox,
-    result_viewport: ScrolledWindow,
-) {
+fn nav_event(result_holder: ListBox, result_viewport: ScrolledWindow) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability
     let event_controller = Rc::new(RefCell::new(EventControllerKey::new()));
 
@@ -68,8 +61,8 @@ fn nav_event(
                         .clone()
                         .downcast_ref::<EventControllerKey>()
                     {
-                        APP_STATE.with(|state|{
-                            if let Some(ref state) = *state.borrow(){
+                        APP_STATE.with(|state| {
+                            if let Some(ref state) = *state.borrow() {
                                 state.remove_event_listener(controller);
                             }
                         })
@@ -80,8 +73,8 @@ fn nav_event(
                 _ => false.into(),
             }
         });
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.add_event_listener(event_controller.borrow().clone());
         }
     })

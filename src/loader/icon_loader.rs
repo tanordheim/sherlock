@@ -13,7 +13,9 @@ impl Loader {
             let home_dir = env::var("HOME")
                 .map_err(|e| {
                     non_breaking.push(SherlockError {
-                        error: super::util::SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+                        error: super::util::SherlockErrorType::EnvVarNotFoundError(
+                            "HOME".to_string(),
+                        ),
                         traceback: e.to_string(),
                     });
                 })

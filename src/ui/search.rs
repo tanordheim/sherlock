@@ -16,41 +16,31 @@ use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
 use crate::{APP_STATE, CONFIG};
 
-struct SearchUI{
+struct SearchUI {
     result_viewport: ScrolledWindow,
     preview_box: HVBox,
     search_bar: Entry,
     mode_title: Label,
 }
 
-pub fn search(
-    launchers: Vec<Launcher>,
-) {
+pub fn search(launchers: Vec<Launcher>) {
     // Initiallize the view to show all apps
-    let (mode, modes, vbox, ui, results) =
-        construct_window(&launchers);
-    ui.result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
+    let (mode, modes, vbox, ui, results) = construct_window(&launchers);
+    ui.result_viewport
+        .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     set_home_screen("", "all", &*results, &launchers);
     results.focus_first();
     ui.search_bar.grab_focus();
 
     change_event(&ui, modes, &mode, &launchers, &results);
 
-    nav_event(
-        results,
-        ui,
-        mode,
-        launchers,
-    );
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+    nav_event(results, ui, mode, launchers);
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "search-page");
         }
     });
-
 }
-
-
 
 fn construct_window(
     launchers: &Vec<Launcher>,
@@ -77,23 +67,18 @@ fn construct_window(
     // Get the requred object references
     let vbox: HVBox = builder.object("vbox").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
-    let ui = SearchUI{
+    let ui = SearchUI {
         result_viewport: builder.object("scrolled-window").unwrap_or_default(),
-        preview_box:  builder.object("preview_box").unwrap_or_default(),
-        search_bar:  builder.object("search-bar").unwrap_or_default(),
-        mode_title:  builder.object("category-type-label").unwrap_or_default(),
+        preview_box: builder.object("preview_box").unwrap_or_default(),
+        search_bar: builder.object("search-bar").unwrap_or_default(),
+        mode_title: builder.object("category-type-label").unwrap_or_default(),
     };
-    if let Some(c) = CONFIG.get(){
-        ui.result_viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, -1);
+    if let Some(c) = CONFIG.get() {
+        ui.result_viewport
+            .set_size_request((c.appearance.width as f32 * 0.4) as i32, -1);
     }
 
-    (
-        mode,
-        modes,
-        vbox,
-        ui,
-        results,
-    )
+    (mode, modes, vbox, ui, results)
 }
 
 fn nav_event(
@@ -153,8 +138,8 @@ fn nav_event(
         }
         false.into()
     });
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.add_event_listener(event_controller);
         }
     });
@@ -223,15 +208,15 @@ fn change_event(
                 .iter()
                 .filter_map(|launcher| {
                     if current_mode == launcher.alias.as_deref().unwrap_or("") {
-                        launcher
-                            .get_loader_widget(&current_text)
-                            .map(|(widget, title, body, attrs)| AsyncLauncherTile {
+                        launcher.get_loader_widget(&current_text).map(
+                            |(widget, title, body, attrs)| AsyncLauncherTile {
                                 launcher: launcher.clone(),
                                 widget,
                                 title,
                                 body,
                                 attrs,
-                            })
+                            },
+                        )
                     } else {
                         None
                     }
@@ -249,11 +234,15 @@ fn change_event(
                     return;
                 }
                 for widget in widgets.iter() {
-                    if let Some((title, body, next_content)) = widget.launcher.get_result(&current_text).await {
+                    if let Some((title, body, next_content)) =
+                        widget.launcher.get_result(&current_text).await
+                    {
                         widget.title.set_text(&title);
                         widget.body.set_text(&body);
                         if let Some(next_content) = next_content {
-                            let label = Label::new(Some(format!("next_content | {}", next_content).as_str()));
+                            let label = Label::new(Some(
+                                format!("next_content | {}", next_content).as_str(),
+                            ));
                             widget.attrs.append(&label);
                         }
                     }

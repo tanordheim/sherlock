@@ -1,6 +1,6 @@
 use gtk4::{prelude::*, ListBoxRow};
 
-use super::{Tile, util::TileBuilder};
+use super::{util::TileBuilder, Tile};
 use crate::loader::util::SherlockError;
 
 impl Tile {
@@ -13,7 +13,8 @@ impl Tile {
         let widgets: Vec<ListBoxRow> = errors
             .iter()
             .map(|e| {
-                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui", index, false);
+                let builder =
+                    TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui", index, false);
 
                 if let Some(class) = match tile_type {
                     "ERROR" => Some("error"),

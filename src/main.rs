@@ -1,11 +1,11 @@
 use gio::prelude::*;
-use gtk4::{EventController, Stack, Widget};
 use gtk4::{prelude::*, Application, ApplicationWindow};
+use gtk4::{EventController, Stack, Widget};
 use loader::util::SherlockErrorType;
 use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::OnceLock;
 use std::{env, process};
-use std::rc::Rc;
 
 mod actions;
 mod launcher;
@@ -19,14 +19,13 @@ use loader::{
 };
 use ui::util::show_stack_page;
 
-
-struct AppState{
+struct AppState {
     window: Option<ApplicationWindow>,
     stack: Option<Stack>,
 }
-impl AppState{
-    pub fn add_stack_page<T,U>(&self, child: T, name: U)
-    where 
+impl AppState {
+    pub fn add_stack_page<T, U>(&self, child: T, name: U)
+    where
         T: IsA<Widget>,
         U: AsRef<str>,
     {
@@ -35,12 +34,12 @@ impl AppState{
         }
     }
 
-    pub fn add_event_listener<T: IsA<EventController>>(&self, controller: T){
+    pub fn add_event_listener<T: IsA<EventController>>(&self, controller: T) {
         if let Some(window) = &self.window {
             window.add_controller(controller);
         }
     }
-    pub fn remove_event_listener<T: IsA<EventController>>(&self, controller: &T){
+    pub fn remove_event_listener<T: IsA<EventController>>(&self, controller: &T) {
         if let Some(window) = &self.window {
             window.remove_controller(controller);
         }
@@ -95,7 +94,6 @@ async fn main() {
         gio::ApplicationFlags::HANDLES_COMMAND_LINE,
     );
 
-
     if let Some(config) = CONFIG.get() {
         env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
     }
@@ -105,7 +103,6 @@ async fn main() {
         app.activate();
         0
     });
-
 
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
@@ -129,7 +126,7 @@ async fn main() {
 
         // Main logic for the Search-View
         let (window, stack) = ui::window::window(&app);
-        let state = Rc::new(AppState{
+        let state = Rc::new(AppState {
             window: Some(window),
             stack: Some(stack),
         });
@@ -140,7 +137,7 @@ async fn main() {
         if pipe.is_empty() {
             ui::search::search(launchers);
         } else {
-            if sherlock_flags.display_raw{
+            if sherlock_flags.display_raw {
                 ui::user::display_raw(pipe, sherlock_flags.center_raw);
             } else {
                 let lines: Vec<String> = pipe
@@ -151,7 +148,6 @@ async fn main() {
                 ui::user::display_pipe(lines);
             }
         };
-    
 
         // Logic for the Error-View
         if !app_config.debug.try_surpress_errors {
@@ -162,16 +158,14 @@ async fn main() {
                 show_stack_page("error-page", None);
             }
         }
-    
+
         // Show window
-        APP_STATE.with(|state|{
-            if let Some(ref state) = *state.borrow(){
+        APP_STATE.with(|state| {
+            if let Some(ref state) = *state.borrow() {
                 state.window.as_ref().map(|window| window.present());
             }
         });
     });
 
-
     application.run();
 }
-

@@ -2,9 +2,9 @@ use glob::Pattern;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs::{self,  File};
+use std::fs::{self, File};
 
-use super::util::{SherlockError, SherlockFlags, SherlockErrorType, read_lines};
+use super::util::{read_lines, SherlockError, SherlockErrorType, SherlockFlags};
 use super::{util, Loader};
 use crate::CONFIG;
 use util::{read_file, AppData, SherlockAlias};
@@ -33,7 +33,7 @@ impl Loader {
         };
 
         // Parse user-specified 'sherlockignore' file
-        let ignore_apps: Vec<Pattern> = match read_lines(&sherlock_flags.ignore){
+        let ignore_apps: Vec<Pattern> = match read_lines(&sherlock_flags.ignore) {
             Ok(lines) => lines
                 .map_while(Result::ok)
                 .filter_map(|line| Pattern::new(&line.to_lowercase()).ok())
@@ -46,13 +46,13 @@ impl Loader {
         };
 
         // Parse user-specified 'sherlock_alias.json' file
-        let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias){
+        let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias) {
             Ok(f) => serde_json::from_reader(f).map_err(|e| SherlockError {
                 error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
                 traceback: e.to_string(),
             })?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
-            Err(e) => Err(SherlockError{
+            Err(e) => Err(SherlockError {
                 error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
                 traceback: e.to_string(),
             })?,

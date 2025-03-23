@@ -4,7 +4,6 @@ use gtk4_layer_shell::{Layer, LayerShell};
 
 use crate::CONFIG;
 
-
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     // 618 with, 591 without notification bar
     let (width, height) = if let Some(config) = CONFIG.get() {
@@ -27,7 +26,6 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     //Build main fame here that holds logic for stacking
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
     let holder: Stack = builder.object("stack").unwrap();
-
 
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
