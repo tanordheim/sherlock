@@ -9,7 +9,7 @@ impl Tile {
     pub fn web_tile(
         launcher: &Launcher,
         index: i32,
-        keyword: &String,
+        keyword: &str,
         web: &Web,
     ) -> (i32, Vec<ListBoxRow>) {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
@@ -34,7 +34,13 @@ impl Tile {
             attrs.push(("next_content", next));
         }
 
-        builder.add_default_attrs(Some(&launcher.method), Some(&keyword), Some(&keyword), None, Some(attrs));
+        builder.add_default_attrs(
+            Some(&launcher.method),
+            Some(keyword),
+            Some(keyword),
+            None,
+            Some(attrs),
+        );
 
         return (index + 1, vec![builder.object]);
     }

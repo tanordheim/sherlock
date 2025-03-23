@@ -11,7 +11,7 @@ impl Tile {
     pub fn app_tile(
         launcher: &Launcher,
         index: i32,
-        keyword: &String,
+        keyword: &str,
         commands: HashMap<String, AppData>,
         app_config: &Config,
     ) -> (i32, Vec<ListBoxRow>) {
@@ -42,11 +42,11 @@ impl Tile {
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
                 builder.add_default_attrs(
-                    Some(&launcher.method), 
-                    Some(&keyword),
-                    Some(&keyword),
+                    Some(&launcher.method),
+                    Some(keyword),
+                    Some(keyword),
                     Some(&value.exec),
-                    None
+                    None,
                 );
 
                 index_ref += 1;
