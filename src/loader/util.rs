@@ -43,6 +43,7 @@ pub struct SherlockFlags {
     pub alias: String,
     pub display_raw: bool,
     pub center_raw: bool,
+    pub caching: bool,
     pub cache: String,
 }
 
@@ -139,6 +140,8 @@ pub struct Config {
     pub debug: ConfigDebug,
     #[serde(default)]
     pub appearance: ConfigAppearance,
+    #[serde(default)]
+    pub behavior: ConfigBehavior,
 }
 impl Config {
     pub fn default() -> (Self, Vec<SherlockError>) {
@@ -162,6 +165,10 @@ impl Config {
                     icon_paths: Default::default(),
                     icon_size: default_icon_size(),
                 },
+                behavior: ConfigBehavior {
+                    cache: String::from("~/.cache/sherlock_desktop_cache.json"),
+                    caching: false,
+                }
             },
             non_breaking,
         )
@@ -180,6 +187,15 @@ impl Default for ConfigDefaultApps {
         }
     }
 }
+
+#[derive(Deserialize, Debug, Clone, Default)]
+pub struct ConfigBehavior {
+    #[serde(default = "default_cache")]
+    pub cache: String,
+    #[serde(default)]
+    pub caching: bool,
+}
+
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigDebug {
     #[serde(default)]
@@ -221,6 +237,12 @@ where
 
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
+}
+pub fn default_cache() -> String {
+    match env::var("HOME") {
+        Ok(dir) => format!("{}/.cache/sherlock_desktop_cache.json", dir),
+        Err(_) => String::from("~/cache/sherlock_desktop_cache.json"),
+    }
 }
 pub fn default_icon_size()->i32{
     22

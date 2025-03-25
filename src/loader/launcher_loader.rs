@@ -20,6 +20,7 @@ use super::{
     Loader,
 };
 use util::{AppData, CommandConfig, SherlockFlags};
+use crate::CONFIG;
 
 impl Loader {
     pub fn load_launchers(
@@ -28,18 +29,27 @@ impl Loader {
         // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         // Read fallback data here:
-        let (config, n) = parse_launcher_configs(sherlock_flags)?;
+        let (launcher_config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
 
         // Parse the launchers
-        let mut launchers: Vec<Launcher> = config
+        let mut launchers: Vec<Launcher> = launcher_config
             .iter()
             .filter_map(|cmd| {
                 let launcher_type: LauncherType = match cmd.r#type.as_str() {
                     "app_launcher" => {
-                        let apps = Loader::load_applications(sherlock_flags)
-                            .map_err(|e| non_breaking.push(e))
-                            .ok()?;
+                        let mut apps: HashMap<String, AppData> = HashMap::new();
+                        if let Some(c) = CONFIG.get() {
+                            apps = match c.behavior.caching {
+                                true => Loader::load_applications(sherlock_flags)
+                                    .map_err(|e| non_breaking.push(e))
+                                    .ok()?,
+                                false => Loader::load_applications_from_disk(sherlock_flags)
+                                    .map_err(|e| non_breaking.push(e))
+                                    .ok()?,
+                            };
+                        }
+
                         LauncherType::App(App { apps })
                     }
                     "web_launcher" => LauncherType::Web(Web {

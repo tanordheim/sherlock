@@ -49,6 +49,7 @@ impl SherlockFlags {
             alias: extract_flag_value("--alias", defaults.alias),
             display_raw: check_flag_existance("--display-raw"),
             center_raw: check_flag_existance("--center"),
+            caching: check_flag_existance("--cache"),
             cache: extract_flag_value("--cache", defaults.cache),
         })
     }
@@ -66,6 +67,7 @@ impl SherlockFlags {
             alias: format!("{}/.config/sherlock/sherlock_alias.json", home_dir),
             display_raw: false,
             center_raw: false,
+            caching: false,
             cache: format!("{}/.cache/sherlock_desktop_cache.json", home_dir),
         })
     }

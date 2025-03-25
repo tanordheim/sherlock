@@ -11,7 +11,7 @@ use crate::CONFIG;
 use util::{read_file, read_lines, AppData, SherlockAlias};
 
 impl Loader {
-    fn load_applications_from_disk(
+    pub fn load_applications_from_disk(
         sherlock_flags: &SherlockFlags,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
