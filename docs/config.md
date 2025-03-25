@@ -32,4 +32,11 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `icon_size`    | `22`        | Sets the default icon size for the icons in each tile. |
 
 ---
+## Behavior Section `[behavior]`
 
+| **Keyword**           | **Default** | **Explanation**                                                                 |
+|-----------------------|-------------|---------------------------------------------------------------------------------|
+| `caching` | `false`     | If set to `true`, Desktop file caching will be activated to either the specified or the default location `~/.cache/sherlock_desktop_cache.json`. |
+| `cache` | `~/.cache/sherlock_desktop_cache.json`   | Overrides the default caching location. |
+
+---
