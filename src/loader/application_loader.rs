@@ -2,8 +2,10 @@ use glob::Pattern;
 use rayon::prelude::*;
 use regex::Regex;
 use simd_json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
 use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
 use super::{util, Loader};
@@ -13,6 +15,7 @@ use util::{read_file, read_lines, AppData, SherlockAlias};
 impl Loader {
     pub fn load_applications_from_disk(
         sherlock_flags: &SherlockFlags,
+        applications: Option<Vec<PathBuf>>
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
             error: SherlockErrorType::ConfigError(None),
@@ -58,24 +61,33 @@ impl Loader {
         };
 
         // Gather '.desktop' files
-        let desktop_files: Vec<_> = fs::read_dir(system_apps)
-            .expect("Unable to read/access /usr/share/applications directory")
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                entry
-                    .path()
-                    .extension()
-                    .map(|ext| ext == "desktop")
-                    .unwrap_or(false)
-            })
-            .collect();
+        let desktop_files: Vec<PathBuf> = match applications {
+            Some(apps) => apps,
+            _ => {
+                fs::read_dir(system_apps)
+                    .map_err(|e| SherlockError{
+                        error: SherlockErrorType::DirReadError(system_apps.to_string()),
+                        traceback: e.to_string(),
+                    })?
+                .filter_map(|entry| {
+                    entry.ok().and_then(|f| {
+                        let path = f.path();
+                        if path.extension().and_then(|ext| ext.to_str()) == Some("desktop"){
+                            Some(path)
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect()
+            }
+        };
 
         // Parellize opening of all files and reading into appfiles
         let apps: HashMap<String, AppData> = desktop_files
             .into_par_iter()
             .filter_map(|entry| {
-                let path = entry.path();
-                let r_path = path.to_str()?;
+                let r_path = entry.to_str()?;
                 match read_file(r_path) {
                     Ok(content) => {
 
@@ -117,7 +129,7 @@ impl Loader {
                         let search_string = format!("{};{}", name, keywords);
 
                         let desktop_file_path = match config.behavior.caching {
-                            true => Some(r_path.to_string()),
+                            true => Some(entry),
                             false => None
                         };
 
@@ -140,11 +152,91 @@ impl Loader {
         Ok(apps)
     }
 
-    fn write_cache(apps: &HashMap<String, AppData>, flags: &SherlockFlags) {
-        let tmp_path = flags.cache.to_string() + ".tmp";
+
+    fn get_new_applications(mut apps: HashMap<String, AppData>, flags: &SherlockFlags)-> Result<HashMap<String, AppData>, SherlockError>{
+        let system_apps = "/usr/share/applications/";
+
+        // check if sherlock_alias was modified
+        let alias_path = Path::new(&flags.alias);
+        let cache_path = Path::new(&flags.cache);
+
+        fn modtime(path: &Path) -> Option<SystemTime>{
+            match fs::metadata(path){
+                Ok(metadata) => metadata.modified().ok(),
+                Err(_) => None
+            }
+        } 
+        match (modtime(&alias_path), modtime(&cache_path)) {
+            (Some(t1), Some(t2)) => {
+                if t1 >= t2 {
+                    return Loader::load_applications_from_disk(flags, None)
+                }
+            },
+            _ => {}
+        }
+
+
+
+        // get all desktop files
+        let desktop_files: HashSet<PathBuf> = fs::read_dir(system_apps)
+            .map_err(|e| SherlockError{
+                error: SherlockErrorType::DirReadError(system_apps.to_string()),
+                traceback: e.to_string(),
+            })?
+            .filter_map(|entry| {
+                entry.ok().and_then(|f| {
+                    let path = f.path();
+                    if path.extension().and_then(|ext| ext.to_str()) == Some("desktop"){
+                        Some(path)
+                    } else {
+                        None
+                    }
+                })
+            })
+            .collect();
+
+        // get cached desktop entries
+        let cached: HashMap<String, PathBuf> = apps
+            .iter()
+            .filter_map(|(key, value)| {
+                if let Some(v) = &value.desktop_file {
+                    Some((key.clone(), v.clone()))
+                } else {
+                    None
+                }
+            })
+        .collect();
+
+        // remove if cached entry doesnt exist on device anympre
+        for (k,v) in &cached {
+            if !desktop_files.contains(v){
+                println!("{:?}", k);
+                apps.remove(k);
+            } 
+        };
+
+        // get files that are not yet cached
+        let uncached: Vec<PathBuf> = desktop_files
+            .iter()
+            .filter(|file| !cached.values().any(|v| v == *file))
+            .cloned()
+            .collect();
+
+        // get information for uncached applications
+        match Loader::load_applications_from_disk(flags, Some(uncached)){
+            Ok(new_apps) => {
+                apps.extend(new_apps)
+            },
+            _ => {}
+        };
+        return Ok(apps)
+    }
+
+    fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
+        let tmp_path = cache_loc.as_ref().with_extension(".tmp");
         if let Ok(f) = File::create(&tmp_path) {
             if let Ok(_) = simd_json::to_writer(f, &apps) {
-                let _ = fs::rename(&tmp_path, &flags.cache);
+                let _ = fs::rename(&tmp_path, &cache_loc);
             } else {
                 let _ = fs::remove_file(&tmp_path);
             }
@@ -154,29 +246,28 @@ impl Loader {
     pub fn load_applications(
         sherlock_flags: &SherlockFlags,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
-        let cached_apps: Option<HashMap<String, AppData>> = File::open(&sherlock_flags.cache)
+        let cache_loc = sherlock_flags.cache.to_string();
+        let flags = sherlock_flags.clone();
+        let cached_apps: Option<HashMap<String, AppData>> = File::open(&cache_loc)
             .ok()
             .and_then(|f| simd_json::from_reader(f).ok());
+         
 
-        let flags = sherlock_flags.clone();
         if let Some(apps) = cached_apps {
             // Refresh cache in the background
             let old_apps = apps.clone();
             std::thread::spawn(move || {
-                if let Ok(new_apps) = Loader::load_applications_from_disk(&flags) {
-                    if old_apps != new_apps {
-                        Loader::write_cache(&new_apps, &flags);
-                    }
+                if let Ok(new_apps) = Loader::get_new_applications(old_apps, &flags){
+                    Loader::write_cache(&new_apps, &cache_loc);
                 }
             });
             return Ok(apps);
         }
 
-        let apps = Loader::load_applications_from_disk(sherlock_flags)?;
-
+        let apps = Loader::load_applications_from_disk(sherlock_flags, None)?;
         // Write the cache in the background
         let app_clone = apps.clone();
-        std::thread::spawn(move || Loader::write_cache(&app_clone, &flags));
+        std::thread::spawn(move || Loader::write_cache(&app_clone, &cache_loc));
         Ok(apps)
     }
 }

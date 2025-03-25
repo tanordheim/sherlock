@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Deserialize, Debug)]
@@ -32,7 +32,7 @@ pub struct AppData {
     pub search_string: String,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
-    pub desktop_file: Option<String>,
+    pub desktop_file: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug, Default)]

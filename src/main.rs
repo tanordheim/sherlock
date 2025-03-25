@@ -77,7 +77,6 @@ async fn main() {
         .map_err(|e| startup_errors.push(e))
         .unwrap_or(loader::util::Config::default());
     non_breaking.extend(n);
-    println!("{:?}", app_config);
 
     match CONFIG.set(app_config.clone()) {
         Ok(_) => {}

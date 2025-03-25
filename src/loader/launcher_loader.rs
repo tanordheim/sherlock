@@ -44,7 +44,7 @@ impl Loader {
                                 true => Loader::load_applications(sherlock_flags)
                                     .map_err(|e| non_breaking.push(e))
                                     .ok()?,
-                                false => Loader::load_applications_from_disk(sherlock_flags)
+                                false => Loader::load_applications_from_disk(sherlock_flags, None)
                                     .map_err(|e| non_breaking.push(e))
                                     .ok()?,
                             };
