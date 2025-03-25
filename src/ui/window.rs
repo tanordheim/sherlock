@@ -31,17 +31,26 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
 
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, _| {
-        match key {
-            gdk::Key::Escape => {
-                hide_window();
-                //std::process::exit(0);
+    if let Some(c) = CONFIG.get(){
+        let action = match c.behavior.daemonize{
+            true => hide_window,
+            false => exit_app,
+        };
+        event_controller.connect_key_pressed(move |_, key, _, _| {
+            match key {
+                gdk::Key::Escape => {
+                    action()
+                }
+                _ => (),
             }
-            _ => (),
-        }
-        false.into()
-    });
+            false.into()
+        });
+    }
     window.add_controller(event_controller);
     window.set_child(Some(&holder));
     return (window, holder);
+}
+fn exit_app(){
+    std::process::exit(0)
+
 }

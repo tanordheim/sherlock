@@ -175,23 +175,22 @@ async fn main() {
             }
         }
 
-        // Todo: Make logic for switching to deamon by config key
-    
-        // Show window
-        APP_STATE.with(|state|{
-            if let Some(ref state) = *state.borrow(){
-                state.window.as_ref().map(|window| window.present());
+        // Logic for handling the daemonization 
+        if let Some(c) = CONFIG.get(){
+            match c.behavior.daemonize {
+                true => {
+                    // deamonize option
+                    thread::spawn(move || {
+                        SherlockDeamon::new(SOCKET_PATH);
+                    });
+                },
+                false => {
+                    // Show window without daemonizing
+                    show_window();
+                }
             }
-        });
-
-        // deamonize option
-        thread::spawn(move || {
-            SherlockDeamon::new(SOCKET_PATH);
-        });
-
+        }
     });
-
-
     application.run();
 }
 
