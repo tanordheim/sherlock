@@ -152,7 +152,7 @@ Has following fields of its own:
     "on_return": "copy",
     "args": {
         "icon": "wikipedia",
-        "exec": "wiki-api"
+        "exec": "~/.config/sherlock/scripts/sherlock-wiki"
         "exec-args": "{keyword}"
     },
     "priority": 0
@@ -168,4 +168,5 @@ Specifies the program that should be run. **Note:** that its probably suitable t
 **`exec-args`** (optional):<br>
 Specifies the arguments to pass along to the `exec` program.
 
+> The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
 --- 
