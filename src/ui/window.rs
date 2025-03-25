@@ -2,7 +2,7 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-use crate::CONFIG;
+use crate::{hide_window, CONFIG};
 
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
@@ -34,7 +34,8 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     event_controller.connect_key_pressed(move |_, key, _, _| {
         match key {
             gdk::Key::Escape => {
-                std::process::exit(0);
+                hide_window();
+                //std::process::exit(0);
             }
             _ => (),
         }

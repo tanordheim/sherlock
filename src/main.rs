@@ -2,9 +2,10 @@ use gio::prelude::*;
 use gtk4::{EventController, Stack, Widget};
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use loader::util::SherlockErrorType;
+use ui::window::window;
 use std::cell::RefCell;
 use std::sync::OnceLock;
-use std::{env, process};
+use std::{env, process, thread};
 use std::rc::Rc;
 
 mod actions;
@@ -12,12 +13,16 @@ mod launcher;
 mod loader;
 mod lock;
 mod ui;
+mod daemon;
+
+const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
 use loader::{
     util::{Config, SherlockError},
     Loader,
 };
 use ui::util::show_stack_page;
+use daemon::deamon::SherlockDeamon;
 
 
 struct AppState{
@@ -130,6 +135,12 @@ async fn main() {
 
         // Main logic for the Search-View
         let (window, stack) = ui::window::window(&app);
+
+
+
+
+
+        // creating app state
         let state = Rc::new(AppState{
             window: Some(window),
             stack: Some(stack),
@@ -163,6 +174,8 @@ async fn main() {
                 show_stack_page("error-page", None);
             }
         }
+
+        // Todo: Make logic for switching to deamon by config key
     
         // Show window
         APP_STATE.with(|state|{
@@ -170,9 +183,30 @@ async fn main() {
                 state.window.as_ref().map(|window| window.present());
             }
         });
+
+        // deamonize option
+        thread::spawn(move || {
+            SherlockDeamon::new(SOCKET_PATH);
+        });
+
     });
 
 
     application.run();
 }
 
+
+pub fn show_window(){
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.window.as_ref().map(|window| window.present());
+        }
+    });
+}
+pub fn hide_window(){
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.window.as_ref().map(|window| window.hide());
+        }
+    });
+}
