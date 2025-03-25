@@ -58,7 +58,7 @@ impl Loader {
         };
 
         // Gather '.desktop' files
-        let dektop_files: Vec<_> = fs::read_dir(system_apps)
+        let desktop_files: Vec<_> = fs::read_dir(system_apps)
             .expect("Unable to read/access /usr/share/applications directory")
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
@@ -70,72 +70,73 @@ impl Loader {
             })
             .collect();
 
-        // Parellize opening of all files and reading into vector
-        let file_contents: Vec<String> = dektop_files
+        // Parellize opening of all files and reading into appfiles
+        let apps: HashMap<String, AppData> = desktop_files
             .into_par_iter()
             .filter_map(|entry| {
                 let path = entry.path();
-                let rpath = path.to_str()?;
-                read_file(rpath).ok()
-            })
-            .collect();
+                let r_path = path.to_str()?;
+                match read_file(r_path) {
+                    Ok(content) => {
 
-        // Pararellize parsing of the '.desktop' files contents
-        let apps: HashMap<String, AppData> = file_contents
-            .into_par_iter()
-            .filter_map(|content| {
-                // Skip if "NoDisplay" field is set to "true"
-                if parse_field(&content, &display_re) == "true" {
-                    return None;
-                }
+                        if parse_field(&content, &display_re) == "true" {
+                            return None;
+                        }
 
-                // Extract fields
-                let mut keywords = parse_field(&content, &keywords_re);
-                let mut icon = parse_field(&content, &icon_re);
-                let mut name = parse_field(&content, &name_re);
-                if name.is_empty() || should_ignore(&ignore_apps, &name) {
-                    return None; // Skip entries with empty names
-                }
+                        // Extract fields
+                        let mut keywords = parse_field(&content, &keywords_re);
+                        let mut icon = parse_field(&content, &icon_re);
+                        let mut name = parse_field(&content, &name_re);
+                        if name.is_empty() || should_ignore(&ignore_apps, &name) {
+                            return None; // Skip entries with empty names
+                        }
 
-                // Construct the executable command
-                let exec_path = parse_field(&content, &exec_re);
-                let mut exec = if parse_field(&content, &terminal_re) == "true" {
-                    format!("{} {}", &config.default_apps.terminal, exec_path)
-                } else {
-                    exec_path.to_string()
-                };
+                        // Construct the executable command
+                        let exec_path = parse_field(&content, &exec_re);
+                        let mut exec = if parse_field(&content, &terminal_re) == "true" {
+                            format!("{} {}", &config.default_apps.terminal, exec_path)
+                        } else {
+                            exec_path.to_string()
+                        };
 
-                // apply aliases
-                if let Some(alias) = aliases.get(&name) {
-                    if let Some(alias_name) = alias.name.as_ref() {
-                        name = alias_name.to_string();
-                    }
-                    if let Some(alias_icon) = alias.icon.as_ref() {
-                        icon = alias_icon.to_string();
-                    }
-                    if let Some(alias_keywords) = alias.keywords.as_ref() {
-                        keywords = alias_keywords.to_string();
-                    }
-                    if let Some(alias_exec) = alias.exec.as_ref() {
-                        exec = alias_exec.to_string();
-                    }
-                };
-                let search_string = format!("{};{}", name, keywords);
+                        // apply aliases
+                        if let Some(alias) = aliases.get(&name) {
+                            if let Some(alias_name) = alias.name.as_ref() {
+                                name = alias_name.to_string();
+                            }
+                            if let Some(alias_icon) = alias.icon.as_ref() {
+                                icon = alias_icon.to_string();
+                            }
+                            if let Some(alias_keywords) = alias.keywords.as_ref() {
+                                keywords = alias_keywords.to_string();
+                            }
+                            if let Some(alias_exec) = alias.exec.as_ref() {
+                                exec = alias_exec.to_string();
+                            }
+                        };
+                        let search_string = format!("{};{}", name, keywords);
 
-                // Return the processed app data
-                Some((
-                    name,
-                    AppData {
-                        icon,
-                        exec,
-                        search_string,
-                        tag_start: None,
-                        tag_end: None,
+                        let desktop_file_path = match config.behavior.caching {
+                            true => Some(r_path.to_string()),
+                            false => None
+                        };
+
+                        // Return the processed app data
+                        Some((
+                                name,
+                                AppData {
+                                    icon,
+                                    exec,
+                                    search_string,
+                                    tag_start: None,
+                                    tag_end: None,
+                                    desktop_file: desktop_file_path,
+                                },
+                        ))
                     },
-                ))
-            })
-            .collect();
-
+                    Err(_) => None,
+            }
+            }).collect();
         Ok(apps)
     }
 

@@ -32,6 +32,7 @@ pub struct AppData {
     pub search_string: String,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
+    pub desktop_file: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
