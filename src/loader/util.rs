@@ -61,6 +61,7 @@ pub enum SherlockErrorType {
     FileExistError(String),
     FileReadError(String),
     FileParseError(String),
+    DirReadError(String),
     ResourceParseError,
     ResourceLookupError(String),
     DisplayError,
@@ -88,6 +89,10 @@ impl SherlockErrorType {
             SherlockErrorType::FileParseError(file) => (
                 "FileParseError".to_string(),
                 format!("Failed to parse file \"{}\"", file),
+            ),
+            SherlockErrorType::DirReadError(file) => (
+                "DirReadError".to_string(),
+                format!("Failed to read/access dir \"{}\"", file),
             ),
             SherlockErrorType::ResourceParseError => (
                 "ResourceParseError".to_string(),
