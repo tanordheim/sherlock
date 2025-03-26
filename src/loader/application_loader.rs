@@ -197,20 +197,15 @@ impl Loader {
 
         // remove if cached entry doesnt exist on device anympre
         let mut cached_paths = HashSet::with_capacity(apps.capacity());
-        apps.retain(|k,v|{
+        apps.retain(|_,v|{
             if let Some(path) = &v.desktop_file {
                 if desktop_files.contains(path){
-                    cached_paths.insert(path);
+                    cached_paths.insert(path.clone());
                     return true;
                 }
             }
             false
         });
-        let cached_paths: HashSet<PathBuf> = apps
-            .values()
-            .filter_map(|v|v.desktop_file.clone())
-            .collect();
-
 
         // get files that are not yet cached
         desktop_files.retain(|v| {
