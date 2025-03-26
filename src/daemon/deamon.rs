@@ -1,7 +1,7 @@
 use std::os::unix::net::UnixListener;
 use gtk4::glib::{self, ControlFlow};
 use std::io::{Read, Write};
-use crate::ui::window::{show_window, hide_window};
+use crate::ui::window::show_window;
 
 pub struct SherlockDeamon{}
 impl SherlockDeamon {
@@ -24,12 +24,6 @@ impl SherlockDeamon {
                                         ControlFlow::Break
                                     });
                                 },
-                                "hide" => {
-                                    glib::idle_add(move || {
-                                        hide_window();
-                                        ControlFlow::Break
-                                    });
-                                }
                                 _ => println!("Received: {}", received_data)
                             }
 
