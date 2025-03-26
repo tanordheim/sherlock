@@ -38,5 +38,6 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 |-----------------------|-------------|---------------------------------------------------------------------------------|
 | `caching` | `false`     | If set to `true`, Desktop file caching will be activated to either the specified or the default location `~/.cache/sherlock_desktop_cache.json`. |
 | `cache` | `~/.cache/sherlock_desktop_cache.json`   | Overrides the default caching location. |
+| `daemonize` | `false`     | If set to `true`, Sherlock will run in daemon mode. This will consume more memory because the rendered application will be kept in memory. Damonizing will allow faster startup times. Send the `open` message to socket `/tmp/sherlock_daemon.socket` to open the window. |
 
 ---
