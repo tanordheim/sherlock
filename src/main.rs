@@ -186,7 +186,7 @@ async fn main() {
                 },
                 false => {
                     // Show window without daemonizing
-                    show_window();
+                    ui::window::show_window();
                 }
             }
         }
@@ -195,17 +195,3 @@ async fn main() {
 }
 
 
-pub fn show_window(){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
-            state.window.as_ref().map(|window| window.present());
-        }
-    });
-}
-pub fn hide_window(){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
-            state.window.as_ref().map(|window| window.hide());
-        }
-    });
-}

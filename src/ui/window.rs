@@ -2,7 +2,7 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-use crate::{hide_window, CONFIG};
+use crate::{CONFIG, APP_STATE};
 
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
@@ -53,4 +53,19 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
 fn exit_app(){
     std::process::exit(0)
 
+}
+
+pub fn show_window(){
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.window.as_ref().map(|window| window.present());
+        }
+    });
+}
+pub fn hide_window(){
+    APP_STATE.with(|state|{
+        if let Some(ref state) = *state.borrow(){
+            state.window.as_ref().map(|window| window.hide());
+        }
+    });
 }
