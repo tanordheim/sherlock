@@ -33,7 +33,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     if let Some(c) = CONFIG.get(){
         let action = match c.behavior.daemonize{
-            true => hide_window,
+            true => hide_app,
             false => exit_app,
         };
         event_controller.connect_key_pressed(move |_, key, _, _| {
@@ -52,7 +52,9 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
 }
 fn exit_app(){
     std::process::exit(0)
-
+}
+fn hide_app(){
+    hide_window(false);
 }
 
 pub fn show_window(){
@@ -62,10 +64,11 @@ pub fn show_window(){
         }
     });
 }
-pub fn hide_window(){
+pub fn hide_window(clear_search: bool){
     APP_STATE.with(|state|{
         if let Some(ref state) = *state.borrow(){
             state.window.as_ref().map(|window| window.hide());
+            state.search_bar.as_ref().map(|search_bar| search_bar.set_text(""));
         }
     });
 }

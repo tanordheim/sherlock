@@ -56,7 +56,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
 fn eval_exit(){
     if let Some(c) = CONFIG.get(){
         match c.behavior.daemonize {
-            true => hide_window(),
+            true => hide_window(true),
             false => exit(0)
         }
     }

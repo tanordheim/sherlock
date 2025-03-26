@@ -1,8 +1,7 @@
 use gio::prelude::*;
-use gtk4::{EventController, Stack, Widget};
+use gtk4::{EventController, Stack, Widget, Entry};
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use loader::util::SherlockErrorType;
-use ui::window::window;
 use std::cell::RefCell;
 use std::sync::OnceLock;
 use std::{env, process, thread};
@@ -28,6 +27,7 @@ use daemon::deamon::SherlockDeamon;
 struct AppState{
     window: Option<ApplicationWindow>,
     stack: Option<Stack>,
+    search_bar: Option<Entry>
 }
 impl AppState{
     pub fn add_stack_page<T,U>(&self, child: T, name: U)
@@ -144,6 +144,7 @@ async fn main() {
         let state = Rc::new(AppState{
             window: Some(window),
             stack: Some(stack),
+            search_bar: None,
         });
         APP_STATE.with(|app_state| *app_state.borrow_mut() = Some(state));
 
