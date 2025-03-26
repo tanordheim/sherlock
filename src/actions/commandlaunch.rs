@@ -5,7 +5,6 @@ use crate::loader::util::{SherlockError, SherlockErrorType};
 pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
     let exec = exec.replace("{keyword}", &keyword);
     let commands: Vec<&str> = exec.split("&").collect();
-    let num_cmds = commands.len();
 
     for command in commands {
         if !command.is_empty() {
