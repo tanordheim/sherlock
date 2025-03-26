@@ -14,7 +14,7 @@ use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
-use crate::{APP_STATE, CONFIG};
+use crate::{AppState, APP_STATE, CONFIG};
 
 struct SearchUI{
     result_viewport: ScrolledWindow,
@@ -86,6 +86,17 @@ fn construct_window(
     if let Some(c) = CONFIG.get(){
         ui.result_viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, -1);
     }
+
+    APP_STATE.with(|app_state|{
+        let new_state = app_state.borrow_mut().take().map(|old_state|{
+            Rc::new(AppState{
+                window: old_state.window.clone(),
+                stack: old_state.stack.clone(),
+                search_bar: Some(ui.search_bar.clone())
+            })
+        });
+        *app_state.borrow_mut() = new_state;
+    });
 
     (
         mode,

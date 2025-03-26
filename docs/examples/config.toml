@@ -15,4 +15,5 @@ icon_size               =   22                                      # Sets the i
 
 [behavior]
 caching                 =   false                                   # If set to true, will enable caching
-try_surpress_warnings   =   "~/.cache/sherlock_desktop_cache.json"  # Sets the location for caching files
+cache                   =   "~/.cache/sherlock_desktop_cache.json"  # Sets the location for caching files
+daemonize               =   false                                   # Enables deamon mode

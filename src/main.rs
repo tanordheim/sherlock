@@ -1,10 +1,10 @@
 use gio::prelude::*;
-use gtk4::{EventController, Stack, Widget};
+use gtk4::{EventController, Stack, Widget, Entry};
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use loader::util::SherlockErrorType;
 use std::cell::RefCell;
 use std::sync::OnceLock;
-use std::{env, process};
+use std::{env, process, thread};
 use std::rc::Rc;
 
 mod actions;
@@ -12,17 +12,22 @@ mod launcher;
 mod loader;
 mod lock;
 mod ui;
+mod daemon;
+
+const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
 use loader::{
     util::{Config, SherlockError},
     Loader,
 };
 use ui::util::show_stack_page;
+use daemon::deamon::SherlockDeamon;
 
 
 struct AppState{
     window: Option<ApplicationWindow>,
     stack: Option<Stack>,
+    search_bar: Option<Entry>
 }
 impl AppState{
     pub fn add_stack_page<T,U>(&self, child: T, name: U)
@@ -130,9 +135,16 @@ async fn main() {
 
         // Main logic for the Search-View
         let (window, stack) = ui::window::window(&app);
+
+
+
+
+
+        // creating app state
         let state = Rc::new(AppState{
             window: Some(window),
             stack: Some(stack),
+            search_bar: None,
         });
         APP_STATE.with(|app_state| *app_state.borrow_mut() = Some(state));
 
@@ -163,16 +175,30 @@ async fn main() {
                 show_stack_page("error-page", None);
             }
         }
-    
-        // Show window
-        APP_STATE.with(|state|{
-            if let Some(ref state) = *state.borrow(){
-                state.window.as_ref().map(|window| window.present());
+
+        
+        // Logic for handling the daemonization 
+        if let Some(c) = CONFIG.get(){
+            match c.behavior.daemonize {
+                true => {
+                    // deamonize option
+
+                    // Cache the results
+                    ui::window::show_window();
+                    ui::window::hide_window(false);
+
+                    thread::spawn(move || {
+                        SherlockDeamon::new(SOCKET_PATH);
+                    });
+                },
+                false => {
+                    // Show window without daemonizing
+                    ui::window::show_window();
+                }
             }
-        });
+        }
     });
-
-
     application.run();
 }
+
 

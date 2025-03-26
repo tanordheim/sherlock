@@ -174,6 +174,7 @@ impl Config {
                 behavior: ConfigBehavior {
                     cache: String::from("~/.cache/sherlock_desktop_cache.json"),
                     caching: false,
+                    daemonize: true,
                 }
             },
             non_breaking,
@@ -200,6 +201,8 @@ pub struct ConfigBehavior {
     pub cache: String,
     #[serde(default)]
     pub caching: bool,
+    #[serde(default)]
+    pub daemonize: bool,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
