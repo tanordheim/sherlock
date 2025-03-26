@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-use crate::ui::user::{display_next, display_raw};
+use crate::{ui::{user::{display_next, display_raw}, window::hide_window}, CONFIG};
 
 pub mod applaunch;
 pub mod commandlaunch;
@@ -14,19 +14,19 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "app_launcher" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
-                exit(0);
+                eval_exit();
             }
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
                 let engine = attrs.get("engine").map_or("", |s| s.as_str());
                 let _  = websearch::websearch(engine, query);
-                exit(0);
+                eval_exit();
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
-                exit(0)
+                eval_exit();
             }
             "copy" => {
                 if let Some(result) = attrs.get("result") {
@@ -46,9 +46,18 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(out) = attrs.get("text_content"){
                     print!("{}", out);
                 }
-                exit(0)
+                eval_exit();
 
             }
+        }
+    }
+}
+
+fn eval_exit(){
+    if let Some(c) = CONFIG.get(){
+        match c.behavior.daemonize {
+            true => hide_window(),
+            false => exit(0)
         }
     }
 }
