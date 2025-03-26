@@ -1,8 +1,10 @@
 [default_apps]
 terminal                =   "kitty"                         # Used to start applications
+
 [debug]
 try_surpress_errors     =   true                            # Disables the error screen for errors
 try_surpress_warnings   =   false                           # Disables the error screen for warnings
+
 [appearance]
 width                   =   900                             # Sets the width of the main window
 height                  =   593                             # Sets the height of the main window
@@ -11,3 +13,5 @@ recolor_icons           =   false                           # If set to true, us
 icon_paths              =   ["~/.config/sherlock/icons"]    # Sets where the application should look for custom icons
 icon_size               =   22                              # Sets the icon size for the tiles
 
+[behavior]
+daemonize               =   false                           # Enables deamon mode
