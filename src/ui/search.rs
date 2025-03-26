@@ -16,8 +16,10 @@ use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
 use crate::{AppState, APP_STATE, CONFIG};
 
+#[allow(dead_code)]
 struct SearchUI {
     result_viewport: ScrolledWindow,
+    // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
     search_bar: Entry,
     mode_title: Label,
