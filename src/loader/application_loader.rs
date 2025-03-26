@@ -15,7 +15,7 @@ use util::{read_file, read_lines, AppData, SherlockAlias};
 impl Loader {
     pub fn load_applications_from_disk(
         sherlock_flags: &SherlockFlags,
-        applications: Option<HashSet<PathBuf>>
+        applications: Option<HashSet<PathBuf>>,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
             error: SherlockErrorType::ConfigError(None),
@@ -63,24 +63,22 @@ impl Loader {
         // Gather '.desktop' files
         let desktop_files: HashSet<PathBuf> = match applications {
             Some(apps) => apps,
-            _ => {
-                fs::read_dir(system_apps)
-                    .map_err(|e| SherlockError{
-                        error: SherlockErrorType::DirReadError(system_apps.to_string()),
-                        traceback: e.to_string(),
-                    })?
+            _ => fs::read_dir(system_apps)
+                .map_err(|e| SherlockError {
+                    error: SherlockErrorType::DirReadError(system_apps.to_string()),
+                    traceback: e.to_string(),
+                })?
                 .filter_map(|entry| {
                     entry.ok().and_then(|f| {
                         let path = f.path();
-                        if path.extension().and_then(|ext| ext.to_str()) == Some("desktop"){
+                        if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
                             Some(path)
                         } else {
                             None
                         }
                     })
                 })
-                .collect()
-            }
+                .collect(),
         };
 
         // Parellize opening of all .desktop files and parsing them into AppData
@@ -90,7 +88,6 @@ impl Loader {
                 let r_path = entry.to_str()?;
                 match read_file(r_path) {
                     Ok(content) => {
-
                         if parse_field(&content, &display_re) == "true" {
                             return None;
                         }
@@ -130,63 +127,64 @@ impl Loader {
 
                         let desktop_file_path = match config.behavior.caching {
                             true => Some(entry),
-                            false => None
+                            false => None,
                         };
 
                         // Return the processed app data
                         Some((
-                                name,
-                                AppData {
-                                    icon,
-                                    exec,
-                                    search_string,
-                                    tag_start: None,
-                                    tag_end: None,
-                                    desktop_file: desktop_file_path,
-                                },
+                            name,
+                            AppData {
+                                icon,
+                                exec,
+                                search_string,
+                                tag_start: None,
+                                tag_end: None,
+                                desktop_file: desktop_file_path,
+                            },
                         ))
-                    },
+                    }
                     Err(_) => None,
-            }
-            }).collect();
+                }
+            })
+            .collect();
         Ok(apps)
     }
 
-
-    fn get_new_applications(mut apps: HashMap<String, AppData>, flags: &SherlockFlags)-> Result<HashMap<String, AppData>, SherlockError>{
+    fn get_new_applications(
+        mut apps: HashMap<String, AppData>,
+        flags: &SherlockFlags,
+    ) -> Result<HashMap<String, AppData>, SherlockError> {
         let system_apps = "/usr/share/applications/";
 
         // check if sherlock_alias was modified
         let alias_path = Path::new(&flags.alias);
         let cache_path = Path::new(&flags.cache);
 
-        fn modtime(path: &Path) -> Option<SystemTime>{
-            match fs::metadata(path){
+        fn modtime(path: &Path) -> Option<SystemTime> {
+            match fs::metadata(path) {
                 Ok(metadata) => metadata.modified().ok(),
-                Err(_) => None
+                Err(_) => None,
             }
-        } 
+        }
         match (modtime(&alias_path), modtime(&cache_path)) {
             (Some(t1), Some(t2)) => {
                 if t1 >= t2 {
-                    return Loader::load_applications_from_disk(flags, None)
+                    return Loader::load_applications_from_disk(flags, None);
                 }
-            },
+            }
             _ => {}
         }
 
-
-
         // get all desktop files
         let mut desktop_files: HashSet<PathBuf> = fs::read_dir(system_apps)
-            .map_err(|e| SherlockError{
+            .map_err(|e| SherlockError {
                 error: SherlockErrorType::DirReadError(system_apps.to_string()),
                 traceback: e.to_string(),
             })?
             .filter_map(|entry| {
                 entry.ok().and_then(|f| {
                     let path = f.path();
-                    if path.extension().and_then(|ext| ext.to_str()) == Some("desktop"){
+                    if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
                         Some(path)
                     } else {
                         None
@@ -197,9 +195,9 @@ impl Loader {
 
         // remove if cached entry doesnt exist on device anympre
         let mut cached_paths = HashSet::with_capacity(apps.capacity());
-        apps.retain(|_,v|{
+        apps.retain(|_, v| {
             if let Some(path) = &v.desktop_file {
-                if desktop_files.contains(path){
+                if desktop_files.contains(path) {
                     cached_paths.insert(path.clone());
                     return true;
                 }
@@ -213,13 +211,11 @@ impl Loader {
         });
 
         // get information for uncached applications
-        match Loader::load_applications_from_disk(flags, Some(desktop_files)){
-            Ok(new_apps) => {
-                apps.extend(new_apps)
-            },
+        match Loader::load_applications_from_disk(flags, Some(desktop_files)) {
+            Ok(new_apps) => apps.extend(new_apps),
             _ => {}
         };
-        return Ok(apps)
+        return Ok(apps);
     }
 
     fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
@@ -241,13 +237,12 @@ impl Loader {
         let cached_apps: Option<HashMap<String, AppData>> = File::open(&cache_loc)
             .ok()
             .and_then(|f| simd_json::from_reader(f).ok());
-         
 
         if let Some(apps) = cached_apps {
             // Refresh cache in the background
             let old_apps = apps.clone();
             std::thread::spawn(move || {
-                if let Ok(new_apps) = Loader::get_new_applications(old_apps, &flags){
+                if let Ok(new_apps) = Loader::get_new_applications(old_apps, &flags) {
                     Loader::write_cache(&new_apps, &cache_loc);
                 }
             });
