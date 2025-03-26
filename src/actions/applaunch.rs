@@ -16,12 +16,12 @@ pub fn applaunch(exec: &str) {
     }
 
     #[cfg(target_family = "unix")]
-    {   
+    unsafe {   
         command
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .before_exec(||{
+            .pre_exec(||{
                 nix::unistd::setsid().ok();
                 Ok(())
             });
