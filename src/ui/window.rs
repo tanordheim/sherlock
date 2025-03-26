@@ -68,7 +68,9 @@ pub fn hide_window(clear_search: bool){
     APP_STATE.with(|state|{
         if let Some(ref state) = *state.borrow(){
             state.window.as_ref().map(|window| window.hide());
-            state.search_bar.as_ref().map(|search_bar| search_bar.set_text(""));
+            if clear_search {
+                state.search_bar.as_ref().map(|search_bar| search_bar.set_text(""));
+            }
         }
     });
 }

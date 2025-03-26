@@ -176,11 +176,17 @@ async fn main() {
             }
         }
 
+        
         // Logic for handling the daemonization 
         if let Some(c) = CONFIG.get(){
             match c.behavior.daemonize {
                 true => {
                     // deamonize option
+
+                    // Cache the results
+                    ui::window::show_window();
+                    ui::window::hide_window(false);
+
                     thread::spawn(move || {
                         SherlockDeamon::new(SOCKET_PATH);
                     });
