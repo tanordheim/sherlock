@@ -83,7 +83,7 @@ impl Loader {
             }
         };
 
-        // Parellize opening of all files and reading into appfiles
+        // Parellize opening of all .desktop files and parsing them into AppData
         let apps: HashMap<String, AppData> = desktop_files
             .into_par_iter()
             .filter_map(|entry| {
@@ -95,7 +95,7 @@ impl Loader {
                             return None;
                         }
 
-                        // Extract fields
+                        // Extract keywords, icon, and name fields
                         let mut keywords = parse_field(&content, &keywords_re);
                         let mut icon = parse_field(&content, &icon_re);
                         let mut name = parse_field(&content, &name_re);
