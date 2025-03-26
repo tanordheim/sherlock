@@ -1,7 +1,13 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-use crate::{ui::{user::{display_next, display_raw}, window::hide_window}, CONFIG};
+use crate::{
+    ui::{
+        user::{display_next, display_raw},
+        window::hide_window,
+    },
+    CONFIG,
+};
 
 pub mod applaunch;
 pub mod commandlaunch;
@@ -19,7 +25,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
                 let engine = attrs.get("engine").map_or("", |s| s.as_str());
-                let _  = websearch::websearch(engine, query);
+                let _ = websearch::websearch(engine, query);
                 eval_exit();
             }
             "command" => {
@@ -32,32 +38,33 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
-            },
+            }
             "next" => {
-                let next_content = attrs.get("next_content").map_or("No next_content provided...", |s| s);
+                let next_content = attrs
+                    .get("next_content")
+                    .map_or("No next_content provided...", |s| s);
                 display_next(next_content);
-            },
+            }
             "display_raw" => {
-               if let Some(next_content) = attrs.get("next_content"){
+                if let Some(next_content) = attrs.get("next_content") {
                     display_raw(next_content, false);
                 }
             }
             _ => {
-                if let Some(out) = attrs.get("text_content"){
+                if let Some(out) = attrs.get("text_content") {
                     print!("{}", out);
                 }
                 eval_exit();
-
             }
         }
     }
 }
 
-fn eval_exit(){
-    if let Some(c) = CONFIG.get(){
+fn eval_exit() {
+    if let Some(c) = CONFIG.get() {
         match c.behavior.daemonize {
             true => hide_window(true),
-            false => exit(0)
+            false => exit(0),
         }
     }
 }

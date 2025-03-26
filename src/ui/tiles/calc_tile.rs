@@ -6,16 +6,20 @@ use super::Tile;
 use crate::launcher::Launcher;
 
 impl Tile {
-    pub fn calc_tile(launcher: &Launcher, index: i32, equation: &str, result: Option<f64>) -> (i32, Vec<ListBoxRow>) {
+    pub fn calc_tile(
+        launcher: &Launcher,
+        index: i32,
+        equation: &str,
+        result: Option<f64>,
+    ) -> (i32, Vec<ListBoxRow>) {
         let mut results: Vec<ListBoxRow> = Default::default();
         let result = if let Some(r) = result {
             r
-        } else if let Ok(r) = eval_str(equation){
+        } else if let Ok(r) = eval_str(equation) {
             r
         } else {
             return (index, results);
         };
-
 
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui", index, true);
         builder.equation_holder.set_text(&equation);

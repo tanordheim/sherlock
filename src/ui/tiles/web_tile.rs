@@ -27,14 +27,18 @@ impl Tile {
         builder.display_tag_start(&launcher.tag_start, keyword);
         builder.display_tag_end(&launcher.tag_end, keyword);
 
-        let mut attrs: Vec<(&str, &str)> = vec![
-            ("engine", &web.engine),
-        ];
+        let mut attrs: Vec<(&str, &str)> = vec![("engine", &web.engine)];
         if let Some(next) = launcher.next_content.as_deref() {
             attrs.push(("next_content", next));
         }
 
-        builder.add_default_attrs(Some(&launcher.method), Some(&keyword), Some(&keyword), None, Some(attrs));
+        builder.add_default_attrs(
+            Some(&launcher.method),
+            Some(&keyword),
+            Some(&keyword),
+            None,
+            Some(attrs),
+        );
 
         return (index + 1, vec![builder.object]);
     }

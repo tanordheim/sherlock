@@ -1,5 +1,8 @@
 use gtk4::{
-    self, gdk::{self, Key}, prelude::*, Builder, EventControllerKey, Justification 
+    self,
+    gdk::{self, Key},
+    prelude::*,
+    Builder, EventControllerKey, Justification,
 };
 
 use gtk4::{Box as HVBox, Entry, ListBox, ScrolledWindow};
@@ -11,12 +14,10 @@ use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::APP_STATE;
 
-pub fn display_pipe(
-    pipe_content: Vec<String>,
-){
+pub fn display_pipe(pipe_content: Vec<String>) {
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
-    
+
     // Get the requred object references
     let vbox: HVBox = builder.object("vbox").unwrap();
     let search_bar: Entry = builder.object("search-bar").unwrap();
@@ -38,12 +39,12 @@ pub fn display_pipe(
 
     nav_event(results, result_viewport);
     APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow(){
+        if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "search-page");
         }
     });
 }
-pub fn display_raw<T: AsRef<str>>(content: T, center:bool){
+pub fn display_raw<T: AsRef<str>>(content: T, center: bool) {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
     let buffer = builder.content.buffer();
     builder.content.add_css_class("raw_text");
@@ -53,22 +54,21 @@ pub fn display_raw<T: AsRef<str>>(content: T, center:bool){
         builder.content.set_justification(Justification::Center);
     }
 
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.add_stack_page(builder.object, "search-page");
         }
     });
-
 }
-pub fn display_next<T: AsRef<str>>(content:T){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+pub fn display_next<T: AsRef<str>>(content: T) {
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
             builder.content.set_wrap_mode(gtk4::WrapMode::Word);
             let buf = builder.content.buffer();
             buf.set_text(content.as_ref());
 
-            if let Some(stack) = &state.stack{
+            if let Some(stack) = &state.stack {
                 stack.add_named(&builder.object, Some("next-page"));
                 show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
             }
@@ -76,10 +76,7 @@ pub fn display_next<T: AsRef<str>>(content:T){
     });
 }
 
-fn nav_event(
-    results_ev_nav: Rc<ListBox>,
-    result_viewport: ScrolledWindow,
-) {
+fn nav_event(results_ev_nav: Rc<ListBox>, result_viewport: ScrolledWindow) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
@@ -116,7 +113,7 @@ fn nav_event(
     });
 
     APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow(){
+        if let Some(ref state) = *state.borrow() {
             state.add_event_listener(event_controller);
         }
     });

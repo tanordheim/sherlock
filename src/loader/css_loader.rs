@@ -2,15 +2,14 @@ use gtk4::gdk::Display;
 use gtk4::CssProvider;
 use std::path::Path;
 
-
-use super::util::{SherlockError, SherlockFlags, SherlockErrorType};
+use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
 use super::Loader;
 
 impl Loader {
     pub fn load_css(sherlock_flags: &SherlockFlags) -> Result<Vec<SherlockError>, SherlockError> {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         let provider = CssProvider::new();
-        
+
         // Load the default css
         provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
 

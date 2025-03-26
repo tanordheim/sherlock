@@ -1,23 +1,28 @@
 use gio::glib::Bytes;
 use gtk4::{gdk, prelude::*, Image, ListBoxRow};
+use meval::eval_str;
 use regex::Regex;
 use std::collections::HashMap;
-use meval::eval_str;
 
 use crate::launcher::Launcher;
 
 use super::util::TileBuilder;
 use super::Tile;
-fn hex_to_rgb(hex_color: &str)->(u8, u8, u8){
+fn hex_to_rgb(hex_color: &str) -> (u8, u8, u8) {
     let default = (0, 0, 0);
     if hex_color.len() >= 6 {
-        let Ok(r) = u8::from_str_radix(&hex_color[0..2], 16) else {return default};
-        let Ok(g) = u8::from_str_radix(&hex_color[2..4], 16) else {return default};
-        let Ok(b) = u8::from_str_radix(&hex_color[4..6], 16) else {return default};
-        return (r,g,b);
+        let Ok(r) = u8::from_str_radix(&hex_color[0..2], 16) else {
+            return default;
+        };
+        let Ok(g) = u8::from_str_radix(&hex_color[2..4], 16) else {
+            return default;
+        };
+        let Ok(b) = u8::from_str_radix(&hex_color[4..6], 16) else {
+            return default;
+        };
+        return (r, g, b);
     }
     default
-    
 }
 
 impl Tile {
@@ -57,7 +62,7 @@ impl Tile {
                 } else if let Some(hex_color) = captures.get(6) {
                     builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
                     let (r, g, b) = hex_to_rgb(hex_color.as_str());
-                    let pix_buf = vec![r,g,b];
+                    let pix_buf = vec![r, g, b];
                     let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
                         &Bytes::from_owned(pix_buf),
                         gdk::gdk_pixbuf::Colorspace::Rgb,
@@ -65,9 +70,11 @@ impl Tile {
                         8,
                         1,
                         1,
-                        3
+                        3,
                     );
-                    if let Some(image_buf) = image_buf.scale_simple(30, 30, gdk::gdk_pixbuf::InterpType::Nearest){
+                    if let Some(image_buf) =
+                        image_buf.scale_simple(30, 30, gdk::gdk_pixbuf::InterpType::Nearest)
+                    {
                         let image = Image::from_pixbuf(Some(&image_buf));
                         builder.icon_holder.append(&image);
                         image.set_widget_name("icon");
@@ -80,8 +87,8 @@ impl Tile {
                     };
 
                     // Clipboard matches a hex color
-                } 
-            } else if let Ok(result) = eval_str(clipboard_content){
+                }
+            } else if let Ok(result) = eval_str(clipboard_content) {
                 return Tile::calc_tile(launcher, index, clipboard_content, Some(result));
             }
 
@@ -94,10 +101,14 @@ impl Tile {
                 builder.title.set_text(clipboard_content);
                 builder.icon.set_icon_name(Some(&icon));
 
-                let attrs: Vec<(&str, &str)> = vec![
-                    ("engine", "plain"),
-                ];
-                builder.add_default_attrs(Some(method), None, Some(clipboard_content), None, Some(attrs));
+                let attrs: Vec<(&str, &str)> = vec![("engine", "plain")];
+                builder.add_default_attrs(
+                    Some(method),
+                    None,
+                    Some(clipboard_content),
+                    None,
+                    Some(attrs),
+                );
                 results.push(builder.object);
             }
         }

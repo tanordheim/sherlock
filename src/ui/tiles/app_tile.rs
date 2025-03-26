@@ -1,8 +1,8 @@
 use gtk4::{prelude::*, ListBoxRow};
 use std::collections::HashMap;
 
-use crate::loader::util::{AppData, Config};
 use crate::launcher::Launcher;
+use crate::loader::util::{AppData, Config};
 
 use super::util::{ensure_icon_name, TileBuilder};
 use super::Tile;
@@ -42,11 +42,11 @@ impl Tile {
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
                 builder.add_default_attrs(
-                    Some(&launcher.method), 
+                    Some(&launcher.method),
                     Some(&keyword),
                     Some(&keyword),
                     Some(&value.exec),
-                    None
+                    None,
                 );
 
                 index_ref += 1;

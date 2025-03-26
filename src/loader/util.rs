@@ -112,11 +112,8 @@ impl SherlockErrorType {
                 } else {
                     "It should never come to this".to_string()
                 };
-                (
-                    "ConfigError".to_string(),
-                    message
-                )
-            },
+                ("ConfigError".to_string(), message)
+            }
             SherlockErrorType::RegexError(key) => (
                 format!("RegexError"),
                 format!("Failed to compile the regular expression for \"{}\"", key),
@@ -175,7 +172,7 @@ impl Config {
                     cache: String::from("~/.cache/sherlock_desktop_cache.json"),
                     caching: false,
                     daemonize: true,
-                }
+                },
             },
             non_breaking,
         )
@@ -224,7 +221,7 @@ pub struct ConfigAppearance {
     pub recolor_icons: bool,
     #[serde(default)]
     pub icon_paths: Vec<String>,
-    #[serde(default="default_icon_size")]
+    #[serde(default = "default_icon_size")]
     pub icon_size: i32,
 }
 
@@ -253,7 +250,7 @@ pub fn default_cache() -> String {
         Err(_) => String::from("~/cache/sherlock_desktop_cache.json"),
     }
 }
-pub fn default_icon_size()->i32{
+pub fn default_icon_size() -> i32 {
     22
 }
 pub fn get_terminal() -> Result<String, SherlockError> {

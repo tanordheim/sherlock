@@ -1,4 +1,7 @@
-use std::{os::unix::process::CommandExt, process::{exit, Command, Stdio}};
+use std::{
+    os::unix::process::CommandExt,
+    process::{exit, Command, Stdio},
+};
 
 pub fn applaunch(exec: &str) {
     let parts: Vec<String> = exec.split_whitespace().map(String::from).collect();
@@ -16,12 +19,12 @@ pub fn applaunch(exec: &str) {
     }
 
     #[cfg(target_family = "unix")]
-    unsafe {   
+    unsafe {
         command
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .pre_exec(||{
+            .pre_exec(|| {
                 nix::unistd::setsid().ok();
                 Ok(())
             });

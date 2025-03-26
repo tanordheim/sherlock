@@ -1,4 +1,4 @@
-use gtk4::{Label, ListBoxRow, Box};
+use gtk4::{Box, Label, ListBoxRow};
 
 pub mod app_launcher;
 pub mod bulk_text_launcher;
@@ -45,27 +45,17 @@ impl Launcher {
     pub fn get_patch(&self, index: i32, keyword: &String) -> (i32, Vec<ListBoxRow>) {
         if let Some(app_config) = CONFIG.get() {
             match &self.launcher_type {
-                LauncherType::App(app) => Tile::app_tile(
-                    self,
-                    index,
-                    keyword,
-                    app.apps.clone(),
-                    app_config,
-                ),
-                LauncherType::Web(web) => {
-                    Tile::web_tile(self, index, keyword, &web)
+                LauncherType::App(app) => {
+                    Tile::app_tile(self, index, keyword, app.apps.clone(), app_config)
                 }
+                LauncherType::Web(web) => Tile::web_tile(self, index, keyword, &web),
                 LauncherType::Calc(_) => Tile::calc_tile(self, index, keyword, None),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self.name, &self.method, &bulk_text.icon, index, keyword)
                 }
-                LauncherType::SystemCommand(cmd) => Tile::app_tile(
-                    self,
-                    index,
-                    keyword,
-                    cmd.commands.clone(),
-                    app_config,
-                ),
+                LauncherType::SystemCommand(cmd) => {
+                    Tile::app_tile(self, index, keyword, cmd.commands.clone(), app_config)
+                }
                 LauncherType::Clipboard(clp) => {
                     Tile::clipboard_tile(self, index, &clp.clipboard_content, keyword)
                 }

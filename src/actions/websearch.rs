@@ -3,7 +3,7 @@ use std::process::Command;
 
 use crate::loader::util::{SherlockError, SherlockErrorType};
 
-pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError>{
+pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
     let engines: HashMap<&str, &str> = HashMap::from([
         ("google", "https://www.google.com/search?q={keyword}"),
         ("bing", "https://www.bing.com/search?q={keyword}"),
@@ -32,9 +32,9 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError>{
         .spawn()
     {
         Ok(_) => Ok(()),
-        Err(e) => Err(SherlockError{
+        Err(e) => Err(SherlockError {
             error: SherlockErrorType::CommandExecutionError("xdg-open".to_string()),
             traceback: e.to_string(),
-        })
+        }),
     }
 }

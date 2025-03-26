@@ -1,5 +1,5 @@
-use crate::{launcher::Launcher, CONFIG}; 
-use gtk4::{ prelude::*, Box, Builder,TextView, Image, Label, ListBoxRow };
+use crate::{launcher::Launcher, CONFIG};
+use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, TextView};
 use std::collections::HashSet;
 
 pub struct AsyncLauncherTile {
@@ -18,14 +18,13 @@ pub fn ensure_icon_name(name: String) -> String {
     }
 }
 
-
 #[derive(Default)]
 pub struct TextViewTileBuilder {
     pub object: Box,
     pub content: TextView,
 }
 impl TextViewTileBuilder {
-    pub fn new(resource: &str)->Self{
+    pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
         TextViewTileBuilder {
             object: builder.object("next_tile").unwrap_or_default(),
@@ -52,9 +51,8 @@ pub struct TileBuilder {
     pub result_holder: Label,
 }
 
-
 impl TileBuilder {
-    pub fn new(resource: &str, index: i32, show_shortcut: bool)->Self{
+    pub fn new(resource: &str, index: i32, show_shortcut: bool) -> Self {
         let builder = Builder::from_resource(resource);
         let object: ListBoxRow = builder.object("holder").unwrap_or_default();
         let icon: Image = builder.object("icon-name").unwrap_or_default();
@@ -72,7 +70,7 @@ impl TileBuilder {
         // Specific to 'calc_tile'
         let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
-    
+
         // Implement the shortcuts
         if show_shortcut && index < 5 {
             let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
@@ -82,7 +80,7 @@ impl TileBuilder {
         }
 
         // Set the icon size to the user-specified one
-        if let Some(c) = CONFIG.get(){
+        if let Some(c) = CONFIG.get() {
             icon.set_pixel_size(c.appearance.icon_size);
         }
 
@@ -102,15 +100,24 @@ impl TileBuilder {
             equation_holder,
             result_holder,
         }
-
     }
-    pub fn add_default_attrs<T: AsRef<str>>(&self, method: Option<T>, result:Option<T>, keyword: Option<T>, exec: Option<T>, additional_attrs: Option<Vec<(&str, &str)>>){
+    pub fn add_default_attrs<T: AsRef<str>>(
+        &self,
+        method: Option<T>,
+        result: Option<T>,
+        keyword: Option<T>,
+        exec: Option<T>,
+        additional_attrs: Option<Vec<(&str, &str)>>,
+    ) {
         let method = method.as_ref().map(|s| ("method", s.as_ref()));
         let result = result.as_ref().map(|s| ("result", s.as_ref()));
         let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
         let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
 
-        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword].into_iter().filter_map(|x| x).collect();
+        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
+            .into_iter()
+            .filter_map(|x| x)
+            .collect();
         if let Some(ads) = additional_attrs {
             attrs.extend(ads);
         }
@@ -119,33 +126,32 @@ impl TileBuilder {
             let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
             self.attrs.append(&label);
         }
-        
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
-        where T: AsRef<str>
+    where
+        T: AsRef<str>,
     {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
-            if !text.is_empty(){
+            if !text.is_empty() {
                 self.tag_start.set_text(&text);
                 self.tag_start.set_visible(true);
             }
         }
     }
     pub fn display_tag_end<T>(&self, content: &Option<String>, keyword: T)
-        where T: AsRef<str>
+    where
+        T: AsRef<str>,
     {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
-            if !text.is_empty(){
+            if !text.is_empty() {
                 self.tag_end.set_text(&text);
                 self.tag_end.set_visible(true);
             }
         }
     }
 }
-
-
 
 pub trait SherlockSearch {
     fn fuzzy_match<T>(&self, substring: T) -> bool

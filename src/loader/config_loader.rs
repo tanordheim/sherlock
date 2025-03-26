@@ -9,11 +9,13 @@ impl Loader {
     ) -> Result<(Config, Vec<SherlockError>), SherlockError> {
         match fs::read_to_string(&sherlock_flags.config) {
             Ok(config_str) => {
-                let mut config: Config = match toml::de::from_str(&config_str){
+                let mut config: Config = match toml::de::from_str(&config_str) {
                     Ok(config) => config,
                     Err(e) => {
                         return Err(SherlockError {
-                            error: SherlockErrorType::FileParseError(sherlock_flags.config.to_string()),
+                            error: SherlockErrorType::FileParseError(
+                                sherlock_flags.config.to_string(),
+                            ),
                             traceback: e.to_string(),
                         })
                     }
@@ -24,7 +26,7 @@ impl Loader {
                     config.behavior.cache = sherlock_flags.cache.clone();
                 }
                 Ok((config, vec![]))
-            },
+            }
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
                     let mut non_breaking = vec![SherlockError {

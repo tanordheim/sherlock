@@ -1,4 +1,7 @@
-use std::{os::unix::process::CommandExt, process::{Command, Stdio}};
+use std::{
+    os::unix::process::CommandExt,
+    process::{Command, Stdio},
+};
 
 use crate::loader::util::{SherlockError, SherlockErrorType};
 
@@ -19,10 +22,11 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
 
 fn asynchronous_execution(execute: &str, args: Vec<&str>) -> Result<(), SherlockError> {
     let mut command = Command::new(execute);
-    command.args(args)
-        .stdin(Stdio::null())  
-        .stdout(Stdio::null()) 
-        .stderr(Stdio::null()) 
+    command
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .before_exec(|| {
             nix::unistd::setsid().ok();
             Ok(())
@@ -35,5 +39,3 @@ fn asynchronous_execution(execute: &str, args: Vec<&str>) -> Result<(), Sherlock
 
     Ok(())
 }
-
-

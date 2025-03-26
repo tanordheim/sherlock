@@ -19,8 +19,8 @@ use super::{
     util::{self, SherlockError, SherlockErrorType},
     Loader,
 };
-use util::{AppData, CommandConfig, SherlockFlags};
 use crate::CONFIG;
+use util::{AppData, CommandConfig, SherlockFlags};
 
 impl Loader {
     pub fn load_launchers(

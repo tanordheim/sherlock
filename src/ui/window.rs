@@ -2,8 +2,7 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-use crate::{CONFIG, APP_STATE};
-
+use crate::{APP_STATE, CONFIG};
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     // 618 with, 591 without notification bar
@@ -28,19 +27,16 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
     let holder: Stack = builder.object("stack").unwrap();
 
-
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    if let Some(c) = CONFIG.get(){
-        let action = match c.behavior.daemonize{
+    if let Some(c) = CONFIG.get() {
+        let action = match c.behavior.daemonize {
             true => hide_app,
             false => exit_app,
         };
         event_controller.connect_key_pressed(move |_, key, _, _| {
             match key {
-                gdk::Key::Escape => {
-                    action()
-                }
+                gdk::Key::Escape => action(),
                 _ => (),
             }
             false.into()
@@ -50,26 +46,29 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     window.set_child(Some(&holder));
     return (window, holder);
 }
-fn exit_app(){
+fn exit_app() {
     std::process::exit(0)
 }
-fn hide_app(){
+fn hide_app() {
     hide_window(false);
 }
 
-pub fn show_window(){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+pub fn show_window() {
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.present());
         }
     });
 }
-pub fn hide_window(clear_search: bool){
-    APP_STATE.with(|state|{
-        if let Some(ref state) = *state.borrow(){
+pub fn hide_window(clear_search: bool) {
+    APP_STATE.with(|state| {
+        if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.hide());
             if clear_search {
-                state.search_bar.as_ref().map(|search_bar| search_bar.set_text(""));
+                state
+                    .search_bar
+                    .as_ref()
+                    .map(|search_bar| search_bar.set_text(""));
             }
         }
     });
