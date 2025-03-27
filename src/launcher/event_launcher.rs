@@ -1,4 +1,4 @@
-use chrono::{Local, Utc, DateTime};
+use chrono::{DateTime, Local, Utc};
 use rusqlite::Connection;
 use std::{
     collections::HashMap,
@@ -45,7 +45,7 @@ impl EventLauncher {
                                         title,
                                         meeting_url: meeting_url.to_string(),
                                         start_time,
-                                        end_time
+                                        end_time,
                                     });
                                 }
                             }

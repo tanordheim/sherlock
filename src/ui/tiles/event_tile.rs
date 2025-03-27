@@ -28,9 +28,13 @@ impl Tile {
         let mut attrs: Vec<(&str, &str)> = vec![];
 
         builder.title.set_text(&event.title);
-        builder.icon.set_icon_name(Some(event_launcher.icon.as_ref()));
+        builder
+            .icon
+            .set_icon_name(Some(event_launcher.icon.as_ref()));
         builder.start_time.set_text(&event.start_time);
-        builder.end_time.set_text(format!(".. {}", event.end_time).as_str());
+        builder
+            .end_time
+            .set_text(format!(".. {}", event.end_time).as_str());
         attrs.push(("meeting_url", &event.meeting_url));
 
         if let Some(next) = launcher.next_content.as_deref() {
