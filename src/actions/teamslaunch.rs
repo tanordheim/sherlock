@@ -1,8 +1,8 @@
+use crate::CONFIG;
 use std::{
     os::unix::process::CommandExt,
     process::{exit, Command, Stdio},
 };
-use crate::CONFIG;
 
 pub fn teamslaunch(meeting_url: &str) {
     if let Some(c) = CONFIG.get() {

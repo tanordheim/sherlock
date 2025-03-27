@@ -33,7 +33,6 @@ impl TextViewTileBuilder {
     }
 }
 
-
 #[derive(Default)]
 pub struct EventTileBuilder {
     pub object: ListBoxRow,
@@ -68,8 +67,7 @@ impl EventTileBuilder {
         keyword: Option<&str>,
         exec: Option<&str>,
         additional_attrs: Option<Vec<(&str, &str)>>,
-    ) 
-    {
+    ) {
         let method = method.as_ref().map(|s| ("method", s.as_ref()));
         let result = result.as_ref().map(|s| ("result", s.as_ref()));
         let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
@@ -91,7 +89,6 @@ impl EventTileBuilder {
         }
     }
 }
-
 
 #[derive(Default)]
 pub struct TileBuilder {
@@ -160,7 +157,6 @@ impl TileBuilder {
             equation_holder,
             result_holder,
         }
-
     }
 
     pub fn add_default_attrs(
@@ -170,8 +166,7 @@ impl TileBuilder {
         keyword: Option<&str>,
         exec: Option<&str>,
         additional_attrs: Option<Vec<(&str, &str)>>,
-    ) 
-    {
+    ) {
         let method = method.as_ref().map(|s| ("method", s.as_ref()));
         let result = result.as_ref().map(|s| ("result", s.as_ref()));
         let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));

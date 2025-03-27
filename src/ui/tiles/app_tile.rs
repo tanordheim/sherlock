@@ -56,4 +56,3 @@ impl Tile {
         return (index_ref, results);
     }
 }
-

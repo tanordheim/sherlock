@@ -85,7 +85,7 @@ impl Loader {
                         } else {
                             LauncherType::Clipboard(Clp { clipboard_content })
                         }
-                    },
+                    }
                     "teams_event" => {
                         let date = cmd.args["event_date"].as_str().unwrap_or("now");
                         let event_start = cmd.args["event_start"].as_str().unwrap_or("-5 minutes");
@@ -93,7 +93,7 @@ impl Loader {
 
                         let event = EventLauncher::get_event(date, event_start, event_end);
 
-                        LauncherType::EventLauncher(EventLauncher {event})
+                        LauncherType::EventLauncher(EventLauncher { event })
                     }
                     _ => LauncherType::Empty,
                 };

@@ -20,13 +20,12 @@ impl Tile {
         };
 
         //Handle searching
-        if !event.title.contains(keyword){
-            return  (index, vec![]);
+        if !event.title.contains(keyword) {
+            return (index, vec![]);
         }
 
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui", index, false);
         let mut attrs: Vec<(&str, &str)> = vec![];
-
 
         builder.title.set_text(&event.title);
         builder.time.set_text(&event.time);

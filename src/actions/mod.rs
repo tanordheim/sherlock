@@ -13,9 +13,9 @@ use crate::{
 
 pub mod applaunch;
 pub mod commandlaunch;
+pub mod teamslaunch;
 pub mod util;
 pub mod websearch;
-pub mod teamslaunch;
 
 pub fn execute_from_attrs(attrs: HashMap<String, String>) {
     if let Some(method) = attrs.get("method") {
