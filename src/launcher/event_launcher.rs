@@ -19,7 +19,7 @@ pub struct EventLauncher {
 
 
 impl EventLauncher {
-    pub fn get_event()->Option<TeamsEvent>{
+    pub fn get_event(date:&str, event_start:&str, event_end:&str)->Option<TeamsEvent>{
         let calendar_client = CONFIG.get()?.default_apps.calendar_client.as_ref();
         match calendar_client {
             "thunderbird" => {
@@ -29,7 +29,7 @@ impl EventLauncher {
                         Ok(conn) => {
                             let meetings = thunderbird_manager.get_all_teams_events(&conn);
                             let ids = meetings.keys().map(|i| format!("'{}'", i)).collect::<Vec<String>>().join(", ");
-                            if let Some((id, title, time)) = thunderbird_manager.get_teams_event_by_time(&conn, ids){
+                            if let Some((id, title, time)) = thunderbird_manager.get_teams_event_by_time(&conn, ids,date, event_start, event_end){
                                 if let Some((meeting_url, _)) = meetings.get(&id){
                                     return Some(TeamsEvent {
                                         title,
@@ -107,16 +107,15 @@ impl ThunderBirdEventManager {
         events
     }
 
-    pub fn get_teams_event_by_time(&self, conn: &Connection, ids: String)->Option<(String, String, String)>{
-
+    pub fn get_teams_event_by_time(&self, conn: &Connection, ids: String, date:&str, event_start:&str, event_end:&str)->Option<(String, String, String)>{
         let query  = if !ids.is_empty(){
             format!("
                 SELECT id, title, event_start
                 FROM cal_events 
                 WHERE id IN ({})
-                AND event_start BETWEEN strftime('%s', 'now', '-5 minutes') * 1000000 AND strftime('%s', 'now', '+15 hours') * 1000000
+                AND event_start BETWEEN strftime('%s', '{}', '{}') * 1000000 AND strftime('%s', '{}', '{}') * 1000000
                 ORDER BY event_start;
-                ", ids)
+                ", ids, date, event_start, date, event_end)
         } else {
             return None;
         };
@@ -143,5 +142,3 @@ impl ThunderBirdEventManager {
         return None
     }
 }
-
-

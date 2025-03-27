@@ -19,6 +19,8 @@ impl Tile {
             builder.title.set_text(&event.title);
             builder.time.set_text(&event.time);
             attrs.push(("meeting_url", &event.meeting_url));
+        } else {
+            return (index, vec![]);
         }
 
         if let Some(next) = launcher.next_content.as_deref() {
