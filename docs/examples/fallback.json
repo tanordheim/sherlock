@@ -3,7 +3,7 @@
         "name": "Teams Event",
         "type": "teams_event",
         "args": {
-            "date": "now",
+            "date_date": "now",
             "event_start": "-5 minutes",
             "event_end": "+15 minutes"
         },

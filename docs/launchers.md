@@ -178,7 +178,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
     "name": "Teams Event",
     "type": "teams_event",
     "args": {
-        "date": "now",
+        "event_date": "now",
         "event_start": "-5 minutes",
         "event_end": "+15 minutes"
     },
@@ -188,7 +188,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
 ```
 
 ### Arguments (args):
-**`date`** (optional):<br>
+**`event_date`** (optional):<br>
 Specifies the date for the event lookup<br>
 
 **`event_start`** (optional):<br>
