@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 
 use crate::actions::util::read_from_clipboard;
+use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, calc_launcher, clipboard_launcher, system_cmd_launcher,
     web_launcher, Launcher, LauncherType,
@@ -84,6 +85,10 @@ impl Loader {
                         } else {
                             LauncherType::Clipboard(Clp { clipboard_content })
                         }
+                    },
+                    "teams_event" => {
+                        let event = EventLauncher::get_event();
+                        LauncherType::EventLauncher(EventLauncher {event})
                     }
                     _ => LauncherType::Empty,
                 };

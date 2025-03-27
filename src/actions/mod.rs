@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::process::exit;
 
+use teamslaunch::teamslaunch;
+
 use crate::{
     ui::{
         user::{display_next, display_raw},
@@ -13,6 +15,7 @@ pub mod applaunch;
 pub mod commandlaunch;
 pub mod util;
 pub mod websearch;
+pub mod teamslaunch;
 
 pub fn execute_from_attrs(attrs: HashMap<String, String>) {
     if let Some(method) = attrs.get("method") {
@@ -38,6 +41,12 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
+            }
+            "teams_event" => {
+                if let Some(meeting) = attrs.get("meeting_url") {
+                    teamslaunch(meeting);
+                }
+                eval_exit();
             }
             "next" => {
                 let next_content = attrs

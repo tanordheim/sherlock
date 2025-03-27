@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::{env, io};
 
 #[derive(Deserialize, Debug)]
 pub struct CommandConfig {
@@ -153,6 +152,7 @@ impl Config {
         (
             Config {
                 default_apps: ConfigDefaultApps {
+                    teams: default_teams(),
                     terminal: get_terminal()
                         .map_err(|e| non_breaking.push(e))
                         .unwrap_or_default(),
@@ -182,12 +182,15 @@ impl Config {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ConfigDefaultApps {
+    #[serde(default = "default_teams")]
+    pub teams: String,
     #[serde(default = "default_terminal")]
     pub terminal: String,
 }
 impl Default for ConfigDefaultApps {
     fn default() -> Self {
         Self {
+            teams: default_teams(),
             terminal: get_terminal().unwrap_or_default(), // Should never get to this...
         }
     }
@@ -244,6 +247,9 @@ where
 
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
+}
+pub fn default_teams() -> String {
+    String::from("teams-for-linux --enable-features=UseOzonePlatform --ozone-platform=wayland --url {meeting_url}")
 }
 pub fn default_cache() -> String {
     match env::var("HOME") {

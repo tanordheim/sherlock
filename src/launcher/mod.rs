@@ -6,6 +6,7 @@ pub mod calc_launcher;
 pub mod clipboard_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
+pub mod event_launcher;
 
 use crate::{ui::tiles::Tile, CONFIG};
 
@@ -15,6 +16,7 @@ use calc_launcher::Calc;
 use clipboard_launcher::Clp;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
+use event_launcher::EventLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -24,6 +26,7 @@ pub enum LauncherType {
     BulkText(BulkText),
     SystemCommand(SystemCommand),
     Clipboard(Clp),
+    EventLauncher(EventLauncher),
     Empty,
 }
 
@@ -58,6 +61,9 @@ impl Launcher {
                 }
                 LauncherType::Clipboard(clp) => {
                     Tile::clipboard_tile(self, index, &clp.clipboard_content, keyword)
+                }
+                LauncherType::EventLauncher(evl) => {
+                    Tile::event_tile(self, index, evl)
                 }
 
                 _ => (index, Vec::new()),

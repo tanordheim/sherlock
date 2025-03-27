@@ -33,6 +33,66 @@ impl TextViewTileBuilder {
     }
 }
 
+
+#[derive(Default)]
+pub struct EventTileBuilder {
+    pub object: ListBoxRow,
+    pub time: Label,
+    pub title: Label,
+    pub attrs: Box,
+}
+impl EventTileBuilder {
+    pub fn new(resource: &str, index: i32, show_shortcut: bool) -> Self {
+        let builder = Builder::from_resource(resource);
+
+        // Implement the shortcuts
+        if show_shortcut && index < 5 {
+            let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
+            let shortcut: Label = builder.object("shortcut").unwrap_or_default();
+            shortcut_holder.set_visible(true);
+            shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
+        }
+
+        EventTileBuilder {
+            object: builder.object("holder").unwrap_or_default(),
+            time: builder.object("time-label").unwrap_or_default(),
+            title: builder.object("title-label").unwrap_or_default(),
+            attrs: builder.object("attrs-holder").unwrap_or_default(),
+        }
+    }
+
+    pub fn add_default_attrs(
+        &self,
+        method: Option<&str>,
+        result: Option<&str>,
+        keyword: Option<&str>,
+        exec: Option<&str>,
+        additional_attrs: Option<Vec<(&str, &str)>>,
+    ) 
+    {
+        let method = method.as_ref().map(|s| ("method", s.as_ref()));
+        let result = result.as_ref().map(|s| ("result", s.as_ref()));
+        let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
+        let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
+
+        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
+            .into_iter()
+            .filter_map(|x| x)
+            .collect();
+
+        if let Some(ads) = additional_attrs {
+            attrs.extend(ads);
+        }
+
+        for item in attrs {
+            let (key, value) = item;
+            let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
+            self.attrs.append(&label);
+        }
+    }
+}
+
+
 #[derive(Default)]
 pub struct TileBuilder {
     pub object: ListBoxRow,
@@ -100,15 +160,18 @@ impl TileBuilder {
             equation_holder,
             result_holder,
         }
+
     }
-    pub fn add_default_attrs<T: AsRef<str>>(
+
+    pub fn add_default_attrs(
         &self,
-        method: Option<T>,
-        result: Option<T>,
-        keyword: Option<T>,
-        exec: Option<T>,
+        method: Option<&str>,
+        result: Option<&str>,
+        keyword: Option<&str>,
+        exec: Option<&str>,
         additional_attrs: Option<Vec<(&str, &str)>>,
-    ) {
+    ) 
+    {
         let method = method.as_ref().map(|s| ("method", s.as_ref()));
         let result = result.as_ref().map(|s| ("result", s.as_ref()));
         let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
@@ -118,11 +181,13 @@ impl TileBuilder {
             .into_iter()
             .filter_map(|x| x)
             .collect();
+
         if let Some(ads) = additional_attrs {
             attrs.extend(ads);
         }
+
         for item in attrs {
-            let (key, value, ..) = item;
+            let (key, value) = item;
             let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
             self.attrs.append(&label);
         }

@@ -60,6 +60,10 @@ box {
     background: hsl(var(--background));
 }
 
+label {
+    color: hsl(var(--text));
+}
+
 
 window {
     color: hsl(var(--text));
@@ -245,6 +249,16 @@ image {
     font-size: 25px;
     color: gray;
 }
+
+/*EVENT TILE*/
+.tile.tile.event-tile {
+    padding: 10px;
+}
+.tile.event-tile #time-label{
+    font-size: 3rem;
+}
+
+
 
 
 
