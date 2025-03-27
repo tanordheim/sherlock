@@ -15,6 +15,7 @@
 - [x] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
 - [x] Startup animation
 - [x] Caching: Add functionality to read files that are not yet cached
+- [x] Teams Event Tile: Make a launcher and tile that allows joining upcoming teams meetings
 - [ ] Daemonize for faster startup
     - [ ] Make animations possible on every show
     - [ ] Reconstruct the window content on every startup and reread the appfiles
