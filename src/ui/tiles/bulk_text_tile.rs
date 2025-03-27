@@ -14,6 +14,7 @@ impl Tile {
 
         builder.category.set_text(name);
         builder.icon.set_icon_name(Some(icon));
+        builder.icon.set_pixel_size(15);
         builder.content_title.set_text(keyword);
         builder.content_body.set_text("Loading...");
         builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
@@ -36,6 +37,7 @@ impl Tile {
 
         builder.category.set_text(name);
         builder.icon.set_icon_name(Some(icon));
+        builder.icon.set_pixel_size(15);
         builder.title.set_text(keyword);
         builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
 

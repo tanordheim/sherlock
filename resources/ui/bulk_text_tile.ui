@@ -24,7 +24,7 @@
                             <object class="GtkImage" id="icon-name">
                                 <property name="name">bulk-text-icon</property>
                                 <property name="icon-name"></property>
-                                <property name="pixel-size">15</property>   
+                                <property name="pixel-size">13</property>   
                             </object>
                         </child>
                         <child>

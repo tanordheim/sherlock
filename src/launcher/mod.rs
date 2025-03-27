@@ -63,7 +63,7 @@ impl Launcher {
                     Tile::clipboard_tile(self, index, &clp.clipboard_content, keyword)
                 }
                 LauncherType::EventLauncher(evl) => {
-                    Tile::event_tile(self, index, evl)
+                    Tile::event_tile(self, index, evl, keyword)
                 }
 
                 _ => (index, Vec::new()),
