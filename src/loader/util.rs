@@ -152,6 +152,7 @@ impl SherlockConfig {
         (
             SherlockConfig {
                 default_apps: ConfigDefaultApps {
+                    calendar_client: default_calendar_client(),
                     teams: default_teams(),
                     terminal: get_terminal()
                         .map_err(|e| non_breaking.push(e))
@@ -185,6 +186,8 @@ impl SherlockConfig {
 pub struct ConfigDefaultApps {
     #[serde(default = "default_teams")]
     pub teams: String,
+    #[serde(default = "default_calendar_client")]
+    pub calendar_client: String,
     #[serde(default = "default_terminal")]
     pub terminal: String,
 }
@@ -192,6 +195,7 @@ impl Default for ConfigDefaultApps {
     fn default() -> Self {
         Self {
             teams: default_teams(),
+            calendar_client: default_calendar_client(),
             terminal: get_terminal().unwrap_or_default(), // Should never get to this...
         }
     }
@@ -253,6 +257,9 @@ pub fn default_terminal() -> String {
 }
 pub fn default_teams() -> String {
     String::from("teams-for-linux --enable-features=UseOzonePlatform --ozone-platform=wayland --url {meeting_url}")
+}
+pub fn default_calendar_client() -> String {
+    String::from("thunderbird")
 }
 pub fn default_cache() -> String {
     match env::var("HOME") {
