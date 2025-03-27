@@ -2,7 +2,11 @@
     {
         "name": "Teams Event",
         "type": "teams_event",
-        "args": {},
+        "args": {
+            "date": "now",
+            "event_start": "-5 minutes",
+            "event_end": "+15 minutes"
+        },
         "priority": 1,
         "home": true
     },

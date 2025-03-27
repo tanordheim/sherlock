@@ -163,23 +163,37 @@ Has following fields of its own:
 Specifies the icon shown for the command.<br>
 
 **`exec`** (required):<br>
-Specifies the program that should be run. **Note:** that its probably suitable to run it asynchronously. To do that, set the `async` attribute to `true`.
+Specifies the program that should be run. **Note:** that its probably suitable to run it asynchronously. To do that, set the `async` attribute to `true`. <br>
 
 **`exec-args`** (optional):<br>
-Specifies the arguments to pass along to the `exec` program.
+Specifies the arguments to pass along to the `exec` program.<br>
 
 > The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
 --- 
 
 ## Teams Event
+> **WARNING:** Currently only supports Thunderbird calendar events
 ```json
 {
     "name": "Teams Event",
     "type": "teams_event",
-    "args": {},
+    "args": {
+        "date": "now",
+        "event_start": "-5 minutes",
+        "event_end": "+15 minutes"
+    },
     "priority": 1,
     "home": true
 },
 ```
-> **WARNING:** Currently only supports Thunderbird calendar events
+
+### Arguments (args):
+**`date`** (optional):<br>
+Specifies the date for the event lookup<br>
+
+**`event_start`** (optional):<br>
+Specifies the offset from the `date` parameter.<br>
+
+**`event_end`** (optional):<br>
+Specifies the second offset from the `date` parameter.<br>
 --- 
