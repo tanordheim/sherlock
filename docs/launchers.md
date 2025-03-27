@@ -188,6 +188,9 @@ Specifies the arguments to pass along to the `exec` program.<br>
 ```
 
 ### Arguments (args):
+**`icon`** (optional):<br>
+Specifies the icon shown for the event.<br>
+
 **`event_date`** (optional):<br>
 Specifies the date for the event lookup<br>
 
