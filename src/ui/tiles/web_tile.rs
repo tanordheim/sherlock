@@ -34,8 +34,8 @@ impl Tile {
 
         builder.add_default_attrs(
             Some(&launcher.method),
-            Some(keyword),
-            Some(keyword),
+            Some(&keyword),
+            Some(&keyword),
             None,
             Some(attrs),
         );

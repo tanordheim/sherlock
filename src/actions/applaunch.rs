@@ -1,4 +1,7 @@
-use std::process::{exit, Command};
+use std::{
+    os::unix::process::CommandExt,
+    process::{exit, Command, Stdio},
+};
 
 pub fn applaunch(exec: &str) {
     let parts: Vec<String> = exec.split_whitespace().map(String::from).collect();
@@ -13,6 +16,18 @@ pub fn applaunch(exec: &str) {
         if !arg.starts_with("%") {
             command.arg(arg);
         }
+    }
+
+    #[cfg(target_family = "unix")]
+    unsafe {
+        command
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .pre_exec(|| {
+                nix::unistd::setsid().ok();
+                Ok(())
+            });
     }
 
     let _output = command.spawn().expect("Failed to start the application");

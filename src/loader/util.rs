@@ -1,7 +1,8 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::env;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
-use std::path::Path;
+use std::io::{self, BufRead, BufReader, Read};
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, io};
 
@@ -25,16 +26,17 @@ pub struct CommandConfig {
     pub args: serde_json::Value,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AppData {
     pub icon: String,
     pub exec: String,
     pub search_string: String,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
+    pub desktop_file: Option<PathBuf>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct SherlockFlags {
     pub config: String,
     pub fallback: String,
@@ -43,6 +45,8 @@ pub struct SherlockFlags {
     pub alias: String,
     pub display_raw: bool,
     pub center_raw: bool,
+    pub caching: bool,
+    pub cache: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -58,6 +62,7 @@ pub enum SherlockErrorType {
     FileExistError(String),
     FileReadError(String),
     FileParseError(String),
+    DirReadError(String),
     ResourceParseError,
     ResourceLookupError(String),
     DisplayError,
@@ -85,6 +90,10 @@ impl SherlockErrorType {
             SherlockErrorType::FileParseError(file) => (
                 "FileParseError".to_string(),
                 format!("Failed to parse file \"{}\"", file),
+            ),
+            SherlockErrorType::DirReadError(file) => (
+                "DirReadError".to_string(),
+                format!("Failed to read/access dir \"{}\"", file),
             ),
             SherlockErrorType::ResourceParseError => (
                 "ResourceParseError".to_string(),
@@ -135,6 +144,8 @@ pub struct Config {
     pub debug: ConfigDebug,
     #[serde(default)]
     pub appearance: ConfigAppearance,
+    #[serde(default)]
+    pub behavior: ConfigBehavior,
 }
 impl Config {
     pub fn default() -> (Self, Vec<SherlockError>) {
@@ -158,6 +169,11 @@ impl Config {
                     icon_paths: Default::default(),
                     icon_size: default_icon_size(),
                 },
+                behavior: ConfigBehavior {
+                    cache: String::from("~/.cache/sherlock_desktop_cache.json"),
+                    caching: false,
+                    daemonize: true,
+                },
             },
             non_breaking,
         )
@@ -176,6 +192,17 @@ impl Default for ConfigDefaultApps {
         }
     }
 }
+
+#[derive(Deserialize, Debug, Clone, Default)]
+pub struct ConfigBehavior {
+    #[serde(default = "default_cache")]
+    pub cache: String,
+    #[serde(default)]
+    pub caching: bool,
+    #[serde(default)]
+    pub daemonize: bool,
+}
+
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigDebug {
     #[serde(default)]
@@ -217,6 +244,12 @@ where
 
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
+}
+pub fn default_cache() -> String {
+    match env::var("HOME") {
+        Ok(dir) => format!("{}/.cache/sherlock_desktop_cache.json", dir),
+        Err(_) => String::from("~/cache/sherlock_desktop_cache.json"),
+    }
 }
 pub fn default_icon_size() -> i32 {
     22

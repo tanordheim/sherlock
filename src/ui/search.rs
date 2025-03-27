@@ -14,10 +14,12 @@ use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
-use crate::{APP_STATE, CONFIG};
+use crate::{AppState, APP_STATE, CONFIG};
 
+#[allow(dead_code)]
 struct SearchUI {
     result_viewport: ScrolledWindow,
+    // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
     search_bar: Entry,
     mode_title: Label,
@@ -78,6 +80,16 @@ fn construct_window(
             .set_size_request((c.appearance.width as f32 * 0.4) as i32, -1);
     }
 
+    APP_STATE.with(|app_state| {
+        let new_state = app_state.borrow_mut().take().map(|old_state| {
+            Rc::new(AppState {
+                window: old_state.window.clone(),
+                stack: old_state.stack.clone(),
+                search_bar: Some(ui.search_bar.clone()),
+            })
+        });
+        *app_state.borrow_mut() = new_state;
+    });
     (mode, modes, vbox, ui, results)
 }
 

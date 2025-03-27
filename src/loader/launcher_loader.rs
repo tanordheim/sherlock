@@ -11,6 +11,7 @@ use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calc;
 use clipboard_launcher::Clp;
+use simd_json;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
@@ -18,6 +19,7 @@ use super::{
     util::{self, SherlockError, SherlockErrorType},
     Loader,
 };
+use crate::CONFIG;
 use util::{AppData, CommandConfig, SherlockFlags};
 
 impl Loader {
@@ -27,18 +29,27 @@ impl Loader {
         // Read fallback data here:
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         // Read fallback data here:
-        let (config, n) = parse_launcher_configs(sherlock_flags)?;
+        let (launcher_config, n) = parse_launcher_configs(sherlock_flags)?;
         non_breaking.extend(n);
 
         // Parse the launchers
-        let mut launchers: Vec<Launcher> = config
+        let mut launchers: Vec<Launcher> = launcher_config
             .iter()
             .filter_map(|cmd| {
                 let launcher_type: LauncherType = match cmd.r#type.as_str() {
                     "app_launcher" => {
-                        let apps = Loader::load_applications(sherlock_flags)
-                            .map_err(|e| non_breaking.push(e))
-                            .ok()?;
+                        let mut apps: HashMap<String, AppData> = HashMap::new();
+                        if let Some(c) = CONFIG.get() {
+                            apps = match c.behavior.caching {
+                                true => Loader::load_applications(sherlock_flags)
+                                    .map_err(|e| non_breaking.push(e))
+                                    .ok()?,
+                                false => Loader::load_applications_from_disk(sherlock_flags, None)
+                                    .map_err(|e| non_breaking.push(e))
+                                    .ok()?,
+                            };
+                        }
+
                         LauncherType::App(App { apps })
                     }
                     "web_launcher" => LauncherType::Web(Web {
@@ -114,7 +125,7 @@ fn parse_launcher_configs(
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
         match File::open(&sherlock_flags.fallback) {
-            Ok(f) => serde_json::from_reader(f).map_err(|e| SherlockError {
+            Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
                 error: SherlockErrorType::FileParseError(sherlock_flags.fallback.to_string()),
                 traceback: e.to_string(),
             }),

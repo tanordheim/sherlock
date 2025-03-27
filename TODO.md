@@ -14,6 +14,10 @@
 - [x] Add an "return" command type for a tile.
 - [x] Implement a `next()` function that adds a layout to the launcher stack to navigate within Sherlock, similar to a follow-up screen.
 - [x] Startup animation
+- [x] Caching: Add functionality to read files that are not yet cached
+- [ ] Daemonize for faster startup
+    - [ ] Make animations possible on every show
+    - [ ] Reconstruct the window content on every startup and reread the appfiles
 - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
 - [ ] Make more widgets asynchronous.

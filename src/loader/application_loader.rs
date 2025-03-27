@@ -1,17 +1,21 @@
 use glob::Pattern;
 use rayon::prelude::*;
 use regex::Regex;
-use std::collections::HashMap;
+use simd_json;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
 
-use super::util::{read_lines, SherlockError, SherlockErrorType, SherlockFlags};
+use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
 use super::{util, Loader};
 use crate::CONFIG;
-use util::{read_file, AppData, SherlockAlias};
+use util::{read_file, read_lines, AppData, SherlockAlias};
 
 impl Loader {
-    pub fn load_applications(
+    pub fn load_applications_from_disk(
         sherlock_flags: &SherlockFlags,
+        applications: Option<HashSet<PathBuf>>,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
             error: SherlockErrorType::ConfigError(None),
@@ -47,7 +51,7 @@ impl Loader {
 
         // Parse user-specified 'sherlock_alias.json' file
         let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias) {
-            Ok(f) => serde_json::from_reader(f).map_err(|e| SherlockError {
+            Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
                 error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
                 traceback: e.to_string(),
             })?,
@@ -59,83 +63,198 @@ impl Loader {
         };
 
         // Gather '.desktop' files
-        let dektop_files: Vec<_> = fs::read_dir(system_apps)
-            .expect("Unable to read/access /usr/share/applications directory")
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                entry
-                    .path()
-                    .extension()
-                    .map(|ext| ext == "desktop")
-                    .unwrap_or(false)
-            })
-            .collect();
+        let desktop_files: HashSet<PathBuf> = match applications {
+            Some(apps) => apps,
+            _ => fs::read_dir(system_apps)
+                .map_err(|e| SherlockError {
+                    error: SherlockErrorType::DirReadError(system_apps.to_string()),
+                    traceback: e.to_string(),
+                })?
+                .filter_map(|entry| {
+                    entry.ok().and_then(|f| {
+                        let path = f.path();
+                        if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
+                            Some(path)
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect(),
+        };
 
-        // Parellize opening of all files and reading into vector
-        let file_contents: Vec<String> = dektop_files
+        // Parellize opening of all .desktop files and parsing them into AppData
+        let apps: HashMap<String, AppData> = desktop_files
             .into_par_iter()
             .filter_map(|entry| {
-                let path = entry.path();
-                let rpath = path.to_str()?;
-                read_file(rpath).ok()
+                let r_path = entry.to_str()?;
+                match read_file(r_path) {
+                    Ok(content) => {
+                        if parse_field(&content, &display_re) == "true" {
+                            return None;
+                        }
+
+                        // Extract keywords, icon, and name fields
+                        let mut keywords = parse_field(&content, &keywords_re);
+                        let mut icon = parse_field(&content, &icon_re);
+                        let mut name = parse_field(&content, &name_re);
+                        if name.is_empty() || should_ignore(&ignore_apps, &name) {
+                            return None; // Skip entries with empty names
+                        }
+
+                        // Construct the executable command
+                        let exec_path = parse_field(&content, &exec_re);
+                        let mut exec = if parse_field(&content, &terminal_re) == "true" {
+                            format!("{} {}", &config.default_apps.terminal, exec_path)
+                        } else {
+                            exec_path.to_string()
+                        };
+
+                        // apply aliases
+                        if let Some(alias) = aliases.get(&name) {
+                            if let Some(alias_name) = alias.name.as_ref() {
+                                name = alias_name.to_string();
+                            }
+                            if let Some(alias_icon) = alias.icon.as_ref() {
+                                icon = alias_icon.to_string();
+                            }
+                            if let Some(alias_keywords) = alias.keywords.as_ref() {
+                                keywords = alias_keywords.to_string();
+                            }
+                            if let Some(alias_exec) = alias.exec.as_ref() {
+                                exec = alias_exec.to_string();
+                            }
+                        };
+                        let search_string = format!("{};{}", name, keywords);
+
+                        let desktop_file_path = match config.behavior.caching {
+                            true => Some(entry),
+                            false => None,
+                        };
+
+                        // Return the processed app data
+                        Some((
+                            name,
+                            AppData {
+                                icon,
+                                exec,
+                                search_string,
+                                tag_start: None,
+                                tag_end: None,
+                                desktop_file: desktop_file_path,
+                            },
+                        ))
+                    }
+                    Err(_) => None,
+                }
+            })
+            .collect();
+        Ok(apps)
+    }
+
+    fn get_new_applications(
+        mut apps: HashMap<String, AppData>,
+        flags: &SherlockFlags,
+    ) -> Result<HashMap<String, AppData>, SherlockError> {
+        let system_apps = "/usr/share/applications/";
+
+        // check if sherlock_alias was modified
+        let alias_path = Path::new(&flags.alias);
+        let cache_path = Path::new(&flags.cache);
+
+        fn modtime(path: &Path) -> Option<SystemTime> {
+            match fs::metadata(path) {
+                Ok(metadata) => metadata.modified().ok(),
+                Err(_) => None,
+            }
+        }
+        match (modtime(&alias_path), modtime(&cache_path)) {
+            (Some(t1), Some(t2)) => {
+                if t1 >= t2 {
+                    return Loader::load_applications_from_disk(flags, None);
+                }
+            }
+            _ => {}
+        }
+
+        // get all desktop files
+        let mut desktop_files: HashSet<PathBuf> = fs::read_dir(system_apps)
+            .map_err(|e| SherlockError {
+                error: SherlockErrorType::DirReadError(system_apps.to_string()),
+                traceback: e.to_string(),
+            })?
+            .filter_map(|entry| {
+                entry.ok().and_then(|f| {
+                    let path = f.path();
+                    if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
+                        Some(path)
+                    } else {
+                        None
+                    }
+                })
             })
             .collect();
 
-        // Pararellize parsing of the '.desktop' files contents
-        let apps: HashMap<String, AppData> = file_contents
-            .into_par_iter()
-            .filter_map(|content| {
-                // Skip if "NoDisplay" field is set to "true"
-                if parse_field(&content, &display_re) == "true" {
-                    return None;
+        // remove if cached entry doesnt exist on device anympre
+        let mut cached_paths = HashSet::with_capacity(apps.capacity());
+        apps.retain(|_, v| {
+            if let Some(path) = &v.desktop_file {
+                if desktop_files.contains(path) {
+                    cached_paths.insert(path.clone());
+                    return true;
                 }
+            }
+            false
+        });
 
-                // Extract fields
-                let mut keywords = parse_field(&content, &keywords_re);
-                let mut icon = parse_field(&content, &icon_re);
-                let mut name = parse_field(&content, &name_re);
-                if name.is_empty() || should_ignore(&ignore_apps, &name) {
-                    return None; // Skip entries with empty names
+        // get files that are not yet cached
+        desktop_files.retain(|v| {
+            return !cached_paths.contains(v);
+        });
+
+        // get information for uncached applications
+        match Loader::load_applications_from_disk(flags, Some(desktop_files)) {
+            Ok(new_apps) => apps.extend(new_apps),
+            _ => {}
+        };
+        return Ok(apps);
+    }
+
+    fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
+        let tmp_path = cache_loc.as_ref().with_extension(".tmp");
+        if let Ok(f) = File::create(&tmp_path) {
+            if let Ok(_) = simd_json::to_writer(f, &apps) {
+                let _ = fs::rename(&tmp_path, &cache_loc);
+            } else {
+                let _ = fs::remove_file(&tmp_path);
+            }
+        }
+    }
+
+    pub fn load_applications(
+        sherlock_flags: &SherlockFlags,
+    ) -> Result<HashMap<String, AppData>, SherlockError> {
+        let cache_loc = sherlock_flags.cache.to_string();
+        let flags = sherlock_flags.clone();
+        let cached_apps: Option<HashMap<String, AppData>> = File::open(&cache_loc)
+            .ok()
+            .and_then(|f| simd_json::from_reader(f).ok());
+
+        if let Some(apps) = cached_apps {
+            // Refresh cache in the background
+            let old_apps = apps.clone();
+            std::thread::spawn(move || {
+                if let Ok(new_apps) = Loader::get_new_applications(old_apps, &flags) {
+                    Loader::write_cache(&new_apps, &cache_loc);
                 }
+            });
+            return Ok(apps);
+        }
 
-                // Construct the executable command
-                let exec_path = parse_field(&content, &exec_re);
-                let mut exec = if parse_field(&content, &terminal_re) == "true" {
-                    format!("{} {}", &config.default_apps.terminal, exec_path)
-                } else {
-                    exec_path.to_string()
-                };
-
-                // apply aliases
-                if let Some(alias) = aliases.get(&name) {
-                    if let Some(alias_name) = alias.name.as_ref() {
-                        name = alias_name.to_string();
-                    }
-                    if let Some(alias_icon) = alias.icon.as_ref() {
-                        icon = alias_icon.to_string();
-                    }
-                    if let Some(alias_keywords) = alias.keywords.as_ref() {
-                        keywords = alias_keywords.to_string();
-                    }
-                    if let Some(alias_exec) = alias.exec.as_ref() {
-                        exec = alias_exec.to_string();
-                    }
-                };
-                let search_string = format!("{};{}", name, keywords);
-
-                // Return the processed app data
-                Some((
-                    name,
-                    AppData {
-                        icon,
-                        exec,
-                        search_string,
-                        tag_start: None,
-                        tag_end: None,
-                    },
-                ))
-            })
-            .collect();
+        let apps = Loader::load_applications_from_disk(sherlock_flags, None)?;
+        // Write the cache in the background
+        let app_clone = apps.clone();
+        std::thread::spawn(move || Loader::write_cache(&app_clone, &cache_loc));
         Ok(apps)
     }
 }

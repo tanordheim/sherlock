@@ -101,12 +101,12 @@ impl TileBuilder {
             result_holder,
         }
     }
-    pub fn add_default_attrs(
+    pub fn add_default_attrs<T: AsRef<str>>(
         &self,
-        method: Option<&str>,
-        result: Option<&str>,
-        keyword: Option<&str>,
-        exec: Option<&str>,
+        method: Option<T>,
+        result: Option<T>,
+        keyword: Option<T>,
+        exec: Option<T>,
         additional_attrs: Option<Vec<(&str, &str)>>,
     ) {
         let method = method.as_ref().map(|s| ("method", s.as_ref()));

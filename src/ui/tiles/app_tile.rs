@@ -43,8 +43,8 @@ impl Tile {
                 builder.title.set_markup(&tile_name);
                 builder.add_default_attrs(
                     Some(&launcher.method),
-                    Some(keyword),
-                    Some(keyword),
+                    Some(&keyword),
+                    Some(&keyword),
                     Some(&value.exec),
                     None,
                 );
