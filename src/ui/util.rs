@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
-use crate::APP_STATE;
+use crate::{APP_STATE, CONFIG};
 
 pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
     APP_STATE.with(|state| {
@@ -72,9 +72,13 @@ pub fn set_home_screen(
     }
 
     let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
-    for widget in widgets {
-        widget.add_css_class("animate");
-        results_frame.append(&widget);
+    if let Some(c) = CONFIG.get(){
+        if c.behavior.animate {
+            for widget in widgets {
+                widget.add_css_class("animate");
+                results_frame.append(&widget);
+            }
+        }
     }
 }
 pub fn read_from_label(label_obj: &Widget) -> Option<(String, String)> {

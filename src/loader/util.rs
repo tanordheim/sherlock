@@ -172,7 +172,8 @@ impl SherlockConfig {
                 behavior: ConfigBehavior {
                     cache: String::from("~/.cache/sherlock_desktop_cache.json"),
                     caching: false,
-                    daemonize: true,
+                    daemonize: false,
+                    animate: true,
                 },
             },
             non_breaking,
@@ -204,6 +205,8 @@ pub struct ConfigBehavior {
     pub caching: bool,
     #[serde(default)]
     pub daemonize: bool,
+    #[serde(default = "default_true")]
+    pub animate: bool,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -256,6 +259,9 @@ pub fn default_cache() -> String {
         Ok(dir) => format!("{}/.cache/sherlock_desktop_cache.json", dir),
         Err(_) => String::from("~/cache/sherlock_desktop_cache.json"),
     }
+}
+pub fn default_true() -> bool {
+    true
 }
 pub fn default_icon_size() -> i32 {
     22
