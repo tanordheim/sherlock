@@ -47,6 +47,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 - Use the async widget to send API requests and display their responses directly in the launcher.
 - Great for integrating live data or external tools into your workflow.
 
+### 📅 Teams Events Launcher
+- Use the Teams Event Launcher to easily join upcoming Microsoft Teams meetings
+
 ### 🔍 Category-Based Search 
 - Type the launcher alias and spacebar to only search within a specific category of commands.
 - Categories are fully configureable, allowing you to customize search scopes.
@@ -148,7 +151,7 @@ Make sure you have the folloing dependencies installed:
     Once the package is built, you can install it using:
 
     ```bash
-    sudo dpkg -i target/debian/sherlock-launcher_0.1.0_amd64.deb
+    sudo dpkg -i target/debian/sherlock-launcher_0.1.5_amd64.deb
     ```
 
     (Make sure to replace the filename if the version number is different.)
