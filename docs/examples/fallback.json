@@ -1,5 +1,12 @@
 [
     {
+        "name": "Teams Event",
+        "type": "teams_event",
+        "args": {},
+        "priority": 1,
+        "home": true
+    },
+    {
         "name": "Clipboard",
         "type": "clipboard-execution",
         "args": {},
