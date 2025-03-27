@@ -2,6 +2,8 @@ use rusqlite::Connection;
 use std::{collections::HashMap, env, fs, path::{Path, PathBuf}};
 use chrono::{NaiveDateTime, TimeZone, Local};
 
+use crate::CONFIG;
+
 #[derive(Clone, Debug)]
 pub struct TeamsEvent {
     pub title: String,
@@ -18,24 +20,31 @@ pub struct EventLauncher {
 
 impl EventLauncher {
     pub fn get_event()->Option<TeamsEvent>{
-        let thunderbird_manager = ThunderBirdEventManager::new(); 
-        if let Some(path) = &thunderbird_manager.database_path {
-            match Connection::open(Path::new(path)) {
-                Ok(conn) => {
-                    let meetings = thunderbird_manager.get_all_teams_events(&conn);
-                    let ids = meetings.keys().map(|i| format!("'{}'", i)).collect::<Vec<String>>().join(", ");
-                    if let Some((id, title, time)) = thunderbird_manager.get_teams_event_by_time(&conn, ids){
-                        if let Some((meeting_url, _)) = meetings.get(&id){
-                            return Some(TeamsEvent {
-                                title,
-                                meeting_url: meeting_url.to_string(),
-                                time
-                            });
-                        } 
+        let calendar_client = CONFIG.get()?.default_apps.calendar_client.as_ref();
+        match calendar_client {
+            "thunderbird" => {
+                let thunderbird_manager = ThunderBirdEventManager::new(); 
+                if let Some(path) = &thunderbird_manager.database_path {
+                    match Connection::open(Path::new(path)) {
+                        Ok(conn) => {
+                            let meetings = thunderbird_manager.get_all_teams_events(&conn);
+                            let ids = meetings.keys().map(|i| format!("'{}'", i)).collect::<Vec<String>>().join(", ");
+                            if let Some((id, title, time)) = thunderbird_manager.get_teams_event_by_time(&conn, ids){
+                                if let Some((meeting_url, _)) = meetings.get(&id){
+                                    return Some(TeamsEvent {
+                                        title,
+                                        meeting_url: meeting_url.to_string(),
+                                        time
+                                    });
+                                } 
+                            }
+                        }
+                        Err(_) => return None
                     }
                 }
-                Err(_) => return None
-            }
+            },
+            _ => {}
+            
         }
         return None
     }
