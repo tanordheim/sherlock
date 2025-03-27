@@ -18,7 +18,7 @@ const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
 use daemon::deamon::SherlockDeamon;
 use loader::{
-    util::{Config, SherlockError},
+    util::{SherlockConfig, SherlockError},
     Loader,
 };
 use ui::util::show_stack_page;
@@ -54,7 +54,7 @@ impl AppState {
 thread_local! {
     static APP_STATE: RefCell<Option<Rc<AppState>>> = RefCell::new(None);
 }
-static CONFIG: OnceLock<Config> = OnceLock::new();
+static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
@@ -78,7 +78,7 @@ async fn main() {
     // Parse configs from 'config.toml'
     let (app_config, n) = Loader::load_config(&sherlock_flags)
         .map_err(|e| startup_errors.push(e))
-        .unwrap_or(loader::util::Config::default());
+        .unwrap_or(loader::util::SherlockConfig::default());
     non_breaking.extend(n);
 
     match CONFIG.set(app_config.clone()) {

@@ -136,7 +136,7 @@ pub struct SherlockError {
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
-pub struct Config {
+pub struct SherlockConfig {
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,
     #[serde(default)]
@@ -146,11 +146,11 @@ pub struct Config {
     #[serde(default)]
     pub behavior: ConfigBehavior,
 }
-impl Config {
+impl SherlockConfig {
     pub fn default() -> (Self, Vec<SherlockError>) {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         (
-            Config {
+            SherlockConfig {
                 default_apps: ConfigDefaultApps {
                     teams: default_teams(),
                     terminal: get_terminal()

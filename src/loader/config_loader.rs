@@ -1,15 +1,15 @@
 use std::fs;
 
-use super::util::{Config, SherlockError, SherlockErrorType, SherlockFlags};
+use super::util::{SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags};
 use super::Loader;
 
 impl Loader {
     pub fn load_config(
         sherlock_flags: &SherlockFlags,
-    ) -> Result<(Config, Vec<SherlockError>), SherlockError> {
+    ) -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
         match fs::read_to_string(&sherlock_flags.config) {
             Ok(config_str) => {
-                let mut config: Config = match toml::de::from_str(&config_str) {
+                let mut config: SherlockConfig = match toml::de::from_str(&config_str) {
                     Ok(config) => config,
                     Err(e) => {
                         return Err(SherlockError {
@@ -35,7 +35,7 @@ impl Loader {
                     }];
 
                     // Unpack non-breaking errors and default config
-                    let (mut config, n) = Config::default();
+                    let (mut config, n) = SherlockConfig::default();
                     non_breaking.extend(n);
 
                     if sherlock_flags.caching {
