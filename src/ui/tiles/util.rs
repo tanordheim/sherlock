@@ -36,8 +36,10 @@ impl TextViewTileBuilder {
 #[derive(Default)]
 pub struct EventTileBuilder {
     pub object: ListBoxRow,
-    pub time: Label,
     pub title: Label,
+    pub icon: Image,
+    pub start_time: Label,
+    pub end_time: Label,
     pub attrs: Box,
 }
 impl EventTileBuilder {
@@ -54,8 +56,10 @@ impl EventTileBuilder {
 
         EventTileBuilder {
             object: builder.object("holder").unwrap_or_default(),
-            time: builder.object("time-label").unwrap_or_default(),
             title: builder.object("title-label").unwrap_or_default(),
+            start_time: builder.object("time-label").unwrap_or_default(),
+            end_time: builder.object("end-time-label").unwrap_or_default(),
+            icon: builder.object("icon-name").unwrap_or_default(),
             attrs: builder.object("attrs-holder").unwrap_or_default(),
         }
     }

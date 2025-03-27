@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveDateTime, TimeZone};
+use chrono::{Local, Utc, DateTime};
 use rusqlite::Connection;
 use std::{
     collections::HashMap,
@@ -12,12 +12,14 @@ use crate::CONFIG;
 pub struct TeamsEvent {
     pub title: String,
     pub meeting_url: String,
-    pub time: String,
+    pub start_time: String,
+    pub end_time: String,
 }
 
 #[derive(Clone, Debug)]
 pub struct EventLauncher {
     pub event: Option<TeamsEvent>,
+    pub icon: String,
 }
 
 impl EventLauncher {
@@ -35,14 +37,15 @@ impl EventLauncher {
                                 .map(|i| format!("'{}'", i))
                                 .collect::<Vec<String>>()
                                 .join(", ");
-                            if let Some((id, title, time)) = thunderbird_manager
+                            if let Some((id, title, start_time, end_time)) = thunderbird_manager
                                 .get_teams_event_by_time(&conn, ids, date, event_start, event_end)
                             {
                                 if let Some((meeting_url, _)) = meetings.get(&id) {
                                     return Some(TeamsEvent {
                                         title,
                                         meeting_url: meeting_url.to_string(),
-                                        time,
+                                        start_time,
+                                        end_time
                                     });
                                 }
                             }
@@ -132,10 +135,10 @@ impl ThunderBirdEventManager {
         date: &str,
         event_start: &str,
         event_end: &str,
-    ) -> Option<(String, String, String)> {
+    ) -> Option<(String, String, String, String)> {
         let query = if !ids.is_empty() {
             format!("
-                SELECT id, title, event_start
+                SELECT id, title, event_start, event_end
                 FROM cal_events 
                 WHERE id IN ({})
                 AND event_start BETWEEN strftime('%s', '{}', '{}') * 1000000 AND strftime('%s', '{}', '{}') * 1000000
@@ -150,16 +153,25 @@ impl ThunderBirdEventManager {
                 let id: String = row.get(0)?;
                 let title: String = row.get(1)?;
                 let start_time: i64 = row.get(2)?;
-                Ok((id, title, start_time))
+                let end_time: i64 = row.get(3)?;
+                Ok((id, title, start_time, end_time))
             });
 
             if let Ok(rows) = event_iter {
                 if let Some(row) = rows.flatten().nth(0) {
-                    let timestamp = row.2 / 1_000_000;
-                    let native_datetime = NaiveDateTime::from_timestamp(timestamp, 0);
-                    let local_datetime = Local.from_utc_datetime(&native_datetime);
-                    let formatted = local_datetime.format("%H:%M").to_string();
-                    return Some((row.0, row.1, formatted));
+                    let t1 = row.2 / 1_000_000;
+                    let t2 = row.3 / 1_000_000;
+
+                    let start_datetime: DateTime<Utc> = DateTime::from_timestamp(t1, 0)?;
+                    let end_datetime: DateTime<Utc> = DateTime::from_timestamp(t2, 0)?;
+
+                    let start_time = start_datetime.with_timezone(&Local);
+                    let end_time = end_datetime.with_timezone(&Local);
+
+                    let event_start = start_time.format("%H:%M").to_string();
+                    let event_end = end_time.format("%H:%M").to_string();
+
+                    return Some((row.0, row.1, event_start, event_end));
                 }
             }
         }
