@@ -172,7 +172,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
 --- 
 
 ## Teams Event
-> **WARNING:** Currently only supports Thunderbird calendar events
+> **🚨 Warning:** Currently only supports Thunderbird calendar events
 ```json
 {
     "name": "Teams Event",
