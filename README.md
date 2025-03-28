@@ -181,6 +181,18 @@ touch ~/.config/sherlock/config.toml ~/.config/sherlock/sherlockignore
 echo [] > ~/.config/sherlock/fallback.json
 echo {} > ~/.config/sherlock/sherlock_alias.json
 ```
+**Alternatively**, you can use `curl -O` in the `~/.config/sherlock/` directory but it's generally **not good practice** and **not recommended** since you could also curl **malware**! Nevertheless, here's that way, if you prefer to be a risk-taker:
+
+```bash
+mkdir -p ~/.config/sherlock/
+cd ~/.config/sherlock/
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/config.toml
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/sherlockignore
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/fallback.json
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/sherlock_alias.json
+```
+#### Warnings after startup
+If you're getting warnings after startup, you can press `return` to access the main application. Alternatively you can set the `try_surpress_warnings` key in the config file to true. This will prevent any warnings to be shown. The same thing can be done for errors. However, if you surpress errors, the application might not work as expected.
 
 #### **Keybind Setup**  
 To launch Sherlock, you can either type `sherlock` into the command line or bind it to a key. The latter is recommended.  
