@@ -1,7 +1,8 @@
 # Configuration File
 
 The configuration file for Sherlock is located at `~/.config/sherlock/config.toml`, unless specified otherwise. This file allows you to customize various parameters to tailor Sherlock to your needs. Below, we will explore the available options and their purposes.
-
+<br>
+> **Example File:** [config.toml](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/config.toml)
 ---
 
 ## Default App Section `[default_apps]`
