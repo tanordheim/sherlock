@@ -181,6 +181,7 @@ touch ~/.config/sherlock/config.toml ~/.config/sherlock/sherlockignore
 echo [] > ~/.config/sherlock/fallback.json
 echo {} > ~/.config/sherlock/sherlock_alias.json
 ```
+<br><br>
 **Alternatively**, you can use `curl -O` in the `~/.config/sherlock/` directory to load the [example configs](https://github.com/Skxxtz/sherlock/tree/main/docs/examples). This is **not good practice** and **not recommended**, especially if you don't know the source, as you could end up downloading **malware**! Nevertheless, here's how you can do that, if you prefer to be a risk-taker:
 
 > **🚨 Warning:** Only use `curl` with trusted sources to avoid downloading malicious content!
