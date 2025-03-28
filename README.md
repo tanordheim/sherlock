@@ -22,11 +22,16 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 > **🚨 Warning:** The app is was created on **Arch Linux** with the **Hyprland** tiling window manager in mind. It may cause errors or won't function at all on other system configurations.
 ---
 ## Table of Contents
-- [Features](#features)<br>
-- [Getting Started](#getting-started)<br>
-    - [Dependencies](#dependencies)<br>
-    - [Installation](#installation)<br>
-    - [Post Installation](#post-installation)<br>
+- [Features](#features)
+- [Getting Started](#getting-started)
+    - [Dependencies](#dependencies)
+    - [Installation](#installation)
+        - [Arch Linux](#arch-linux)
+        - [From Source](#from-source)
+        - [Debian](#build-debian-package)
+    - [Post Installation](#post-installation)
+        - [Config Setup](#config-setup)
+        - [Keybind Setup](#keybind-setup)
 --- 
 <br><br>
 
@@ -67,7 +72,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 ## Getting Started
 
-### Dependencies
+### 1. Dependencies
 
 To run the Sherlock Launcher, ensure the following dependencies are installed:
 
@@ -79,7 +84,7 @@ Additionally, if you're building from source, you will need:
 - `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 - `git` - [How to install git](https://github.com/git-guides/install-git)
 <br><br>
-### Installation
+### 2. Installation
 
 #### <ins>Arch Linux</ins>
 
@@ -122,7 +127,6 @@ Make sure you have the necessary dependencies installed:
     sudo cp target/release/sherlock /usr/bin/
     ```
 
----
 
 #### <ins>Build Debian Package</ins>
 
@@ -161,7 +165,7 @@ Make sure you have the folloing dependencies installed:
 
     (Make sure to replace the filename if the version number is different.)
 <br><br>
-### Post Installation
+### 3. Post Installation
 
 #### **Config Setup**  
 After the installation is completed, you can set up your configuration files. The location for them is `~/.config/sherlock/`. Depending on your needs, you should add the following files:  
