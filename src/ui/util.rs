@@ -73,11 +73,11 @@ pub fn set_home_screen(
 
     let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
     if let Some(c) = CONFIG.get() {
-            for widget in widgets {
-                if c.behavior.animate {
-                    widget.add_css_class("animate");
-                }
-                results_frame.append(&widget);
+        for widget in widgets {
+            if c.behavior.animate {
+                widget.add_css_class("animate");
+            }
+            results_frame.append(&widget);
         }
     }
 }

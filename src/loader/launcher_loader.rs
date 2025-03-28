@@ -149,6 +149,7 @@ impl Loader {
                 })
             })
             .collect();
+
         // get and write executioon counts if they are empty
         if counts.is_empty() {
             let counts: HashMap<String, f32> = launchers
