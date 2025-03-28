@@ -178,8 +178,8 @@ After the installation is completed, you can set up your configuration files. Th
 ```bash
 mkdir -p ~/.config/sherlock/
 touch ~/.config/sherlock/config.toml ~/.config/sherlock/sherlockignore
-echo {} > ~/.config/sherlock/fallback.json
-echo {} > ~/.config/sherlock/sherlock_alias.json.json
+echo [] > ~/.config/sherlock/fallback.json
+echo {} > ~/.config/sherlock/sherlock_alias.json
 ```
 
 #### **Keybind Setup**  
