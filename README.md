@@ -62,9 +62,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 <br><br>
 
 ## Getting Started
-[Dependencies](#dependencies)<br>
-[Installation](#installation)<br>
-[Post Installation](#post-installation)<br>
+1. [Dependencies](#dependencies)<br>
+2. [Installation](#installation)<br>
+3. [Post Installation](#post-installation)<br>
 
 ### Dependencies
 
