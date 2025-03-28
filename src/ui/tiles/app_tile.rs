@@ -1,7 +1,7 @@
-use gtk4::{prelude::*, ListBoxRow};
+use gtk4::prelude::*;
 use std::collections::HashMap;
 
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 use crate::loader::util::{AppData, SherlockConfig};
 
 use super::util::{ensure_icon_name, TileBuilder};
@@ -14,8 +14,8 @@ impl Tile {
         keyword: &str,
         commands: HashMap<String, AppData>,
         app_config: &SherlockConfig,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let mut results: Vec<ListBoxRow> = Default::default();
+    ) -> (i32, Vec<ResultItem>) {
+        let mut results: Vec<ResultItem> = Default::default();
         let mut index_ref = index;
 
         for (key, value) in commands.into_iter() {
@@ -50,7 +50,11 @@ impl Tile {
                 );
 
                 index_ref += 1;
-                results.push(builder.object);
+
+                results.push(ResultItem {
+                    priority: value.priority,
+                    row_item: builder.object,
+                });
             }
         }
         return (index_ref, results);

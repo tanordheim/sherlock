@@ -1,9 +1,8 @@
-use gtk4::ListBoxRow;
 use meval::eval_str;
 
 use super::util::TileBuilder;
 use super::Tile;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
     pub fn calc_tile(
@@ -11,14 +10,13 @@ impl Tile {
         index: i32,
         equation: &str,
         result: Option<f64>,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let mut results: Vec<ListBoxRow> = Default::default();
+    ) -> (i32, Vec<ResultItem>) {
         let result = if let Some(r) = result {
             r
         } else if let Ok(r) = eval_str(equation) {
             r
         } else {
-            return (index, results);
+            return (index, vec![]);
         };
 
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui", index, true);
@@ -29,8 +27,11 @@ impl Tile {
 
         let result = result.to_string();
         builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, None);
-        results.push(builder.object);
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+        };
 
-        (index, results)
+        (index, vec![res])
     }
 }

@@ -4,6 +4,7 @@ use std::process::exit;
 use teamslaunch::teamslaunch;
 
 use crate::{
+    loader::launcher_loader::CounterReader,
     ui::{
         user::{display_next, display_raw},
         window::hide_window,
@@ -23,18 +24,22 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "app_launcher" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
+                increment(&exec);
                 eval_exit();
             }
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
                 let engine = attrs.get("engine").map_or("", |s| s.as_str());
                 let _ = websearch::websearch(engine, query);
+                let exec = format!("websearch-{}", engine);
+                increment(&exec);
                 eval_exit();
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
+                increment(&exec);
                 eval_exit();
             }
             "copy" => {
@@ -76,4 +81,10 @@ fn eval_exit() {
             false => exit(0),
         }
     }
+}
+fn increment(key: &str) {
+    println!("incrementing {:?}", key);
+    if let Ok(count_reader) = CounterReader::new() {
+        let _ = count_reader.increment(key);
+    };
 }

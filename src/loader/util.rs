@@ -15,7 +15,7 @@ pub struct CommandConfig {
     pub on_return: Option<String>,
     pub next_content: Option<String>,
     pub r#type: String,
-    pub priority: u32,
+    pub priority: f32,
 
     #[serde(default)]
     pub r#async: bool,
@@ -33,6 +33,7 @@ pub struct AppData {
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
     pub desktop_file: Option<PathBuf>,
+    pub priority: f32,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -62,6 +63,7 @@ pub enum SherlockErrorType {
     FileReadError(String),
     FileParseError(String),
     DirReadError(String),
+    DirCreateError(String),
     ResourceParseError,
     ResourceLookupError(String),
     DisplayError,
@@ -93,6 +95,10 @@ impl SherlockErrorType {
             SherlockErrorType::DirReadError(file) => (
                 "DirReadError".to_string(),
                 format!("Failed to read/access dir \"{}\"", file),
+            ),
+            SherlockErrorType::DirCreateError(file) => (
+                "DirCreateError".to_string(),
+                format!("Failed to create parent dir \"{}\"", file),
             ),
             SherlockErrorType::ResourceParseError => (
                 "ResourceParseError".to_string(),

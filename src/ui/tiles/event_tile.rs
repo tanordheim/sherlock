@@ -1,19 +1,17 @@
 use std::vec;
 
-use gtk4::ListBoxRow;
-
 use super::util::EventTileBuilder;
 use super::Tile;
 use crate::launcher::event_launcher::EventLauncher;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
     pub fn event_tile(
         launcher: &Launcher,
         index: i32,
-        event_launcher: &EventLauncher,
         keyword: &str,
-    ) -> (i32, Vec<ListBoxRow>) {
+        event_launcher: &EventLauncher,
+    ) -> (i32, Vec<ResultItem>) {
         let event = match &event_launcher.event {
             Some(event) => event,
             None => return (index, vec![]),
@@ -42,7 +40,10 @@ impl Tile {
         }
 
         builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
-
-        return (index + 1, vec![builder.object]);
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+        };
+        return (index + 1, vec![res]);
     }
 }

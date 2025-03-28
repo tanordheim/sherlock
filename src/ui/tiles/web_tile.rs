@@ -1,9 +1,7 @@
-use gtk4::ListBoxRow;
-
 use super::util::TileBuilder;
 use super::Tile;
 use crate::launcher::web_launcher::Web;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
     pub fn web_tile(
@@ -11,7 +9,7 @@ impl Tile {
         index: i32,
         keyword: &str,
         web: &Web,
-    ) -> (i32, Vec<ListBoxRow>) {
+    ) -> (i32, Vec<ResultItem>) {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
 
         builder.category.set_text(&launcher.name);
@@ -40,6 +38,11 @@ impl Tile {
             Some(attrs),
         );
 
-        return (index + 1, vec![builder.object]);
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+        };
+
+        return (index + 1, vec![res]);
     }
 }

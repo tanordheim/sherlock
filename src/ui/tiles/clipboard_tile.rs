@@ -1,10 +1,10 @@
 use gio::glib::Bytes;
-use gtk4::{gdk, prelude::*, Image, ListBoxRow};
+use gtk4::{gdk, prelude::*, Image};
 use meval::eval_str;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -31,8 +31,8 @@ impl Tile {
         index: i32,
         clipboard_content: &str,
         keyword: &str,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let mut results: Vec<ListBoxRow> = Default::default();
+    ) -> (i32, Vec<ResultItem>) {
+        let mut results: Vec<ResultItem> = Default::default();
         let mut is_valid: i32 = 0;
 
         //TODO implement searchstring before clipboard content
@@ -109,7 +109,10 @@ impl Tile {
                     None,
                     Some(attrs),
                 );
-                results.push(builder.object);
+                results.push(ResultItem {
+                    priority: launcher.priority as f32,
+                    row_item: builder.object,
+                });
             }
         }
 
