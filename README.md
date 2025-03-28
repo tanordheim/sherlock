@@ -175,6 +175,12 @@ After the installation is completed, you can set up your configuration files. Th
 3. [**sherlock_alias.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json): This file specifies aliases for applications. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/aliases.md).  
 4. [**sherlockignore**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlockignore): This file specifies which applications to exclude from your search. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/sherlockignore.md).  
 
+```bash
+mkdir -p ~/.config/sherlock/
+touch ~/.config/sherlock/config.toml ~/.config/sherlock/sherlockignore
+echo {} > ~/.config/sherlock/fallback.json
+echo {} > ~/.config/sherlock/sherlock_alias.json.json
+```
 
 #### **Keybind Setup**  
 To launch Sherlock, you can either type `sherlock` into the command line or bind it to a key. The latter is recommended.  
