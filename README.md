@@ -21,7 +21,12 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 
 > **🚨 Warning:** The app is was created on **Arch Linux** with the **Hyprland** tiling window manager in mind. It may cause errors or won't function at all on other system configurations.
 ---
-<!-- TOC -->
+## Table of Contents
+- [Features](#features)<br>
+- [Getting Started](#getting-started)<br>
+    - [Dependencies](#dependencies)<br>
+    - [Installation](#installation)<br>
+    - [Post Installation](#post-installation)<br>
 --- 
 <br><br>
 
