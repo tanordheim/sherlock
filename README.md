@@ -62,6 +62,9 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 <br><br>
 
 ## Getting Started
+[Dependencies](#dependencies)
+[Installation](#installation)
+[Post Installation](#post-installation)
 
 ### Dependencies
 
@@ -74,7 +77,7 @@ Additionally, if you're building from source, you will need:
 
 - `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 - `git` - [How to install git](https://github.com/git-guides/install-git)
-
+<br><br>
 ### Installation
 
 #### <ins>Arch Linux</ins>
@@ -156,7 +159,7 @@ Make sure you have the folloing dependencies installed:
     ```
 
     (Make sure to replace the filename if the version number is different.)
-
+<br><br>
 ### Post Installation
 
 #### **Config Setup**  
@@ -167,7 +170,6 @@ After the installation is completed, you can set up your configuration files. Th
 3. [**sherlock_alias.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json): This file **specifies** aliases for applications. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/aliases.md).  
 4. [**sherlockignore**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlockignore): This file **specifies** which applications to exclude from your search. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/sherlockignore.md).  
 
----
 
 #### **Keybind Setup**  
 To launch Sherlock, you can either type `sherlock` into the command line or bind it to a key. The latter is recommended.  
