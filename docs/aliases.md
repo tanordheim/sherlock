@@ -5,6 +5,8 @@ Sherlock aliases provide a way for you to customize the:
 3. Keywords
 4. Exec
 of an app.
+<br>
+> **Example File:** [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
 
 ## Setup:
 1. Create the `sherloc_alias.json` file:
