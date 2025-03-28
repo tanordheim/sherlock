@@ -2,8 +2,16 @@ name: Build
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - "**.md"
+      - "**.markdown"
+      - "**.rasi"
   pull_request:
     branches: [ "**" ]
+    paths-ignore:
+      - "**.md"
+      - "**.markdown"
+      - "**.rasi"
 
 env:
   CARGO_TERM_COLOR: always
