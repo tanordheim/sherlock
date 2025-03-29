@@ -1,4 +1,3 @@
-use gtk4::gdk::ModifierType;
 use gtk4::glib;
 use gtk4::{
     self,
@@ -16,68 +15,6 @@ use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
 use crate::{AppState, APP_STATE, CONFIG};
-
-#[derive(Debug, Clone, PartialEq)]
-struct ConfKeys {
-    next: Option<Key>,
-    next_mod: Option<ModifierType>,
-    prev: Option<Key>,
-    prev_mod: Option<ModifierType>,
-}
-impl ConfKeys {
-    pub fn from<T: AsRef<str>>(next: T, prev: T) -> Self {
-        let (next_mod, next) = ConfKeys::eval_bind_combination(next);
-        let (prev_mod, prev) = ConfKeys::eval_bind_combination(prev);
-        ConfKeys {
-            next,
-            next_mod,
-            prev,
-            prev_mod,
-        }
-    }
-    pub fn empty() -> Self {
-        ConfKeys {
-            next: None,
-            next_mod: None,
-            prev: None,
-            prev_mod: None,
-        }
-    }
-    fn eval_bind_combination<T: AsRef<str>>(key: T) -> (Option<ModifierType>, Option<Key>) {
-        let key_str = key.as_ref();
-        match key_str.split("-").collect::<Vec<&str>>().as_slice() {
-            [modifier, key, ..] => (ConfKeys::eval_mod(modifier), ConfKeys::eval_key(key)),
-            [key, ..] => (None, ConfKeys::eval_key(key)),
-            _ => (None, None),
-        }
-    }
-    fn eval_key(key: &str) -> Option<Key> {
-        match key {
-            "tab" => Some(Key::Tab),
-            "up" => Some(Key::Up),
-            "down" => Some(Key::Down),
-            "left" => Some(Key::Left),
-            "right" => Some(Key::Right),
-            "pgup" => Some(Key::Page_Up),
-            "pgdown" => Some(Key::Page_Down),
-            "end" => Some(Key::End),
-            "home" => Some(Key::Home),
-            _ => None,
-        }
-    }
-    fn eval_mod(key: &str) -> Option<ModifierType> {
-        match key {
-            "shift" => Some(ModifierType::SHIFT_MASK),
-            "control" => Some(ModifierType::CONTROL_MASK),
-            "alt" => Some(ModifierType::ALT_MASK),
-            "super" => Some(ModifierType::SUPER_MASK),
-            "lock" => Some(ModifierType::LOCK_MASK),
-            "hypr" => Some(ModifierType::HYPER_MASK),
-            "meta" => Some(ModifierType::META_MASK),
-            _ => None,
-        }
-    }
-}
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -360,29 +297,4 @@ pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers
         results_frame.append(&widget);
     }
     results_frame.focus_first();
-}
-
-#[test]
-fn test_custom_binds() {
-    let prev = "s-tab";
-    let next = "tab";
-    let sk = ConfKeys::from(next, prev);
-    let sb = ConfKeys {
-        prev: Some(Key::Tab),
-        prev_mod: Some(ModifierType::SHIFT_MASK),
-
-        next: Some(Key::Tab),
-        next_mod: None,
-    };
-    let ck = ConfKeys::from("tab", "c-tab");
-    let cb = ConfKeys {
-        prev: Some(Key::Tab),
-        prev_mod: Some(ModifierType::CONTROL_MASK),
-
-        next: Some(Key::Tab),
-        next_mod: None,
-    };
-    println!("{:?}", ck);
-    assert_eq!(sk, sb);
-    assert_eq!(ck, cb);
 }
