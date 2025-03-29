@@ -128,7 +128,6 @@ impl Launcher {
                 Tile::bulk_text_tile_loader(&self, keyword, &bulk_text)
             }
             LauncherType::MusicPlayerLauncher(mpris) => {
-                println!("music player");
                 Tile::mpris_tile(&self, &mpris)
             }
             _ => {
