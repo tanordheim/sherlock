@@ -73,7 +73,8 @@ pub fn set_home_screen(
 
     // Partition into async and non asynt to load loaders or normal tiles
 
-    let widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
+    let mut widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
+    widgets.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
     if let Some(c) = CONFIG.get() {
         for widget in widgets {
             if c.behavior.animate {
