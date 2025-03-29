@@ -217,7 +217,7 @@ impl Default for ConfigDefaultApps {
 pub struct ConfigBehavior {
     #[serde(default = "default_cache")]
     pub cache: String,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub caching: bool,
     #[serde(default)]
     pub daemonize: bool,
