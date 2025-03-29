@@ -5,6 +5,7 @@ use std::fs::{self, File};
 use std::path::PathBuf;
 
 use crate::actions::util::read_from_clipboard;
+use crate::launcher::audio_launcher::{MusicPlayerLauncher, AudioLauncherFunctions};
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
@@ -127,6 +128,15 @@ impl Loader {
                         let event = EventLauncher::get_event(date, event_start, event_end);
 
                         LauncherType::EventLauncher(EventLauncher { event, icon })
+                    },
+                    "audio_sink" => {
+                        AudioLauncherFunctions::new().and_then(|launcher|{
+                            launcher.get_current_player().and_then(|player|{
+                                launcher.get_metadata(&player).and_then(|l|{
+                                    Some(LauncherType::MusicPlayerLauncher(l))
+                                })
+                            })
+                        }).unwrap_or(LauncherType::Empty)
                     }
                     _ => LauncherType::Empty,
                 };

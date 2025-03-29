@@ -1,12 +1,14 @@
-use crate::{launcher::Launcher, CONFIG};
+use crate::{launcher::{Launcher, ResultItem}, CONFIG};
 use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, TextView};
 use std::collections::HashSet;
 
+#[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
-    pub widget: ListBoxRow,
-    pub title: Label,
-    pub body: Label,
+    pub result_item: ResultItem,
+    pub title: Option<Label>,
+    pub body: Option<Label>,
+    pub icon: Option<Image>,
     pub attrs: Box,
 }
 

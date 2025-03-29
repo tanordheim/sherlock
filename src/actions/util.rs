@@ -15,5 +15,5 @@ pub fn read_from_clipboard() -> Result<String, SherlockError> {
         error: SherlockErrorType::ClipboardError,
         traceback: e.to_string(),
     })?;
-    Ok(ctx.get_contents().unwrap_or("".to_string()))
+    Ok(ctx.get_contents().unwrap_or_default().trim().to_string())
 }

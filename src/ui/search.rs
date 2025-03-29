@@ -241,13 +241,14 @@ fn change_event(
             let widgets: Vec<AsyncLauncherTile> = async_launchers
                 .iter()
                 .filter_map(|launcher| {
-                    if current_mode == launcher.alias.as_deref().unwrap_or("") {
+                    if launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or("") || launcher.priority > 0 {
                         launcher.get_loader_widget(&current_text).map(
-                            |(widget, title, body, attrs)| AsyncLauncherTile {
+                            |(widget, title, body, icon, attrs)| AsyncLauncherTile {
                                 launcher: launcher.clone(),
-                                widget,
+                                result_item: widget,
                                 title,
                                 body,
+                                icon,
                                 attrs,
                             },
                         )
@@ -258,7 +259,7 @@ fn change_event(
                 .collect();
 
             for widget in widgets.iter() {
-                results_ev_changed.append(&widget.widget);
+                results_ev_changed.append(&widget.result_item.row_item);
             }
             results_ev_changed.focus_first();
 
@@ -267,18 +268,25 @@ fn change_event(
                 if *cancel_flag.borrow() {
                     return;
                 }
+                println!("{:?}", widgets);
+                // get results for aysnc launchers
                 for widget in widgets.iter() {
                     if let Some((title, body, next_content)) =
                         widget.launcher.get_result(&current_text).await
                     {
-                        widget.title.set_text(&title);
-                        widget.body.set_text(&body);
+                        widget.title.as_ref().map(|t| t.set_text(&title));
+                        widget.body.as_ref().map(|b| b.set_text(&body));
                         if let Some(next_content) = next_content {
                             let label = Label::new(Some(
                                 format!("next_content | {}", next_content).as_str(),
                             ));
                             widget.attrs.append(&label);
                         }
+                    }
+                    if let Some(icon) = &widget.icon{
+                         let image = widget.launcher.get_image().await;
+                         icon.set_from_pixbuf(image.as_ref());
+
                     }
                 }
             });

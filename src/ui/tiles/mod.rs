@@ -6,6 +6,7 @@ pub mod event_tile;
 pub mod simple_text_tile;
 pub mod util;
 pub mod web_tile;
+pub mod mpris_tile;
 
 pub mod error_tile;
 

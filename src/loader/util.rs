@@ -60,6 +60,7 @@ pub struct SherlockAlias {
 pub enum SherlockErrorType {
     EnvVarNotFoundError(String),
     FileExistError(String),
+    FileWriteError(String),
     FileReadError(String),
     FileParseError(String),
     DirReadError(String),
@@ -71,6 +72,7 @@ pub enum SherlockErrorType {
     RegexError(String),
     CommandExecutionError(String),
     ClipboardError,
+    HttpRequestError(String),
 }
 
 impl SherlockErrorType {
@@ -83,6 +85,10 @@ impl SherlockErrorType {
             SherlockErrorType::FileExistError(file) => (
                 "FileExistError".to_string(),
                 format!("File \"{}\" does not exist", file),
+            ),
+            SherlockErrorType::FileWriteError(file) => (
+                "FileWriteError".to_string(),
+                format!("Failed to write file \"{}\"", file),
             ),
             SherlockErrorType::FileReadError(file) => (
                 "FileReadError".to_string(),
@@ -131,6 +137,10 @@ impl SherlockErrorType {
             SherlockErrorType::ClipboardError => (
                 format!("ClipboardError"),
                 format!("Failed to get system clipboard"),
+            ),
+            SherlockErrorType::HttpRequestError(cmd) => (
+                format!("HttpRequestError"),
+                format!("Failed to get requested source \"{}\"", cmd),
             ),
         }
     }

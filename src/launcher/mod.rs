@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use gtk4::{Box, Label, ListBoxRow};
+use gtk4::{subclass::widget, Box, Image, Label, ListBoxRow};
 
 pub mod app_launcher;
 pub mod bulk_text_launcher;
@@ -8,6 +8,7 @@ pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
+pub mod audio_launcher;
 
 use crate::{ui::tiles::Tile, CONFIG};
 
@@ -17,6 +18,7 @@ use clipboard_launcher::Clp;
 use event_launcher::EventLauncher;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
+use audio_launcher::MusicPlayerLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -27,6 +29,7 @@ pub enum LauncherType {
     SystemCommand(SystemCommand),
     Clipboard(Clp),
     EventLauncher(EventLauncher),
+    MusicPlayerLauncher(MusicPlayerLauncher),
     Empty,
 }
 
@@ -107,17 +110,27 @@ impl Launcher {
             _ => None,
         }
     }
-    pub fn get_loader_widget(&self, keyword: &str) -> Option<(ListBoxRow, Label, Label, Box)> {
+    pub fn get_loader_widget(&self, keyword: &str) -> Option<(ResultItem, Option<Label>, Option<Label>, Option<Image>, Box)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile_loader(&self.name, &self.method, &bulk_text.icon, keyword)
+                Tile::bulk_text_tile_loader(&self, keyword, &bulk_text)
             }
-            _ => None,
+            LauncherType::MusicPlayerLauncher(mpris) => {
+                println!("music player");
+                Tile::mpris_tile(&self, &mpris)
+            }
+            _ => {println!("{:?}", self.launcher_type); None},
         }
     }
     pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => bulk_text.get_result(keyword).await,
+            _ => None,
+        }
+    }
+    pub async fn get_image(&self) -> Option<gdk_pixbuf::Pixbuf> {
+        match &self.launcher_type {
+            LauncherType::MusicPlayerLauncher(mpis) => mpis.get_image().await,
             _ => None,
         }
     }
