@@ -8,7 +8,6 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
-
 use dbus::{
     arg::{RefArg, Variant},
     blocking::{BlockingSender, Connection},
@@ -28,27 +27,27 @@ pub struct MusicPlayerLauncher {
     pub _player: String,
 }
 impl MusicPlayerLauncher {
-    pub async fn get_image(&self) -> Option<Pixbuf> {
-        let loc = match &self.art.split("/").last(){
+    pub async fn get_image(&self) -> Option<(Pixbuf, bool)> {
+        let loc = match &self.art.split("/").last() {
             Some(s) => s.to_string(),
-            _=> return None
+            _ => return None,
         };
-        let bytes = match MusicPlayerLauncher::read_cached_cover(&loc){
+        let mut was_cached = true;
+        let bytes = match MusicPlayerLauncher::read_cached_cover(&loc) {
             Ok(b) => b,
             Err(_) => {
-                println!("Not found, fetching new");
                 let response = reqwest::get(&self.art).await.ok()?;
                 let bytes = response.bytes().await.ok()?;
                 let _ = MusicPlayerLauncher::cache_cover(&bytes, &loc);
+                was_cached = false;
                 bytes
             }
         };
 
-
         let loader = PixbufLoader::new();
         loader.write(&bytes).ok()?;
         loader.close().ok()?;
-        loader.pixbuf()
+        loader.pixbuf().and_then(|i| Some((i, was_cached)))
     }
     fn cache_cover(image: &Bytes, loc: &str) -> Result<(), SherlockError> {
         // Create dir and parents
@@ -66,7 +65,7 @@ impl MusicPlayerLauncher {
                 traceback: e.to_string(),
             })?;
         };
-        
+
         let mut file = if path.exists() {
             File::open(&path)
         } else {
@@ -77,7 +76,7 @@ impl MusicPlayerLauncher {
             traceback: e.to_string(),
         })?;
 
-        file.write_all(&image).map_err(|e| SherlockError{
+        file.write_all(&image).map_err(|e| SherlockError {
             error: SherlockErrorType::FileExistError(format!("{:?}", &path)),
             traceback: e.to_string(),
         })?;
@@ -92,12 +91,12 @@ impl MusicPlayerLauncher {
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".sherlock/mpris-cache/").join(loc);
 
-        let mut file = File::open(path).map_err(|e| SherlockError{
+        let mut file = File::open(path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileExistError(loc.to_string()),
             traceback: e.to_string(),
         })?;
         let mut buffer = vec![];
-        file.read_to_end(&mut buffer).map_err(|e|SherlockError{
+        file.read_to_end(&mut buffer).map_err(|e| SherlockError {
             error: SherlockErrorType::FileReadError(loc.to_string()),
             traceback: e.to_string(),
         })?;
@@ -171,7 +170,7 @@ impl AudioLauncherFunctions {
                 }
             });
         }
-        println!("{:?}", meta_data);
+        // println!("{:?}", meta_data);
         Some(MusicPlayerLauncher {
             artist: meta_data
                 .get("xesam:artist")

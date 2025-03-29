@@ -1,5 +1,8 @@
-use crate::{launcher::{Launcher, ResultItem}, CONFIG};
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, TextView};
+use crate::{
+    launcher::{Launcher, ResultItem},
+    CONFIG,
+};
+use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Overlay, TextView};
 use std::collections::HashSet;
 
 #[derive(Debug)]
@@ -8,8 +11,22 @@ pub struct AsyncLauncherTile {
     pub result_item: ResultItem,
     pub title: Option<Label>,
     pub body: Option<Label>,
-    pub icon: Option<Image>,
+    pub async_opts: Option<AsyncOptions>,
     pub attrs: Box,
+}
+
+#[derive(Debug)]
+pub struct AsyncOptions {
+    pub _icon: Option<Image>,
+    pub icon_holder_overlay: Option<Overlay>,
+}
+impl AsyncOptions {
+    pub fn new() -> Self {
+        AsyncOptions {
+            _icon: None,
+            icon_holder_overlay: None,
+        }
+    }
 }
 
 pub fn ensure_icon_name(name: String) -> String {

@@ -1,9 +1,9 @@
-use gtk4::{Box, Image, Label, ListBoxRow};
+use gtk4::{Box, Label};
 
 use crate::launcher::bulk_text_launcher::BulkText;
 use crate::launcher::{Launcher, ResultItem};
 
-use super::util::TileBuilder;
+use super::util::{AsyncOptions, TileBuilder};
 use super::Tile;
 
 impl Tile {
@@ -11,7 +11,13 @@ impl Tile {
         launcher: &Launcher,
         keyword: &str,
         bulk_text: &BulkText,
-    ) -> Option<(ResultItem, Option<Label>, Option<Label>, Option<Image>, Box)> {
+    ) -> Option<(
+        ResultItem,
+        Option<Label>,
+        Option<Label>,
+        Option<AsyncOptions>,
+        Box,
+    )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
 
         builder.category.set_text(&launcher.name);

@@ -1,24 +1,27 @@
 use std::collections::HashSet;
 
-use gtk4::{subclass::widget, Box, Image, Label, ListBoxRow};
+use gtk4::{Box, Label, ListBoxRow};
 
 pub mod app_launcher;
+pub mod audio_launcher;
 pub mod bulk_text_launcher;
 pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
-pub mod audio_launcher;
 
-use crate::{ui::tiles::Tile, CONFIG};
+use crate::{
+    ui::tiles::{util::AsyncOptions, Tile},
+    CONFIG,
+};
 
 use app_launcher::App;
+use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
 use clipboard_launcher::Clp;
 use event_launcher::EventLauncher;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
-use audio_launcher::MusicPlayerLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -110,7 +113,16 @@ impl Launcher {
             _ => None,
         }
     }
-    pub fn get_loader_widget(&self, keyword: &str) -> Option<(ResultItem, Option<Label>, Option<Label>, Option<Image>, Box)> {
+    pub fn get_loader_widget(
+        &self,
+        keyword: &str,
+    ) -> Option<(
+        ResultItem,
+        Option<Label>,
+        Option<Label>,
+        Option<AsyncOptions>,
+        Box,
+    )> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(&self, keyword, &bulk_text)
@@ -119,7 +131,10 @@ impl Launcher {
                 println!("music player");
                 Tile::mpris_tile(&self, &mpris)
             }
-            _ => {println!("{:?}", self.launcher_type); None},
+            _ => {
+                println!("{:?}", self.launcher_type);
+                None
+            }
         }
     }
     pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {
@@ -128,7 +143,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_image(&self) -> Option<gdk_pixbuf::Pixbuf> {
+    pub async fn get_image(&self) -> Option<(gdk_pixbuf::Pixbuf, bool)> {
         match &self.launcher_type {
             LauncherType::MusicPlayerLauncher(mpis) => mpis.get_image().await,
             _ => None,
@@ -136,7 +151,7 @@ impl Launcher {
     }
 }
 
-pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec<ListBoxRow> {
+pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec<ResultItem> {
     let mut results = Vec::new();
     let mut index: i32 = 0;
     let sel_mode = mode.trim();
@@ -153,6 +168,7 @@ pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec
             results.extend(result);
         }
     }
-    results.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-    results.into_iter().map(|r| r.row_item).collect()
+    // results.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
+    // results.into_iter().map(|r| r.row_item).collect()
+    results
 }

@@ -56,6 +56,7 @@ pub struct SherlockAlias {
     pub exec: Option<String>,
     pub keywords: Option<String>,
 }
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum SherlockErrorType {
     EnvVarNotFoundError(String),

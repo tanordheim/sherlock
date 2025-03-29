@@ -1,10 +1,10 @@
-use gtk4::glib;
 use gtk4::{
     self,
     gdk::{self, Key},
     prelude::*,
-    Builder, EventControllerKey,
+    Builder, EventControllerKey, Image,
 };
+use gtk4::{glib, ListBoxRow};
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ use std::rc::Rc;
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
-use crate::launcher::{construct_tiles, Launcher};
+use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};
 
 #[allow(dead_code)]
@@ -144,6 +144,7 @@ fn nav_event(
                             &mode_ev_nav.borrow(),
                             &*results_ev_nav,
                             &launchers_ev_nav,
+                            None,
                         );
                     }
                 }
@@ -217,91 +218,132 @@ fn change_event(
                     &mode_ev_changed.borrow(),
                     &*results_ev_changed,
                     &launchers_ev_changed,
+                    None,
                 );
             }
         } else {
-            *cancel_flag.borrow_mut() = false;
-            let cancel_flag = Rc::clone(&cancel_flag);
-            let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-                launchers_ev_changed
-                    .clone()
-                    .into_iter()
-                    .partition(|launcher| launcher.r#async);
-
-            set_results(
-                &current_text,
-                &mode_ev_changed.borrow(),
-                &*results_ev_changed,
-                &non_async_launchers,
+            async_calc(
+                &cancel_flag,
+                &current_task,
+                &launchers_ev_changed,
+                &mode_ev_changed,
+                current_text,
+                &results_ev_changed,
             );
-
-            // Create loader widgets
-            // TODO
-            let current_mode = mode_ev_changed.borrow().trim().to_string();
-            let widgets: Vec<AsyncLauncherTile> = async_launchers
-                .iter()
-                .filter_map(|launcher| {
-                    if launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or("") || launcher.priority > 0 {
-                        launcher.get_loader_widget(&current_text).map(
-                            |(widget, title, body, icon, attrs)| AsyncLauncherTile {
-                                launcher: launcher.clone(),
-                                result_item: widget,
-                                title,
-                                body,
-                                icon,
-                                attrs,
-                            },
-                        )
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            for widget in widgets.iter() {
-                results_ev_changed.append(&widget.result_item.row_item);
-            }
-            results_ev_changed.focus_first();
-
-            // Async widget execution
-            let task = glib::MainContext::default().spawn_local(async move {
-                if *cancel_flag.borrow() {
-                    return;
-                }
-                println!("{:?}", widgets);
-                // get results for aysnc launchers
-                for widget in widgets.iter() {
-                    if let Some((title, body, next_content)) =
-                        widget.launcher.get_result(&current_text).await
-                    {
-                        widget.title.as_ref().map(|t| t.set_text(&title));
-                        widget.body.as_ref().map(|b| b.set_text(&body));
-                        if let Some(next_content) = next_content {
-                            let label = Label::new(Some(
-                                format!("next_content | {}", next_content).as_str(),
-                            ));
-                            widget.attrs.append(&label);
-                        }
-                    }
-                    if let Some(icon) = &widget.icon{
-                         let image = widget.launcher.get_image().await;
-                         icon.set_from_pixbuf(image.as_ref());
-
-                    }
-                }
-            });
-            *current_task.borrow_mut() = Some(task);
         }
     });
 }
 
-pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers: &Vec<Launcher>) {
+pub fn async_calc(
+    cancel_flag: &Rc<RefCell<bool>>,
+    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    launchers: &Vec<Launcher>,
+    mode: &Rc<RefCell<String>>,
+    current_text: String,
+    results: &Rc<ListBox>,
+) {
+    *cancel_flag.borrow_mut() = false;
+    let cancel_flag = Rc::clone(&cancel_flag);
+    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
+        .clone()
+        .into_iter()
+        .partition(|launcher| launcher.r#async);
+
+    // Create loader widgets
+    // TODO
+    let current_mode = mode.borrow().trim().to_string();
+    let widgets: Vec<AsyncLauncherTile> = async_launchers
+        .iter()
+        .filter_map(|launcher| {
+            if launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or("")
+                || launcher.priority > 0
+            {
+                launcher.get_loader_widget(&current_text).map(
+                    |(widget, title, body, async_opts, attrs)| AsyncLauncherTile {
+                        launcher: launcher.clone(),
+                        result_item: widget,
+                        title,
+                        body,
+                        async_opts,
+                        attrs,
+                    },
+                )
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    set_results(
+        &current_text,
+        &mode.borrow(),
+        &*results,
+        &non_async_launchers,
+        Some(&widgets),
+    );
+    results.focus_first();
+
+    // Async widget execution
+    let task = glib::MainContext::default().spawn_local(async move {
+        if *cancel_flag.borrow() {
+            return;
+        }
+        // get results for aysnc launchers
+        for widget in widgets.iter() {
+            if let Some((title, body, next_content)) =
+                widget.launcher.get_result(&current_text).await
+            {
+                widget.title.as_ref().map(|t| t.set_text(&title));
+                widget.body.as_ref().map(|b| b.set_text(&body));
+                if let Some(next_content) = next_content {
+                    let label =
+                        Label::new(Some(format!("next_content | {}", next_content).as_str()));
+                    widget.attrs.append(&label);
+                }
+            }
+            if let Some(opts) = &widget.async_opts {
+                // Replace one image with another
+                if let Some(overlay) = &opts.icon_holder_overlay {
+                    if let Some((image, was_cached)) = widget.launcher.get_image().await {
+                        // Also check for animate key
+                        if !was_cached {
+                            overlay.add_css_class("image-replace-overlay");
+                        }
+                        let gtk_image = Image::from_pixbuf(Some(&image));
+                        gtk_image.set_widget_name("album-cover");
+                        gtk_image.set_pixel_size(50);
+                        overlay.add_overlay(&gtk_image);
+                    }
+                }
+            }
+        }
+    });
+    *current_task.borrow_mut() = Some(task);
+}
+
+pub fn set_results(
+    keyword: &str,
+    mode: &str,
+    results_frame: &ListBox,
+    launchers: &Vec<Launcher>,
+    async_launchers: Option<&Vec<AsyncLauncherTile>>,
+) {
     // Remove all elements inside to avoid duplicates
+    let mut launcher_tiles = Vec::new();
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
     let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
-    for widget in widgets {
+    launcher_tiles.extend(widgets);
+    if let Some(a_wid) = async_launchers {
+        let widgets: Vec<ResultItem> = a_wid.into_iter().map(|l| l.result_item.clone()).collect();
+        launcher_tiles.extend(widgets);
+    }
+
+    launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
+    let results: Vec<ListBoxRow> = launcher_tiles.into_iter().map(|r| r.row_item).collect();
+
+    for widget in results {
         results_frame.append(&widget);
     }
     results_frame.focus_first();
