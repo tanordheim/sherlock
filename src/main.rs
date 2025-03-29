@@ -16,7 +16,7 @@ mod ui;
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
-use daemon::deamon::SherlockDeamon;
+use daemon::daemon::SherlockDeamon;
 use loader::{
     util::{SherlockConfig, SherlockError},
     Loader,
