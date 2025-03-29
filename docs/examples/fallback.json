@@ -110,7 +110,7 @@
         "type": "bulk_text",
         "on_return": "next",
         "async": true, 
-        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/wiki-api", "exec-args": "'{keyword}'"},
+        "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/sherlock-wiki", "exec-args": "'{keyword}'"},
         "priority": 0 
     }
 ]
