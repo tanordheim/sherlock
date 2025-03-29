@@ -1,3 +1,4 @@
+use gtk4::gdk::ModifierType;
 use gtk4::glib;
 use gtk4::{
     self,
@@ -15,6 +16,59 @@ use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::launcher::{construct_tiles, Launcher};
 use crate::{AppState, APP_STATE, CONFIG};
+
+#[derive(Debug, Clone, PartialEq)]
+struct ConfKeys {
+    next: Option<Key>,
+    next_mod: Option<ModifierType>,
+    prev: Option<Key>,
+    prev_mod: Option<ModifierType>,
+}
+impl ConfKeys {
+    pub fn from<T: AsRef<str>>(next: T, prev: T) -> Self {
+        let (next_mod, next) = ConfKeys::eval_bind_combination(next);
+        let (prev_mod, prev) = ConfKeys::eval_bind_combination(prev);
+        ConfKeys {
+            next,
+            next_mod,
+            prev,
+            prev_mod,
+        }
+    }
+    pub fn empty() -> Self {
+        ConfKeys {
+            next: None,
+            next_mod: None,
+            prev: None,
+            prev_mod: None,
+        }
+    }
+    fn eval_bind_combination<T: AsRef<str>>(key: T) -> (Option<ModifierType>, Option<Key>) {
+        let key_str = key.as_ref();
+        match key_str.split("-").collect::<Vec<&str>>().as_slice() {
+            [modifier, key, ..] => (ConfKeys::eval_mod(modifier), ConfKeys::eval_key(key)),
+            [key, ..] => (None, ConfKeys::eval_key(key)),
+            _ => (None, None),
+        }
+    }
+    fn eval_key(key: &str) -> Option<Key> {
+        match key {
+            "tab" => Some(Key::Tab),
+            "up" => Some(Key::Up),
+            "down" => Some(Key::Down),
+            _ => None,
+        }
+    }
+    fn eval_mod(key: &str) -> Option<ModifierType> {
+        match key {
+            "s" => Some(ModifierType::SHIFT_MASK),
+            "c" => Some(ModifierType::CONTROL_MASK),
+            "a" => Some(ModifierType::ALT_MASK),
+            "win" => Some(ModifierType::SUPER_MASK),
+            _ => None,
+        }
+    }
+}
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -35,8 +89,15 @@ pub fn search(launchers: Vec<Launcher>) {
     ui.search_bar.grab_focus();
 
     change_event(&ui, modes, &mode, &launchers, &results);
+    let custom_binds = CONFIG.get().map_or(ConfKeys::empty(), |c| {
+        let prev = c.behavior.prev.clone().unwrap_or_default();
+        let next = c.behavior.next.clone().unwrap_or_default();
+        ConfKeys::from(next, prev)
+    });
 
-    nav_event(results, ui, mode, launchers);
+    println!("{:?}", custom_binds);
+
+    nav_event(results, ui, mode, launchers, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "search-page");
@@ -98,11 +159,28 @@ fn nav_event(
     ui: SearchUI,
     mode_ev_nav: Rc<RefCell<String>>,
     launchers_ev_nav: Vec<Launcher>,
+    custom_binds: ConfKeys,
 ) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
         match key {
+            k if Some(k) == custom_binds.prev
+                && custom_binds
+                    .prev_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results_ev_nav.focus_prev(&ui.result_viewport);
+                return true.into();
+            }
+            k if Some(k) == custom_binds.next
+                && custom_binds
+                    .next_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results_ev_nav.focus_next(&ui.result_viewport);
+                return true.into();
+            }
             gdk::Key::Up => {
                 results_ev_nav.focus_prev(&ui.result_viewport);
             }
@@ -275,4 +353,29 @@ pub fn set_results(keyword: &str, mode: &str, results_frame: &ListBox, launchers
         results_frame.append(&widget);
     }
     results_frame.focus_first();
+}
+
+#[test]
+fn test_custom_binds() {
+    let prev = "s-tab";
+    let next = "tab";
+    let sk = ConfKeys::from(next, prev);
+    let sb = ConfKeys {
+        prev: Some(Key::Tab),
+        prev_mod: Some(ModifierType::SHIFT_MASK),
+
+        next: Some(Key::Tab),
+        next_mod: None,
+    };
+    let ck = ConfKeys::from("tab", "c-tab");
+    let cb = ConfKeys {
+        prev: Some(Key::Tab),
+        prev_mod: Some(ModifierType::CONTROL_MASK),
+
+        next: Some(Key::Tab),
+        next_mod: None,
+    };
+    println!("{:?}", ck);
+    assert_eq!(sk, sb);
+    assert_eq!(ck, cb);
 }

@@ -181,6 +181,8 @@ impl SherlockConfig {
                     caching: false,
                     daemonize: false,
                     animate: true,
+                    prev: None,
+                    next: None,
                 },
             },
             non_breaking,
@@ -217,6 +219,10 @@ pub struct ConfigBehavior {
     pub daemonize: bool,
     #[serde(default = "default_true")]
     pub animate: bool,
+    #[serde(default)]
+    pub prev: Option<String>,
+    #[serde(default)]
+    pub next: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
