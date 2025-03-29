@@ -90,12 +90,10 @@ pub fn search(launchers: Vec<Launcher>) {
 
     change_event(&ui, modes, &mode, &launchers, &results);
     let custom_binds = CONFIG.get().map_or(ConfKeys::empty(), |c| {
-        let prev = c.behavior.prev.clone().unwrap_or_default();
-        let next = c.behavior.next.clone().unwrap_or_default();
+        let prev = c.binds.prev.clone().unwrap_or_default();
+        let next = c.binds.next.clone().unwrap_or_default();
         ConfKeys::from(next, prev)
     });
-
-    println!("{:?}", custom_binds);
 
     nav_event(results, ui, mode, launchers, custom_binds);
     APP_STATE.with(|state| {

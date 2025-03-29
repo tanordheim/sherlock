@@ -2,7 +2,6 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-use crate::loader::util::default_true;
 use crate::{APP_STATE, CONFIG};
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {

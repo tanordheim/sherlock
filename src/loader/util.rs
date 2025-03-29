@@ -151,6 +151,8 @@ pub struct SherlockConfig {
     pub appearance: ConfigAppearance,
     #[serde(default)]
     pub behavior: ConfigBehavior,
+    #[serde(default)]
+    pub binds: ConfigBinds,
 }
 impl SherlockConfig {
     pub fn default() -> (Self, Vec<SherlockError>) {
@@ -181,6 +183,8 @@ impl SherlockConfig {
                     caching: false,
                     daemonize: false,
                     animate: true,
+                },
+                binds: ConfigBinds {
                     prev: None,
                     next: None,
                 },
@@ -219,6 +223,10 @@ pub struct ConfigBehavior {
     pub daemonize: bool,
     #[serde(default = "default_true")]
     pub animate: bool,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
+pub struct ConfigBinds {
     #[serde(default)]
     pub prev: Option<String>,
     #[serde(default)]
