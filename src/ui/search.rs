@@ -56,15 +56,24 @@ impl ConfKeys {
             "tab" => Some(Key::Tab),
             "up" => Some(Key::Up),
             "down" => Some(Key::Down),
+            "left" => Some(Key::Left),
+            "right" => Some(Key::Right),
+            "pgup" => Some(Key::Page_Up),
+            "pgdown" => Some(Key::Page_Down),
+            "end" => Some(Key::End),
+            "home" => Some(Key::Home),
             _ => None,
         }
     }
     fn eval_mod(key: &str) -> Option<ModifierType> {
         match key {
-            "s" => Some(ModifierType::SHIFT_MASK),
-            "c" => Some(ModifierType::CONTROL_MASK),
-            "a" => Some(ModifierType::ALT_MASK),
-            "win" => Some(ModifierType::SUPER_MASK),
+            "shift" => Some(ModifierType::SHIFT_MASK),
+            "control" => Some(ModifierType::CONTROL_MASK),
+            "alt" => Some(ModifierType::ALT_MASK),
+            "super" => Some(ModifierType::SUPER_MASK),
+            "lock" => Some(ModifierType::LOCK_MASK),
+            "hypr" => Some(ModifierType::HYPER_MASK),
+            "meta" => Some(ModifierType::META_MASK),
             _ => None,
         }
     }
