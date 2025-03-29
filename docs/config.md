@@ -44,3 +44,38 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `animate` | `true`   | Sets if startup animation should play. (Only works on deamonize=false) |
 
 ---
+## Binds Section `[binds]`
+
+THe `[binds]` section allows you to configure additional keybindings for navigation. The values of the binds are specified in the format `<modifier>-<key>`. For example, `control-tab` binds the Control key and the Tab key. If you only want to bind a single Key, you only provide `<key>`.
+
+| **Keyword**           | **Default** | **Explanation**                                                                 |
+|-----------------------|-------------|---------------------------------------------------------------------------------|
+| `prev` | `None`     | Defines an additional keybind to switch to the previous item in the list. |
+| `next` | `None`     | Defines an additional keybind to switch to the next item in the list. |
+
+
+### Available Keys
+| Key Input   | Config Name  |
+|------------|-------------|
+| `<Tab>`    | `tab`       |
+| `<Up>`     | `up`        |
+| `<Down>`   | `down`      |
+| `<Left>`   | `left`      |
+| `<Right>`  | `right`     |
+| `<PageUp>` | `pgup`      |
+| `<PageDown>` | `pgdown`  |
+| `<End>`    | `end`       |
+| `<Home>`   | `home`      |
+
+### Available Modifiers
+| Key Input   | Config Name  |
+|------------|-------------|
+| `<Shift>`  | `shift`     |
+| `<Control>`| `control`   |
+| `<Alt>`    | `alt`       |
+| `<Super>`  | `super`     |
+| `<Lock>`   | `lock`      |
+| `<Hyper>`  | `hypr`      |
+| `<Meta>`   | `meta`      |
+
+---
