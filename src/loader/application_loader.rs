@@ -3,6 +3,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use simd_json;
 use std::collections::{HashMap, HashSet};
+use std::env;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -23,7 +24,7 @@ impl Loader {
         })?;
 
         // Define required paths for application parsing
-        let system_apps = "/usr/share/applications/";
+        let system_apps = get_applications_dir();
 
         // Parse needed fields from the '.desktop'
         let (name_re, icon_re, exec_re, display_re, terminal_re, keywords_re) =
@@ -65,22 +66,7 @@ impl Loader {
         // Gather '.desktop' files
         let desktop_files: HashSet<PathBuf> = match applications {
             Some(apps) => apps,
-            _ => fs::read_dir(system_apps)
-                .map_err(|e| SherlockError {
-                    error: SherlockErrorType::DirReadError(system_apps.to_string()),
-                    traceback: e.to_string(),
-                })?
-                .filter_map(|entry| {
-                    entry.ok().and_then(|f| {
-                        let path = f.path();
-                        if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
-                            Some(path)
-                        } else {
-                            None
-                        }
-                    })
-                })
-                .collect(),
+            _ => get_desktop_files(system_apps),
         };
 
         // Parellize opening of all .desktop files and parsing them into AppData
@@ -156,7 +142,7 @@ impl Loader {
         mut apps: HashMap<String, AppData>,
         flags: &SherlockFlags,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
-        let system_apps = "/usr/share/applications/";
+        let system_apps = get_applications_dir();
 
         // check if sherlock_alias was modified
         let alias_path = Path::new(&flags.alias);
@@ -178,22 +164,7 @@ impl Loader {
         }
 
         // get all desktop files
-        let mut desktop_files: HashSet<PathBuf> = fs::read_dir(system_apps)
-            .map_err(|e| SherlockError {
-                error: SherlockErrorType::DirReadError(system_apps.to_string()),
-                traceback: e.to_string(),
-            })?
-            .filter_map(|entry| {
-                entry.ok().and_then(|f| {
-                    let path = f.path();
-                    if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
-                        Some(path)
-                    } else {
-                        None
-                    }
-                })
-            })
-            .collect();
+        let mut desktop_files = get_desktop_files(system_apps);
 
         // remove if cached entry doesnt exist on device anympre
         let mut cached_paths = HashSet::with_capacity(apps.capacity());
@@ -279,4 +250,69 @@ fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), Sh
     let terminal = construct_pattern("Terminal")?;
     let keywords = construct_pattern("Keywords")?;
     return Ok((name, icon, exec, display, terminal, keywords));
+}
+
+fn get_applications_dir() -> HashSet<PathBuf> {
+    match env::var("XDG_DATA_DIRS").ok() {
+        Some(paths) => {
+            let app_dirs: HashSet<PathBuf> = paths
+                .split(":")
+                .map(|p| PathBuf::from(p).join("applications/"))
+                .collect();
+            app_dirs
+        }
+        _ => HashSet::from([PathBuf::from("/usr/share/applications/")]),
+    }
+}
+
+fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
+    dirs.into_par_iter()
+        .filter_map(|dir| {
+            fs::read_dir(dir).ok().map(|entries| {
+                entries
+                    .filter_map(|entry| {
+                        entry.ok().and_then(|f| {
+                            let path = f.path();
+                            if path.extension().and_then(|ext| ext.to_str()) == Some("desktop") {
+                                Some(path)
+                            } else {
+                                None
+                            }
+                        })
+                    })
+                    .collect::<Vec<PathBuf>>()
+            })
+        })
+        .flatten()
+        .collect::<HashSet<PathBuf>>()
+}
+
+#[test]
+fn test_get_applications_dir() {
+    // Test input path
+    let test_path = Some("/home/cinnamon/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/home/cinnamon/.nix-profile/share:/nix/profile/share:/home/cinnamon/.local/state/nix/profile/share:/etc/profiles/per-user/cinnamon/share:/nix/var/nix/profiles/default/share:/run/current-system/sw/share".to_string());
+
+    // Compute result based on input path
+    let res: HashSet<PathBuf> = match test_path {
+        Some(path) => path
+            .split(":")
+            .map(|p| PathBuf::from(p).join("applications/"))
+            .collect(),
+        _ => HashSet::from([PathBuf::from("/usr/share/applications/")]),
+    };
+
+    // Manually insert the paths into HashSet for expected result
+    let expected_app_dirs: HashSet<PathBuf> = HashSet::from([
+        PathBuf::from("/home/cinnamon/.local/share/flatpak/exports/share/applications/"),
+        PathBuf::from("/var/lib/flatpak/exports/share/applications/"),
+        PathBuf::from("/home/cinnamon/.nix-profile/share/applications/"),
+        PathBuf::from("/nix/profile/share/applications/"),
+        PathBuf::from("/home/cinnamon/.local/state/nix/profile/share/applications/"),
+        PathBuf::from("/etc/profiles/per-user/cinnamon/share/applications/"),
+        PathBuf::from("/nix/var/nix/profiles/default/share/applications/"),
+        PathBuf::from("/run/current-system/sw/share/applications/"),
+    ]);
+
+    // Assert that the result matches the expected HashSet
+    assert_eq!(res, expected_app_dirs);
 }
