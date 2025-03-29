@@ -25,12 +25,6 @@ impl Loader {
             traceback: format!(""),
         })?;
 
-        // TODO
-        // 1. Read the cached counter file.json
-        // 2. check the entry for the exec if thers none use default priority else
-        // 3. calculate priority. the more calls → the less will be added → 100/cached_count should
-        //    be enough
-
         // Define required paths for application parsing
         let system_apps = "/usr/share/applications/";
 
