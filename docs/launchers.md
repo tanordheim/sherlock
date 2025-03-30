@@ -31,6 +31,7 @@ The launcher can be of the following types:<br>
 | `priority`  | `[FC]` (required) | Defines the display order of launcher elements at startup. A value of 0 means the launcher will only be shown if the `alias` is active. |
 | `async`     | `[FC]` (optional) | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
 | `on_return`     | `[FC]` (optional) | Specifies what to do if return is pressed on the tile. |
+| `spawn_focus`     | `[FC]` (optional) | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 
 ---
 
@@ -212,7 +213,8 @@ Specifies the second offset from the `date` parameter.<br>
     "args": { },
     "async": true,
     "priority": 1,
-    "home": true
+    "home": true,
+    "spawn_focus": false
 },
 
 ```
