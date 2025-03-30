@@ -310,7 +310,6 @@ fn get_applications_dir() -> HashSet<PathBuf> {
                 .map(|path| path.replace("~", &home))
                 .map(|path| PathBuf::from(path))
                 .collect();
-            println!("{:?}", paths );
             paths
         },
     }
