@@ -15,14 +15,27 @@
 
 <br>
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage..
+<br>
+
+### Suggested packages
+
+- [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki): allows you to search wikipedia from within sherlock unsing the `bulk_text` launcher.
 <br><br>
-Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage. <br><br>
 
-
-> **🚨 Warning:** The app is was created on **Arch Linux** with the **Hyprland** tiling window manager in mind. It may cause errors or won't function at all on other system configurations.
-
-
---- 
+> **🚨 Warning:** This app is/was created on **Arch Linux** with the **Hyprland** tiling window manager in mind. It may cause errors or won't function at all on other system configurations.
+---
+## Table of Contents
+- [Features](#features)
+- [Getting Started](#getting-started)
+    - [Dependencies](#1-dependencies)
+    - [Installation](#2-installation)
+        - [Arch Linux](#arch-linux)
+        - [From Source](#from-source)
+        - [Debian](#build-debian-package)
+    - [Post Installation](#3-post-installation)
+        - [Config Setup](#config-setup)
+        - [Keybind Setup](#keybind-setup)
+---
 <br><br>
 
 ## Features
@@ -50,19 +63,19 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 ### 📅 Teams Events Launcher
 - Use the Teams Event Launcher to easily join upcoming Microsoft Teams meetings
 
-### 🔍 Category-Based Search 
+### 🔍 Category-Based Search
 - Type the launcher alias and spacebar to only search within a specific category of commands.
 - Categories are fully configureable, allowing you to customize search scopes.
 
 ### ⌨️ Shortcuts
 - Use shortcuts like ctrl + 4 to quickly launch a command or app without having to scroll.
 
---- 
+---
 <br><br>
 
 ## Getting Started
 
-### Dependencies
+### 1. Dependencies
 
 To run the Sherlock Launcher, ensure the following dependencies are installed:
 
@@ -73,8 +86,8 @@ Additionally, if you're building from source, you will need:
 
 - `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 - `git` - [How to install git](https://github.com/git-guides/install-git)
-
-### Installation
+<br><br>
+### 2. Installation
 
 #### <ins>Arch Linux</ins>
 
@@ -117,7 +130,6 @@ Make sure you have the necessary dependencies installed:
     sudo cp target/release/sherlock /usr/bin/
     ```
 
----
 
 #### <ins>Build Debian Package</ins>
 
@@ -155,5 +167,47 @@ Make sure you have the folloing dependencies installed:
     ```
 
     (Make sure to replace the filename if the version number is different.)
+<br><br>
+### 3. Post Installation
 
+#### **Config Setup**
+After the installation is completed, you can set up your configuration files. The location for them is `~/.config/sherlock/`. Depending on your needs, you should add the following files:
 
+1. [**config.toml**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/config.toml): This file specifies the behavior and defaults of your launcher. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/config.md).
+2. [**fallback.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json): This file specifies the features your launcher should have. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/launchers.md).
+3. [**sherlock_alias.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json): This file specifies aliases for applications. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/aliases.md).
+4. [**sherlockignore**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlockignore): This file specifies which applications to exclude from your search. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/sherlockignore.md).
+
+```bash
+mkdir -p ~/.config/sherlock/
+touch ~/.config/sherlock/config.toml ~/.config/sherlock/sherlockignore
+echo [] > ~/.config/sherlock/fallback.json
+echo {} > ~/.config/sherlock/sherlock_alias.json
+```
+<br><br>
+**Alternatively**, you can use `curl -O` in the `~/.config/sherlock/` directory to load the [example configs](https://github.com/Skxxtz/sherlock/tree/main/docs/examples). This is **not good practice** and **not recommended**, especially if you don't know the source, as you could end up downloading **malware**! Nevertheless, here's how you can do that, if you prefer to be a risk-taker:
+
+> **🚨 Warning:** Only use `curl` with trusted sources to avoid downloading malicious content!
+```bash
+mkdir -p ~/.config/sherlock/
+cd ~/.config/sherlock/
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/config.toml
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/sherlockignore
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/fallback.json
+curl -O https://raw.githubusercontent.com/skxxtz/sherlock/main/docs/examples/sherlock_alias.json
+```
+#### Warnings after startup
+If you're getting warnings after startup, you can press `return` to access the main application. Alternatively you can set the `try_surpress_warnings` key in the config file to true. This will prevent any warnings to be shown. The same thing can be done for errors. However, if you surpress errors, the application might not work as expected.
+
+#### **Keybind Setup**
+To launch Sherlock, you can either type `sherlock` into the command line or bind it to a key. The latter is recommended.
+The setup steps vary by display manager. The setup for **Hyprland** is outlined here:
+
+1. (Recommended) Bind the `$menu` variable to Sherlock:
+```conf
+$menu = sherlock
+```
+2. Bind a key to execute `$menu`
+```conf
+bind = $mainMod, space, exec, $menu
+```

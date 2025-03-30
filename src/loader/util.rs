@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
@@ -178,9 +179,9 @@ impl SherlockConfig {
                         .unwrap_or_default(),
                 },
                 debug: ConfigDebug {
-                    try_surpress_errors: false,
-                    try_surpress_warnings: false,
-                    app_paths: Vec::new(),
+                    try_suppress_errors: false,
+                    try_suppress_warnings: false,
+                    app_paths: HashSet::new(),
                 },
                 appearance: ConfigAppearance {
                     width: 900,
@@ -248,11 +249,11 @@ pub struct ConfigBinds {
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigDebug {
     #[serde(default)]
-    pub try_surpress_errors: bool,
+    pub try_suppress_errors: bool,
     #[serde(default)]
-    pub try_surpress_warnings: bool,
+    pub try_suppress_warnings: bool,
     #[serde(default)]
-    pub app_paths: Vec<PathBuf>,
+    pub app_paths: HashSet<String>,
 }
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigAppearance {
