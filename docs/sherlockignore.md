@@ -1,5 +1,5 @@
 # Sherlock Ignore
-The `sherlockignore` file is a way for you to decide which applications you want to display in the menu.
+The `sherlockignore` file is a way for you to decide which applications you don't want to display in the menu.
 <br>
 > **Example File:** [sherlockignore](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlockignore)
 ## Setup
