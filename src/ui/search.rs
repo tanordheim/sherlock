@@ -164,6 +164,7 @@ fn nav_event(
                     return  true.into();
                 }
             }
+            // Pain - solution for shift-tab since gtk handles it as an individual event
             _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
