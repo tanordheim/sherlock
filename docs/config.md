@@ -20,7 +20,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 |-----------------------|-------------|---------------------------------------------------------------------------------|
 | `try_suppress_errors` | `false`     | If set to `true`, errors and warnings will not be displayed when starting the app. |
 | `try_suppress_warnings` | `false`   | If set to `true`, only errors will trigger the error screen at startup, while warnings will be ignored. |
-| `app_paths` | `None`   | Adds custom paths to search for `.desktop` files. |
+| `app_paths` | `[]`   | Adds custom paths to search for `.desktop` files. Should be a list of strings. |
 
 ---
 
