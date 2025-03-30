@@ -19,11 +19,13 @@
         "home": true
     },
     {
-        "name": "Clipboard",
-        "type": "clipboard-execution",
-        "args": {},
+        "name": "Spotify",
+        "type": "audio_sink",
+        "args": { },
+        "async": true,
         "priority": 1,
-        "home": true
+        "home": true,
+        "spawn_focus": false
     },
     {
         "name": "Calculator",
