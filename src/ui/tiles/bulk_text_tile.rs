@@ -24,6 +24,7 @@ impl Tile {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
         builder.object.add_css_class("bulk-text");
         builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&bulk_text.icon));

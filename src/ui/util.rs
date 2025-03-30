@@ -27,10 +27,10 @@ pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTran
 
 pub fn execute_by_index(results: &ListBox, index: i32) {
     let mut child_counter = 1;
-    for child in &results.observe_children(){
-        if let Some(child) = child.ok(){
-            if let Some(row) = child.downcast_ref::<SherlockRow>(){
-                if row.imp().spawn_focus.get() {
+    for child in &results.observe_children() {
+        if let Some(child) = child.ok() {
+            if let Some(row) = child.downcast_ref::<SherlockRow>() {
+                if row.imp().shortcut.get() {
                     if child_counter == index {
                         let attrs = get_row_attrs(row);
                         execute_from_attrs(attrs);
@@ -38,7 +38,6 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
                         child_counter += 1
                     }
                 }
-
             }
         }
     }

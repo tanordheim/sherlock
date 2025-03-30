@@ -26,6 +26,7 @@ impl Tile {
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
         builder.object.add_css_class("event-tile");
         builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
 
         let mut attrs: Vec<(&str, &str)> = vec![];
         builder.title.set_text(&event.title);

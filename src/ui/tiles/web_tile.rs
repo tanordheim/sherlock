@@ -7,6 +7,7 @@ impl Tile {
     pub fn web_tile(launcher: &Launcher, keyword: &str, web: &Web) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
         builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&web.icon));

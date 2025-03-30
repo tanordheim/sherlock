@@ -143,7 +143,10 @@ fn nav_event(
                 results_ev_nav.focus_first();
             }
             gdk::Key::Return => {
-                if let Some(row) = results_ev_nav.selected_row().and_downcast_ref::<SherlockRow>() {
+                if let Some(row) = results_ev_nav
+                    .selected_row()
+                    .and_downcast_ref::<SherlockRow>()
+                {
                     let attrs: HashMap<String, String> = get_row_attrs(row);
                     execute_from_attrs(attrs);
                 }

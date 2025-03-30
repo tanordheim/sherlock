@@ -16,6 +16,9 @@ impl SherlockRow {
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);
     }
+    pub fn set_shortcut(&self, shortcut: bool) {
+        self.imp().shortcut.set(shortcut);
+    }
 }
 
 impl Default for SherlockRow {

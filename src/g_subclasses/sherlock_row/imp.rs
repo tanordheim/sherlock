@@ -5,6 +5,7 @@ use std::cell::Cell;
 #[derive(Default)]
 pub struct SherlockRow {
     pub spawn_focus: Cell<bool>,
+    pub shortcut: Cell<bool>,
 }
 
 // The central trait for subclassing a GObject

@@ -24,6 +24,7 @@ impl Tile {
             {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);
+                builder.object.set_shortcut(launcher.shortcut);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)

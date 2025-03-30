@@ -20,6 +20,7 @@ impl Tile {
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
 
         builder.category.set_text(&mpris.artist);
         builder.title.set_text(&mpris.title);
