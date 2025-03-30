@@ -16,7 +16,7 @@ The launcher can be of the following types:<br>
 - **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
-
+- **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 
 ## Common Launcher Attributes
 `[UI]` - used for UI <br>
@@ -202,4 +202,21 @@ Specifies the offset from the `date` parameter.<br>
 
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
+--- 
+
+## Music Player
+```json
+{
+    "name": "Spotify",
+    "type": "audio_sink",
+    "args": { },
+    "async": true,
+    "priority": 1,
+    "home": true
+},
+
+```
+
+### Arguments (args):
+None
 --- 

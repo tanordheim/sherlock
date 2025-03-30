@@ -19,6 +19,13 @@
         "home": true
     },
     {
+        "name": "Clipboard",
+        "type": "clipboard-execution",
+        "args": {},
+        "priority": 1,
+        "home": true
+    },
+    {
         "name": "Calculator",
         "type": "calculation",
         "args": {},
