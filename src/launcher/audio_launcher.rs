@@ -24,7 +24,7 @@ pub struct MusicPlayerLauncher {
     pub _album: String,
     pub art: String,
     pub _url: String,
-    pub _player: String,
+    pub player: String,
 }
 impl MusicPlayerLauncher {
     pub async fn get_image(&self) -> Option<(Pixbuf, bool)> {
@@ -101,6 +101,33 @@ impl MusicPlayerLauncher {
             traceback: e.to_string(),
         })?;
         Ok(buffer.into())
+    }
+    pub fn playpause(player: &str) -> Result<(), SherlockError> {
+        let conn = Connection::new_session().map_err(|e| SherlockError {
+            error: SherlockErrorType::DBusConnectionError,
+            traceback: e.to_string(),
+        })?;
+        let msg = Message::new_method_call(
+            player,
+            "/org/mpris/MediaPlayer2",
+            "org.mpris.MediaPlayer2.Player",
+            "PlayPause",
+        )
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::DBusMessageConstructError(format!(
+                "PlayPause for {}",
+                player
+            )),
+            traceback: e.to_string(),
+        })?;
+        let _reply = conn
+            .send_with_reply_and_block(msg, Duration::from_millis(500))
+            .map_err(|e| SherlockError {
+                error: SherlockErrorType::DBusMessageSendError(format!("PlayPause to {}", player)),
+                traceback: e.to_string(),
+            })?;
+        println!("PlayPause");
+        Ok(())
     }
 }
 
@@ -196,7 +223,7 @@ impl AudioLauncherFunctions {
                 .get("xesam:url")
                 .map(|f| f.to_string())
                 .unwrap_or_default(),
-            _player: service_name.to_string(),
+            player: service_name.to_string(),
         })
     }
 }

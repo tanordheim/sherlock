@@ -54,7 +54,8 @@ impl Tile {
         builder.icon_holder.set_margin_top(10);
         builder.icon_holder.set_margin_bottom(10);
 
-        builder.add_default_attrs(Some(&launcher.method), None, None, None, None);
+        let attrs: Vec<(&str, &str)> = vec![("player", &mpris.player)];
+        builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
 
         let res = ResultItem {
             priority: launcher.priority as f32,

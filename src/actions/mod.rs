@@ -4,6 +4,7 @@ use std::process::exit;
 use teamslaunch::teamslaunch;
 
 use crate::{
+    launcher::audio_launcher::MusicPlayerLauncher,
     loader::launcher_loader::CounterReader,
     ui::{
         user::{display_next, display_raw},
@@ -64,7 +65,14 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                     display_raw(next_content, false);
                 }
             }
+            "play-pause" | "audio_sink" => {
+                if let Some(player) = attrs.get("player") {
+                    let _ = MusicPlayerLauncher::playpause(player);
+                }
+                eval_exit();
+            }
             _ => {
+                println!("{}", method);
                 if let Some(out) = attrs.get("text_content") {
                     print!("{}", out);
                 }

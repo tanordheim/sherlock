@@ -74,6 +74,9 @@ pub enum SherlockErrorType {
     RegexError(String),
     CommandExecutionError(String),
     ClipboardError,
+    DBusConnectionError,
+    DBusMessageSendError(String),
+    DBusMessageConstructError(String),
     HttpRequestError(String),
 }
 
@@ -139,6 +142,18 @@ impl SherlockErrorType {
             SherlockErrorType::ClipboardError => (
                 format!("ClipboardError"),
                 format!("Failed to get system clipboard"),
+            ),
+            SherlockErrorType::DBusConnectionError => (
+                format!("DBusConnectionError"),
+                format!("Failed to connect to system DBus"),
+            ),
+            SherlockErrorType::DBusMessageConstructError(message) => (
+                format!("DBusMessageConstructError"),
+                format!("Failed to construct Dbus message \"{}\"", message),
+            ),
+            SherlockErrorType::DBusMessageSendError(message) => (
+                format!("DBusConnectionError"),
+                format!("Failed to send Dbus message \"{}\"", message),
             ),
             SherlockErrorType::HttpRequestError(cmd) => (
                 format!("HttpRequestError"),
