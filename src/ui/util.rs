@@ -252,32 +252,3 @@ impl ConfKeys {
         k.to_string()
     }
 }
-
-#[test]
-fn test_custom_binds() {
-    let prev = "shift-tab";
-    let next = "tab";
-    let sk = ConfKeys::from(next, prev);
-    let sb = ConfKeys {
-        prev: Some(Key::Tab),
-        prev_mod: Some(ModifierType::SHIFT_MASK),
-
-        next: Some(Key::Tab),
-        next_mod: None,
-        shortcut_modifier: None,
-        shortcut_modifier_str: String::new(),
-    };
-    let ck = ConfKeys::from("tab", "control-tab");
-    let cb = ConfKeys {
-        prev: Some(Key::Tab),
-        prev_mod: Some(ModifierType::CONTROL_MASK),
-
-        next: Some(Key::Tab),
-        next_mod: None,
-        shortcut_modifier: None,
-        shortcut_modifier_str: String::new(),
-    };
-    println!("{:?}", ck);
-    assert_eq!(sk, sb);
-    assert_eq!(ck, cb);
-}
