@@ -353,6 +353,8 @@ pub fn async_calc(
                         gtk_image.set_widget_name("album-cover");
                         gtk_image.set_pixel_size(50);
                         overlay.add_overlay(&gtk_image);
+                    } else {
+                        println!("failed to load image");
                     }
                 }
             }

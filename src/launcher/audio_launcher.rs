@@ -36,11 +36,15 @@ impl MusicPlayerLauncher {
         let bytes = match MusicPlayerLauncher::read_cached_cover(&loc) {
             Ok(b) => b,
             Err(_) => {
-                let response = reqwest::get(&self.art).await.ok()?;
-                let bytes = response.bytes().await.ok()?;
-                let _ = MusicPlayerLauncher::cache_cover(&bytes, &loc);
-                was_cached = false;
-                bytes
+                if self.art.starts_with("file"){
+                    MusicPlayerLauncher::read_image_file(&self.art).ok()?
+                } else {
+                    let response = reqwest::get(&self.art).await.ok()?;
+                    let bytes = response.bytes().await.ok()?;
+                    let _ = MusicPlayerLauncher::cache_cover(&bytes, &loc);
+                    was_cached = false;
+                    bytes
+                }
             }
         };
 
@@ -90,6 +94,20 @@ impl MusicPlayerLauncher {
         })?;
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".sherlock/mpris-cache/").join(loc);
+
+        let mut file = File::open(path).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileExistError(loc.to_string()),
+            traceback: e.to_string(),
+        })?;
+        let mut buffer = vec![];
+        file.read_to_end(&mut buffer).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileReadError(loc.to_string()),
+            traceback: e.to_string(),
+        })?;
+        Ok(buffer.into())
+    }
+    fn read_image_file(loc: &str) -> Result<Bytes, SherlockError> {
+        let path = PathBuf::from(loc.trim_start_matches("file://"));
 
         let mut file = File::open(path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileExistError(loc.to_string()),
@@ -159,7 +177,7 @@ impl AudioLauncherFunctions {
         if let Some(services) = reply.get1::<Vec<String>>() {
             let mpris_services: Vec<String> = services
                 .into_iter()
-                .filter(|s| s.starts_with("org.mpris.MediaPlayer2.") && s.contains("ncspot"))
+                .filter(|s| s.starts_with("org.mpris.MediaPlayer2."))
                 .collect();
 
             // Return the first MPRIS service name found, if any
