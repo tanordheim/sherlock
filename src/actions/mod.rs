@@ -69,7 +69,6 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(player) = attrs.get("player") {
                     let _ = MusicPlayerLauncher::playpause(player);
                 }
-                eval_exit();
             }
             _ => {
                 println!("{}", method);

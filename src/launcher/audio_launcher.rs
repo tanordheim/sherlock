@@ -126,7 +126,6 @@ impl MusicPlayerLauncher {
                 error: SherlockErrorType::DBusMessageSendError(format!("PlayPause to {}", player)),
                 traceback: e.to_string(),
             })?;
-        println!("PlayPause");
         Ok(())
     }
 }
