@@ -30,9 +30,7 @@ pub fn search(launchers: Vec<Launcher>) {
     let (mode, modes, vbox, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-    set_home_screen("", "all", &*results, &launchers);
-    results.focus_first();
-    ui.search_bar.grab_focus();
+
 
     change_event(&ui, modes, &mode, &launchers, &results);
     let custom_binds = CONFIG.get().map_or(ConfKeys::empty(), |c| {
@@ -40,6 +38,8 @@ pub fn search(launchers: Vec<Launcher>) {
         let next = c.binds.next.clone().unwrap_or_default();
         ConfKeys::from(next, prev)
     });
+
+    ui.search_bar.grab_focus();
 
     nav_event(results, ui, mode, launchers, custom_binds);
     APP_STATE.with(|state| {
@@ -145,6 +145,7 @@ fn nav_event(
                             &*results_ev_nav,
                             &launchers_ev_nav,
                             None,
+                            false,
                         );
                     }
                 }
@@ -193,8 +194,22 @@ fn change_event(
     let mode_ev_changed = Rc::clone(mode);
     let results_ev_changed = Rc::clone(results);
 
+    // Setting up async capabilities
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
+
+    // Set Home and focus first result
+    // set_home_screen("", "all", &*results, &launchers, &cancel_flag, &current_task);
+    // results.focus_first();
+    async_calc(
+        &cancel_flag,
+        &current_task,
+        &launchers_ev_changed,
+        &mode_ev_changed,
+        String::new(),
+        &results_ev_changed,
+        true
+    );
 
     ui.search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text().to_string();
@@ -219,6 +234,7 @@ fn change_event(
                     &*results_ev_changed,
                     &launchers_ev_changed,
                     None,
+                    false,
                 );
             }
         } else {
@@ -229,6 +245,7 @@ fn change_event(
                 &mode_ev_changed,
                 current_text,
                 &results_ev_changed,
+                false
             );
         }
     });
@@ -241,11 +258,20 @@ pub fn async_calc(
     mode: &Rc<RefCell<String>>,
     current_text: String,
     results: &Rc<ListBox>,
+    home: bool,
 ) {
     *cancel_flag.borrow_mut() = false;
     let cancel_flag = Rc::clone(&cancel_flag);
+    let launchers = if home {
+        let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
+                        .clone()
+                        .into_iter()
+                        .partition(|launcher| launcher.home);
+        show   
+    } else {
+        launchers.clone()
+    };
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
-        .clone()
         .into_iter()
         .partition(|launcher| launcher.r#async);
 
@@ -280,6 +306,7 @@ pub fn async_calc(
         &*results,
         &non_async_launchers,
         Some(&widgets),
+        home
     );
     results.focus_first();
 
@@ -327,6 +354,7 @@ pub fn set_results(
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
     async_launchers: Option<&Vec<AsyncLauncherTile>>,
+    home: bool
 ) {
     // Remove all elements inside to avoid duplicates
     let mut launcher_tiles = Vec::new();
@@ -343,8 +371,13 @@ pub fn set_results(
     launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
     let results: Vec<ListBoxRow> = launcher_tiles.into_iter().map(|r| r.row_item).collect();
 
-    for widget in results {
-        results_frame.append(&widget);
+    if let Some(c) = CONFIG.get() {
+        for widget in results {
+            if home && c.behavior.animate {
+                widget.add_css_class("animate");
+            }
+            results_frame.append(&widget);
+        }
     }
     results_frame.focus_first();
 }

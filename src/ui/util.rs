@@ -54,36 +54,6 @@ pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, m
     *mode_c.borrow_mut() = new_mode;
 }
 
-pub fn set_home_screen(
-    keyword: &str,
-    mode: &str,
-    results_frame: &ListBox,
-    launchers: &Vec<Launcher>,
-) {
-    // Check if launcher should be shown on home
-    let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
-        .clone()
-        .into_iter()
-        .partition(|launcher| launcher.home);
-
-    // Remove all elements inside to avoid duplicates
-    while let Some(row) = results_frame.last_child() {
-        results_frame.remove(&row);
-    }
-
-    // Partition into async and non asynt to load loaders or normal tiles
-
-    let mut widgets = construct_tiles(&keyword.to_string(), &show, &mode.to_string());
-    widgets.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-    if let Some(c) = CONFIG.get() {
-        for widget in widgets {
-            if c.behavior.animate {
-                widget.row_item.add_css_class("animate");
-            }
-            results_frame.append(&widget.row_item);
-        }
-    }
-}
 pub fn read_from_label(label_obj: &Widget) -> Option<(String, String)> {
     if let Some(label) = label_obj.downcast_ref::<Label>() {
         let text = label.text();
