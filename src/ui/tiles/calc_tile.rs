@@ -12,7 +12,7 @@ impl Tile {
     ) -> Vec<ResultItem> {
         let result = if let Some(r) = result {
             r
-        } else if let Ok(r) = eval_str(equation) {
+        } else if let Ok(r) = eval_str(equation.trim()) {
             r
         } else {
             return vec![];

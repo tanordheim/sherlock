@@ -216,7 +216,8 @@ fn change_event(
             task.abort();
         };
         *cancel_flag.borrow_mut() = true;
-        if modes.contains_key(&current_text) {
+        let tmp = current_text.trim();
+        if modes.contains_key(tmp) {
             // Logic to apply modes
             if let Some(mode_name) = modes.get(&current_text) {
                 set_mode(
