@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
-use crate::actions::execute_from_attrs;
+use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 use crate::APP_STATE;
 
 pub fn display_pipe(pipe_content: Vec<String>) {
@@ -89,7 +89,7 @@ fn nav_event(results_ev_nav: Rc<ListBox>, result_viewport: ScrolledWindow) {
                 return true.into();
             }
             gdk::Key::Return => {
-                if let Some(row) = results_ev_nav.selected_row() {
+                if let Some(row) = results_ev_nav.selected_row().and_downcast_ref::<SherlockRow>() {
                     let attrs: HashMap<String, String> = get_row_attrs(row);
                     execute_from_attrs(attrs);
                 }

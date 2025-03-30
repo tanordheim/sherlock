@@ -26,12 +26,24 @@ pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTran
 }
 
 pub fn execute_by_index(results: &ListBox, index: i32) {
-    if let Some(row) = results.row_at_index(index - 1) {
-        let attrs = get_row_attrs(row);
-        execute_from_attrs(attrs);
+    let mut child_counter = 1;
+    for child in &results.observe_children(){
+        if let Some(child) = child.ok(){
+            if let Some(row) = child.downcast_ref::<SherlockRow>(){
+                if row.imp().spawn_focus.get() {
+                    if child_counter == index {
+                        let attrs = get_row_attrs(row);
+                        execute_from_attrs(attrs);
+                    } else {
+                        child_counter += 1
+                    }
+                }
+
+            }
+        }
     }
 }
-pub fn get_row_attrs(selected_row: ListBoxRow) -> HashMap<String, String> {
+pub fn get_row_attrs(selected_row: &SherlockRow) -> HashMap<String, String> {
     let mut attrs: HashMap<String, String> = Default::default();
     if let Some(main_holder) = selected_row.first_child() {
         if let Some(attrs_holder) = main_holder.first_child() {

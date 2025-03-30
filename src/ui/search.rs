@@ -13,6 +13,7 @@ use std::rc::Rc;
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};
 
@@ -142,7 +143,7 @@ fn nav_event(
                 results_ev_nav.focus_first();
             }
             gdk::Key::Return => {
-                if let Some(row) = results_ev_nav.selected_row() {
+                if let Some(row) = results_ev_nav.selected_row().and_downcast_ref::<SherlockRow>() {
                     let attrs: HashMap<String, String> = get_row_attrs(row);
                     execute_from_attrs(attrs);
                 }
