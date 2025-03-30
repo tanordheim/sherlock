@@ -34,6 +34,8 @@ jobs:
       run: meson setup gtk4-layer-shell-build gtk4-layer-shell
     - name: Install gtk4-layer-shell
       run: sudo ninja -C gtk4-layer-shell-build install
+    - name: Install dbus
+      run: sudo apt-get install libdbus-1-dev
 
     # Build, test and check formatting
     - name: Build
