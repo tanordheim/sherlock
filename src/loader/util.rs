@@ -180,6 +180,7 @@ impl SherlockConfig {
                 debug: ConfigDebug {
                     try_surpress_errors: false,
                     try_surpress_warnings: false,
+                    app_paths: Vec::new(),
                 },
                 appearance: ConfigAppearance {
                     width: 900,
@@ -250,6 +251,8 @@ pub struct ConfigDebug {
     pub try_surpress_errors: bool,
     #[serde(default)]
     pub try_surpress_warnings: bool,
+    #[serde(default)]
+    pub app_paths: Vec<PathBuf>,
 }
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigAppearance {
