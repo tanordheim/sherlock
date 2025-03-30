@@ -38,6 +38,7 @@ pub struct AppData {
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
     pub desktop_file: Option<PathBuf>,
+    #[serde(default)]
     pub priority: f32,
 }
 
