@@ -47,6 +47,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
+                eval_exit();
             }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
