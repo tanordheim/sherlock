@@ -47,12 +47,13 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 ---
 ## Binds Section `[binds]`
 
-THe `[binds]` section allows you to configure additional keybindings for navigation. The values of the binds are specified in the format `<modifier>-<key>`. For example, `control-tab` binds the Control key and the Tab key. If you only want to bind a single Key, you only provide `<key>`.
+THe `[binds]` section allows you to configure additional keybindings for navigation. The values of the binds are specified in the format `<modifier>-<key>`. For example, `control-tab` binds the Control key and the Tab key. If you only want to bind a single Key, you only provide `<key>`. For the modifier key you can only provide `<modifier>.
 
 | **Keyword**           | **Default** | **Explanation**                                                                 |
 |-----------------------|-------------|---------------------------------------------------------------------------------|
 | `prev` | `None`     | Defines an additional keybind to switch to the previous item in the list. |
 | `next` | `None`     | Defines an additional keybind to switch to the next item in the list. |
+| `modifier` | `control`     | Defines the keybind used for shortcuts (`<modifier>+<1-5>`) and the clearing of the search bar using (`<modifier>+<backspace>`)  |
 
 
 ### Available Keys
