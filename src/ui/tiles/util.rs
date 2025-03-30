@@ -1,13 +1,33 @@
-use crate::{launcher::Launcher, CONFIG};
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, TextView};
+use crate::{
+    g_subclasses::sherlock_row::SherlockRow,
+    launcher::{Launcher, ResultItem},
+    CONFIG,
+};
+use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
 use std::collections::HashSet;
 
+#[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
-    pub widget: ListBoxRow,
-    pub title: Label,
-    pub body: Label,
+    pub result_item: ResultItem,
+    pub title: Option<Label>,
+    pub body: Option<Label>,
+    pub async_opts: Option<AsyncOptions>,
     pub attrs: Box,
+}
+
+#[derive(Debug)]
+pub struct AsyncOptions {
+    pub _icon: Option<Image>,
+    pub icon_holder_overlay: Option<Overlay>,
+}
+impl AsyncOptions {
+    pub fn new() -> Self {
+        AsyncOptions {
+            _icon: None,
+            icon_holder_overlay: None,
+        }
+    }
 }
 
 pub fn ensure_icon_name(name: String) -> String {
@@ -35,32 +55,31 @@ impl TextViewTileBuilder {
 
 #[derive(Default)]
 pub struct EventTileBuilder {
-    pub object: ListBoxRow,
+    pub object: SherlockRow,
     pub title: Label,
     pub icon: Image,
     pub start_time: Label,
     pub end_time: Label,
     pub attrs: Box,
+    pub shortcut_holder: Option<Box>,
 }
 impl EventTileBuilder {
-    pub fn new(resource: &str, index: i32, show_shortcut: bool) -> Self {
+    pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
+        let holder: Box = builder.object("holder").unwrap_or_default();
 
-        // Implement the shortcuts
-        if show_shortcut && index < 5 {
-            let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
-            let shortcut: Label = builder.object("shortcut").unwrap_or_default();
-            shortcut_holder.set_visible(true);
-            shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
-        }
+        // Append content to the sherlock row
+        let object = SherlockRow::new();
+        object.set_child(Some(&holder));
 
         EventTileBuilder {
-            object: builder.object("holder").unwrap_or_default(),
+            object,
             title: builder.object("title-label").unwrap_or_default(),
             start_time: builder.object("time-label").unwrap_or_default(),
             end_time: builder.object("end-time-label").unwrap_or_default(),
             icon: builder.object("icon-name").unwrap_or_default(),
             attrs: builder.object("attrs-holder").unwrap_or_default(),
+            shortcut_holder: builder.object("shortcut_holder"),
         }
     }
 
@@ -96,7 +115,7 @@ impl EventTileBuilder {
 
 #[derive(Default)]
 pub struct TileBuilder {
-    pub object: ListBoxRow,
+    pub object: SherlockRow,
     pub icon: Image,
     pub icon_holder: Box,
     pub title: Label,
@@ -104,6 +123,8 @@ pub struct TileBuilder {
     pub attrs: Box,
     pub tag_start: Label,
     pub tag_end: Label,
+    pub shortcut_holder: Option<Box>,
+
     // Specific to 'bulk_text_tile'
     pub content_title: Label,
     pub content_body: Label,
@@ -113,9 +134,9 @@ pub struct TileBuilder {
 }
 
 impl TileBuilder {
-    pub fn new(resource: &str, index: i32, show_shortcut: bool) -> Self {
+    pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let object: ListBoxRow = builder.object("holder").unwrap_or_default();
+        let holder: Box = builder.object("holder").unwrap_or_default();
         let icon: Image = builder.object("icon-name").unwrap_or_default();
         let title: Label = builder.object("app-name").unwrap_or_default();
         let category: Label = builder.object("launcher-type").unwrap_or_default();
@@ -124,6 +145,11 @@ impl TileBuilder {
         let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
         let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
 
+        // Append content to the sherlock row
+        let object = SherlockRow::new();
+        object.set_child(Some(&holder));
+        object.set_css_classes(&vec!["tile"]);
+
         // Specific to 'bulk_text_tile' and 'error_tile'
         let content_title: Label = builder.object("content-title").unwrap_or_default();
         let content_body: Label = builder.object("content-body").unwrap_or_default();
@@ -131,14 +157,6 @@ impl TileBuilder {
         // Specific to 'calc_tile'
         let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
-
-        // Implement the shortcuts
-        if show_shortcut && index < 5 {
-            let shortcut_holder: Box = builder.object("shortcut-holder").unwrap_or_default();
-            let shortcut: Label = builder.object("shortcut").unwrap_or_default();
-            shortcut_holder.set_visible(true);
-            shortcut.set_text(format!("ctrl + {}", index + 1).as_str());
-        }
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {
@@ -154,6 +172,7 @@ impl TileBuilder {
             attrs,
             tag_start,
             tag_end,
+            shortcut_holder: builder.object("shortcut-holder"),
 
             content_body,
             content_title,

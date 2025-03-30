@@ -1,46 +1,80 @@
-use gtk4::{Box, Label, ListBoxRow};
+use std::vec;
 
-use super::util::TileBuilder;
+use gtk4::prelude::WidgetExt;
+use gtk4::{Box, Label};
+
+use crate::launcher::bulk_text_launcher::BulkText;
+use crate::launcher::{Launcher, ResultItem};
+
+use super::util::{AsyncOptions, TileBuilder};
 use super::Tile;
 
 impl Tile {
     pub fn bulk_text_tile_loader(
-        name: &str,
-        method: &str,
-        icon: &str,
+        launcher: &Launcher,
         keyword: &str,
-    ) -> Option<(ListBoxRow, Label, Label, Box)> {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", 0, false);
+        bulk_text: &BulkText,
+    ) -> Option<(
+        ResultItem,
+        Option<Label>,
+        Option<Label>,
+        Option<AsyncOptions>,
+        Box,
+    )> {
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
+        builder.object.add_css_class("bulk-text");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
-        builder.category.set_text(name);
-        builder.icon.set_icon_name(Some(icon));
+        builder.category.set_text(&launcher.name);
+        builder.icon.set_icon_name(Some(&bulk_text.icon));
         builder.icon.set_pixel_size(15);
         builder.content_title.set_text(keyword);
         builder.content_body.set_text("Loading...");
-        builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
+        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
+
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None,
+        };
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+            // builder.shortcut_holder if key in launcher is not false
+            shortcut_holder,
+        };
 
         return Some((
-            builder.object,
-            builder.content_title,
-            builder.content_body,
+            res,
+            Some(builder.content_title),
+            Some(builder.content_body),
+            None,
             builder.attrs,
         ));
     }
     pub fn bulk_text_tile(
-        name: &str,
-        method: &str,
-        icon: &str,
-        index: i32,
+        launcher: &Launcher,
         keyword: &str,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui", index, false);
+        bulk_text: &BulkText,
+    ) -> Vec<ResultItem> {
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
+        builder.object.add_css_class("bulk-text");
 
-        builder.category.set_text(name);
-        builder.icon.set_icon_name(Some(icon));
+        builder.category.set_text(&launcher.name);
+        builder.icon.set_icon_name(Some(&bulk_text.icon));
         builder.icon.set_pixel_size(15);
         builder.title.set_text(keyword);
-        builder.add_default_attrs(Some(method), None, Some(keyword), None, None);
+        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None,
+        };
 
-        return (index + 1, vec![builder.object]);
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+            shortcut_holder,
+        };
+
+        return vec![res];
     }
 }

@@ -4,6 +4,8 @@ use std::process::exit;
 use teamslaunch::teamslaunch;
 
 use crate::{
+    launcher::audio_launcher::MusicPlayerLauncher,
+    loader::launcher_loader::CounterReader,
     ui::{
         user::{display_next, display_raw},
         window::hide_window,
@@ -23,24 +25,29 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
             "app_launcher" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
+                increment(&exec);
                 eval_exit();
             }
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
                 let engine = attrs.get("engine").map_or("", |s| s.as_str());
                 let _ = websearch::websearch(engine, query);
+                let exec = format!("websearch-{}", engine);
+                increment(&exec);
                 eval_exit();
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
+                increment(&exec);
                 eval_exit();
             }
             "copy" => {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
+                eval_exit();
             }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
@@ -59,7 +66,13 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                     display_raw(next_content, false);
                 }
             }
+            "play-pause" | "audio_sink" => {
+                if let Some(player) = attrs.get("player") {
+                    let _ = MusicPlayerLauncher::playpause(player);
+                }
+            }
             _ => {
+                println!("{}", method);
                 if let Some(out) = attrs.get("text_content") {
                     print!("{}", out);
                 }
@@ -76,4 +89,10 @@ fn eval_exit() {
             false => exit(0),
         }
     }
+}
+fn increment(key: &str) {
+    println!("incrementing {:?}", key);
+    if let Ok(count_reader) = CounterReader::new() {
+        let _ = count_reader.increment(key);
+    };
 }

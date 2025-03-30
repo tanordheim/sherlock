@@ -1,10 +1,10 @@
 use gio::glib::Bytes;
-use gtk4::{gdk, prelude::*, Image, ListBoxRow};
+use gtk4::{gdk, prelude::*, Image};
 use meval::eval_str;
 use regex::Regex;
 use std::collections::HashMap;
 
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -28,12 +28,11 @@ fn hex_to_rgb(hex_color: &str) -> (u8, u8, u8) {
 impl Tile {
     pub fn clipboard_tile(
         launcher: &Launcher,
-        index: i32,
         clipboard_content: &str,
         keyword: &str,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let mut results: Vec<ListBoxRow> = Default::default();
-        let mut is_valid: i32 = 0;
+    ) -> Vec<ResultItem> {
+        let mut results: Vec<ResultItem> = Default::default();
+        let mut is_valid = false;
 
         //TODO implement searchstring before clipboard content
         if !clipboard_content.is_empty() && clipboard_content.contains(keyword) {
@@ -54,13 +53,15 @@ impl Tile {
             if let Some(captures) = re.captures(clipboard_content) {
                 name = "From Clipboard";
                 if let Some(main_domain) = captures.get(3) {
-                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
-                    is_valid = 1;
+                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                    builder.object.set_spawn_focus(launcher.spawn_focus);
+                    is_valid = true;
                     method = "web_launcher";
                     let main_domain = main_domain.as_str();
                     icon = known_pages.get(main_domain).map_or("google", |m| m);
                 } else if let Some(hex_color) = captures.get(6) {
-                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+                    builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                    builder.object.set_spawn_focus(launcher.spawn_focus);
                     let (r, g, b) = hex_to_rgb(hex_color.as_str());
                     let pix_buf = vec![r, g, b];
                     let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -83,16 +84,16 @@ impl Tile {
                         image.set_pixel_size(22);
                         builder.icon.set_visible(false);
 
-                        is_valid = 1;
+                        is_valid = true;
                     };
 
                     // Clipboard matches a hex color
                 }
             } else if let Ok(result) = eval_str(clipboard_content) {
-                return Tile::calc_tile(launcher, index, clipboard_content, Some(result));
+                return Tile::calc_tile(launcher, clipboard_content, Some(result));
             }
 
-            if is_valid == 1 {
+            if is_valid {
                 if name.is_empty() {
                     builder.category.set_visible(false);
                 }
@@ -109,10 +110,19 @@ impl Tile {
                     None,
                     Some(attrs),
                 );
-                results.push(builder.object);
+
+                let shortcut_holder = match launcher.shortcut {
+                    true => builder.shortcut_holder,
+                    _ => None,
+                };
+                results.push(ResultItem {
+                    priority: launcher.priority as f32,
+                    row_item: builder.object,
+                    shortcut_holder,
+                });
             }
         }
 
-        return (index + is_valid, results);
+        return results;
     }
 }

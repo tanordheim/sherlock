@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
@@ -15,8 +16,12 @@ pub struct CommandConfig {
     pub on_return: Option<String>,
     pub next_content: Option<String>,
     pub r#type: String,
-    pub priority: u32,
+    pub priority: f32,
 
+    #[serde(default = "default_true")]
+    pub shortcut: bool,
+    #[serde(default = "default_true")]
+    pub spawn_focus: bool,
     #[serde(default)]
     pub r#async: bool,
     #[serde(default)]
@@ -33,6 +38,7 @@ pub struct AppData {
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
     pub desktop_file: Option<PathBuf>,
+    pub priority: f32,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -55,13 +61,16 @@ pub struct SherlockAlias {
     pub exec: Option<String>,
     pub keywords: Option<String>,
 }
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum SherlockErrorType {
     EnvVarNotFoundError(String),
     FileExistError(String),
+    FileWriteError(String),
     FileReadError(String),
     FileParseError(String),
     DirReadError(String),
+    DirCreateError(String),
     ResourceParseError,
     ResourceLookupError(String),
     DisplayError,
@@ -69,6 +78,10 @@ pub enum SherlockErrorType {
     RegexError(String),
     CommandExecutionError(String),
     ClipboardError,
+    DBusConnectionError,
+    DBusMessageSendError(String),
+    DBusMessageConstructError(String),
+    HttpRequestError(String),
 }
 
 impl SherlockErrorType {
@@ -82,6 +95,10 @@ impl SherlockErrorType {
                 "FileExistError".to_string(),
                 format!("File \"{}\" does not exist", file),
             ),
+            SherlockErrorType::FileWriteError(file) => (
+                "FileWriteError".to_string(),
+                format!("Failed to write file \"{}\"", file),
+            ),
             SherlockErrorType::FileReadError(file) => (
                 "FileReadError".to_string(),
                 format!("Failed to read file \"{}\"", file),
@@ -93,6 +110,10 @@ impl SherlockErrorType {
             SherlockErrorType::DirReadError(file) => (
                 "DirReadError".to_string(),
                 format!("Failed to read/access dir \"{}\"", file),
+            ),
+            SherlockErrorType::DirCreateError(file) => (
+                "DirCreateError".to_string(),
+                format!("Failed to create parent dir \"{}\"", file),
             ),
             SherlockErrorType::ResourceParseError => (
                 "ResourceParseError".to_string(),
@@ -126,6 +147,22 @@ impl SherlockErrorType {
                 format!("ClipboardError"),
                 format!("Failed to get system clipboard"),
             ),
+            SherlockErrorType::DBusConnectionError => (
+                format!("DBusConnectionError"),
+                format!("Failed to connect to system DBus"),
+            ),
+            SherlockErrorType::DBusMessageConstructError(message) => (
+                format!("DBusMessageConstructError"),
+                format!("Failed to construct Dbus message \"{}\"", message),
+            ),
+            SherlockErrorType::DBusMessageSendError(message) => (
+                format!("DBusConnectionError"),
+                format!("Failed to send Dbus message \"{}\"", message),
+            ),
+            SherlockErrorType::HttpRequestError(cmd) => (
+                format!("HttpRequestError"),
+                format!("Failed to get requested source \"{}\"", cmd),
+            ),
         }
     }
 }
@@ -145,6 +182,8 @@ pub struct SherlockConfig {
     pub appearance: ConfigAppearance,
     #[serde(default)]
     pub behavior: ConfigBehavior,
+    #[serde(default)]
+    pub binds: ConfigBinds,
 }
 impl SherlockConfig {
     pub fn default() -> (Self, Vec<SherlockError>) {
@@ -161,6 +200,7 @@ impl SherlockConfig {
                 debug: ConfigDebug {
                     try_suppress_errors: false,
                     try_suppress_warnings: false,
+                    app_paths: HashSet::new(),
                 },
                 appearance: ConfigAppearance {
                     width: 900,
@@ -175,6 +215,11 @@ impl SherlockConfig {
                     caching: false,
                     daemonize: false,
                     animate: true,
+                },
+                binds: ConfigBinds {
+                    prev: None,
+                    next: None,
+                    modifier: None,
                 },
             },
             non_breaking,
@@ -205,7 +250,7 @@ impl Default for ConfigDefaultApps {
 pub struct ConfigBehavior {
     #[serde(default = "default_cache")]
     pub cache: String,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub caching: bool,
     #[serde(default)]
     pub daemonize: bool,
@@ -214,11 +259,23 @@ pub struct ConfigBehavior {
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
+pub struct ConfigBinds {
+    #[serde(default)]
+    pub prev: Option<String>,
+    #[serde(default)]
+    pub next: Option<String>,
+    #[serde(default)]
+    pub modifier: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigDebug {
     #[serde(default)]
     pub try_suppress_errors: bool,
     #[serde(default)]
     pub try_suppress_warnings: bool,
+    #[serde(default)]
+    pub app_paths: HashSet<String>,
 }
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigAppearance {

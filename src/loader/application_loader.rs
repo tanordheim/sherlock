@@ -17,6 +17,9 @@ impl Loader {
     pub fn load_applications_from_disk(
         sherlock_flags: &SherlockFlags,
         applications: Option<HashSet<PathBuf>>,
+        priority: f32,
+        counts: HashMap<String, f32>,
+        decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
             error: SherlockErrorType::ConfigError(None),
@@ -118,6 +121,10 @@ impl Loader {
                             false => None,
                         };
 
+                        // apply counts
+                        let count = counts.get(&exec).unwrap_or(&0.0);
+                        let priority = priority - count * 10f32.powi(-decimals);
+
                         // Return the processed app data
                         Some((
                             name,
@@ -128,6 +135,7 @@ impl Loader {
                                 tag_start: None,
                                 tag_end: None,
                                 desktop_file: desktop_file_path,
+                                priority,
                             },
                         ))
                     }
@@ -141,6 +149,9 @@ impl Loader {
     fn get_new_applications(
         mut apps: HashMap<String, AppData>,
         flags: &SherlockFlags,
+        priority: f32,
+        counts: HashMap<String, f32>,
+        decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let system_apps = get_applications_dir();
 
@@ -157,7 +168,9 @@ impl Loader {
         match (modtime(&alias_path), modtime(&cache_path)) {
             (Some(t1), Some(t2)) => {
                 if t1 >= t2 {
-                    return Loader::load_applications_from_disk(flags, None);
+                    return Loader::load_applications_from_disk(
+                        flags, None, priority, counts, decimals,
+                    );
                 }
             }
             _ => {}
@@ -184,7 +197,13 @@ impl Loader {
         });
 
         // get information for uncached applications
-        match Loader::load_applications_from_disk(flags, Some(desktop_files)) {
+        match Loader::load_applications_from_disk(
+            flags,
+            Some(desktop_files),
+            priority,
+            counts,
+            decimals,
+        ) {
             Ok(new_apps) => apps.extend(new_apps),
             _ => {}
         };
@@ -204,6 +223,9 @@ impl Loader {
 
     pub fn load_applications(
         sherlock_flags: &SherlockFlags,
+        priority: f32,
+        counts: HashMap<String, f32>,
+        decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
         let cache_loc = sherlock_flags.cache.to_string();
         let flags = sherlock_flags.clone();
@@ -211,18 +233,28 @@ impl Loader {
             .ok()
             .and_then(|f| simd_json::from_reader(f).ok());
 
-        if let Some(apps) = cached_apps {
+        if let Some(mut apps) = cached_apps {
+            // apply the current counts
+            for (_, v) in apps.iter_mut() {
+                let count = counts.get(&v.exec).unwrap_or(&0.0);
+                let priority = priority - count * 10f32.powi(-decimals);
+                v.priority = priority
+            }
+
             // Refresh cache in the background
             let old_apps = apps.clone();
             std::thread::spawn(move || {
-                if let Ok(new_apps) = Loader::get_new_applications(old_apps, &flags) {
+                if let Ok(new_apps) =
+                    Loader::get_new_applications(old_apps, &flags, priority, counts, decimals)
+                {
                     Loader::write_cache(&new_apps, &cache_loc);
                 }
             });
             return Ok(apps);
         }
 
-        let apps = Loader::load_applications_from_disk(sherlock_flags, None)?;
+        let apps =
+            Loader::load_applications_from_disk(sherlock_flags, None, priority, counts, decimals)?;
         // Write the cache in the background
         let app_clone = apps.clone();
         std::thread::spawn(move || Loader::write_cache(&app_clone, &cache_loc));
@@ -261,7 +293,23 @@ fn get_applications_dir() -> HashSet<PathBuf> {
                 .collect();
             app_dirs
         }
-        _ => HashSet::from([PathBuf::from("/usr/share/applications/")]),
+        _ => {
+            let home = env::var("HOME").ok().unwrap_or("~".to_string());
+            let mut default_paths = vec![
+                String::from("/usr/share/applications/"),
+                String::from("~/.local/share/applications/"),
+            ];
+            if let Some(c) = CONFIG.get() {
+                default_paths.extend(c.debug.app_paths.clone());
+            };
+
+            let paths: HashSet<PathBuf> = default_paths
+                .iter()
+                .map(|path| path.replace("~", &home))
+                .map(|path| PathBuf::from(path))
+                .collect();
+            paths
+        }
     }
 }
 

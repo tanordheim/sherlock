@@ -20,6 +20,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 |-----------------------|-------------|---------------------------------------------------------------------------------|
 | `try_suppress_errors` | `false`     | If set to `true`, errors and warnings will not be displayed when starting the app. |
 | `try_suppress_warnings` | `false`   | If set to `true`, only errors will trigger the error screen at startup, while warnings will be ignored. |
+| `app_paths` | `[]`   | Adds custom paths to search for `.desktop` files. Should be a list of strings. |
 
 ---
 
@@ -43,4 +44,40 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `cache` | `~/.cache/sherlock_desktop_cache.json`   | Overrides the default caching location. ||
 | `daemonize` | `false`     | If set to `true`, Sherlock will run in daemon mode. This will consume more memory because the rendered application will be kept in memory. Damonizing will allow faster startup times. Send the `open` message to socket `/tmp/sherlock_daemon.socket` to open the window. |[Daemonizing](https://github.com/Skxxtz/sherlock/blob/documentation/docs/features/daemonizing.md)|
 | `animate` | `true`   | Sets if startup animation should play. (Only works on deamonize=false) ||
+---
+## Binds Section `[binds]`
+
+THe `[binds]` section allows you to configure additional keybindings for navigation. The values of the binds are specified in the format `<modifier>-<key>`. For example, `control-tab` binds the Control key and the Tab key. If you only want to bind a single Key, you only provide `<key>`. For the modifier key you can only provide `<modifier>.
+
+| **Keyword**           | **Default** | **Explanation**                                                                 |
+|-----------------------|-------------|---------------------------------------------------------------------------------|
+| `prev` | `None`     | Defines an additional keybind to switch to the previous item in the list. |
+| `next` | `None`     | Defines an additional keybind to switch to the next item in the list. |
+| `modifier` | `control`     | Defines the keybind used for shortcuts (`<modifier>+<1-5>`) and the clearing of the search bar using (`<modifier>+<backspace>`)  |
+
+
+### Available Keys
+| Key Input   | Config Name  |
+|------------|-------------|
+| `<Tab>`    | `tab`       |
+| `<Up>`     | `up`        |
+| `<Down>`   | `down`      |
+| `<Left>`   | `left`      |
+| `<Right>`  | `right`     |
+| `<PageUp>` | `pgup`      |
+| `<PageDown>` | `pgdown`  |
+| `<End>`    | `end`       |
+| `<Home>`   | `home`      |
+
+### Available Modifiers
+| Key Input   | Config Name  |
+|------------|-------------|
+| `<Shift>`  | `shift`     |
+| `<Control>`| `control`   |
+| `<Alt>`    | `alt`       |
+| `<Super>`  | `super`     |
+| `<Lock>`   | `lock`      |
+| `<Hyper>`  | `hypr`      |
+| `<Meta>`   | `meta`      |
+
 ---

@@ -19,6 +19,15 @@
         "home": true
     },
     {
+        "name": "Spotify",
+        "type": "audio_sink",
+        "args": { },
+        "async": true,
+        "priority": 1,
+        "home": true,
+        "spawn_focus": false
+    },
+    {
         "name": "Calculator",
         "type": "calculation",
         "args": {},
@@ -111,7 +120,8 @@
         "on_return": "next",
         "async": true, 
         "args": {"icon": "wikipedia", "exec": "/home/basti/.config/sherlock/scripts/sherlock-wiki", "exec-args": "'{keyword}'"},
-        "priority": 0 
+        "priority": 0,
+        "shortcut": false
     }
 ]
 

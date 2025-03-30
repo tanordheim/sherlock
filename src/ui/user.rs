@@ -26,7 +26,7 @@ pub fn display_pipe(pipe_content: Vec<String>) {
 
     let keyword = search_bar.text();
 
-    let (_, tiles) = Tile::simple_text_tile(0, &pipe_content, "", &keyword);
+    let tiles = Tile::simple_text_tile(&pipe_content, "", &keyword);
     for item in tiles {
         results.append(&item);
     }
@@ -130,7 +130,7 @@ fn change_event(search_bar: &Entry, results: &Rc<ListBox>, pipe_content: Vec<Str
         while let Some(row) = results_ev_changed.last_child() {
             results_ev_changed.remove(&row);
         }
-        let (_, tiles) = Tile::simple_text_tile(0, &pipe_content_clone, "", &current_text);
+        let tiles = Tile::simple_text_tile(&pipe_content_clone, "", &current_text);
         for item in tiles {
             results_ev_changed.append(&item);
         }

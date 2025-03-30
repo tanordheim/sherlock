@@ -1,32 +1,33 @@
 use std::vec;
 
-use gtk4::ListBoxRow;
+use gtk4::prelude::WidgetExt;
 
 use super::util::EventTileBuilder;
 use super::Tile;
 use crate::launcher::event_launcher::EventLauncher;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
     pub fn event_tile(
         launcher: &Launcher,
-        index: i32,
-        event_launcher: &EventLauncher,
         keyword: &str,
-    ) -> (i32, Vec<ListBoxRow>) {
+        event_launcher: &EventLauncher,
+    ) -> Vec<ResultItem> {
         let event = match &event_launcher.event {
             Some(event) => event,
-            None => return (index, vec![]),
+            None => return vec![],
         };
 
         //Handle searching
         if !event.title.contains(keyword) {
-            return (index, vec![]);
+            return vec![];
         }
 
-        let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui", index, false);
-        let mut attrs: Vec<(&str, &str)> = vec![];
+        let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
+        builder.object.add_css_class("event-tile");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
+        let mut attrs: Vec<(&str, &str)> = vec![];
         builder.title.set_text(&event.title);
         builder
             .icon
@@ -43,6 +44,15 @@ impl Tile {
 
         builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
 
-        return (index + 1, vec![builder.object]);
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None,
+        };
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+            shortcut_holder,
+        };
+        return vec![res];
     }
 }

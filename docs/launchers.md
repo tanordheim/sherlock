@@ -12,11 +12,11 @@ The launcher can be of the following types:<br>
 - **[App Launcher](#app-launcher):** Launches your apps. 
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default webbrowser. The used search engine is configureable and the most common search engines are included. 
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Return, it also copies the result into the clipboard.
-- **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the url in the default webbrowser.
+- **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the url in the default webbrowser. Also displays hex and rgb colors.
 - **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
-- **[Bulk Text](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
-
+- **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
+- **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 
 ## Common Launcher Attributes
 `[UI]` - used for UI <br>
@@ -28,9 +28,11 @@ The launcher can be of the following types:<br>
 | `home`      | `[FC]` (optional) | Determines if the elements of this launcher are displayed at startup. |
 | `type`      | `[FC]` (required) | Specifies the tile and functionality to be used for this Launcher. |
 | `args`      | `[FC]` (required) | Arguments specific to the `type`. Can be left empty. |
-| `priority`  | `[FC]` (required) | Defines the display order of launcher elements at startup. A value of 0 means the launcher will only be shown if the `alias` is active. |
+| `priority`  | `[FC]` (required) | Defines the display order of launcher elements at startup. **A value of 0 means the launcher will only be shown if the `alias` is active.**|
 | `async`     | `[FC]` (optional) | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
 | `on_return`     | `[FC]` (optional) | Specifies what to do if return is pressed on the tile. |
+| `spawn_focus`     | `[FC]` (optional) | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
+| `shortcut`     | `[FC]` (optional) | Determines whether the tile should have the shortcut indicator on the side. |
 
 ---
 
@@ -158,7 +160,8 @@ Has following fields of its own:
         "exec": "~/.config/sherlock/scripts/sherlock-wiki"
         "exec-args": "{keyword}"
     },
-    "priority": 0
+    "priority": 0,
+    "shortcut": false
 }
 ```
 ### Arguments (args):
@@ -202,4 +205,22 @@ Specifies the offset from the `date` parameter.<br>
 
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
+--- 
+
+## Music Player
+```json
+{
+    "name": "Spotify",
+    "type": "audio_sink",
+    "args": { },
+    "async": true,
+    "priority": 1,
+    "home": true,
+    "spawn_focus": false
+},
+
+```
+
+### Arguments (args):
+None
 --- 

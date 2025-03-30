@@ -1,27 +1,24 @@
-use gtk4::ListBoxRow;
+use gtk4::prelude::WidgetExt;
 use meval::eval_str;
 
 use super::util::TileBuilder;
 use super::Tile;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn calc_tile(
-        launcher: &Launcher,
-        index: i32,
-        equation: &str,
-        result: Option<f64>,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let mut results: Vec<ListBoxRow> = Default::default();
+    pub fn calc_tile(launcher: &Launcher, equation: &str, result: Option<f64>) -> Vec<ResultItem> {
         let result = if let Some(r) = result {
             r
-        } else if let Ok(r) = eval_str(equation) {
+        } else if let Ok(r) = eval_str(equation.trim()) {
             r
         } else {
-            return (index, results);
+            return vec![];
         };
 
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui", index, true);
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
+        builder.object.add_css_class("calc-tile");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
+
         builder.equation_holder.set_text(&equation);
         builder
             .result_holder
@@ -29,8 +26,18 @@ impl Tile {
 
         let result = result.to_string();
         builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, None);
-        results.push(builder.object);
 
-        (index, results)
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None,
+        };
+
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+            shortcut_holder,
+        };
+
+        vec![res]
     }
 }

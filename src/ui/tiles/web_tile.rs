@@ -1,18 +1,12 @@
-use gtk4::ListBoxRow;
-
 use super::util::TileBuilder;
 use super::Tile;
 use crate::launcher::web_launcher::Web;
-use crate::launcher::Launcher;
+use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn web_tile(
-        launcher: &Launcher,
-        index: i32,
-        keyword: &str,
-        web: &Web,
-    ) -> (i32, Vec<ListBoxRow>) {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &Web) -> Vec<ResultItem> {
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&web.icon));
@@ -40,6 +34,16 @@ impl Tile {
             Some(attrs),
         );
 
-        return (index + 1, vec![builder.object]);
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None,
+        };
+        let res = ResultItem {
+            priority: launcher.priority as f32,
+            row_item: builder.object,
+            shortcut_holder,
+        };
+
+        return vec![res];
     }
 }

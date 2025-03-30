@@ -1,1 +1,1 @@
-pub mod deamon;
+pub mod daemon;
