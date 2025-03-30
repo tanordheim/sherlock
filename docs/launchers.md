@@ -32,6 +32,7 @@ The launcher can be of the following types:<br>
 | `async`     | `[FC]` (optional) | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
 | `on_return`     | `[FC]` (optional) | Specifies what to do if return is pressed on the tile. |
 | `spawn_focus`     | `[FC]` (optional) | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
+| `shortcut`     | `[FC]` (optional) | Determines whether the tile should have the shortcut indicator on the side. |
 
 ---
 
@@ -159,7 +160,8 @@ Has following fields of its own:
         "exec": "~/.config/sherlock/scripts/sherlock-wiki"
         "exec-args": "{keyword}"
     },
-    "priority": 0
+    "priority": 0,
+    "shortcut": false
 }
 ```
 ### Arguments (args):
