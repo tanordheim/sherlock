@@ -283,9 +283,8 @@ pub fn async_calc(
     let widgets: Vec<AsyncLauncherTile> = async_launchers
         .iter()
         .filter_map(|launcher| {
-            if launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or("")
-                || launcher.priority > 0
-            {
+            if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
+                || (current_mode == "all" && launcher.priority > 0) {
                 launcher.get_loader_widget(&current_text).map(
                     |(widget, title, body, async_opts, attrs)| AsyncLauncherTile {
                         launcher: launcher.clone(),
