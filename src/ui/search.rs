@@ -40,7 +40,7 @@ pub fn search(launchers: Vec<Launcher>) {
 
     ui.search_bar.grab_focus();
 
-    nav_event(results, ui, mode, launchers, custom_binds);
+    nav_event(results, ui, mode, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "search-page");
@@ -101,7 +101,6 @@ fn nav_event(
     results_ev_nav: Rc<ListBox>,
     ui: SearchUI,
     mode_ev_nav: Rc<RefCell<String>>,
-    launchers_ev_nav: Vec<Launcher>,
     custom_binds: ConfKeys,
 ) {
     let event_controller = EventControllerKey::new();
@@ -138,14 +137,8 @@ fn nav_event(
                 } else {
                     if ctext.is_empty() {
                         set_mode(&ui.mode_title, &mode_ev_nav, "all", &"All".to_string());
-                        set_results(
-                            &ctext,
-                            &mode_ev_nav.borrow(),
-                            &*results_ev_nav,
-                            &launchers_ev_nav,
-                            None,
-                            false,
-                        );
+                        // to trigger homescreen rebuild
+                        let _ = &ui.search_bar.set_text("");
                     }
                 }
                 results_ev_nav.focus_first();
@@ -197,9 +190,6 @@ fn change_event(
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
 
-    // Set Home and focus first result
-    // set_home_screen("", "all", &*results, &launchers, &cancel_flag, &current_task);
-    // results.focus_first();
     async_calc(
         &cancel_flag,
         &current_task,
