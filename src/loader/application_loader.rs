@@ -299,6 +299,7 @@ fn get_applications_dir() -> HashSet<PathBuf> {
             let home = env::var("HOME").ok().unwrap_or("~".to_string());
             let mut default_paths = vec![
                 String::from("/usr/share/applications/"),
+                String::from("~/.local/share/applications/"),
             ];
             if let Some(c) = CONFIG.get(){
                 default_paths.extend(c.debug.app_paths.clone());
