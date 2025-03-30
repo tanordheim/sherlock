@@ -104,7 +104,6 @@ fn nav_event(
     custom_binds: ConfKeys,
 ) {
     let conf_keys = ConfKeys::new();
-    println!("{:?}", conf_keys);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, i, modifiers| {
