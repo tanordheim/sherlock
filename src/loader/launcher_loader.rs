@@ -156,6 +156,7 @@ impl Loader {
                     r#async: cmd.r#async,
                     home: cmd.home,
                     launcher_type,
+                    shortcut: cmd.shortcut.clone(),
                 })
             })
             .collect();

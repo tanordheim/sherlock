@@ -18,6 +18,8 @@ pub struct CommandConfig {
     pub r#type: String,
     pub priority: f32,
 
+    #[serde(default="default_true")]
+    pub shortcut: bool,
     #[serde(default)]
     pub r#async: bool,
     #[serde(default)]

@@ -48,39 +48,43 @@ pub struct Launcher {
     pub r#async: bool,
     pub home: bool,
     pub launcher_type: LauncherType,
+    pub shortcut: bool,
 }
 
 #[derive(Clone, Debug)]
 pub struct ResultItem {
+    pub shortcut: bool,
     pub priority: f32,
     pub row_item: ListBoxRow,
+    pub shortcut_holder: Option<Box>,
+
 }
 
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(&self, index: i32, keyword: &str) -> (i32, Vec<ResultItem>) {
+    pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
         if let Some(app_config) = CONFIG.get() {
             match &self.launcher_type {
                 LauncherType::App(app) => {
-                    Tile::app_tile(self, index, keyword, app.apps.clone(), app_config)
+                    Tile::app_tile(self, keyword, app.apps.clone(), app_config)
                 }
-                LauncherType::Web(web) => Tile::web_tile(self, index, keyword, &web),
-                LauncherType::Calc(_) => Tile::calc_tile(self, index, keyword, None),
+                LauncherType::Web(web) => Tile::web_tile(self,  keyword, &web),
+                LauncherType::Calc(_) => Tile::calc_tile(self, keyword, None),
                 LauncherType::BulkText(bulk_text) => {
-                    Tile::bulk_text_tile(&self, index, keyword, &bulk_text)
+                    Tile::bulk_text_tile(&self, keyword, &bulk_text)
                 }
                 LauncherType::SystemCommand(cmd) => {
-                    Tile::app_tile(self, index, keyword, cmd.commands.clone(), app_config)
+                    Tile::app_tile(self, keyword, cmd.commands.clone(), app_config)
                 }
                 LauncherType::Clipboard(clp) => {
-                    Tile::clipboard_tile(self, index, &clp.clipboard_content, keyword)
+                    Tile::clipboard_tile(self, &clp.clipboard_content, keyword)
                 }
-                LauncherType::EventLauncher(evl) => Tile::event_tile(self, index, keyword, evl),
+                LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
 
-                _ => (index, Vec::new()),
+                _ => Vec::new(),
             }
         } else {
-            (index, Vec::new())
+            Vec::new()
         }
     }
     pub fn get_execs(&self) -> Option<HashSet<String>> {
@@ -147,7 +151,6 @@ impl Launcher {
 
 pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec<ResultItem> {
     let mut results = Vec::new();
-    let mut index: i32 = 0;
     let sel_mode = mode.trim();
     for launcher in launchers.iter() {
         let alias = launcher.alias.as_deref().unwrap_or("all");
@@ -157,8 +160,7 @@ pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec
         }
 
         if alias == sel_mode || sel_mode == "all" {
-            let (returned_index, result) = launcher.get_patch(index, keyword);
-            index = returned_index;
+            let result = launcher.get_patch(keyword);
             results.extend(result);
         }
     }

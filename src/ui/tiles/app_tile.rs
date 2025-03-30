@@ -10,13 +10,11 @@ use super::Tile;
 impl Tile {
     pub fn app_tile(
         launcher: &Launcher,
-        index: i32,
         keyword: &str,
         commands: HashMap<String, AppData>,
         app_config: &SherlockConfig,
-    ) -> (i32, Vec<ResultItem>) {
+    ) -> Vec<ResultItem> {
         let mut results: Vec<ResultItem> = Default::default();
-        let mut index_ref = index;
 
         for (key, value) in commands.into_iter() {
             if value
@@ -24,7 +22,7 @@ impl Tile {
                 .to_lowercase()
                 .contains(&keyword.to_lowercase())
             {
-                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index_ref, true);
+                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
@@ -48,15 +46,20 @@ impl Tile {
                     Some(&value.exec),
                     None,
                 );
+                let shortcut_holder = match launcher.shortcut {
+                    true => builder.shortcut_holder,
+                    _ => None
+                };
 
-                index_ref += 1;
 
                 results.push(ResultItem {
                     priority: value.priority,
                     row_item: builder.object,
+                    shortcut: launcher.shortcut,
+                    shortcut_holder
                 });
             }
         }
-        return (index_ref, results);
+        return results;
     }
 }

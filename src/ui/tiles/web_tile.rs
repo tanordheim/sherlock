@@ -6,11 +6,10 @@ use crate::launcher::{Launcher, ResultItem};
 impl Tile {
     pub fn web_tile(
         launcher: &Launcher,
-        index: i32,
         keyword: &str,
         web: &Web,
-    ) -> (i32, Vec<ResultItem>) {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui", index, true);
+    ) -> Vec<ResultItem> {
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&web.icon));
@@ -37,12 +36,18 @@ impl Tile {
             None,
             Some(attrs),
         );
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None
+        };
 
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
+            shortcut: launcher.shortcut,
+            shortcut_holder,
         };
 
-        return (index + 1, vec![res]);
+        return vec![res];
     }
 }

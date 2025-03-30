@@ -367,14 +367,17 @@ pub fn set_results(
     }
 
     launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-    let results: Vec<ListBoxRow> = launcher_tiles.into_iter().map(|r| r.row_item).collect();
 
     if let Some(c) = CONFIG.get() {
-        for widget in results {
+        let mut shortcut_index = 1;
+        for widget in launcher_tiles {
             if home && c.behavior.animate {
-                widget.add_css_class("animate");
+                widget.row_item.add_css_class("animate");
             }
-            results_frame.append(&widget);
+            if let Some(shortcut_holder) = widget.shortcut_holder {
+                shortcut_index += shortcut_holder.apply_shortcut(shortcut_index);
+            }
+            results_frame.append(&widget.row_item);
         }
     }
     results_frame.focus_first();

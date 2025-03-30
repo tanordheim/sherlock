@@ -18,7 +18,7 @@ impl Tile {
         Option<AsyncOptions>,
         Box,
     )> {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui", 0, true);
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
 
         builder.category.set_text(&mpris.artist);
         builder.title.set_text(&mpris.title);
@@ -57,9 +57,15 @@ impl Tile {
         let attrs: Vec<(&str, &str)> = vec![("player", &mpris.player)];
         builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
 
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None
+        };
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
+            shortcut: launcher.shortcut,
+            shortcut_holder,
         };
 
         options.icon_holder_overlay = Some(overlay);

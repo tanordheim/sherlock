@@ -14,7 +14,7 @@ impl Tile {
             .iter()
             .map(|e| {
                 let builder =
-                    TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui", index, false);
+                    TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
 
                 if let Some(class) = match tile_type {
                     "ERROR" => Some("error"),

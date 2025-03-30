@@ -8,21 +8,20 @@ use crate::launcher::{Launcher, ResultItem};
 impl Tile {
     pub fn event_tile(
         launcher: &Launcher,
-        index: i32,
         keyword: &str,
         event_launcher: &EventLauncher,
-    ) -> (i32, Vec<ResultItem>) {
+    ) -> Vec<ResultItem>{
         let event = match &event_launcher.event {
             Some(event) => event,
-            None => return (index, vec![]),
+            None => return vec![],
         };
 
         //Handle searching
         if !event.title.contains(keyword) {
-            return (index, vec![]);
+            return vec![];
         }
 
-        let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui", index, false);
+        let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
         let mut attrs: Vec<(&str, &str)> = vec![];
 
         builder.title.set_text(&event.title);
@@ -40,10 +39,17 @@ impl Tile {
         }
 
         builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
+
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None
+        };
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
+            shortcut: launcher.shortcut,
+            shortcut_holder,
         };
-        return (index + 1, vec![res]);
+        return vec![res];
     }
 }

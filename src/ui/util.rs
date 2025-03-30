@@ -1,5 +1,5 @@
 use gtk4::gdk::{Key, ModifierType, Rectangle};
-use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType, Widget};
+use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType, Widget, Box as HVBox};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -126,6 +126,25 @@ impl RowOperations for ListBox {
         return ListBoxRow::new();
     }
 }
+
+pub trait ShortCut {
+    fn apply_shortcut(&self, index: i32) -> i32;
+}
+impl ShortCut for HVBox {
+    fn apply_shortcut(&self, index: i32) -> i32 {
+        if index < 6 {
+            if let Some(child) = self.first_child() {
+                if let Some(label) = child.downcast_ref::<Label>() {
+                    self.set_visible(true);
+                    label.set_text(&format!("ctrl + {}", index));
+                    return 1;
+                }
+            }
+        }
+        return 0;
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
