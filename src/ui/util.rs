@@ -5,8 +5,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
-use crate::launcher::{construct_tiles, Launcher};
-use crate::{APP_STATE, CONFIG};
+use crate::APP_STATE;
 
 pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
     APP_STATE.with(|state| {

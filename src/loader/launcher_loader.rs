@@ -132,9 +132,9 @@ impl Loader {
                     "audio_sink" => AudioLauncherFunctions::new()
                         .and_then(|launcher| {
                             launcher.get_current_player().and_then(|player| {
-                                launcher
-                                    .get_metadata(&player)
-                                    .and_then(|l| Some(LauncherType::MusicPlayerLauncher(l)))
+                                launcher.get_metadata(&player).and_then(|launcher| {
+                                    Some(LauncherType::MusicPlayerLauncher(launcher))
+                                })
                             })
                         })
                         .unwrap_or(LauncherType::Empty),

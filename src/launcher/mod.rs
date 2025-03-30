@@ -127,13 +127,8 @@ impl Launcher {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(&self, keyword, &bulk_text)
             }
-            LauncherType::MusicPlayerLauncher(mpris) => {
-                Tile::mpris_tile(&self, &mpris)
-            }
-            _ => {
-                println!("{:?}", self.launcher_type);
-                None
-            }
+            LauncherType::MusicPlayerLauncher(mpris) => Tile::mpris_tile(&self, &mpris),
+            _ => None,
         }
     }
     pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {

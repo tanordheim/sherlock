@@ -31,7 +31,6 @@ pub fn search(launchers: Vec<Launcher>) {
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
 
-
     change_event(&ui, modes, &mode, &launchers, &results);
     let custom_binds = CONFIG.get().map_or(ConfKeys::empty(), |c| {
         let prev = c.binds.prev.clone().unwrap_or_default();
@@ -208,7 +207,7 @@ fn change_event(
         &mode_ev_changed,
         String::new(),
         &results_ev_changed,
-        true
+        true,
     );
 
     ui.search_bar.connect_changed(move |search_bar| {
@@ -245,7 +244,7 @@ fn change_event(
                 &mode_ev_changed,
                 current_text,
                 &results_ev_changed,
-                false
+                false,
             );
         }
     });
@@ -264,16 +263,15 @@ pub fn async_calc(
     let cancel_flag = Rc::clone(&cancel_flag);
     let launchers = if home {
         let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
-                        .clone()
-                        .into_iter()
-                        .partition(|launcher| launcher.home);
-        show   
+            .clone()
+            .into_iter()
+            .partition(|launcher| launcher.home);
+        show
     } else {
         launchers.clone()
     };
-    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
-        .into_iter()
-        .partition(|launcher| launcher.r#async);
+    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
+        launchers.into_iter().partition(|launcher| launcher.r#async);
 
     // Create loader widgets
     // TODO
@@ -306,7 +304,7 @@ pub fn async_calc(
         &*results,
         &non_async_launchers,
         Some(&widgets),
-        home
+        home,
     );
     results.focus_first();
 
@@ -354,7 +352,7 @@ pub fn set_results(
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
     async_launchers: Option<&Vec<AsyncLauncherTile>>,
-    home: bool
+    home: bool,
 ) {
     // Remove all elements inside to avoid duplicates
     let mut launcher_tiles = Vec::new();

@@ -1,4 +1,3 @@
-use dbus::arg::RefArg;
 use glob::Pattern;
 use rayon::prelude::*;
 use regex::Regex;
@@ -11,7 +10,6 @@ use std::time::SystemTime;
 
 use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
 use super::{util, Loader};
-use crate::loader::config_loader;
 use crate::CONFIG;
 use util::{read_file, read_lines, AppData, SherlockAlias};
 
@@ -301,7 +299,7 @@ fn get_applications_dir() -> HashSet<PathBuf> {
                 String::from("/usr/share/applications/"),
                 String::from("~/.local/share/applications/"),
             ];
-            if let Some(c) = CONFIG.get(){
+            if let Some(c) = CONFIG.get() {
                 default_paths.extend(c.debug.app_paths.clone());
             };
 
@@ -311,7 +309,7 @@ fn get_applications_dir() -> HashSet<PathBuf> {
                 .map(|path| PathBuf::from(path))
                 .collect();
             paths
-        },
+        }
     }
 }
 
