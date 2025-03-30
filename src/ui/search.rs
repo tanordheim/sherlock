@@ -1,6 +1,6 @@
 use gtk4::{
     self,
-    gdk::{self, Key},
+    gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, EventControllerKey, Image,
 };
@@ -107,7 +107,7 @@ fn nav_event(
     println!("{:?}", conf_keys);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, modifiers| {
+    event_controller.connect_key_pressed(move |_, key, i, modifiers| {
         match key {
             k if Some(k) == custom_binds.prev
                 && custom_binds
@@ -165,7 +165,18 @@ fn nav_event(
                     return  true.into();
                 }
             }
-            _ => (),
+            _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
+                let shift = Some(ModifierType::SHIFT_MASK);
+                let tab = Some(Key::Tab);
+                if conf_keys.prev_mod == shift && conf_keys.prev == tab {
+                    results_ev_nav.focus_prev(&ui.result_viewport);
+                    return true.into();
+                } else if conf_keys.next_mod == shift && conf_keys.next == tab {
+                    results_ev_nav.focus_next(&ui.result_viewport);
+                    return true.into();
+                }
+            },
+             _ => (),
         }
         false.into()
     });
