@@ -4,6 +4,9 @@ In the Sherlock Application Launcher, each tile is associated with a specific "l
 
 Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [fallback.json](resources/fallback.json).<br>
 
+> **Example File:** [fallback.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json)
+<br>
+
 The launcher can be of the following types:<br>
 
 - **[App Launcher](#app-launcher):** Launches your apps. 
