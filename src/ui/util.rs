@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
-use crate::APP_STATE;
+use crate::{APP_STATE, CONFIG};
 
 pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
     APP_STATE.with(|state| {
@@ -152,6 +152,7 @@ pub struct ConfKeys {
     pub next_mod: Option<ModifierType>,
     pub prev: Option<Key>,
     pub prev_mod: Option<ModifierType>,
+    pub shortcut_modifier: Option<ModifierType>,
 }
 impl ConfKeys {
     pub fn from<T: AsRef<str>>(next: T, prev: T) -> Self {
@@ -162,7 +163,32 @@ impl ConfKeys {
             next_mod,
             prev,
             prev_mod,
+            shortcut_modifier: None,
         }
+    }
+    pub fn new() -> Self {
+        if let Some(c) = CONFIG.get(){
+            let (prev_mod, prev) = match &c.binds.prev {
+                Some(prev) => ConfKeys::eval_bind_combination(prev),
+                _ => (None, None)
+            };
+            let (next_mod, next) = match &c.binds.next {
+                Some(next) => ConfKeys::eval_bind_combination(next),
+                _ => (None, None)
+            };
+            let shortcut_modifier = match &c.binds.modifier {
+                Some(shortcut) => ConfKeys::eval_mod(shortcut),
+                _ => Some(ModifierType::CONTROL_MASK),
+            };
+            return ConfKeys{
+                next,
+                next_mod,
+                prev,
+                prev_mod,
+                shortcut_modifier,
+            }
+        }
+        ConfKeys::empty()
     }
     pub fn empty() -> Self {
         ConfKeys {
@@ -170,6 +196,7 @@ impl ConfKeys {
             next_mod: None,
             prev: None,
             prev_mod: None,
+            shortcut_modifier: None,
         }
     }
     fn eval_bind_combination<T: AsRef<str>>(key: T) -> (Option<ModifierType>, Option<Key>) {
@@ -180,8 +207,8 @@ impl ConfKeys {
             _ => (None, None),
         }
     }
-    fn eval_key(key: &str) -> Option<Key> {
-        match key {
+    fn eval_key<T: AsRef<str>>(key: T) -> Option<Key> {
+        match key.as_ref() {
             "tab" => Some(Key::Tab),
             "up" => Some(Key::Up),
             "down" => Some(Key::Down),
@@ -210,7 +237,7 @@ impl ConfKeys {
 
 #[test]
 fn test_custom_binds() {
-    let prev = "s-tab";
+    let prev = "shift-tab";
     let next = "tab";
     let sk = ConfKeys::from(next, prev);
     let sb = ConfKeys {
@@ -219,14 +246,16 @@ fn test_custom_binds() {
 
         next: Some(Key::Tab),
         next_mod: None,
+        shortcut_modifier: None,
     };
-    let ck = ConfKeys::from("tab", "c-tab");
+    let ck = ConfKeys::from("tab", "control-tab");
     let cb = ConfKeys {
         prev: Some(Key::Tab),
         prev_mod: Some(ModifierType::CONTROL_MASK),
 
         next: Some(Key::Tab),
         next_mod: None,
+        shortcut_modifier: None,
     };
     println!("{:?}", ck);
     assert_eq!(sk, sb);

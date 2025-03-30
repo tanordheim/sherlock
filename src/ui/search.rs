@@ -4,7 +4,7 @@ use gtk4::{
     prelude::*,
     Builder, EventControllerKey, Image,
 };
-use gtk4::{glib, ListBoxRow};
+use gtk4::glib;
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -103,6 +103,8 @@ fn nav_event(
     mode_ev_nav: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
 ) {
+    let conf_keys = ConfKeys::new();
+    println!("{:?}", conf_keys);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, modifiers| {
@@ -132,7 +134,7 @@ fn nav_event(
             }
             gdk::Key::BackSpace => {
                 let ctext = &ui.search_bar.text();
-                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
+                if conf_keys.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() {
@@ -150,7 +152,7 @@ fn nav_event(
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
+                if conf_keys.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
@@ -160,6 +162,7 @@ fn nav_event(
                         _ => return false.into(),
                     };
                     execute_by_index(&*results_ev_nav, key_index);
+                    return  true.into();
                 }
             }
             _ => (),

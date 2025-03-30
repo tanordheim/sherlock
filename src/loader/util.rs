@@ -217,6 +217,7 @@ impl SherlockConfig {
                 binds: ConfigBinds {
                     prev: None,
                     next: None,
+                    modifier: None,
                 },
             },
             non_breaking,
@@ -261,6 +262,8 @@ pub struct ConfigBinds {
     pub prev: Option<String>,
     #[serde(default)]
     pub next: Option<String>,
+    #[serde(default)]
+    pub modifier: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
