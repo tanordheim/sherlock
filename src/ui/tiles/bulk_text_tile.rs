@@ -22,7 +22,7 @@ impl Tile {
         Box,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
-        builder.object.set_css_classes(&vec!["bulk-text"]);
+        builder.object.add_css_class("bulk-text");
         builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.category.set_text(&launcher.name);
@@ -32,11 +32,17 @@ impl Tile {
         builder.content_body.set_text("Loading...");
         builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
 
+        let shortcut_holder = match launcher.shortcut {
+            true => builder.shortcut_holder,
+            _ => None
+        };
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut_holder: builder.shortcut_holder,
+            // builder.shortcut_holder if key in launcher is not false
+            shortcut_holder
         };
+
         return Some((
             res,
             Some(builder.content_title),
@@ -51,6 +57,7 @@ impl Tile {
         bulk_text: &BulkText,
     ) ->  Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
+        builder.object.add_css_class("bulk-text");
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&bulk_text.icon));

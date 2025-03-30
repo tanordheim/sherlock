@@ -47,11 +47,11 @@ impl Tile {
                     Some(&value.exec),
                     None,
                 );
+
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
                     _ => None,
                 };
-
                 results.push(ResultItem {
                     priority: value.priority,
                     row_item: builder.object,

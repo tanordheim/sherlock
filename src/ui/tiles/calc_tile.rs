@@ -20,7 +20,7 @@ impl Tile {
         };
 
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
-        builder.object.set_css_classes(&vec!["calc-tile"]);
+        builder.object.add_css_class("calc-tile");
         builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.equation_holder.set_text(&equation);
