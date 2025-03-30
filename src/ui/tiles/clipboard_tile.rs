@@ -113,7 +113,7 @@ impl Tile {
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
-                    _ => None
+                    _ => None,
                 };
                 results.push(ResultItem {
                     priority: launcher.priority as f32,

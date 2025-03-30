@@ -1,10 +1,10 @@
+use gtk4::glib;
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, EventControllerKey, Image,
 };
-use gtk4::glib;
 use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -127,7 +127,10 @@ fn nav_event(
             }
             gdk::Key::BackSpace => {
                 let ctext = &ui.search_bar.text();
-                if custom_binds.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
+                {
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() {
@@ -145,7 +148,10 @@ fn nav_event(
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if custom_binds.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
+                {
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
@@ -155,7 +161,7 @@ fn nav_event(
                         _ => return false.into(),
                     };
                     execute_by_index(&*results_ev_nav, key_index);
-                    return  true.into();
+                    return true.into();
                 }
             }
             // Pain - solution for shift-tab since gtk handles it as an individual event
@@ -169,8 +175,8 @@ fn nav_event(
                     results_ev_nav.focus_next(&ui.result_viewport);
                     return true.into();
                 }
-            },
-             _ => (),
+            }
+            _ => (),
         }
         false.into()
     });
@@ -284,7 +290,8 @@ pub fn async_calc(
         .iter()
         .filter_map(|launcher| {
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
-                || (current_mode == "all" && launcher.priority > 0) {
+                || (current_mode == "all" && launcher.priority > 0)
+            {
                 launcher.get_loader_widget(&current_text).map(
                     |(widget, title, body, async_opts, attrs)| AsyncLauncherTile {
                         launcher: launcher.clone(),
@@ -357,7 +364,7 @@ pub fn set_results(
     launchers: &Vec<Launcher>,
     async_launchers: Option<&Vec<AsyncLauncherTile>>,
     home: bool,
-    mod_str: &str
+    mod_str: &str,
 ) {
     // Remove all elements inside to avoid duplicates
     let mut launcher_tiles = Vec::new();

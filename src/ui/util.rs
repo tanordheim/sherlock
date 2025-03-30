@@ -1,6 +1,9 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
-use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType, Widget, Box as HVBox};
+use gtk4::{
+    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType,
+    Widget,
+};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -112,10 +115,10 @@ impl RowOperations for ListBox {
     fn focus_first(&self) {
         for child in &self.observe_children() {
             if let Some(child) = child.ok() {
-                if let Some(row) = child.downcast_ref::<SherlockRow>(){
+                if let Some(row) = child.downcast_ref::<SherlockRow>() {
                     if row.imp().spawn_focus.get() {
                         self.select_row(Some(row));
-                        return
+                        return;
                     }
                 }
             }
@@ -158,7 +161,6 @@ impl ShortCut for HVBox {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
     pub next: Option<Key>,
@@ -170,28 +172,28 @@ pub struct ConfKeys {
 }
 impl ConfKeys {
     pub fn new() -> Self {
-        if let Some(c) = CONFIG.get(){
+        if let Some(c) = CONFIG.get() {
             let (prev_mod, prev) = match &c.binds.prev {
                 Some(prev) => ConfKeys::eval_bind_combination(prev),
-                _ => (None, None)
+                _ => (None, None),
             };
             let (next_mod, next) = match &c.binds.next {
                 Some(next) => ConfKeys::eval_bind_combination(next),
-                _ => (None, None)
+                _ => (None, None),
             };
             let shortcut_modifier = match &c.binds.modifier {
                 Some(shortcut) => ConfKeys::eval_mod(shortcut),
                 _ => Some(ModifierType::CONTROL_MASK),
             };
             let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
-            return ConfKeys{
+            return ConfKeys {
                 next,
                 next_mod,
                 prev,
                 prev_mod,
                 shortcut_modifier,
                 shortcut_modifier_str,
-            }
+            };
         }
         ConfKeys::empty()
     }
@@ -239,21 +241,17 @@ impl ConfKeys {
             _ => None,
         }
     }
-    fn get_mod_str(mod_key: &Option<ModifierType>)-> String{
+    fn get_mod_str(mod_key: &Option<ModifierType>) -> String {
         let k = match mod_key {
-            Some(ModifierType::SHIFT_MASK) |
-            Some(ModifierType::LOCK_MASK) => "⇧",
-            Some(ModifierType::CONTROL_MASK) |
-            Some(ModifierType::META_MASK) => "⌘",
+            Some(ModifierType::SHIFT_MASK) | Some(ModifierType::LOCK_MASK) => "⇧",
+            Some(ModifierType::CONTROL_MASK) | Some(ModifierType::META_MASK) => "⌘",
             Some(ModifierType::ALT_MASK) => "⎇",
-            Some(ModifierType::SUPER_MASK)|
-            Some(ModifierType::HYPER_MASK) => "✦",
+            Some(ModifierType::SUPER_MASK) | Some(ModifierType::HYPER_MASK) => "✦",
             _ => "⌘",
         };
         k.to_string()
     }
 }
-
 
 #[test]
 fn test_custom_binds() {
@@ -283,5 +281,3 @@ fn test_custom_binds() {
     assert_eq!(sk, sb);
     assert_eq!(ck, cb);
 }
-
-

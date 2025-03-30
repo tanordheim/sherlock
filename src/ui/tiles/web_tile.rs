@@ -4,11 +4,7 @@ use crate::launcher::web_launcher::Web;
 use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn web_tile(
-        launcher: &Launcher,
-        keyword: &str,
-        web: &Web,
-    ) -> Vec<ResultItem> {
+    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &Web) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
         builder.object.set_spawn_focus(launcher.spawn_focus);
 
@@ -40,7 +36,7 @@ impl Tile {
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
-            _ => None
+            _ => None,
         };
         let res = ResultItem {
             priority: launcher.priority as f32,

@@ -6,11 +6,7 @@ use super::Tile;
 use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn calc_tile(
-        launcher: &Launcher,
-        equation: &str,
-        result: Option<f64>,
-    ) -> Vec<ResultItem> {
+    pub fn calc_tile(launcher: &Launcher, equation: &str, result: Option<f64>) -> Vec<ResultItem> {
         let result = if let Some(r) = result {
             r
         } else if let Ok(r) = eval_str(equation.trim()) {
@@ -33,7 +29,7 @@ impl Tile {
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
-            _ => None
+            _ => None,
         };
 
         let res = ResultItem {

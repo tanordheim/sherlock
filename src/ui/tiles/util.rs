@@ -1,5 +1,7 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, CONFIG
+    g_subclasses::sherlock_row::SherlockRow,
+    launcher::{Launcher, ResultItem},
+    CONFIG,
 };
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
 use std::collections::HashSet;
@@ -59,12 +61,12 @@ pub struct EventTileBuilder {
     pub start_time: Label,
     pub end_time: Label,
     pub attrs: Box,
-    pub shortcut_holder: Option<Box>
+    pub shortcut_holder: Option<Box>,
 }
 impl EventTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let holder: Box =  builder.object("holder").unwrap_or_default();
+        let holder: Box = builder.object("holder").unwrap_or_default();
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
@@ -77,7 +79,7 @@ impl EventTileBuilder {
             end_time: builder.object("end-time-label").unwrap_or_default(),
             icon: builder.object("icon-name").unwrap_or_default(),
             attrs: builder.object("attrs-holder").unwrap_or_default(),
-            shortcut_holder: builder.object("shortcut_holder")
+            shortcut_holder: builder.object("shortcut_holder"),
         }
     }
 
@@ -122,7 +124,7 @@ pub struct TileBuilder {
     pub tag_start: Label,
     pub tag_end: Label,
     pub shortcut_holder: Option<Box>,
-     
+
     // Specific to 'bulk_text_tile'
     pub content_title: Label,
     pub content_body: Label,
@@ -142,7 +144,6 @@ impl TileBuilder {
         let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
         let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
         let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
-
 
         // Append content to the sherlock row
         let object = SherlockRow::new();

@@ -18,9 +18,9 @@ pub struct CommandConfig {
     pub r#type: String,
     pub priority: f32,
 
-    #[serde(default="default_true")]
+    #[serde(default = "default_true")]
     pub shortcut: bool,
-    #[serde(default="default_true")]
+    #[serde(default = "default_true")]
     pub spawn_focus: bool,
     #[serde(default)]
     pub r#async: bool,

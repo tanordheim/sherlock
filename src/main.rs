@@ -9,11 +9,11 @@ use std::{env, process, thread};
 
 mod actions;
 mod daemon;
+mod g_subclasses;
 mod launcher;
 mod loader;
 mod lock;
 mod ui;
-mod g_subclasses;
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 use daemon::daemon::SherlockDeamon;

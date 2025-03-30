@@ -11,7 +11,9 @@ pub mod system_cmd_launcher;
 pub mod web_launcher;
 
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, ui::tiles::{util::AsyncOptions, Tile}, CONFIG
+    g_subclasses::sherlock_row::SherlockRow,
+    ui::tiles::{util::AsyncOptions, Tile},
+    CONFIG,
 };
 
 use app_launcher::App;
@@ -66,7 +68,7 @@ impl Launcher {
                 LauncherType::App(app) => {
                     Tile::app_tile(self, keyword, app.apps.clone(), app_config)
                 }
-                LauncherType::Web(web) => Tile::web_tile(self,  keyword, &web),
+                LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
                 LauncherType::Calc(_) => Tile::calc_tile(self, keyword, None),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self, keyword, &bulk_text)

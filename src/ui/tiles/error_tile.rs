@@ -13,8 +13,7 @@ impl Tile {
         let widgets: Vec<SherlockRow> = errors
             .iter()
             .map(|e| {
-                let builder =
-                    TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
+                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
 
                 if let Some(class) = match tile_type {
                     "ERROR" => Some("error"),

@@ -34,13 +34,13 @@ impl Tile {
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
-            _ => None
+            _ => None,
         };
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
             // builder.shortcut_holder if key in launcher is not false
-            shortcut_holder
+            shortcut_holder,
         };
 
         return Some((
@@ -55,7 +55,7 @@ impl Tile {
         launcher: &Launcher,
         keyword: &str,
         bulk_text: &BulkText,
-    ) ->  Vec<ResultItem> {
+    ) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
         builder.object.add_css_class("bulk-text");
 
@@ -66,13 +66,13 @@ impl Tile {
         builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
-            _ => None
+            _ => None,
         };
 
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut_holder
+            shortcut_holder,
         };
 
         return vec![res];
