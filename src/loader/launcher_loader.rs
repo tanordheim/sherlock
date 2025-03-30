@@ -157,6 +157,7 @@ impl Loader {
                     home: cmd.home,
                     launcher_type,
                     shortcut: cmd.shortcut.clone(),
+                    spawn_focus: cmd.spawn_focus.clone(),
                 })
             })
             .collect();

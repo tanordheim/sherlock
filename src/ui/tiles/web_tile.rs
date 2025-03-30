@@ -10,6 +10,7 @@ impl Tile {
         web: &Web,
     ) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&web.icon));
@@ -44,7 +45,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder,
         };
 

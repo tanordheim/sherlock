@@ -1,3 +1,4 @@
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
 use gtk4::{prelude::*, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType, Widget, Box as HVBox};
 use std::cell::RefCell;
@@ -5,6 +6,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::{APP_STATE, CONFIG};
 
 pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
@@ -108,9 +110,14 @@ impl RowOperations for ListBox {
         }
     }
     fn focus_first(&self) {
-        if let Some(first_row) = self.first_child() {
-            if let Some(row) = first_row.downcast_ref::<gtk4::ListBoxRow>() {
-                self.select_row(Some(row));
+        for child in &self.observe_children() {
+            if let Some(child) = child.ok() {
+                if let Some(row) = child.downcast_ref::<SherlockRow>(){
+                    if row.imp().spawn_focus.get() {
+                        self.select_row(Some(row));
+                        return
+                    }
+                }
             }
         }
     }
@@ -128,15 +135,21 @@ impl RowOperations for ListBox {
 }
 
 pub trait ShortCut {
-    fn apply_shortcut(&self, index: i32) -> i32;
+    fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32;
 }
 impl ShortCut for HVBox {
-    fn apply_shortcut(&self, index: i32) -> i32 {
+    fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32 {
         if index < 6 {
             if let Some(child) = self.first_child() {
                 if let Some(label) = child.downcast_ref::<Label>() {
                     self.set_visible(true);
-                    label.set_text(&format!("ctrl + {}", index));
+                    label.set_text(&format!("{}", mod_str));
+                }
+            }
+            if let Some(child) = self.last_child() {
+                if let Some(label) = child.downcast_ref::<Label>() {
+                    self.set_visible(true);
+                    label.set_text(&format!("{}", index));
                     return 1;
                 }
             }
@@ -153,19 +166,9 @@ pub struct ConfKeys {
     pub prev: Option<Key>,
     pub prev_mod: Option<ModifierType>,
     pub shortcut_modifier: Option<ModifierType>,
+    pub shortcut_modifier_str: String,
 }
 impl ConfKeys {
-    pub fn from<T: AsRef<str>>(next: T, prev: T) -> Self {
-        let (next_mod, next) = ConfKeys::eval_bind_combination(next);
-        let (prev_mod, prev) = ConfKeys::eval_bind_combination(prev);
-        ConfKeys {
-            next,
-            next_mod,
-            prev,
-            prev_mod,
-            shortcut_modifier: None,
-        }
-    }
     pub fn new() -> Self {
         if let Some(c) = CONFIG.get(){
             let (prev_mod, prev) = match &c.binds.prev {
@@ -180,12 +183,14 @@ impl ConfKeys {
                 Some(shortcut) => ConfKeys::eval_mod(shortcut),
                 _ => Some(ModifierType::CONTROL_MASK),
             };
+            let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
             return ConfKeys{
                 next,
                 next_mod,
                 prev,
                 prev_mod,
                 shortcut_modifier,
+                shortcut_modifier_str,
             }
         }
         ConfKeys::empty()
@@ -197,6 +202,7 @@ impl ConfKeys {
             prev: None,
             prev_mod: None,
             shortcut_modifier: None,
+            shortcut_modifier_str: String::new(),
         }
     }
     fn eval_bind_combination<T: AsRef<str>>(key: T) -> (Option<ModifierType>, Option<Key>) {
@@ -233,7 +239,21 @@ impl ConfKeys {
             _ => None,
         }
     }
+    fn get_mod_str(mod_key: &Option<ModifierType>)-> String{
+        let k = match mod_key {
+            Some(ModifierType::SHIFT_MASK) |
+            Some(ModifierType::LOCK_MASK) => "⇧",
+            Some(ModifierType::CONTROL_MASK) |
+            Some(ModifierType::META_MASK) => "⌘",
+            Some(ModifierType::ALT_MASK) => "⎇",
+            Some(ModifierType::SUPER_MASK)|
+            Some(ModifierType::HYPER_MASK) => "✦",
+            _ => "⌘",
+        };
+        k.to_string()
+    }
 }
+
 
 #[test]
 fn test_custom_binds() {
@@ -247,6 +267,7 @@ fn test_custom_binds() {
         next: Some(Key::Tab),
         next_mod: None,
         shortcut_modifier: None,
+        shortcut_modifier_str: String::new(),
     };
     let ck = ConfKeys::from("tab", "control-tab");
     let cb = ConfKeys {
@@ -256,8 +277,11 @@ fn test_custom_binds() {
         next: Some(Key::Tab),
         next_mod: None,
         shortcut_modifier: None,
+        shortcut_modifier_str: String::new(),
     };
     println!("{:?}", ck);
     assert_eq!(sk, sb);
     assert_eq!(ck, cb);
 }
+
+

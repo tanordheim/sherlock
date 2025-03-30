@@ -1,3 +1,4 @@
+use gtk4::prelude::WidgetExt;
 use meval::eval_str;
 
 use super::util::TileBuilder;
@@ -19,6 +20,9 @@ impl Tile {
         };
 
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
+        builder.object.set_css_classes(&vec!["calc-tile"]);
+        builder.object.set_spawn_focus(launcher.spawn_focus);
+
         builder.equation_holder.set_text(&equation);
         builder
             .result_holder
@@ -35,7 +39,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder,
         };
 

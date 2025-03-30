@@ -1,8 +1,7 @@
 use crate::{
-    launcher::{Launcher, ResultItem},
-    CONFIG,
+    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, CONFIG
 };
-use gtk4::{prelude::*, Box, Builder, Image, Label, ListBoxRow, Overlay, TextView};
+use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
 use std::collections::HashSet;
 
 #[derive(Debug)]
@@ -54,7 +53,7 @@ impl TextViewTileBuilder {
 
 #[derive(Default)]
 pub struct EventTileBuilder {
-    pub object: ListBoxRow,
+    pub object: SherlockRow,
     pub title: Label,
     pub icon: Image,
     pub start_time: Label,
@@ -65,9 +64,14 @@ pub struct EventTileBuilder {
 impl EventTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
+        let holder: Box =  builder.object("holder").unwrap_or_default();
+
+        // Append content to the sherlock row
+        let object = SherlockRow::new();
+        object.set_child(Some(&holder));
 
         EventTileBuilder {
-            object: builder.object("holder").unwrap_or_default(),
+            object,
             title: builder.object("title-label").unwrap_or_default(),
             start_time: builder.object("time-label").unwrap_or_default(),
             end_time: builder.object("end-time-label").unwrap_or_default(),
@@ -109,7 +113,7 @@ impl EventTileBuilder {
 
 #[derive(Default)]
 pub struct TileBuilder {
-    pub object: ListBoxRow,
+    pub object: SherlockRow,
     pub icon: Image,
     pub icon_holder: Box,
     pub title: Label,
@@ -130,7 +134,7 @@ pub struct TileBuilder {
 impl TileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let object: ListBoxRow = builder.object("holder").unwrap_or_default();
+        let holder: Box = builder.object("holder").unwrap_or_default();
         let icon: Image = builder.object("icon-name").unwrap_or_default();
         let title: Label = builder.object("app-name").unwrap_or_default();
         let category: Label = builder.object("launcher-type").unwrap_or_default();
@@ -138,6 +142,12 @@ impl TileBuilder {
         let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
         let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
         let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
+
+
+        // Append content to the sherlock row
+        let object = SherlockRow::new();
+        object.set_child(Some(&holder));
+        object.set_css_classes(&vec!["tile"]);
 
         // Specific to 'bulk_text_tile' and 'error_tile'
         let content_title: Label = builder.object("content-title").unwrap_or_default();

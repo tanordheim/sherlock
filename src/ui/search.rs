@@ -30,16 +30,11 @@ pub fn search(launchers: Vec<Launcher>) {
     let (mode, modes, vbox, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-
-    change_event(&ui, modes, &mode, &launchers, &results);
-    let custom_binds = CONFIG.get().map_or(ConfKeys::empty(), |c| {
-        let prev = c.binds.prev.clone().unwrap_or_default();
-        let next = c.binds.next.clone().unwrap_or_default();
-        ConfKeys::from(next, prev)
-    });
-
     ui.search_bar.grab_focus();
 
+    let custom_binds = ConfKeys::new();
+
+    change_event(&ui, modes, &mode, &launchers, &results, &custom_binds);
     nav_event(results, ui, mode, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
@@ -103,7 +98,6 @@ fn nav_event(
     mode_ev_nav: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
 ) {
-    let conf_keys = ConfKeys::new();
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, i, modifiers| {
@@ -133,7 +127,7 @@ fn nav_event(
             }
             gdk::Key::BackSpace => {
                 let ctext = &ui.search_bar.text();
-                if conf_keys.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
+                if custom_binds.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() {
@@ -151,7 +145,7 @@ fn nav_event(
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if conf_keys.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
+                if custom_binds.shortcut_modifier.map_or(false, |modifier| modifiers.contains(modifier)){
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
@@ -168,10 +162,10 @@ fn nav_event(
             _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
-                if conf_keys.prev_mod == shift && conf_keys.prev == tab {
+                if custom_binds.prev_mod == shift && custom_binds.prev == tab {
                     results_ev_nav.focus_prev(&ui.result_viewport);
                     return true.into();
-                } else if conf_keys.next_mod == shift && conf_keys.next == tab {
+                } else if custom_binds.next_mod == shift && custom_binds.next == tab {
                     results_ev_nav.focus_next(&ui.result_viewport);
                     return true.into();
                 }
@@ -193,12 +187,14 @@ fn change_event(
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
     results: &Rc<ListBox>,
+    custom_binds: &ConfKeys,
 ) {
     //Cloning:
     let mode_title_ev_changed = ui.mode_title.clone();
     let launchers_ev_changed = launchers.clone();
     let mode_ev_changed = Rc::clone(mode);
     let results_ev_changed = Rc::clone(results);
+    let mod_str = custom_binds.shortcut_modifier_str.clone();
 
     // Setting up async capabilities
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
@@ -212,6 +208,7 @@ fn change_event(
         String::new(),
         &results_ev_changed,
         true,
+        &mod_str,
     );
 
     ui.search_bar.connect_changed(move |search_bar| {
@@ -239,6 +236,7 @@ fn change_event(
                     &launchers_ev_changed,
                     None,
                     false,
+                    mod_str.clone().as_str(),
                 );
             }
         } else {
@@ -250,6 +248,7 @@ fn change_event(
                 current_text,
                 &results_ev_changed,
                 false,
+                &mod_str,
             );
         }
     });
@@ -263,6 +262,7 @@ pub fn async_calc(
     current_text: String,
     results: &Rc<ListBox>,
     home: bool,
+    mod_str: &str,
 ) {
     *cancel_flag.borrow_mut() = false;
     let cancel_flag = Rc::clone(&cancel_flag);
@@ -310,6 +310,7 @@ pub fn async_calc(
         &non_async_launchers,
         Some(&widgets),
         home,
+        mod_str,
     );
     results.focus_first();
 
@@ -358,6 +359,7 @@ pub fn set_results(
     launchers: &Vec<Launcher>,
     async_launchers: Option<&Vec<AsyncLauncherTile>>,
     home: bool,
+    mod_str: &str
 ) {
     // Remove all elements inside to avoid duplicates
     let mut launcher_tiles = Vec::new();
@@ -380,7 +382,7 @@ pub fn set_results(
                 widget.row_item.add_css_class("animate");
             }
             if let Some(shortcut_holder) = widget.shortcut_holder {
-                shortcut_index += shortcut_holder.apply_shortcut(shortcut_index);
+                shortcut_index += shortcut_holder.apply_shortcut(shortcut_index, mod_str);
             }
             results_frame.append(&widget.row_item);
         }

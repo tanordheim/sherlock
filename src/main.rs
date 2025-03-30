@@ -13,9 +13,9 @@ mod launcher;
 mod loader;
 mod lock;
 mod ui;
+mod g_subclasses;
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
-
 use daemon::daemon::SherlockDeamon;
 use loader::{
     util::{SherlockConfig, SherlockError},

@@ -1,6 +1,6 @@
-use super::util::SherlockSearch;
-use gtk4::ListBoxRow;
+use crate::g_subclasses::sherlock_row::SherlockRow;
 
+use super::util::SherlockSearch;
 use super::util::TileBuilder;
 use super::Tile;
 
@@ -9,8 +9,8 @@ impl Tile {
         lines: &Vec<String>,
         method: &str,
         keyword: &str,
-    ) -> Vec<ListBoxRow> {
-        let mut results: Vec<ListBoxRow> = Default::default();
+    ) -> Vec<SherlockRow> {
+        let mut results: Vec<SherlockRow> = Default::default();
 
         for item in lines {
             if item.fuzzy_match(keyword) {

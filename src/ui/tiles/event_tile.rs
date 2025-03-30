@@ -1,5 +1,7 @@
 use std::vec;
 
+use gtk4::prelude::WidgetExt;
+
 use super::util::EventTileBuilder;
 use super::Tile;
 use crate::launcher::event_launcher::EventLauncher;
@@ -22,8 +24,10 @@ impl Tile {
         }
 
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
-        let mut attrs: Vec<(&str, &str)> = vec![];
+        builder.object.set_css_classes(&vec!["event-tile"]);
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
+        let mut attrs: Vec<(&str, &str)> = vec![];
         builder.title.set_text(&event.title);
         builder
             .icon
@@ -47,7 +51,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder,
         };
         return vec![res];

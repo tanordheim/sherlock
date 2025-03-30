@@ -1,3 +1,6 @@
+use std::vec;
+
+use gtk4::prelude::WidgetExt;
 use gtk4::{Box, Label};
 
 use crate::launcher::bulk_text_launcher::BulkText;
@@ -19,6 +22,8 @@ impl Tile {
         Box,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
+        builder.object.set_css_classes(&vec!["bulk-text"]);
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.category.set_text(&launcher.name);
         builder.icon.set_icon_name(Some(&bulk_text.icon));
@@ -30,7 +35,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder: builder.shortcut_holder,
         };
         return Some((
@@ -61,7 +65,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder
         };
 

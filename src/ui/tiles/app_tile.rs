@@ -23,6 +23,7 @@ impl Tile {
                 .contains(&keyword.to_lowercase())
             {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                builder.object.set_spawn_focus(launcher.spawn_focus);
 
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
@@ -48,15 +49,13 @@ impl Tile {
                 );
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
-                    _ => None
+                    _ => None,
                 };
-
 
                 results.push(ResultItem {
                     priority: value.priority,
                     row_item: builder.object,
-                    shortcut: launcher.shortcut,
-                    shortcut_holder
+                    shortcut_holder,
                 });
             }
         }

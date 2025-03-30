@@ -54,12 +54,14 @@ impl Tile {
                 name = "From Clipboard";
                 if let Some(main_domain) = captures.get(3) {
                     builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                    builder.object.set_spawn_focus(launcher.spawn_focus);
                     is_valid = true;
                     method = "web_launcher";
                     let main_domain = main_domain.as_str();
                     icon = known_pages.get(main_domain).map_or("google", |m| m);
                 } else if let Some(hex_color) = captures.get(6) {
                     builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                    builder.object.set_spawn_focus(launcher.spawn_focus);
                     let (r, g, b) = hex_to_rgb(hex_color.as_str());
                     let pix_buf = vec![r, g, b];
                     let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -116,7 +118,6 @@ impl Tile {
                 results.push(ResultItem {
                     priority: launcher.priority as f32,
                     row_item: builder.object,
-                    shortcut: launcher.shortcut,
                     shortcut_holder,
                 });
             }

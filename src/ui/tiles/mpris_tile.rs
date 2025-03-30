@@ -19,6 +19,7 @@ impl Tile {
         Box,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
 
         builder.category.set_text(&mpris.artist);
         builder.title.set_text(&mpris.title);
@@ -64,7 +65,6 @@ impl Tile {
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut: launcher.shortcut,
             shortcut_holder,
         };
 

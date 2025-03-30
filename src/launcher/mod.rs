@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use gtk4::{Box, Label, ListBoxRow};
+use gtk4::{Box, Label};
 
 pub mod app_launcher;
 pub mod audio_launcher;
@@ -11,8 +11,7 @@ pub mod system_cmd_launcher;
 pub mod web_launcher;
 
 use crate::{
-    ui::tiles::{util::AsyncOptions, Tile},
-    CONFIG,
+    g_subclasses::sherlock_row::SherlockRow, ui::tiles::{util::AsyncOptions, Tile}, CONFIG
 };
 
 use app_launcher::App;
@@ -49,15 +48,14 @@ pub struct Launcher {
     pub home: bool,
     pub launcher_type: LauncherType,
     pub shortcut: bool,
+    pub spawn_focus: bool,
 }
 
 #[derive(Clone, Debug)]
 pub struct ResultItem {
-    pub shortcut: bool,
     pub priority: f32,
-    pub row_item: ListBoxRow,
+    pub row_item: SherlockRow,
     pub shortcut_holder: Option<Box>,
-
 }
 
 impl Launcher {
