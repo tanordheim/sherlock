@@ -71,6 +71,7 @@ impl EventTileBuilder {
         // Append content to the sherlock row
         let object = SherlockRow::new();
         object.set_child(Some(&holder));
+        object.set_css_classes(&vec!["tile"]);
 
         EventTileBuilder {
             object,
