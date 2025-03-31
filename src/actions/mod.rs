@@ -44,7 +44,6 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 eval_exit();
             }
             "copy" => {
-                println!("{:?}", method);
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
@@ -73,9 +72,10 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             }
             _ => {
-                println!("{}", method);
                 if let Some(out) = attrs.get("text_content") {
                     print!("{}", out);
+                } else {
+                    println!("Return method \"{}\" not recognized", method);
                 }
                 eval_exit();
             }

@@ -243,7 +243,7 @@ impl Loader {
 
             // Refresh cache in the background
             let old_apps = apps.clone();
-            rayon::spawn_fifo(move||{
+            rayon::spawn_fifo(move || {
                 if let Ok(new_apps) =
                     Loader::get_new_applications(old_apps, &flags, priority, counts, decimals)
                 {

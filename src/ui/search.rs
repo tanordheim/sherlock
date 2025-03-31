@@ -267,7 +267,7 @@ pub fn async_calc(
 ) {
     *cancel_flag.borrow_mut() = false;
     // If task is currently running, abort it
-    if let Some(t) = current_task.borrow_mut().take(){
+    if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
     let cancel_flag = Rc::clone(&cancel_flag);
@@ -320,46 +320,47 @@ pub fn async_calc(
     );
 
     // Gather results for aynchronous widgets
-    
+
     let task = glib::MainContext::default().spawn_local({
         let current_task_clone = Rc::clone(current_task);
         async move {
-        if *cancel_flag.borrow() {
-            return;
-        }
-        // get results for aysnc launchers
-        for widget in async_widgets.iter() {
-            if let Some((title, body, next_content)) =
-                widget.launcher.get_result(&current_text).await
-            {
-                widget.title.as_ref().map(|t| t.set_text(&title));
-                widget.body.as_ref().map(|b| b.set_text(&body));
-                if let Some(next_content) = next_content {
-                    let label =
-                        Label::new(Some(format!("next_content | {}", next_content).as_str()));
-                    widget.attrs.append(&label);
-                }
+            if *cancel_flag.borrow() {
+                return;
             }
-            if let Some(opts) = &widget.async_opts {
-                // Replace one image with another
-                if let Some(overlay) = &opts.icon_holder_overlay {
-                    if let Some((image, was_cached)) = widget.launcher.get_image().await {
-                        // Also check for animate key
-                        if !was_cached {
-                            overlay.add_css_class("image-replace-overlay");
+            // get results for aysnc launchers
+            for widget in async_widgets.iter() {
+                if let Some((title, body, next_content)) =
+                    widget.launcher.get_result(&current_text).await
+                {
+                    widget.title.as_ref().map(|t| t.set_text(&title));
+                    widget.body.as_ref().map(|b| b.set_text(&body));
+                    if let Some(next_content) = next_content {
+                        let label =
+                            Label::new(Some(format!("next_content | {}", next_content).as_str()));
+                        widget.attrs.append(&label);
+                    }
+                }
+                if let Some(opts) = &widget.async_opts {
+                    // Replace one image with another
+                    if let Some(overlay) = &opts.icon_holder_overlay {
+                        if let Some((image, was_cached)) = widget.launcher.get_image().await {
+                            // Also check for animate key
+                            if !was_cached {
+                                overlay.add_css_class("image-replace-overlay");
+                            }
+                            let gtk_image = Image::from_pixbuf(Some(&image));
+                            gtk_image.set_widget_name("album-cover");
+                            gtk_image.set_pixel_size(50);
+                            overlay.add_overlay(&gtk_image);
+                        } else {
+                            println!("failed to load image");
                         }
-                        let gtk_image = Image::from_pixbuf(Some(&image));
-                        gtk_image.set_widget_name("album-cover");
-                        gtk_image.set_pixel_size(50);
-                        overlay.add_overlay(&gtk_image);
-                    } else {
-                        println!("failed to load image");
                     }
                 }
             }
+            *current_task_clone.borrow_mut() = None;
         }
-        *current_task_clone.borrow_mut() = None;
-    }});
+    });
     *current_task.borrow_mut() = Some(task);
 }
 
