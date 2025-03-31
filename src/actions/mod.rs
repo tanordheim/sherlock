@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::process::exit;
 
+use crate::ui::window::destroy_window;
 use teamslaunch::teamslaunch;
 
 use crate::{
@@ -48,6 +48,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
+                eval_exit();
             }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
@@ -86,10 +87,11 @@ fn eval_exit() {
     if let Some(c) = CONFIG.get() {
         match c.behavior.daemonize {
             true => hide_window(true),
-            false => exit(0),
+            false => destroy_window(),
         }
     }
 }
+
 fn increment(key: &str) {
     if let Ok(count_reader) = CounterReader::new() {
         let _ = count_reader.increment(key);
