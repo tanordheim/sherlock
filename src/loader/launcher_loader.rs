@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use std::env;
 use std::fs::{self, File};
-use std::intrinsics::fallback;
 use std::path::PathBuf;
 
 use crate::actions::util::read_from_clipboard;
@@ -16,7 +15,6 @@ use crate::launcher::{
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use clipboard_launcher::Clp;
-use dbus::arg::RefArg;
 use simd_json;
 use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
@@ -27,7 +25,7 @@ use super::{
     Loader,
 };
 use crate::{CONFIG, FLAGS};
-use util::{AppData, CommandConfig, SherlockFlags};
+use util::{AppData, CommandConfig};
 
 impl Loader {
     pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {

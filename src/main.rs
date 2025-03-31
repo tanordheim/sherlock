@@ -1,6 +1,5 @@
 use gio::prelude::*;
-use gtk4::{prelude::*, Application, ApplicationWindow};
-use gtk4::{Entry, EventController, Stack, Widget};
+use gtk4::Application;
 use loader::util::{SherlockErrorType, SherlockFlags};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -12,44 +11,19 @@ mod daemon;
 mod g_subclasses;
 mod launcher;
 mod loader;
-mod lock;
+mod application;
 mod ui;
 
-const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 use daemon::daemon::SherlockDeamon;
 use loader::{
     util::{SherlockConfig, SherlockError},
     Loader,
 };
 use ui::util::{remove_stack_children, show_stack_page};
+use application::util::AppState;
+use application::lock;
 
-struct AppState {
-    window: Option<ApplicationWindow>,
-    stack: Option<Stack>,
-    search_bar: Option<Entry>,
-}
-impl AppState {
-    pub fn add_stack_page<T, U>(&self, child: T, name: U)
-    where
-        T: IsA<Widget>,
-        U: AsRef<str>,
-    {
-        if let Some(stack) = &self.stack {
-            stack.add_named(&child, Some(name.as_ref()));
-        }
-    }
-
-    pub fn add_event_listener<T: IsA<EventController>>(&self, controller: T) {
-        if let Some(window) = &self.window {
-            window.add_controller(controller);
-        }
-    }
-    pub fn remove_event_listener<T: IsA<EventController>>(&self, controller: &T) {
-        if let Some(window) = &self.window {
-            window.remove_controller(controller);
-        }
-    }
-}
+const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
 thread_local! {
     static APP_STATE: RefCell<Option<Rc<AppState>>> = RefCell::new(None);
