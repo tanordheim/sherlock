@@ -137,6 +137,7 @@ fn nav_event(
                     if ctext.is_empty() {
                         set_mode(&ui.mode_title, &mode_ev_nav, "all", &"All".to_string());
                         // to trigger homescreen rebuild
+                        let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
                     }
                 }
@@ -210,6 +211,7 @@ fn change_event(
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
 
+    // Setting home screen
     async_calc(
         &cancel_flag,
         &current_task,
@@ -217,12 +219,11 @@ fn change_event(
         &mode_ev_changed,
         String::new(),
         &results_ev_changed,
-        true,
         &mod_str,
     );
 
     ui.search_bar.connect_changed(move |search_bar| {
-        let current_text = search_bar.text().to_string();
+        let mut current_text = search_bar.text().to_string();
         if let Some(task) = current_task.borrow_mut().take() {
             task.abort();
         };
@@ -237,29 +238,18 @@ fn change_event(
                     mode_name,
                 );
                 search_bar.set_text("");
-
-                set_results(
-                    "",
-                    &mode_ev_changed.borrow(),
-                    &*results_ev_changed,
-                    &launchers_ev_changed,
-                    None,
-                    false,
-                    mod_str.clone().as_str(),
-                );
+                current_text = String::new();
             }
-        } else {
-            async_calc(
-                &cancel_flag,
-                &current_task,
-                &launchers_ev_changed,
-                &mode_ev_changed,
-                current_text,
-                &results_ev_changed,
-                false,
-                &mod_str,
-            );
         }
+        async_calc(
+            &cancel_flag,
+            &current_task,
+            &launchers_ev_changed,
+            &mode_ev_changed,
+            current_text,
+            &results_ev_changed,
+            &mod_str,
+        );
     });
 }
 
@@ -270,11 +260,11 @@ pub fn async_calc(
     mode: &Rc<RefCell<String>>,
     current_text: String,
     results: &Rc<ListBox>,
-    home: bool,
     mod_str: &str,
 ) {
     *cancel_flag.borrow_mut() = false;
     let cancel_flag = Rc::clone(&cancel_flag);
+    let home = current_text.is_empty() && mode.borrow().as_str() == "all";
     let launchers = if home {
         let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
             .clone()
@@ -290,7 +280,7 @@ pub fn async_calc(
     // Create loader widgets
     // TODO
     let current_mode = mode.borrow().trim().to_string();
-    let widgets: Vec<AsyncLauncherTile> = async_launchers
+    let async_widgets: Vec<AsyncLauncherTile> = async_launchers
         .iter()
         .filter_map(|launcher| {
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
@@ -312,24 +302,23 @@ pub fn async_calc(
         })
         .collect();
 
-    set_results(
+    populate(
         &current_text,
         &mode.borrow(),
         &*results,
         &non_async_launchers,
-        Some(&widgets),
+        Some(&async_widgets),
         home,
         mod_str,
     );
-    results.focus_first();
 
-    // Async widget execution
+    // Gather results for aynchronous widgets
     let task = glib::MainContext::default().spawn_local(async move {
         if *cancel_flag.borrow() {
             return;
         }
         // get results for aysnc launchers
-        for widget in widgets.iter() {
+        for widget in async_widgets.iter() {
             if let Some((title, body, next_content)) =
                 widget.launcher.get_result(&current_text).await
             {
@@ -363,7 +352,7 @@ pub fn async_calc(
     *current_task.borrow_mut() = Some(task);
 }
 
-pub fn set_results(
+pub fn populate(
     keyword: &str,
     mode: &str,
     results_frame: &ListBox,
