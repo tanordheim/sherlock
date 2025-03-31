@@ -19,6 +19,7 @@
 - [x] Daemonize for faster startup
     - [x] Make animations possible on every show
     - [x] Reconstruct the window content on every startup and reread the appfiles
+- [ ] Make the home screen function as a dashboard with event tiles, spotify widget, most used apps widget, time, etc
 - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
 - [ ] Make more widgets asynchronous.
