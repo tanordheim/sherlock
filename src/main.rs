@@ -158,10 +158,8 @@ async fn main() {
         if let Some(c) = CONFIG.get() {
             match c.behavior.daemonize {
                 true => {
-                    // deamonize option
-
-                    // Cache the results
-                    ui::window::show_window(true);
+                    // Used to cache render
+                    ui::window::show_window(false);
                     ui::window::hide_window(false);
 
                     thread::spawn(move || {
