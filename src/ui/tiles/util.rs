@@ -80,7 +80,7 @@ impl EventTileBuilder {
             end_time: builder.object("end-time-label").unwrap_or_default(),
             icon: builder.object("icon-name").unwrap_or_default(),
             attrs: builder.object("attrs-holder").unwrap_or_default(),
-            shortcut_holder: builder.object("shortcut_holder"),
+            shortcut_holder: builder.object("shortcut-holder"),
         }
     }
 
