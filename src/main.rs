@@ -185,7 +185,7 @@ async fn main() {
                     // deamonize option
 
                     // Cache the results
-                    ui::window::show_window();
+                    ui::window::show_window(true);
                     ui::window::hide_window(false);
 
                     thread::spawn(move || {
@@ -194,7 +194,7 @@ async fn main() {
                 }
                 false => {
                     // Show window without daemonizing
-                    ui::window::show_window();
+                    ui::window::show_window(false);
                 }
             }
         }

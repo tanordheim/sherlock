@@ -2,11 +2,14 @@ use cli_clipboard::{ClipboardContext, ClipboardProvider};
 
 use crate::loader::util::{SherlockError, SherlockErrorType};
 
+use super::eval_exit;
+
 pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {
     let mut ctx = ClipboardContext::new().map_err(|e| SherlockError {
         error: SherlockErrorType::ClipboardError,
         traceback: e.to_string(),
     })?;
+
     let _ = ctx.set_contents(string.to_string());
     Ok(())
 }

@@ -53,8 +53,10 @@ fn hide_app() {
     hide_window(false);
 }
 
-pub fn show_window() {
-    reload_content();
+pub fn show_window(reload: bool) {
+    if reload {
+        reload_content();
+    };
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.present());

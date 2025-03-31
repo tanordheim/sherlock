@@ -31,6 +31,7 @@ dbus = "0.9.7"
 reqwest = {version = "0.12.15", features = ["blocking"]}
 gdk-pixbuf = "0.20.9"
 bytes = "1.10.1"
+zbus = "5.5.0"
 
 [package.metadata]
 assets = ["resources/*"]

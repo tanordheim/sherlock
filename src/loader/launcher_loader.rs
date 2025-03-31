@@ -92,6 +92,7 @@ impl Loader {
                         let mut commands: HashMap<String, AppData> =
                             serde_json::from_value(cmd.args["commands"].clone())
                                 .unwrap_or_default();
+                        println!("{:?}", commands);
                         commands.iter_mut().for_each(|(_, v)| {
                             v.priority = match counts_clone.get(&v.exec) {
                                 Some(c) if c == &0.0 => prio,
