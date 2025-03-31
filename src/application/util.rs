@@ -1,5 +1,5 @@
-use gtk4::{Entry, EventController, Stack, Widget};
 use gtk4::{prelude::*, ApplicationWindow};
+use gtk4::{Entry, EventController, Stack, Widget};
 
 pub struct AppState {
     pub window: Option<ApplicationWindow>,

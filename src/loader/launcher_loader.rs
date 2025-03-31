@@ -29,7 +29,7 @@ use util::{AppData, CommandConfig};
 
 impl Loader {
     pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
-        let sherlock_flags = FLAGS.get().ok_or_else(||SherlockError{
+        let sherlock_flags = FLAGS.get().ok_or_else(|| SherlockError {
             error: SherlockErrorType::FlagLoadError,
             traceback: String::new(),
         })?;
@@ -244,9 +244,7 @@ fn parse_launcher_configs(
 
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
-    fn load_user_fallback(
-        fallback_path: &str,
-    ) -> Result<Vec<CommandConfig>, SherlockError> {
+    fn load_user_fallback(fallback_path: &str) -> Result<Vec<CommandConfig>, SherlockError> {
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
         match File::open(&fallback_path) {

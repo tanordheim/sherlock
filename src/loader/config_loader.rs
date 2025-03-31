@@ -24,7 +24,7 @@ impl Loader {
                         })
                     }
                 };
-                
+
                 // Override from flags
                 if sherlock_flags.caching {
                     config.behavior.caching = true;

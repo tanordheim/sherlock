@@ -7,21 +7,21 @@ use std::sync::OnceLock;
 use std::{env, process, thread};
 
 mod actions;
+mod application;
 mod daemon;
 mod g_subclasses;
 mod launcher;
 mod loader;
-mod application;
 mod ui;
 
+use application::lock;
+use application::util::AppState;
 use daemon::daemon::SherlockDeamon;
 use loader::{
     util::{SherlockConfig, SherlockError},
     Loader,
 };
 use ui::util::{remove_stack_children, show_stack_page};
-use application::util::AppState;
-use application::lock;
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 
@@ -45,7 +45,6 @@ async fn main() {
             process::exit(1);
         }
     };
-
 
     // Setup flags
     let sherlock_flags = Loader::load_flags()
@@ -176,14 +175,13 @@ async fn main() {
     application.run();
 }
 
-
-pub fn reload_content()->Option<()>{
+pub fn reload_content() -> Option<()> {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let app_config = CONFIG.get()?;
     let sherlock_flags = FLAGS.get()?;
     remove_stack_children();
-    
+
     let (launchers, n) = Loader::load_launchers()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();

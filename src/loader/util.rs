@@ -138,10 +138,9 @@ impl SherlockErrorType {
                 };
                 ("ConfigError".to_string(), message)
             }
-            SherlockErrorType::FlagLoadError => (
-                format!("FlagLoadError"),
-                format!("Failed to load flags"),
-            ),
+            SherlockErrorType::FlagLoadError => {
+                (format!("FlagLoadError"), format!("Failed to load flags"))
+            }
             SherlockErrorType::RegexError(key) => (
                 format!("RegexError"),
                 format!("Failed to compile the regular expression for \"{}\"", key),

@@ -1,4 +1,3 @@
-
 use crate::g_subclasses::sherlock_row::SherlockRow;
 
 use super::util::SherlockSearch;

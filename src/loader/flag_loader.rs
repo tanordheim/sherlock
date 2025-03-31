@@ -101,7 +101,10 @@ pub fn print_help() -> Result<(), SherlockError> {
             "Force Sherlock to use a singular tile to display the piped content",
         ),
         ("--cache", "Specify the sherlock cache file (.json)."),
-        ("--daemonize", "If this flag is set, sherlock will run in daemon mode."),
+        (
+            "--daemonize",
+            "If this flag is set, sherlock will run in daemon mode.",
+        ),
     ];
 
     // Print header
