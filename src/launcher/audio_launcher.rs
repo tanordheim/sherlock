@@ -36,7 +36,7 @@ impl MusicPlayerLauncher {
         let bytes = match MusicPlayerLauncher::read_cached_cover(&loc) {
             Ok(b) => b,
             Err(_) => {
-                if self.art.starts_with("file"){
+                if self.art.starts_with("file") {
                     MusicPlayerLauncher::read_image_file(&self.art).ok()?
                 } else {
                     let response = reqwest::get(&self.art).await.ok()?;
