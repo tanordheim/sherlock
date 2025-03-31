@@ -33,6 +33,7 @@ impl Loader {
             &provider,
             gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
         );
+        drop(provider);
         Ok(non_breaking)
     }
 }
