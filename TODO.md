@@ -5,7 +5,7 @@
 ## Scripts
 - [x] On startup, check if the clipboard contains a URL and enable URL search from it.
     - [x] Improve the functionality further for example display colors
-- [ ] Create a custom Spotify (ncspot) script to control it.
+- [x] Create a custom Spotify (ncspot) script to control it.
 
 
 ## Functionalities
@@ -52,8 +52,10 @@
 
 ## Documentation
 - [x] Add flag section in docs.
+- [ ] Add documentation for custom scripts
+- [ ] Add documentation for piping
 
 ## Porting
-- [ ] X11 Support?
+- [ ] X11 Support? Seems to work apart from centering the window and hiding the title bar
 - [ ] Windows? 
 
