@@ -16,9 +16,9 @@
 - [x] Startup animation
 - [x] Caching: Add functionality to read files that are not yet cached
 - [x] Teams Event Tile: Make a launcher and tile that allows joining upcoming teams meetings
-- [ ] Daemonize for faster startup
-    - [ ] Make animations possible on every show
-    - [ ] Reconstruct the window content on every startup and reread the appfiles
+- [x] Daemonize for faster startup
+    - [x] Make animations possible on every show
+    - [x] Reconstruct the window content on every startup and reread the appfiles
 - [ ] Create a widget that uses `gtk4::Builder::from_string(ui_string)`.
 - [ ] Modular Widget: depending on an external condition (e.g. Spotify is playing -> Spotify tile)
 - [ ] Make more widgets asynchronous.
