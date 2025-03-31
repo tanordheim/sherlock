@@ -9,7 +9,6 @@ use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::time::Duration;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -267,6 +266,10 @@ pub fn async_calc(
     mod_str: &str,
 ) {
     *cancel_flag.borrow_mut() = false;
+    // If task is currently running, abort it
+    if let Some(t) = current_task.borrow_mut().take(){
+        t.abort();
+    };
     let cancel_flag = Rc::clone(&cancel_flag);
     let home = current_text.is_empty() && mode.borrow().as_str() == "all";
     let launchers = if home {
@@ -317,7 +320,10 @@ pub fn async_calc(
     );
 
     // Gather results for aynchronous widgets
-    let task = glib::MainContext::default().spawn_local(async move {
+    
+    let task = glib::MainContext::default().spawn_local({
+        let current_task_clone = Rc::clone(current_task);
+        async move {
         if *cancel_flag.borrow() {
             return;
         }
@@ -352,7 +358,8 @@ pub fn async_calc(
                 }
             }
         }
-    });
+        *current_task_clone.borrow_mut() = None;
+    }});
     *current_task.borrow_mut() = Some(task);
 }
 
