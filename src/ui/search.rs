@@ -9,6 +9,7 @@ use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::time::Duration;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -200,56 +201,59 @@ fn change_event(
     results: &Rc<ListBox>,
     custom_binds: &ConfKeys,
 ) {
-    //Cloning:
-    let mode_title_ev_changed = ui.mode_title.clone();
-    let launchers_ev_changed = launchers.clone();
-    let mode_ev_changed = Rc::clone(mode);
-    let results_ev_changed = Rc::clone(results);
-    let mod_str = custom_binds.shortcut_modifier_str.clone();
-
     // Setting up async capabilities
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
+
+    // vars
+    let mod_str = custom_binds.shortcut_modifier_str.clone();
 
     // Setting home screen
     async_calc(
         &cancel_flag,
         &current_task,
-        &launchers_ev_changed,
-        &mode_ev_changed,
+        &launchers,
+        &mode,
         String::new(),
-        &results_ev_changed,
+        &results,
         &mod_str,
     );
 
-    ui.search_bar.connect_changed(move |search_bar| {
-        let mut current_text = search_bar.text().to_string();
-        if let Some(task) = current_task.borrow_mut().take() {
-            task.abort();
-        };
-        *cancel_flag.borrow_mut() = true;
-        if !current_text.is_empty() && modes.contains_key(&current_text) {
-            // Logic to apply modes
-            if let Some(mode_name) = modes.get(&current_text) {
-                set_mode(
-                    &mode_title_ev_changed,
-                    &mode_ev_changed,
-                    &current_text,
-                    mode_name,
-                );
-                search_bar.set_text("");
-                current_text = String::new();
+    ui.search_bar.connect_changed({
+        let mode_title_clone = ui.mode_title.clone();
+        let launchers_clone = launchers.clone();
+        let mode_clone = Rc::clone(mode);
+        let results_clone = Rc::clone(results);
+
+        move |search_bar| {
+            let mut current_text = search_bar.text().to_string();
+            if let Some(task) = current_task.borrow_mut().take() {
+                task.abort();
+            };
+            *cancel_flag.borrow_mut() = true;
+            if !current_text.trim().is_empty() && modes.contains_key(&current_text) {
+                // Logic to apply modes
+                if let Some(mode_name) = modes.get(&current_text) {
+                    set_mode(&mode_title_clone, &mode_clone, &current_text, mode_name);
+                    // Logic to safely reset the search bar
+                    let search_bar_clone = search_bar.clone();
+                    glib::idle_add_local(move || {
+                        search_bar_clone.set_text("");
+                        glib::ControlFlow::Break
+                    });
+                    current_text.clear();
+                }
             }
+            async_calc(
+                &cancel_flag,
+                &current_task,
+                &launchers_clone,
+                &mode_clone,
+                current_text,
+                &results_clone,
+                &mod_str,
+            );
         }
-        async_calc(
-            &cancel_flag,
-            &current_task,
-            &launchers_ev_changed,
-            &mode_ev_changed,
-            current_text,
-            &results_ev_changed,
-            &mod_str,
-        );
     });
 }
 
