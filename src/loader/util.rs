@@ -53,6 +53,7 @@ pub struct SherlockFlags {
     pub center_raw: bool,
     pub caching: bool,
     pub cache: String,
+    pub daemonize: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]

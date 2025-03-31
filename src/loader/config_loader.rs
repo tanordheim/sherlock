@@ -25,6 +25,9 @@ impl Loader {
                     config.behavior.caching = true;
                     config.behavior.cache = sherlock_flags.cache.clone();
                 }
+                if sherlock_flags.daemonize {
+                    config.behavior.daemonize = true;
+                }
                 Ok((config, vec![]))
             }
             Err(e) => match e.kind() {
@@ -38,9 +41,13 @@ impl Loader {
                     let (mut config, n) = SherlockConfig::default();
                     non_breaking.extend(n);
 
+                    // Override from flags
                     if sherlock_flags.caching {
                         config.behavior.caching = true;
                         config.behavior.cache = sherlock_flags.cache.clone();
+                    }
+                    if sherlock_flags.daemonize {
+                        config.behavior.daemonize = true;
                     }
                     Ok((config, non_breaking))
                 }
