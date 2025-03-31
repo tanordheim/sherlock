@@ -53,6 +53,8 @@
             gtk4-layer-shell.dev
             sqlite.dev
             wayland.dev
+            openssl.dev
+            dbus.dev
           ];
 
           commonArgs = {

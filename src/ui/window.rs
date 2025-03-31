@@ -50,7 +50,7 @@ fn exit_app() {
     std::process::exit(0)
 }
 fn hide_app() {
-    hide_window(false);
+    hide_window(true);
 }
 
 pub fn show_window(reload: bool) {

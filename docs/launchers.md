@@ -205,6 +205,7 @@ Specifies the offset from the `date` parameter.<br>
 
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
+
 --- 
 
 ## Music Player
@@ -223,4 +224,5 @@ Specifies the second offset from the `date` parameter.<br>
 
 ### Arguments (args):
 None
+
 --- 
