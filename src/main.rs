@@ -72,10 +72,11 @@ async fn main() {
         }
     };
 
+
+    // Setup flags
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
-
     match FLAGS.set(sherlock_flags.clone()) {
         Ok(_) => {}
         Err(_) => {
@@ -87,11 +88,10 @@ async fn main() {
     };
 
     // Parse configs from 'config.toml'
-    let (app_config, n) = Loader::load_config(&sherlock_flags)
+    let (app_config, n) = Loader::load_config()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or(loader::util::SherlockConfig::default());
     non_breaking.extend(n);
-
     match CONFIG.set(app_config.clone()) {
         Ok(_) => {}
         Err(_) => {
@@ -125,7 +125,7 @@ async fn main() {
         let mut non_breaking = non_breaking.clone();
 
         // Initialize launchers from 'fallback.json'
-        let (launchers, n) = Loader::load_launchers(&sherlock_flags)
+        let (launchers, n) = Loader::load_launchers()
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);
@@ -135,7 +135,7 @@ async fn main() {
         non_breaking.extend(n);
 
         // Load CSS Stylesheet
-        let n = Loader::load_css(&sherlock_flags)
+        let n = Loader::load_css(&sherlock_flags.style)
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);
@@ -210,7 +210,7 @@ pub fn reload_content()->Option<()>{
     let sherlock_flags = FLAGS.get()?;
     remove_stack_children();
     
-    let (launchers, n) = Loader::load_launchers(&sherlock_flags)
+    let (launchers, n) = Loader::load_launchers()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
 

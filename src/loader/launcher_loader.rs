@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use std::env;
 use std::fs::{self, File};
+use std::intrinsics::fallback;
 use std::path::PathBuf;
 
 use crate::actions::util::read_from_clipboard;
@@ -15,6 +16,7 @@ use crate::launcher::{
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
 use clipboard_launcher::Clp;
+use dbus::arg::RefArg;
 use simd_json;
 use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
@@ -24,17 +26,19 @@ use super::{
     util::{self, SherlockError, SherlockErrorType},
     Loader,
 };
-use crate::CONFIG;
+use crate::{CONFIG, FLAGS};
 use util::{AppData, CommandConfig, SherlockFlags};
 
 impl Loader {
-    pub fn load_launchers(
-        sherlock_flags: &SherlockFlags,
-    ) -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
-        // Read fallback data here:
+    pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
+        let sherlock_flags = FLAGS.get().ok_or_else(||SherlockError{
+            error: SherlockErrorType::FlagLoadError,
+            traceback: String::new(),
+        })?;
         let mut non_breaking: Vec<SherlockError> = Vec::new();
+
         // Read fallback data here:
-        let (launcher_config, n) = parse_launcher_configs(sherlock_flags)?;
+        let (launcher_config, n) = parse_launcher_configs(sherlock_flags.fallback.as_str())?;
         non_breaking.extend(n);
 
         // Read cached counter file
@@ -235,7 +239,7 @@ impl CounterReader {
 }
 
 fn parse_launcher_configs(
-    sherlock_flags: &SherlockFlags,
+    fallback_path: &str,
 ) -> Result<(Vec<CommandConfig>, Vec<SherlockError>), SherlockError> {
     // Reads all the configurations of launchers. Either from fallback.json or from default
     // file.
@@ -243,24 +247,24 @@ fn parse_launcher_configs(
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
     fn load_user_fallback(
-        sherlock_flags: &SherlockFlags,
+        fallback_path: &str,
     ) -> Result<Vec<CommandConfig>, SherlockError> {
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
-        match File::open(&sherlock_flags.fallback) {
+        match File::open(&fallback_path) {
             Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(sherlock_flags.fallback.to_string()),
+                error: SherlockErrorType::FileParseError(fallback_path.to_string()),
                 traceback: e.to_string(),
             }),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(SherlockError {
-                error: SherlockErrorType::FileExistError(sherlock_flags.fallback.to_string()),
+                error: SherlockErrorType::FileExistError(fallback_path.to_string()),
                 traceback: format!(
                     "The file \"{}\" does not exist in the specified location.",
-                    sherlock_flags.fallback
+                    fallback_path
                 ),
             }),
             Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(sherlock_flags.fallback.to_string()),
+                error: SherlockErrorType::FileReadError(fallback_path.to_string()),
                 traceback: e.to_string(),
             }),
         }
@@ -288,7 +292,7 @@ fn parse_launcher_configs(
         })
     }
 
-    let config = match load_user_fallback(sherlock_flags)
+    let config = match load_user_fallback(fallback_path)
         .map_err(|e| non_breaking.push(e))
         .ok()
     {
