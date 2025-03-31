@@ -20,6 +20,7 @@ use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
+use super::util::parse_priority;
 use super::{
     util::{self, SherlockError, SherlockErrorType},
     Loader,
@@ -97,7 +98,7 @@ impl Loader {
                         commands.iter_mut().for_each(|(_, v)| {
                             v.priority = match counts_clone.get(&v.exec) {
                                 Some(c) if c == &0.0 => prio,
-                                Some(c) => prio - (*c as f32) * 10f32.powi(max_decimals),
+                                Some(c) => parse_priority(prio, *c as f32, max_decimals),
                                 _ => prio,
                             };
                         });

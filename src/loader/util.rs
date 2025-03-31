@@ -391,3 +391,7 @@ fn is_terminal_installed(terminal: &str) -> bool {
         .output()
         .is_ok()
 }
+
+pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
+    priority + 1.0 - count * 10f32.powi(-decimals)
+}
