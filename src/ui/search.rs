@@ -377,7 +377,6 @@ pub fn set_results(
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
-    println!("{:?}", mode);
     let widgets = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
     launcher_tiles.extend(widgets);
     if let Some(a_wid) = async_launchers {

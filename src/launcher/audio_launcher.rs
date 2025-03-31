@@ -214,7 +214,6 @@ impl AudioLauncherFunctions {
                 }
             });
         }
-        // println!("{:?}", meta_data);
         Some(MusicPlayerLauncher {
             artist: meta_data
                 .get("xesam:artist")

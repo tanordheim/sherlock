@@ -91,7 +91,6 @@ fn eval_exit() {
     }
 }
 fn increment(key: &str) {
-    println!("incrementing {:?}", key);
     if let Ok(count_reader) = CounterReader::new() {
         let _ = count_reader.increment(key);
     };
