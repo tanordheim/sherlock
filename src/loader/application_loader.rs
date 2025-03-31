@@ -243,7 +243,7 @@ impl Loader {
 
             // Refresh cache in the background
             let old_apps = apps.clone();
-            std::thread::spawn(move || {
+            rayon::spawn_fifo(move||{
                 if let Ok(new_apps) =
                     Loader::get_new_applications(old_apps, &flags, priority, counts, decimals)
                 {
@@ -257,7 +257,7 @@ impl Loader {
             Loader::load_applications_from_disk(sherlock_flags, None, priority, counts, decimals)?;
         // Write the cache in the background
         let app_clone = apps.clone();
-        std::thread::spawn(move || Loader::write_cache(&app_clone, &cache_loc));
+        rayon::spawn_fifo(move || Loader::write_cache(&app_clone, &cache_loc));
         Ok(apps)
     }
 }
