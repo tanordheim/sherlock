@@ -2,7 +2,7 @@ use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
-use crate::{APP_STATE, CONFIG};
+use crate::{reload_content, APP_STATE, CONFIG};
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     // 618 with, 591 without notification bar
@@ -54,6 +54,7 @@ fn hide_app() {
 }
 
 pub fn show_window() {
+    reload_content();
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.present());

@@ -1,7 +1,7 @@
 use gio::prelude::*;
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use gtk4::{Entry, EventController, Stack, Widget};
-use loader::util::SherlockErrorType;
+use loader::util::{SherlockErrorType, SherlockFlags};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
@@ -21,7 +21,7 @@ use loader::{
     util::{SherlockConfig, SherlockError},
     Loader,
 };
-use ui::util::show_stack_page;
+use ui::util::{remove_stack_children, show_stack_page};
 
 struct AppState {
     window: Option<ApplicationWindow>,
@@ -55,6 +55,7 @@ thread_local! {
     static APP_STATE: RefCell<Option<Rc<AppState>>> = RefCell::new(None);
 }
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
+static FLAGS: OnceLock<SherlockFlags> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
@@ -74,6 +75,16 @@ async fn main() {
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
+
+    match FLAGS.set(sherlock_flags.clone()) {
+        Ok(_) => {}
+        Err(_) => {
+            startup_errors.push(SherlockError {
+                error: SherlockErrorType::ConfigError(None),
+                traceback: format!("should never get to this"),
+            });
+        }
+    };
 
     // Parse configs from 'config.toml'
     let (app_config, n) = Loader::load_config(&sherlock_flags)
@@ -189,4 +200,46 @@ async fn main() {
         }
     });
     application.run();
+}
+
+
+pub fn reload_content()->Option<()>{
+    let mut startup_errors: Vec<SherlockError> = Vec::new();
+    let mut non_breaking: Vec<SherlockError> = Vec::new();
+    let app_config = CONFIG.get()?;
+    let sherlock_flags = FLAGS.get()?;
+    remove_stack_children();
+    
+    let (launchers, n) = Loader::load_launchers(&sherlock_flags)
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+
+    non_breaking.extend(n);
+    let pipe = Loader::load_pipe_args();
+    if pipe.is_empty() {
+        ui::search::search(launchers);
+    } else {
+        if sherlock_flags.display_raw {
+            ui::user::display_raw(pipe, sherlock_flags.center_raw);
+        } else {
+            let lines: Vec<String> = pipe
+                .split("\n")
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .collect();
+            ui::user::display_pipe(lines);
+        }
+    };
+
+    // Logic for the Error-View
+    if !app_config.debug.try_suppress_errors {
+        let show_errors = !startup_errors.is_empty();
+        let show_warnings = !app_config.debug.try_suppress_warnings && !non_breaking.is_empty();
+        if show_errors || show_warnings {
+            ui::error_view::errors(&startup_errors, &non_breaking);
+            show_stack_page("error-page", None);
+        }
+    };
+
+    None
 }
