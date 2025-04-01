@@ -51,6 +51,7 @@ pub struct Launcher {
     pub launcher_type: LauncherType,
     pub shortcut: bool,
     pub spawn_focus: bool,
+    pub only_home: bool,
 }
 
 #[derive(Clone, Debug)]

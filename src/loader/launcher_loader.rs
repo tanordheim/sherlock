@@ -158,6 +158,7 @@ impl Loader {
                     priority: cmd.priority as u32,
                     r#async: cmd.r#async,
                     home: cmd.home,
+                    only_home: cmd.only_home,
                     launcher_type,
                     shortcut: cmd.shortcut.clone(),
                     spawn_focus: cmd.spawn_focus.clone(),

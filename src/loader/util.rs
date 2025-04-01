@@ -27,6 +27,8 @@ pub struct CommandConfig {
     #[serde(default)]
     pub home: bool,
     #[serde(default)]
+    pub only_home: bool,
+    #[serde(default)]
     pub args: serde_json::Value,
 }
 

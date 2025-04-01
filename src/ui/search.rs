@@ -259,7 +259,7 @@ fn change_event(
 pub fn async_calc(
     cancel_flag: &Rc<RefCell<bool>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-    launchers: &Vec<Launcher>,
+    launchers: &[Launcher],
     mode: &Rc<RefCell<String>>,
     current_text: String,
     results: &Rc<ListBox>,
@@ -272,17 +272,12 @@ pub fn async_calc(
     };
     let cancel_flag = Rc::clone(&cancel_flag);
     let home = current_text.is_empty() && mode.borrow().as_str() == "all";
-    let launchers = if home {
-        let (show, _): (Vec<Launcher>, Vec<Launcher>) = launchers
-            .clone()
-            .into_iter()
-            .partition(|launcher| launcher.home);
-        show
-    } else {
-        launchers.clone()
-    };
+    let filtered_launchers: Vec<Launcher> = launchers.iter()
+        .filter(|launcher| (home && launcher.home) || (!home && !!launcher.only_home))
+        .cloned()
+        .collect();
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-        launchers.into_iter().partition(|launcher| launcher.r#async);
+        filtered_launchers.into_iter().partition(|launcher| launcher.r#async);
 
     // Create loader widgets
     // TODO
