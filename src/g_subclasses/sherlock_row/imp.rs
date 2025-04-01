@@ -26,6 +26,7 @@ impl ObjectImpl for SherlockRow {
     fn constructed(&self) {
         self.parent_constructed();
         let obj = self.obj();
+        // Make Sherlock execute current row on multi click
         let gesture = GestureClick::new();
         gesture.set_button(0);
         gesture.connect_pressed({
@@ -42,8 +43,6 @@ impl ObjectImpl for SherlockRow {
     }
 }
 
-// Trait shared by all widgets
+// Make SherlockRow function with `IsA widget and ListBoxRow`
 impl WidgetImpl for SherlockRow {}
-
-// Trait shared by all buttons
 impl ListBoxRowImpl for SherlockRow {}
