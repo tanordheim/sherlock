@@ -135,7 +135,7 @@ fn nav_event(
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() {
-                        set_mode(&ui.mode_title, &mode_ev_nav, "all", &"All".to_string());
+                        set_mode(&ui.mode_title, &mode_ev_nav, "all", &"Home".to_string());
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
@@ -272,12 +272,14 @@ pub fn async_calc(
     };
     let cancel_flag = Rc::clone(&cancel_flag);
     let home = current_text.is_empty() && mode.borrow().as_str() == "all";
-    let filtered_launchers: Vec<Launcher> = launchers.iter()
+    let filtered_launchers: Vec<Launcher> = launchers
+        .iter()
         .filter(|launcher| (home && launcher.home) || (!home && !!launcher.only_home))
         .cloned()
         .collect();
-    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) =
-        filtered_launchers.into_iter().partition(|launcher| launcher.r#async);
+    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers
+        .into_iter()
+        .partition(|launcher| launcher.r#async);
 
     // Create loader widgets
     // TODO
