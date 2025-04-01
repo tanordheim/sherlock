@@ -134,7 +134,7 @@ fn nav_event(
                 {
                     let _ = &ui.search_bar.set_text("");
                 } else {
-                    if ctext.is_empty() {
+                    if ctext.is_empty() && mode_ev_nav.borrow().as_str() != "all"{
                         set_mode(&ui.mode_title, &mode_ev_nav, "all", &"Home".to_string());
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
