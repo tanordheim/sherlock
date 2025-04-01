@@ -94,9 +94,9 @@ fn construct_window(
 }
 
 fn nav_event(
-    results_ev_nav: Rc<ListBox>,
+    results: Rc<ListBox>,
     ui: SearchUI,
-    mode_ev_nav: Rc<RefCell<String>>,
+    mode: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
 ) {
     let event_controller = EventControllerKey::new();
@@ -108,7 +108,7 @@ fn nav_event(
                     .prev_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results_ev_nav.focus_prev(&ui.result_viewport);
+                results.focus_prev(&ui.result_viewport);
                 return true.into();
             }
             k if Some(k) == custom_binds.next
@@ -116,14 +116,14 @@ fn nav_event(
                     .next_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results_ev_nav.focus_next(&ui.result_viewport);
+                results.focus_next(&ui.result_viewport);
                 return true.into();
             }
             gdk::Key::Up => {
-                results_ev_nav.focus_prev(&ui.result_viewport);
+                results.focus_prev(&ui.result_viewport);
             }
             gdk::Key::Down => {
-                results_ev_nav.focus_next(&ui.result_viewport);
+                results.focus_next(&ui.result_viewport);
                 return true.into();
             }
             gdk::Key::BackSpace => {
@@ -134,20 +134,17 @@ fn nav_event(
                 {
                     let _ = &ui.search_bar.set_text("");
                 } else {
-                    if ctext.is_empty() && mode_ev_nav.borrow().as_str() != "all"{
-                        set_mode(&ui.mode_title, &mode_ev_nav, "all", &"Home".to_string());
+                    if ctext.is_empty() && mode.borrow().as_str() != "all" {
+                        set_mode(&ui.mode_title, &mode, "all", &"Home".to_string());
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
                     }
                 }
-                results_ev_nav.focus_first();
+                results.focus_first();
             }
             gdk::Key::Return => {
-                if let Some(row) = results_ev_nav
-                    .selected_row()
-                    .and_downcast_ref::<SherlockRow>()
-                {
+                if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
                     let attrs: HashMap<String, String> = get_row_attrs(row);
                     execute_from_attrs(attrs);
                 }
@@ -165,7 +162,7 @@ fn nav_event(
                         Key::_5 => 5,
                         _ => return false.into(),
                     };
-                    execute_by_index(&*results_ev_nav, key_index);
+                    execute_by_index(&*results, key_index);
                     return true.into();
                 }
             }
@@ -174,10 +171,10 @@ fn nav_event(
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
                 if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                    results_ev_nav.focus_prev(&ui.result_viewport);
+                    results.focus_prev(&ui.result_viewport);
                     return true.into();
                 } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                    results_ev_nav.focus_next(&ui.result_viewport);
+                    results.focus_next(&ui.result_viewport);
                     return true.into();
                 }
             }
