@@ -274,7 +274,7 @@ pub fn async_calc(
     let home = current_text.is_empty() && mode.borrow().as_str() == "all";
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
-        .filter(|launcher| (home && launcher.home) || (!home && !!launcher.only_home))
+        .filter(|launcher| (home && launcher.home) || (!home && !launcher.only_home))
         .cloned()
         .collect();
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers

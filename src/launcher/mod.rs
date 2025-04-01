@@ -9,6 +9,7 @@ pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod system_cmd_launcher;
 pub mod web_launcher;
+mod utils;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
