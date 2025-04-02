@@ -29,7 +29,7 @@
           ...
         }: let
           name = "sherlock";
-          version = "0.1.6";
+          version = "0.1.7";
 
           pkgs = import nixpkgs {
             inherit system;
