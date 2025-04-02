@@ -67,12 +67,12 @@ impl MusicPlayerLauncher {
             File::create(&path)
         }
         .map_err(|e| SherlockError {
-            error: SherlockErrorType::FileExistError(format!("{:?}", &path)),
+            error: SherlockErrorType::FileExistError(path.clone()),
             traceback: e.to_string(),
         })?;
 
         file.write_all(&image).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileExistError(format!("{:?}", &path)),
+            error: SherlockErrorType::FileExistError(path.clone()),
             traceback: e.to_string(),
         })?;
         // if file not exist, create and write it
@@ -86,13 +86,13 @@ impl MusicPlayerLauncher {
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".sherlock/mpris-cache/").join(loc);
 
-        let mut file = File::open(path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileExistError(loc.to_string()),
+        let mut file = File::open(&path).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileExistError(path.clone()),
             traceback: e.to_string(),
         })?;
         let mut buffer = vec![];
         file.read_to_end(&mut buffer).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(loc.to_string()),
+            error: SherlockErrorType::FileReadError(path.clone()),
             traceback: e.to_string(),
         })?;
         Ok(buffer.into())
@@ -100,13 +100,13 @@ impl MusicPlayerLauncher {
     fn read_image_file(loc: &str) -> Result<Bytes, SherlockError> {
         let path = PathBuf::from(loc.trim_start_matches("file://"));
 
-        let mut file = File::open(path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileExistError(loc.to_string()),
+        let mut file = File::open(&path).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileExistError(path.clone()),
             traceback: e.to_string(),
         })?;
         let mut buffer = vec![];
         file.read_to_end(&mut buffer).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(loc.to_string()),
+            error: SherlockErrorType::FileReadError(path.clone()),
             traceback: e.to_string(),
         })?;
         Ok(buffer.into())

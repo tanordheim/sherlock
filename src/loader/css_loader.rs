@@ -4,22 +4,27 @@ use std::path::Path;
 
 use super::util::{SherlockError, SherlockErrorType};
 use super::Loader;
+use crate::CONFIG;
 
 impl Loader {
-    pub fn load_css(css_path: &str) -> Result<Vec<SherlockError>, SherlockError> {
+    pub fn load_css() -> Result<Vec<SherlockError>, SherlockError> {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         let provider = CssProvider::new();
 
-        // Load the default css
-        provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
+        let config = CONFIG.get().ok_or_else(|| SherlockError {
+            error: SherlockErrorType::ConfigError(None),
+            traceback: String::new(),
+        })?;
 
         // Load the custom css
-        if Path::new(css_path).exists() {
-            provider.load_from_path(css_path);
+        if Path::new(&config.files.css).exists() {
+            provider.load_from_path(&config.files.css);
         } else {
+            // Load the default css
+            provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
             non_breaking.push(SherlockError {
-                error: SherlockErrorType::FileExistError(css_path.to_string()),
-                traceback: "Using default css".to_string(),
+                error: SherlockErrorType::FileExistError(config.files.css.clone()),
+                traceback: String::from("Using default css"),
             });
         }
 

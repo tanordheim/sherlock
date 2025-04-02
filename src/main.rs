@@ -111,7 +111,7 @@ async fn main() {
         non_breaking.extend(n);
 
         // Load CSS Stylesheet
-        let n = Loader::load_css(&sherlock_flags.style)
+        let n = Loader::load_css()
             .map_err(|e| error_list.push(e))
             .unwrap_or_default();
         non_breaking.extend(n);

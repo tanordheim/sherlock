@@ -8,14 +8,13 @@ use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-use super::util::{SherlockError, SherlockErrorType, SherlockFlags};
+use super::util::{SherlockError, SherlockErrorType};
 use super::{util, Loader};
 use crate::CONFIG;
 use util::{parse_priority, read_file, read_lines, AppData, SherlockAlias};
 
 impl Loader {
     pub fn load_applications_from_disk(
-        sherlock_flags: &SherlockFlags,
         applications: Option<HashSet<PathBuf>>,
         priority: f32,
         counts: HashMap<String, f32>,
@@ -41,27 +40,27 @@ impl Loader {
         };
 
         // Parse user-specified 'sherlockignore' file
-        let ignore_apps: Vec<Pattern> = match read_lines(&sherlock_flags.ignore) {
+        let ignore_apps: Vec<Pattern> = match read_lines(&config.files.ignore) {
             Ok(lines) => lines
                 .map_while(Result::ok)
                 .filter_map(|line| Pattern::new(&line.to_lowercase()).ok())
                 .collect(),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
             Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(sherlock_flags.ignore.to_string()),
+                error: SherlockErrorType::FileReadError(config.files.ignore.clone()),
                 traceback: e.to_string(),
             })?,
         };
 
         // Parse user-specified 'sherlock_alias.json' file
-        let aliases: HashMap<String, SherlockAlias> = match File::open(&sherlock_flags.alias) {
+        let aliases: HashMap<String, SherlockAlias> = match File::open(&config.files.alias) {
             Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
+                error: SherlockErrorType::FileReadError(config.files.alias.clone()),
                 traceback: e.to_string(),
             })?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
             Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(sherlock_flags.alias.to_string()),
+                error: SherlockErrorType::FileReadError(config.files.alias.clone()),
                 traceback: e.to_string(),
             })?,
         };
@@ -148,16 +147,19 @@ impl Loader {
 
     fn get_new_applications(
         mut apps: HashMap<String, AppData>,
-        flags: &SherlockFlags,
         priority: f32,
         counts: HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
+        let config = CONFIG.get().ok_or_else(|| SherlockError {
+            error: SherlockErrorType::ConfigError(None),
+            traceback: String::new(),
+        })?;
         let system_apps = get_applications_dir();
 
         // check if sherlock_alias was modified
-        let alias_path = Path::new(&flags.alias);
-        let cache_path = Path::new(&flags.cache);
+        let alias_path = Path::new(&config.files.alias);
+        let cache_path = Path::new(&config.behavior.cache);
 
         fn modtime(path: &Path) -> Option<SystemTime> {
             match fs::metadata(path) {
@@ -168,9 +170,7 @@ impl Loader {
         match (modtime(&alias_path), modtime(&cache_path)) {
             (Some(t1), Some(t2)) => {
                 if t1 >= t2 {
-                    return Loader::load_applications_from_disk(
-                        flags, None, priority, counts, decimals,
-                    );
+                    return Loader::load_applications_from_disk(None, priority, counts, decimals);
                 }
             }
             _ => {}
@@ -197,13 +197,7 @@ impl Loader {
         });
 
         // get information for uncached applications
-        match Loader::load_applications_from_disk(
-            flags,
-            Some(desktop_files),
-            priority,
-            counts,
-            decimals,
-        ) {
+        match Loader::load_applications_from_disk(Some(desktop_files), priority, counts, decimals) {
             Ok(new_apps) => apps.extend(new_apps),
             _ => {}
         };
@@ -222,14 +216,15 @@ impl Loader {
     }
 
     pub fn load_applications(
-        sherlock_flags: &SherlockFlags,
         priority: f32,
         counts: HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
-        let cache_loc = sherlock_flags.cache.to_string();
-        let flags = sherlock_flags.clone();
-        let cached_apps: Option<HashMap<String, AppData>> = File::open(&cache_loc)
+        let config = CONFIG.get().ok_or_else(|| SherlockError {
+            error: SherlockErrorType::ConfigError(None),
+            traceback: String::new(),
+        })?;
+        let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
             .ok()
             .and_then(|f| simd_json::from_reader(f).ok());
 
@@ -245,19 +240,18 @@ impl Loader {
             let old_apps = apps.clone();
             rayon::spawn_fifo(move || {
                 if let Ok(new_apps) =
-                    Loader::get_new_applications(old_apps, &flags, priority, counts, decimals)
+                    Loader::get_new_applications(old_apps, priority, counts, decimals)
                 {
-                    Loader::write_cache(&new_apps, &cache_loc);
+                    Loader::write_cache(&new_apps, &config.behavior.cache);
                 }
             });
             return Ok(apps);
         }
 
-        let apps =
-            Loader::load_applications_from_disk(sherlock_flags, None, priority, counts, decimals)?;
+        let apps = Loader::load_applications_from_disk(None, priority, counts, decimals)?;
         // Write the cache in the background
         let app_clone = apps.clone();
-        rayon::spawn_fifo(move || Loader::write_cache(&app_clone, &cache_loc));
+        rayon::spawn_fifo(move || Loader::write_cache(&app_clone, &config.behavior.cache));
         Ok(apps)
     }
 }
