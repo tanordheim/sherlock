@@ -114,7 +114,7 @@ impl EventTileBuilder {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct TileBuilder {
     pub object: SherlockRow,
     pub icon: Image,

@@ -38,6 +38,12 @@ impl SherlockFlags {
                 .position(|arg| arg == flag)
                 .map_or(false, |_| true)
         };
+        let extract_flag_value = |flag: &str| {
+            args.iter()
+                .position(|arg| arg == flag)
+                .map_or(None, |i| args.get(i + 1))
+                .cloned()
+        };
 
         Ok(SherlockFlags {
             config: extract_path_value("--config"),
@@ -49,6 +55,7 @@ impl SherlockFlags {
             center_raw: check_flag_existance("--center"),
             cache: extract_path_value("--cache"),
             daemonize: check_flag_existance("--daemonize"),
+            method: extract_flag_value("--method"),
         })
     }
 }

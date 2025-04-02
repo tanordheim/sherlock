@@ -49,6 +49,12 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
                 eval_exit();
             }
+            "print" => {
+                if let Some(result) = attrs.get("result") {
+                    print!("{}", result);
+                }
+                eval_exit();
+            }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
                     teamslaunch(meeting);
@@ -72,7 +78,7 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             }
             _ => {
-                if let Some(out) = attrs.get("text_content") {
+                if let Some(out) = attrs.get("result") {
                     print!("{}", out);
                 } else {
                     println!("Return method \"{}\" not recognized", method);

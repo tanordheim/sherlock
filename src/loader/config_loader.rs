@@ -105,6 +105,7 @@ impl Loader {
                 .unwrap_or(&config.behavior.cache),
             &home,
         );
+        config.pipe.method = sherlock_flags.method.clone();
 
         if sherlock_flags.daemonize {
             config.behavior.daemonize = true;

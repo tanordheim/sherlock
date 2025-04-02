@@ -55,6 +55,7 @@ pub struct SherlockFlags {
     pub center_raw: bool,
     pub cache: Option<PathBuf>,
     pub daemonize: bool,
+    pub method: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -193,6 +194,8 @@ pub struct SherlockConfig {
     pub binds: ConfigBinds,
     #[serde(default)]
     pub files: ConfigFiles,
+    #[serde(default)]
+    pub pipe: ConfigPipe,
 }
 impl SherlockConfig {
     pub fn default() -> (Self, Vec<SherlockError>) {
@@ -237,6 +240,7 @@ impl SherlockConfig {
                     alias: default_alias(),
                     ignore: default_ignore(),
                 },
+                pipe: ConfigPipe { method: None },
             },
             non_breaking,
         )
@@ -310,6 +314,12 @@ pub struct ConfigBinds {
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
+pub struct ConfigPipe {
+    #[serde(default)]
+    pub method: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigDebug {
     #[serde(default)]
     pub try_suppress_errors: bool,
@@ -350,6 +360,21 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
+pub fn home_dir() -> Result<PathBuf, SherlockError> {
+    env::var("HOME")
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError(String::from("HOME")),
+            traceback: e.to_string(),
+        })
+        .map(|s| PathBuf::from(s))
+}
+pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
+    priority + 1.0 - count * 10f32.powi(-decimals)
+}
+
+// ====================
+// SECTION: DEFAULT GETTERS
+// ====================
 pub fn default_terminal() -> String {
     get_terminal().unwrap_or_default()
 }
@@ -438,17 +463,4 @@ fn is_terminal_installed(terminal: &str) -> bool {
         .arg("--version") // You can adjust this if the terminal doesn't have a "--version" flag
         .output()
         .is_ok()
-}
-
-pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
-    priority + 1.0 - count * 10f32.powi(-decimals)
-}
-
-pub fn home_dir() -> Result<PathBuf, SherlockError> {
-    env::var("HOME")
-        .map_err(|e| SherlockError {
-            error: SherlockErrorType::EnvVarNotFoundError(String::from("HOME")),
-            traceback: e.to_string(),
-        })
-        .map(|s| PathBuf::from(s))
 }

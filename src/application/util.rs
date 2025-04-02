@@ -53,12 +53,15 @@ pub fn reload_content() -> Option<()> {
         if sherlock_flags.display_raw {
             ui::user::display_raw(pipe, sherlock_flags.center_raw);
         } else {
-            let lines: Vec<String> = pipe
-                .split("\n")
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string())
-                .collect();
-            ui::user::display_pipe(lines);
+            if let Some(c) = CONFIG.get() {
+                let lines: Vec<String> = pipe
+                    .split("\n")
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_string())
+                    .collect();
+                let method: &str = c.pipe.method.as_deref().unwrap_or("print");
+                ui::user::display_pipe(lines, method)
+            }
         }
     };
 
