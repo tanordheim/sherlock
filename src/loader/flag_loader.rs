@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, path::PathBuf};
 
 use super::{
     util::{SherlockError, SherlockFlags},
@@ -31,7 +31,7 @@ impl SherlockFlags {
             args.iter()
                 .position(|arg| arg == flag)
                 .map_or(None, |index| args.get(index + 1))
-                .cloned()
+                .map(|s| PathBuf::from(s))
         };
         let check_flag_existance = |flag: &str| {
             args.iter()

@@ -24,3 +24,7 @@ animation               =   true                                    # Enables st
 [binds]
 prev                    =   "None"                                  # Sets an aditional bind for selection the previous item in the list
 next                    =   "None"                                  # Sets an aditional bind for selection the next item in the list
+
+[files]
+fallback                =   "~/.config/sherlock/fallback.json"
+css                     =   "~/.config/sherlock/gruvbox.css"

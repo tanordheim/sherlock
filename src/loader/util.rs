@@ -46,14 +46,14 @@ pub struct AppData {
 
 #[derive(Clone, Debug, Default)]
 pub struct SherlockFlags {
-    pub config: Option<String>,
-    pub fallback: Option<String>,
-    pub style: Option<String>,
-    pub ignore: Option<String>,
-    pub alias: Option<String>,
+    pub config: Option<PathBuf>,
+    pub fallback: Option<PathBuf>,
+    pub style: Option<PathBuf>,
+    pub ignore: Option<PathBuf>,
+    pub alias: Option<PathBuf>,
     pub display_raw: bool,
     pub center_raw: bool,
-    pub cache: Option<String>,
+    pub cache: Option<PathBuf>,
     pub daemonize: bool,
 }
 
@@ -274,7 +274,7 @@ pub struct ConfigBehavior {
     pub animate: bool,
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ConfigFiles {
     #[serde(default = "default_config")]
     pub config: PathBuf,
@@ -287,6 +287,18 @@ pub struct ConfigFiles {
     #[serde(default = "default_ignore")]
     pub ignore: PathBuf,
 }
+impl Default for ConfigFiles {
+    fn default() -> Self {
+        Self {
+            config: default_config(),
+            css: default_css(),
+            fallback: default_fallback(),
+            alias: default_alias(),
+            ignore: default_ignore(),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, Clone, Default)]
 pub struct ConfigBinds {
     #[serde(default)]

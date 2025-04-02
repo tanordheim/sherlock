@@ -1,9 +1,8 @@
-use std::fs;
-use std::path::PathBuf;
-
 use super::util::{home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags};
 use super::Loader;
 use crate::FLAGS;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 impl Loader {
     pub fn load_config() -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
@@ -25,7 +24,6 @@ impl Loader {
                         })
                     }
                 };
-
                 config = Loader::apply_flags(sherlock_flags, config)?;
                 Ok((config, vec![]))
             }
@@ -57,55 +55,54 @@ impl Loader {
         // Make paths that contain the ~ dir use the correct path
         let home = home_dir()?;
 
-        fn expand_home(path: &str, home: &PathBuf) -> PathBuf {
-            if let Some(stripped) = path.strip_prefix("~") {
-                home.join(stripped.strip_prefix("/").unwrap_or(stripped))
-            } else {
-                PathBuf::from(path)
+        fn expand_path(path: &Path, home: &Path) -> PathBuf {
+            let mut components = path.components();
+            if let Some(std::path::Component::Normal(first)) = components.next() {
+                if first == "~" {
+                    return home.join(components.as_path());
+                }
             }
+            path.to_path_buf()
         }
 
         // Override config files from flags
-        config.files.config = expand_home(
+        config.files.config = expand_path(
             &sherlock_flags
                 .config
                 .as_deref()
-                .unwrap_or("~/.config/sherlock/config.toml"),
+                .unwrap_or(&config.files.config),
             &home,
         );
-        config.files.fallback = expand_home(
+        config.files.fallback = expand_path(
             &sherlock_flags
                 .fallback
                 .as_deref()
-                .unwrap_or("~/.config/sherlock/fallback.json"),
+                .unwrap_or(&config.files.fallback),
             &home,
         );
-        config.files.css = expand_home(
-            &sherlock_flags
-                .style
-                .as_deref()
-                .unwrap_or("~/.config/sherlock/main.css"),
+        config.files.css = expand_path(
+            &sherlock_flags.style.as_deref().unwrap_or(&config.files.css),
             &home,
         );
-        config.files.alias = expand_home(
+        config.files.alias = expand_path(
             &sherlock_flags
                 .alias
                 .as_deref()
-                .unwrap_or("~/.config/sherlock/sherlock_alias.json"),
+                .unwrap_or(&config.files.alias),
             &home,
         );
-        config.files.ignore = expand_home(
+        config.files.ignore = expand_path(
             &sherlock_flags
                 .ignore
                 .as_deref()
-                .unwrap_or("~/.config/sherlock/sherlockignore"),
+                .unwrap_or(&config.files.ignore),
             &home,
         );
-        config.behavior.cache = expand_home(
+        config.behavior.cache = expand_path(
             &sherlock_flags
                 .cache
                 .as_deref()
-                .unwrap_or("~/.cache/sherlock_desktop_cache.json"),
+                .unwrap_or(&config.behavior.cache),
             &home,
         );
 
