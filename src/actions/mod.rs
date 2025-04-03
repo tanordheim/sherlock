@@ -1,16 +1,14 @@
 use std::collections::HashMap;
 
-use crate::ui::window::destroy_window;
 use teamslaunch::teamslaunch;
+use util::eval_exit;
 
 use crate::{
     launcher::audio_launcher::MusicPlayerLauncher,
     loader::launcher_loader::CounterReader,
     ui::{
         user::{display_next, display_raw},
-        window::hide_window,
-    },
-    CONFIG,
+    }
 };
 
 pub mod applaunch;
@@ -89,14 +87,6 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
     }
 }
 
-fn eval_exit() {
-    if let Some(c) = CONFIG.get() {
-        match c.behavior.daemonize {
-            true => hide_window(true),
-            false => destroy_window(),
-        }
-    }
-}
 
 fn increment(key: &str) {
     if let Ok(count_reader) = CounterReader::new() {

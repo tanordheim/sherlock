@@ -1,7 +1,5 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
-    launcher::{Launcher, ResultItem},
-    CONFIG,
+    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, loader::pipe_loader::PipeData, CONFIG
 };
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
 use std::collections::HashSet;
@@ -238,6 +236,11 @@ impl TileBuilder {
 }
 
 pub trait SherlockSearch {
+    fn fuzzy_match<T: AsRef<str>>(&self, substring: T) -> bool;
+}
+
+
+impl SherlockSearch for String {
     fn fuzzy_match<T>(&self, substring: T) -> bool
     where
         Self: AsRef<str>,
@@ -245,11 +248,31 @@ pub trait SherlockSearch {
     {
         let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
         let concat_str: String = self
-            .as_ref()
             .chars()
             .filter(|s| char_pattern.contains(s))
             .collect();
         concat_str.contains(substring.as_ref())
     }
 }
-impl SherlockSearch for String {}
+impl SherlockSearch for PipeData {
+    fn fuzzy_match<T>(&self, substring: T) -> bool
+    where
+        T: AsRef<str>,
+    {
+
+        // check which value to use 
+        let search_in = match self.title {
+            Some(_) => &self.title,
+            None => &self.description
+        };
+        if let Some(search_in) = search_in {
+            let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
+            let concat_str: String = search_in
+                .chars()
+                .filter(|s| char_pattern.contains(s))
+                .collect();
+            return concat_str.contains(substring.as_ref())
+        }
+        return false
+    }
+}

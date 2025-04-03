@@ -1,6 +1,7 @@
 use gtk4::{prelude::*, ApplicationWindow};
 use gtk4::{Entry, EventController, Stack, Widget};
 
+use crate::loader::pipe_loader::deserialize_pipe;
 use crate::loader::util::SherlockError;
 use crate::loader::Loader;
 use crate::ui::util::{remove_stack_children, show_stack_page};
@@ -51,16 +52,13 @@ pub fn reload_content() -> Option<()> {
         ui::search::search(launchers);
     } else {
         if sherlock_flags.display_raw {
+            let pipe = String::from_utf8_lossy(&pipe);
             ui::user::display_raw(pipe, sherlock_flags.center_raw);
         } else {
+            let parsed = deserialize_pipe(pipe);
             if let Some(c) = CONFIG.get() {
-                let lines: Vec<String> = pipe
-                    .split("\n")
-                    .filter(|s| !s.is_empty())
-                    .map(|s| s.to_string())
-                    .collect();
                 let method: &str = c.pipe.method.as_deref().unwrap_or("print");
-                ui::user::display_pipe(lines, method)
+                ui::user::display_pipe(parsed, method)
             }
         }
     };

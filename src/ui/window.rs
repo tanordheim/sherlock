@@ -1,9 +1,12 @@
+use std::fs;
+
 use gtk4::{gdk, Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Layer, LayerShell};
 
+use crate::actions::util::eval_exit;
 use crate::application::util::reload_content;
-use crate::{APP_STATE, CONFIG};
+use crate::{APP_STATE, CONFIG, LOCK_FILE};
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     // 618 with, 591 without notification bar
@@ -33,7 +36,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     if let Some(c) = CONFIG.get() {
         let action = match c.behavior.daemonize {
             true => hide_app,
-            false => exit_app,
+            false => eval_exit,
         };
         event_controller.connect_key_pressed(move |_, key, _, _| {
             match key {
@@ -46,9 +49,6 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     window.add_controller(event_controller);
     window.set_child(Some(&holder));
     return (window, holder);
-}
-fn exit_app() {
-    std::process::exit(0)
 }
 fn hide_app() {
     hide_window(true);
@@ -73,6 +73,8 @@ pub fn hide_window(clear_search: bool) {
                     .search_bar
                     .as_ref()
                     .map(|search_bar| search_bar.set_text(""));
+            } else {
+                let _ = fs::remove_file(LOCK_FILE);
             }
         }
     });

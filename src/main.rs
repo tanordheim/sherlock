@@ -1,11 +1,14 @@
 // CRATES
-use gio::prelude::*;
+use gio::{prelude::*, ApplicationFlags, Cancellable};
+use gtk4::prelude::{GtkApplicationExt, WidgetExt};
 use gtk4::Application;
+use loader::pipe_loader::deserialize_pipe;
 use loader::util::{SherlockErrorType, SherlockFlags};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
-use std::{env, process, thread};
+use std::{env, fs, process, thread};
+use ui::window;
 
 // MODS
 mod actions;
@@ -27,6 +30,7 @@ use loader::{
 use ui::util::show_stack_page;
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
+const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
 thread_local! {
     static APP_STATE: RefCell<Option<Rc<AppState>>> = RefCell::new(None);
@@ -40,8 +44,7 @@ async fn main() {
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let lock_file = "/tmp/sherlock.lock";
-    let _ = match lock::ensure_single_instance(lock_file) {
+    let lock = match lock::ensure_single_instance(LOCK_FILE) {
         Ok(lock) => lock,
         Err(msg) => {
             eprintln!("{}", msg);
@@ -125,6 +128,7 @@ async fn main() {
             stack: Some(stack),
             search_bar: None,
         });
+
         APP_STATE.with(|app_state| *app_state.borrow_mut() = Some(state));
 
         // Either show user-specified content or show normal search
@@ -133,16 +137,13 @@ async fn main() {
             ui::search::search(launchers);
         } else {
             if sherlock_flags.display_raw {
+                let pipe = String::from_utf8_lossy(&pipe);
                 ui::user::display_raw(pipe, sherlock_flags.center_raw);
             } else {
+                let parsed = deserialize_pipe(pipe);
                 if let Some(c) = CONFIG.get() {
-                    let lines: Vec<String> = pipe
-                        .split("\n")
-                        .filter(|s| !s.is_empty())
-                        .map(|s| s.to_string())
-                        .collect();
                     let method: &str = c.pipe.method.as_deref().unwrap_or("print");
-                    ui::user::display_pipe(lines, method)
+                    ui::user::display_pipe(parsed, method)
                 }
             }
         };

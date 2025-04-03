@@ -73,7 +73,7 @@
                     <object class="GtkLabel" id="launcher-type">
                         <property name="name">launcher-type</property>
                         <property name="xalign">0</property>
-                        <property name="label">App Launcher</property>
+                        <property name="label"></property>
                     </object>
                 </child>
 
