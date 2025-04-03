@@ -85,6 +85,10 @@ pub fn print_help() -> Result<(), SherlockError> {
             "--daemonize",
             "If this flag is set, sherlock will run in daemon mode.",
         ),
+        (
+            "--method",
+            "For pipe mode only: Specifies what to do with the selected data row",
+        ),
     ];
 
     // Print header
