@@ -77,7 +77,7 @@ fn construct_window(
     };
     if let Some(c) = CONFIG.get() {
         ui.result_viewport
-            .set_size_request((c.appearance.width as f32 * 0.4) as i32, -1);
+            .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
     }
 
     APP_STATE.with(|app_state| {
