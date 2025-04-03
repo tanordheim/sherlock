@@ -9,14 +9,12 @@ try_suppress_warnings   =   true                                    # Disables t
 app_paths               =   ["~/.local/share/applications/"]        # Adds paths for Sherlock to look for desktop files
 
 [appearance]
-width = 900 # Sets the width of the main window
-height = 593 # Sets the height of the main window
-gsk_renderer = "cairo" # Sets the rendering engine. [ngl, cairo, ]
-recolor_icons = false # If set to true, uses the [icon-name]-symbolic icons
-icon_paths = [
-    "~/.config/sherlock/icons",
-] # Sets where the application should look for custom icons
-icon_size = 22 # Sets the icon size for the tiles
+width                   = 900                                       # Sets the width of the main window
+height                  = 593                                       # Sets the height of the main window
+gsk_renderer            = "cairo"                                   # Sets the rendering engine. [ngl, cairo, ]
+recolor_icons           = false                                     # If set to true, uses the [icon-name]-symbolic icons
+icon_paths              = [ "~/.config/sherlock/icons"]             # Sets where the application should look for custom icons
+icon_size               = 22                                        # Sets the icon size for the tiles
 
 [behavior]
 caching                 =   true                                    # If set to true, will enable caching
