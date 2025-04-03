@@ -9,7 +9,7 @@ of an app.
 > **Example File:** [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
 
 ## Setup:
-1. Create the `sherloc_alias.json` file:
+1. Create the `sherlock_alias.json` file:
 ```echo {} > ~/.config/sherlock/sherlock_alias.json
 ```
 2. Find the application you want to alias
@@ -20,7 +20,7 @@ of an app.
         "name": "your desired name",
         "icon": "your icon",
         "exec": "/path/to/applicatoin --your-flags %U",
-        "keyword": "sample alias"
+        "keywords": "sample alias"
     }
 }
 ```

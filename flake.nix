@@ -4,81 +4,89 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     crane.url = "github:ipetkov/crane";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = inputs @ {
+  outputs = {
     self,
     nixpkgs,
+    home-manager,
     ...
-  }:
-    with nixpkgs;
-      inputs.flake-parts.lib.mkFlake {inherit inputs;} {
-        # sherlock currently only supports linux
-        systems = [
-          "x86_64-linux"
-          "aarch64-linux"
-        ];
+  } @ inputs:
+    inputs.flake-parts.lib.mkFlake {inherit inputs;} {
+      # sherlock currently only supports linux
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
 
-        perSystem = {
-          system,
-          stdenv,
-          ...
-        }: let
-          name = "sherlock";
-          version = "0.1.7";
+      flake.homeManagerModules.default = import ./nix/home-manager.nix self;
 
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays = [(import inputs.rust-overlay)];
-          };
+      perSystem = {
+        system,
+        stdenv,
+        ...
+      }: let
+        name = "sherlock";
+        version = "0.1.7";
 
-          rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [(import inputs.rust-overlay)];
+        };
 
-          src = lib.fileset.toSource {
+        rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+
+        src = with nixpkgs;
+          lib.fileset.toSource {
             root = ./.;
             fileset = lib.fileset.unions [
               (craneLib.fileset.commonCargoSources ./.)
               (lib.fileset.maybeMissing ./resources)
             ];
           };
-          nativeBuildInputs = with pkgs; [rustToolchain pkg-config];
-          buildInputs = with pkgs; [
-            glib.dev
-            gtk4.dev
-            gtk4-layer-shell.dev
-            sqlite.dev
-            wayland.dev
-            openssl.dev
-            dbus.dev
-          ];
 
-          commonArgs = {
-            inherit src buildInputs nativeBuildInputs;
-          };
-          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-          bin = craneLib.buildPackage (commonArgs
-            // {
-              inherit cargoArtifacts;
-            });
-        in {
-          devShells.default = pkgs.mkShell {
-            inputsFrom = [bin];
-            LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
-            shellHook = ''
-              echo "entering ${name} devshell..."
-            '';
-          };
-          packages = {
-            inherit bin;
-            default = bin;
+        nativeBuildInputs = with pkgs; [rustToolchain pkg-config];
+        buildInputs = with pkgs; [
+          dbus.dev
+          glib.dev
+          gtk4.dev
+          gtk4-layer-shell.dev
+          openssl.dev
+          sqlite.dev
+          wayland.dev
+        ];
+        commonArgs = {
+          inherit src buildInputs nativeBuildInputs;
+        };
+
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+        bin = craneLib.buildPackage (commonArgs
+          // {
+            inherit cargoArtifacts;
             pname = "${name}";
             version = "${version}";
-          };
+          });
+      in {
+        devShells.default = pkgs.mkShell {
+          inputsFrom = [bin];
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
+          shellHook = ''
+            echo "entering ${name} devshell..."
+          '';
+        };
+        packages = {
+          inherit bin;
+          default = bin;
         };
       };
+    };
 }
