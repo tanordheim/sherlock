@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::process::Stdio;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio::process::Command;
@@ -76,10 +75,8 @@ impl BulkText {
         match result {
             Ok((Ok(status), stdout, _stderr)) => {
                 if status.success() {
-                    let output = String::from_utf8_lossy(stdout.as_bytes());
-                    let response: AsyncCommandResponse =
-                        serde_json::from_str(&output).unwrap_or(AsyncCommandResponse::new());
-
+                    let mut output = stdout.into_bytes();
+                    let response: AsyncCommandResponse = simd_json::from_slice(&mut output).unwrap_or(AsyncCommandResponse::new());
                     let title = response.title.unwrap_or(keyword.to_string());
                     let content = response.content.unwrap_or_default();
                     Some((title, content, response.next_content))
