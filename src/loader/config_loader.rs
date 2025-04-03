@@ -11,18 +11,61 @@ impl Loader {
             traceback: String::new(),
         })?;
         let home = home_dir()?;
-        let path = home.join(".config/sherlock/config.toml");
+        let mut path = match &sherlock_flags.config{
+            Some(path) => expand_path(path, &home),
+            _=> home.join(".config/sherlock/config.toml"),
+        };
+        // logic to either use json or toml
+        let mut filetype:String = String::new();
+        if let Some(ext) = path.extension() {
+            let ext = ext.to_string_lossy();
+            match ext.as_ref(){
+                "json" => {
+                    if !path.exists() {
+                        path.set_extension("toml");
+                        filetype = "toml".to_string();
+                    } else {
+                        filetype = "json".to_string();
+                    }
+                }
+                "toml" => {
+                    if !path.exists() {
+                        path.set_extension("json");
+                        filetype = "json".to_string();
+                    } else {
+                        filetype = "toml".to_string();
+                    }
+                }
+                _=> {}
+            }
+        } else {
+            return Err(SherlockError {
+                error: SherlockErrorType::FileParseError(path.clone()),
+                traceback: format!("The file \"{}\" is not in a valid format.", &path.to_string_lossy()),
+            })
+        }
+
 
         match fs::read_to_string(&path) {
             Ok(config_str) => {
-                let mut config: SherlockConfig = match toml::de::from_str(&config_str) {
-                    Ok(config) => config,
-                    Err(e) => {
-                        return Err(SherlockError {
-                            error: SherlockErrorType::FileParseError(path),
+                let mut config: SherlockConfig = match filetype.as_str() {
+                    "json" => {
+                        let mut bytes = config_str.into_bytes();
+                        simd_json::from_slice(&mut bytes).map_err(|e| SherlockError {
+                            error: SherlockErrorType::FileParseError(path.clone()),
                             traceback: e.to_string(),
-                        })
+                        })?
                     }
+                    "toml" => {
+                        toml::de::from_str(&config_str).map_err(|e| SherlockError{
+                            error: SherlockErrorType::FileParseError(path.clone()),
+                            traceback: e.to_string(),
+                        })?
+                    }
+                    _=> {return Err(SherlockError {
+                        error: SherlockErrorType::FileParseError(path.clone()),
+                        traceback: format!("The file \"{}\" is not in a valid format.", &path.to_string_lossy()),
+                    })}
                 };
                 config = Loader::apply_flags(sherlock_flags, config)?;
                 Ok((config, vec![]))
@@ -55,15 +98,6 @@ impl Loader {
         // Make paths that contain the ~ dir use the correct path
         let home = home_dir()?;
 
-        fn expand_path(path: &Path, home: &Path) -> PathBuf {
-            let mut components = path.components();
-            if let Some(std::path::Component::Normal(first)) = components.next() {
-                if first == "~" {
-                    return home.join(components.as_path());
-                }
-            }
-            path.to_path_buf()
-        }
 
         // Override config files from flags
         config.files.config = expand_path(
@@ -112,4 +146,14 @@ impl Loader {
         }
         Ok(config)
     }
+}
+
+fn expand_path(path: &Path, home: &Path) -> PathBuf {
+    let mut components = path.components();
+    if let Some(std::path::Component::Normal(first)) = components.next() {
+        if first == "~" {
+            return home.join(components.as_path());
+        }
+    }
+    path.to_path_buf()
 }
