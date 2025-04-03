@@ -11,8 +11,8 @@ use std::rc::Rc;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
-use crate::{loader::pipe_loader::PipeData, APP_STATE};
 use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
+use crate::{loader::pipe_loader::PipeData, APP_STATE};
 
 pub fn display_pipe(pipe_content: Vec<PipeData>, method: &str) {
     // Initialize the builder with the correct path
@@ -49,11 +49,7 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) {
     let buffer = builder.content.buffer();
     builder.content.add_css_class("raw_text");
     builder.content.set_monospace(true);
-    let sanitized: String = content
-        .as_ref()
-        .chars()
-        .filter(|&c| c != '\0')
-        .collect();
+    let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
     buffer.set_text(&sanitized);
     if center {
         builder.content.set_justification(Justification::Center);

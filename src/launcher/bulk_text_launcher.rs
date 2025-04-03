@@ -76,7 +76,8 @@ impl BulkText {
             Ok((Ok(status), stdout, _stderr)) => {
                 if status.success() {
                     let mut output = stdout.into_bytes();
-                    let response: AsyncCommandResponse = simd_json::from_slice(&mut output).unwrap_or(AsyncCommandResponse::new());
+                    let response: AsyncCommandResponse =
+                        simd_json::from_slice(&mut output).unwrap_or(AsyncCommandResponse::new());
                     let title = response.title.unwrap_or(keyword.to_string());
                     let content = response.content.unwrap_or_default();
                     Some((title, content, response.next_content))

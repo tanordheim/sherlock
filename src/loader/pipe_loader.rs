@@ -19,13 +19,13 @@ impl Loader {
         let stdin = io::stdin();
         let mut buf = Vec::new();
         let _ = stdin.lock().read_to_end(&mut buf);
-        return buf
+        return buf;
     }
 }
 
 pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
     let data: Option<Vec<PipeData>> = simd_json::from_slice(&mut buf).ok();
-    
+
     match data {
         Some(parsed_data) => parsed_data,
         None => {
@@ -90,5 +90,5 @@ pub struct PipeData {
     pub result: Option<String>,
     pub binary: Option<Vec<u8>>,
     pub method: Option<String>,
-    pub hidden: Option<HashMap<String,String>>
+    pub hidden: Option<HashMap<String, String>>,
 }

@@ -1,6 +1,4 @@
-use std::fs::File;
 use std::io::Cursor;
-use std::io::Write;
 
 use gdk_pixbuf::Pixbuf;
 use gtk4::prelude::BoxExt;
@@ -38,18 +36,20 @@ impl Tile {
                 }
                 if let Some(bin) = item.binary.clone() {
                     let cursor = Cursor::new(bin);
-                    if let Some(pixbuf) = Pixbuf::from_read(cursor).ok(){
+                    if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
                         let image = Image::from_pixbuf(Some(&pixbuf));
                         builder.icon_holder.append(&image);
-
                     }
-
                 } else {
                     builder.icon.set_visible(false);
                 }
                 let attrs: Option<Vec<(&str, &str)>> = match &item.hidden {
-                    Some(a) => Some(a.into_iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()),
-                    None => None
+                    Some(a) => Some(
+                        a.into_iter()
+                            .map(|(k, v)| (k.as_str(), v.as_str()))
+                            .collect(),
+                    ),
+                    None => None,
                 };
 
                 let method = item.method.as_deref().or(Some(method));

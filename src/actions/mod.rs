@@ -6,9 +6,7 @@ use util::eval_exit;
 use crate::{
     launcher::audio_launcher::MusicPlayerLauncher,
     loader::launcher_loader::CounterReader,
-    ui::{
-        user::{display_next, display_raw},
-    }
+    ui::user::{display_next, display_raw},
 };
 
 pub mod applaunch;
@@ -86,7 +84,6 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
         }
     }
 }
-
 
 fn increment(key: &str) {
     if let Ok(count_reader) = CounterReader::new() {

@@ -1,7 +1,7 @@
 use cli_clipboard::{ClipboardContext, ClipboardProvider};
 
-use crate::ui::window::{destroy_window, hide_window};
 use crate::loader::util::{SherlockError, SherlockErrorType};
+use crate::ui::window::{destroy_window, hide_window};
 use crate::CONFIG;
 
 pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {

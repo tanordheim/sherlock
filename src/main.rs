@@ -1,14 +1,12 @@
 // CRATES
-use gio::{prelude::*, ApplicationFlags, Cancellable};
-use gtk4::prelude::{GtkApplicationExt, WidgetExt};
+use gio::prelude::*;
 use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
 use loader::util::{SherlockErrorType, SherlockFlags};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
-use std::{env, fs, process, thread};
-use ui::window;
+use std::{env, process, thread};
 
 // MODS
 mod actions;
@@ -44,7 +42,7 @@ async fn main() {
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let lock = match lock::ensure_single_instance(LOCK_FILE) {
+    let _lock = match lock::ensure_single_instance(LOCK_FILE) {
         Ok(lock) => lock,
         Err(msg) => {
             eprintln!("{}", msg);
