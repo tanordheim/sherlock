@@ -278,7 +278,7 @@ fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), Sh
     return Ok((name, icon, exec, display, terminal, keywords));
 }
 
-fn get_applications_dir() -> HashSet<PathBuf> {
+pub fn get_applications_dir() -> HashSet<PathBuf> {
     match env::var("XDG_DATA_DIRS").ok() {
         Some(paths) => {
             let app_dirs: HashSet<PathBuf> = paths
@@ -307,7 +307,7 @@ fn get_applications_dir() -> HashSet<PathBuf> {
     }
 }
 
-fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
+pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
     dirs.into_par_iter()
         .filter_map(|dir| {
             fs::read_dir(dir).ok().map(|entries| {

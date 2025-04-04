@@ -8,6 +8,7 @@ pub mod bulk_text_launcher;
 pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod system_cmd_launcher;
+pub mod process_launcher;
 mod utils;
 pub mod web_launcher;
 
@@ -24,6 +25,7 @@ use clipboard_launcher::Clp;
 use event_launcher::EventLauncher;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
+use process_launcher::ProcessLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
@@ -35,6 +37,7 @@ pub enum LauncherType {
     Clipboard(Clp),
     EventLauncher(EventLauncher),
     MusicPlayerLauncher(MusicPlayerLauncher),
+    ProcessLauncher(ProcessLauncher),
     Empty,
 }
 
@@ -82,6 +85,7 @@ impl Launcher {
                     Tile::clipboard_tile(self, &clp.clipboard_content, keyword)
                 }
                 LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
+                LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
 
                 _ => Vec::new(),
             }

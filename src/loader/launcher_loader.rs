@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use crate::actions::util::read_from_clipboard;
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
 use crate::launcher::event_launcher::EventLauncher;
+use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
     Launcher, LauncherType,
@@ -140,6 +141,10 @@ impl Loader {
                             })
                         })
                         .unwrap_or(LauncherType::Empty),
+                    "process" => {
+                        let launcher = ProcessLauncher::new()?;
+                        LauncherType::ProcessLauncher(launcher)
+                    },
                     _ => LauncherType::Empty,
                 };
                 let method: String = if let Some(value) = &cmd.on_return {
@@ -165,7 +170,7 @@ impl Loader {
             })
             .collect();
 
-        // get and write executioon counts if they are empty
+        // get and write execution counts if they are empty
         if counts.is_empty() {
             let counts: HashMap<String, f32> = launchers
                 .iter()
