@@ -10,31 +10,31 @@ impl Tile {
     pub fn process_tile(
         launcher: &Launcher,
         keyword: &str,
-        proc: &ProcessLauncher
+        proc: &ProcessLauncher,
     ) -> Vec<ResultItem> {
         let mut results: Vec<ResultItem> = Default::default();
 
-        for (_key, value) in proc.processes.iter() {
-            if value
-                .to_lowercase()
-                .contains(&keyword.to_lowercase())
-            {
+        for (key, value) in proc.processes.iter() {
+            if value.to_lowercase().contains(&keyword.to_lowercase()) {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);
                 builder.object.set_shortcut(launcher.shortcut);
-
 
                 if launcher.name.is_empty() {
                     builder.category.set_visible(false);
                 }
                 builder.category.set_text(&launcher.name);
                 builder.title.set_markup(&value);
+                builder.icon.set_icon_name(Some(&proc.icon));
+                let pid = key.to_string();
+
+                let attrs: Vec<(&str, &str)> = vec![("pid", &pid)];
                 builder.add_default_attrs(
-                    Some(&launcher.method),
-                    Some(keyword),
+                    Some("kill-process"),
+                    Some(value),
                     Some(keyword),
                     None,
-                    None,
+                    Some(attrs),
                 );
 
                 let shortcut_holder = match launcher.shortcut {

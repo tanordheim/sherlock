@@ -142,9 +142,10 @@ impl Loader {
                         })
                         .unwrap_or(LauncherType::Empty),
                     "process" => {
-                        let launcher = ProcessLauncher::new()?;
+                        let icon = cmd.args["icon"].as_str().unwrap_or("sherlock-process");
+                        let launcher = ProcessLauncher::new(icon)?;
                         LauncherType::ProcessLauncher(launcher)
-                    },
+                    }
                     _ => LauncherType::Empty,
                 };
                 let method: String = if let Some(value) = &cmd.on_return {

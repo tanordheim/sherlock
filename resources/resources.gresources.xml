@@ -17,6 +17,7 @@
     </gresource>
     <gresource prefix="/org/gtk/libgtk/icons/">
         <file alias="google.svg">icons/google.svg</file>
+        <file alias="sherlock-process.svg">icons/sherlock-process.svg</file>
         <file alias="bing.svg">icons/bing.svg</file>
         <file alias="duckduckgo.svg">icons/duckduckgo.svg</file>
         <file alias="wikipedia.svg">icons/wikipedia.svg</file>

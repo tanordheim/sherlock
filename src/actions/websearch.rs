@@ -42,44 +42,35 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
     } else {
         return Err(SherlockError {
             error: SherlockErrorType::EnvVarNotFoundError("default browser".to_string()),
-            traceback: String::new()
+            traceback: String::new(),
         });
     };
     let desktop_dirs = get_applications_dir();
     let desktop_files = get_desktop_files(desktop_dirs);
-    let browser_file = desktop_files.iter().find(|f| f.ends_with(&desktop_file)).ok_or_else(|| SherlockError {
-        error: SherlockErrorType::EnvVarNotFoundError("default browser".to_string()),
-        traceback: String::new()
-    })?;
+    let browser_file = desktop_files
+        .iter()
+        .find(|f| f.ends_with(&desktop_file))
+        .ok_or_else(|| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("default browser".to_string()),
+            traceback: String::new(),
+        })?;
     // read default browser desktop file
     let browser = read_lines(browser_file)
-    .map_err(|e| SherlockError {
-        error: SherlockErrorType::FileReadError(browser_file.clone()),
-        traceback: e.to_string(),
-    })?
-    .filter_map(Result::ok)
-    .find(|line| line.starts_with("Exec="))
-    .and_then(|line| {
-        line.strip_prefix("Exec=").map(|l| l.to_string())
-    }).ok_or_else(|| SherlockError {
-        error: SherlockErrorType::FileParseError(browser_file.clone()),
-        traceback: String::new(),
-    })?;
-    println!("{:?}", browser);
-
-       
-    
-
-
-
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::FileReadError(browser_file.clone()),
+            traceback: e.to_string(),
+        })?
+        .filter_map(Result::ok)
+        .find(|line| line.starts_with("Exec="))
+        .and_then(|line| line.strip_prefix("Exec=").map(|l| l.to_string()))
+        .ok_or_else(|| SherlockError {
+            error: SherlockErrorType::FileParseError(browser_file.clone()),
+            traceback: String::new(),
+        })?;
 
     let url = url_template.replace("{keyword}", query);
     let command = browser.replace("%u", &format!("'{}'", url));
-    match Command::new("sh")
-        .arg("-c")
-        .arg(command) 
-        .spawn()
-    {
+    match Command::new("sh").arg("-c").arg(command).spawn() {
         Ok(_) => Ok(()),
         Err(e) => Err(SherlockError {
             error: SherlockErrorType::CommandExecutionError("xdg-open".to_string()),

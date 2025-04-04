@@ -7,8 +7,8 @@ pub mod audio_launcher;
 pub mod bulk_text_launcher;
 pub mod clipboard_launcher;
 pub mod event_launcher;
-pub mod system_cmd_launcher;
 pub mod process_launcher;
+pub mod system_cmd_launcher;
 mod utils;
 pub mod web_launcher;
 
@@ -23,9 +23,9 @@ use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
 use clipboard_launcher::Clp;
 use event_launcher::EventLauncher;
+use process_launcher::ProcessLauncher;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
-use process_launcher::ProcessLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {

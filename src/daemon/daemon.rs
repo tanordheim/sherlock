@@ -8,7 +8,7 @@ pub struct SherlockDeamon {
     socket: String,
 }
 impl SherlockDeamon {
-    pub fn new(socket_path: &str)->Self{
+    pub fn new(socket_path: &str) -> Self {
         let _ = std::fs::remove_file(socket_path);
         let listener = UnixListener::bind(socket_path).expect("Failed to bind socket");
         println!("Daemon listening on {}", socket_path);
@@ -39,9 +39,11 @@ impl SherlockDeamon {
                 }
             }
         }
-        Self { socket: socket_path.to_string() }
+        Self {
+            socket: socket_path.to_string(),
+        }
     }
-    fn remove(&self)->Result<(), SherlockError>{
+    fn remove(&self) -> Result<(), SherlockError> {
         std::fs::remove_file(&self.socket).map_err(|e| SherlockError {
             error: SherlockErrorType::SocketRemoveError(self.socket.clone()),
             traceback: e.to_string(),
@@ -49,7 +51,6 @@ impl SherlockDeamon {
         Ok(())
     }
 }
-
 
 impl Drop for SherlockDeamon {
     fn drop(&mut self) {

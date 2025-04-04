@@ -31,7 +31,6 @@ impl LockFile {
     }
 }
 
-
 impl Drop for LockFile {
     fn drop(&mut self) {
         let _ = self.remove();

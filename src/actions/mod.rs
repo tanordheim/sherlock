@@ -4,7 +4,7 @@ use teamslaunch::teamslaunch;
 use util::eval_exit;
 
 use crate::{
-    launcher::audio_launcher::MusicPlayerLauncher,
+    launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
     loader::launcher_loader::CounterReader,
     ui::user::{display_next, display_raw},
 };
@@ -72,6 +72,14 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 if let Some(player) = attrs.get("player") {
                     let _ = MusicPlayerLauncher::playpause(player);
                 }
+            }
+            "kill-process" => {
+                if let Some(pid) = attrs.get("pid") {
+                    if let Some(pid) = pid.parse::<i32>().ok() {
+                        let _ = ProcessLauncher::kill(pid);
+                    }
+                }
+                eval_exit();
             }
             _ => {
                 if let Some(out) = attrs.get("result") {
