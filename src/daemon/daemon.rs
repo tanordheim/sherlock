@@ -1,14 +1,17 @@
+use crate::loader::util::{SherlockError, SherlockErrorType};
 use crate::ui::window::show_window;
 use gtk4::glib::{self, ControlFlow};
 use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 
-pub struct SherlockDeamon {}
+pub struct SherlockDeamon {
+    socket: String,
+}
 impl SherlockDeamon {
-    pub fn new(socket_path: &str) {
+    pub fn new(socket_path: &str)->Self{
         let _ = std::fs::remove_file(socket_path);
         let listener = UnixListener::bind(socket_path).expect("Failed to bind socket");
-        println!("Deamon listening on {}", socket_path);
+        println!("Daemon listening on {}", socket_path);
 
         for stream in listener.incoming() {
             if let Ok(mut stream) = stream {
@@ -31,10 +34,25 @@ impl SherlockDeamon {
                         }
                     }
                     Err(e) => {
-                        println!("Error: {:?}", e)
+                        eprintln!("Error: {:?}", e)
                     }
                 }
             }
         }
+        Self { socket: socket_path.to_string() }
+    }
+    fn remove(&self)->Result<(), SherlockError>{
+        std::fs::remove_file(&self.socket).map_err(|e| SherlockError {
+            error: SherlockErrorType::SocketRemoveError(self.socket.clone()),
+            traceback: e.to_string(),
+        })?;
+        Ok(())
+    }
+}
+
+
+impl Drop for SherlockDeamon {
+    fn drop(&mut self) {
+        let _ = self.remove();
     }
 }

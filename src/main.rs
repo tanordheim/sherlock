@@ -165,7 +165,7 @@ async fn main() {
                     ui::window::hide_window(false);
 
                     thread::spawn(move || {
-                        SherlockDeamon::new(SOCKET_PATH);
+                        let _damon = SherlockDeamon::new(SOCKET_PATH);
                     });
                 }
                 false => {

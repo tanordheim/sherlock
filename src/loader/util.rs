@@ -87,6 +87,7 @@ pub enum SherlockErrorType {
     DBusMessageSendError(String),
     DBusMessageConstructError(String),
     HttpRequestError(String),
+    SocketRemoveError(String),
 }
 
 impl SherlockErrorType {
@@ -95,6 +96,10 @@ impl SherlockErrorType {
             SherlockErrorType::EnvVarNotFoundError(var) => (
                 "EnvVarNotFoundError".to_string(),
                 format!("Failed to unpack environment variable \"{}\"", var),
+            ),
+            SherlockErrorType::SocketRemoveError(socket) => (
+                "SocketRemoveError".to_string(),
+                format!("Failed to close socket at location \"{}\"", socket),
             ),
             SherlockErrorType::FileExistError(file) => (
                 "FileExistError".to_string(),
