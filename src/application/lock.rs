@@ -1,7 +1,23 @@
-use std::fs::{remove_file, File};
-use std::path::Path;
+use std::fs::{self, remove_file, File};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+
+use procfs::process::Process;
 
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
+    let path = PathBuf::from(lock_file);
+    if path.exists() {
+        if let Some(content) = fs::read_to_string(&path).ok() {
+            if let Some(pid) = content.parse::<i32>().ok() {
+                match Process::new(pid) {
+                    Ok(_) => std::process::exit(0),
+                    Err(_) => {
+                        let _ = fs::remove_file(lock_file);
+                    }
+                }
+            }
+        }
+    }
     LockFile::new(lock_file)
 }
 
@@ -16,9 +32,12 @@ impl LockFile {
         }
 
         match File::create(path) {
-            Ok(_) => Ok(LockFile {
-                path: path.to_string(),
-            }),
+            Ok(mut f) => {
+                write!(f, "{}", std::process::id()).map_err(|e| e.to_string())?;
+                Ok(LockFile {
+                    path: path.to_string(),
+                })
+            }
             Err(e) => Err(format!("Failed to create lock file: {}", e)),
         }
     }
