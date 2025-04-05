@@ -1,4 +1,5 @@
-use std::collections::HashMap;
+use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 
 use std::env;
 use std::fs::{self, File};
@@ -15,7 +16,7 @@ use crate::launcher::{
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
-use clipboard_launcher::Clp;
+use clipboard_launcher::ClipboardLauncher;
 use simd_json;
 use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
@@ -116,10 +117,24 @@ impl Loader {
                         let clipboard_content: String = read_from_clipboard()
                             .map_err(|e| non_breaking.push(e))
                             .unwrap_or_default();
+                        let capabilities: Option<HashSet<String>> =
+                            match cmd.args.get("capabilities") {
+                                Some(Value::Array(arr)) => {
+                                    let strings: HashSet<String> = arr
+                                        .iter()
+                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                        .collect();
+                                    Some(strings)
+                                }
+                                _ => None,
+                            };
                         if clipboard_content.is_empty() {
                             LauncherType::Empty
                         } else {
-                            LauncherType::Clipboard(Clp { clipboard_content })
+                            LauncherType::Clipboard(ClipboardLauncher {
+                                clipboard_content,
+                                capabilities,
+                            })
                         }
                     }
                     "teams_event" => {

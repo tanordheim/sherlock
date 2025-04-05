@@ -21,7 +21,7 @@ use crate::{
 use app_launcher::App;
 use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
-use clipboard_launcher::Clp;
+use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::SystemCommand;
@@ -34,7 +34,7 @@ pub enum LauncherType {
     Calc(()),
     BulkText(BulkText),
     SystemCommand(SystemCommand),
-    Clipboard(Clp),
+    Clipboard(ClipboardLauncher),
     EventLauncher(EventLauncher),
     MusicPlayerLauncher(MusicPlayerLauncher),
     ProcessLauncher(ProcessLauncher),
@@ -81,9 +81,7 @@ impl Launcher {
                 LauncherType::SystemCommand(cmd) => {
                     Tile::app_tile(self, keyword, cmd.commands.clone(), app_config)
                 }
-                LauncherType::Clipboard(clp) => {
-                    Tile::clipboard_tile(self, &clp.clipboard_content, keyword)
-                }
+                LauncherType::Clipboard(clp) => Tile::clipboard_tile(self, &clp, keyword),
                 LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
                 LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
 
