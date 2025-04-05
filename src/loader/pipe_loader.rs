@@ -5,6 +5,8 @@ use std::os::linux::fs::MetadataExt;
 
 use serde::Deserialize;
 
+use crate::CONFIG;
+
 use super::Loader;
 
 impl Loader {
@@ -26,12 +28,23 @@ impl Loader {
 pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
     let data: Option<Vec<PipeData>> = simd_json::from_slice(&mut buf).ok();
 
+    let config = match CONFIG.get() {
+        Some(c) => c,
+        None => return vec![],
+    };
+
     match data {
-        Some(parsed_data) => parsed_data,
+        Some(mut parsed_data) => {
+            for i in parsed_data.iter_mut() {
+                if i.field.is_none() {
+                    i.field = config.behavior.field.clone();
+                }
+            }
+            parsed_data
+        }
         None => {
             let mut result = Vec::new();
             let mut start = 0;
-
             while start < buf.len() {
                 // Detect if the current byte sequence is a valid UTF-8 string
                 let end = match buf[start..].iter().position(|&b| b == b'\n') {
@@ -58,6 +71,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         icon: None,
                         binary: None,
                         method: None,
+                        field: config.behavior.field.clone(),
                         hidden: None,
                     });
                 } else {
@@ -68,6 +82,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         result: None,
                         icon: None,
                         binary: Some(chunk.to_vec()),
+                        field: config.behavior.field.clone(),
                         method: None,
                         hidden: None,
                     });
@@ -76,7 +91,6 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                 start = end;
             }
 
-            println!("{:?}", result);
             result
         }
     }
@@ -90,5 +104,6 @@ pub struct PipeData {
     pub result: Option<String>,
     pub binary: Option<Vec<u8>>,
     pub method: Option<String>,
+    pub field: Option<String>,
     pub hidden: Option<HashMap<String, String>>,
 }

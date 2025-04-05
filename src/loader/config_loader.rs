@@ -144,6 +144,7 @@ impl Loader {
             &home,
         );
         config.pipe.method = sherlock_flags.method.clone();
+        config.behavior.field = sherlock_flags.field.clone();
 
         if sherlock_flags.daemonize {
             config.behavior.daemonize = true;

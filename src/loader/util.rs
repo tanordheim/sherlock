@@ -56,6 +56,7 @@ pub struct SherlockFlags {
     pub cache: Option<PathBuf>,
     pub daemonize: bool,
     pub method: Option<String>,
+    pub field: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -232,6 +233,7 @@ impl SherlockConfig {
                     caching: false,
                     daemonize: false,
                     animate: true,
+                    field: None,
                 },
                 binds: ConfigBinds {
                     prev: None,
@@ -281,6 +283,7 @@ pub struct ConfigBehavior {
     pub daemonize: bool,
     #[serde(default = "default_true")]
     pub animate: bool,
+    pub field: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone)]

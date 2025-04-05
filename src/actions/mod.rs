@@ -40,13 +40,21 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 eval_exit();
             }
             "copy" => {
-                if let Some(result) = attrs.get("result") {
+                if let Some(field) = attrs.get("field") {
+                    if let Some(output) = attrs.get(field) {
+                        let _ = util::copy_to_clipboard(output.as_str());
+                    }
+                } else if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
                 eval_exit();
             }
             "print" => {
-                if let Some(result) = attrs.get("result") {
+                if let Some(field) = attrs.get("field") {
+                    if let Some(output) = attrs.get(field) {
+                        print!("{}", output);
+                    }
+                } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
                 }
                 eval_exit();
