@@ -113,7 +113,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 ### Arguments (args):
 **`capabilities`** (optional):<br>
 Specifies what the launcher should parse: 
-- **`url`** - parses urls to launch in the webbrowser
+- **`url`** - parses URLs to launch in the web browser
 - **`hex`** - displays hex colors in Sherlock
 - **`calc`** - displays the solutions to mathematical problems 
 
