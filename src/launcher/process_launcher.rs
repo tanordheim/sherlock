@@ -55,22 +55,28 @@ fn get_all_processes() -> Option<HashMap<i32, String>> {
             let stats = user_processes.iter().filter_map(|p| p.stat().ok());
             let mut collected: HashMap<i32, String> = HashMap::new();
             let mut tmp: HashMap<i32, i32> = HashMap::new();
-            for item in stats.rev() {
+                        for item in stats.rev() {
                 if item.ppid == 1 {
                     let named_id = tmp.get(&item.pid).copied().unwrap_or(item.pid);
-                    if let Some(name) = process_names.remove(&named_id) {
+                    if let Some(name) = process_names.remove(&named_id){
                         collected.insert(item.pid, name);
+                        
                     }
                 } else if item.tty_nr != 0 {
-                    if let Some(v) = tmp.remove(&item.pid) {
-                        tmp.insert(item.ppid, v);
-                    } else {
-                        if tmp.get(&item.ppid).is_none() {
-                            tmp.insert(item.ppid, item.pid);
-                        }
-                    };
+                    if let Some(r) = tmp.remove(&item.pid){
+                        tmp.insert(item.ppid, r);
+                    } else if tmp.get(&item.ppid).is_none(){
+                        tmp.insert(item.ppid, item.pid);
+                    }
+                } else if tmp.get(&item.ppid).is_none() {
+                    tmp.insert(item.ppid, item.pid);
                 }
             }
+
+            for item in collected.iter(){
+                println!("{} - {}", item.0, item.1);
+            }
+
             Some(collected)
         }
         Err(_) => None,
