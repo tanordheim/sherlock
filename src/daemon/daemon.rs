@@ -4,10 +4,10 @@ use gtk4::glib::{self, ControlFlow};
 use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 
-pub struct SherlockDeamon {
+pub struct SherlockDaemon {
     socket: String,
 }
-impl SherlockDeamon {
+impl SherlockDaemon {
     pub fn new(socket_path: &str) -> Self {
         let _ = std::fs::remove_file(socket_path);
         let listener = UnixListener::bind(socket_path).expect("Failed to bind socket");
@@ -52,7 +52,7 @@ impl SherlockDeamon {
     }
 }
 
-impl Drop for SherlockDeamon {
+impl Drop for SherlockDaemon {
     fn drop(&mut self) {
         let _ = self.remove();
     }

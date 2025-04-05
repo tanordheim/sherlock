@@ -20,7 +20,7 @@ mod ui;
 // IMPORTS
 use application::lock;
 use application::util::AppState;
-use daemon::daemon::SherlockDeamon;
+use daemon::daemon::SherlockDaemon;
 use loader::{
     util::{SherlockConfig, SherlockError},
     Loader,
@@ -165,7 +165,7 @@ async fn main() {
                     ui::window::hide_window(false);
 
                     thread::spawn(move || {
-                        let _damon = SherlockDeamon::new(SOCKET_PATH);
+                        let _damon = SherlockDaemon::new(SOCKET_PATH);
                     });
                 }
                 false => {
