@@ -84,10 +84,8 @@ pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, m
 pub fn read_from_label(label_obj: &Widget) -> Option<(String, String)> {
     if let Some(label) = label_obj.downcast_ref::<Label>() {
         let text = label.text();
-        let parts: Vec<&str> = text.split(" | ").collect();
-
-        if parts.len() == 2 {
-            return Some((parts[0].to_string(), parts[1].to_string()));
+        if let Some((key, value)) = text.split_once("S%|%S") {
+            return Some((key.to_string(), value.to_string()));
         }
     }
     return None;
