@@ -135,7 +135,7 @@ fn nav_event(
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        set_mode(&ui.mode_title, &mode, "all", &"Home".to_string());
+                        set_mode(&ui.mode_title, &mode, "all", &"All".to_string());
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
@@ -263,17 +263,18 @@ pub fn async_calc(
     current_text: String,
     results: &Rc<ListBox>,
     mod_str: &str,
-    home: bool,
+    animate: bool,
 ) {
     *cancel_flag.borrow_mut() = false;
     // If task is currently running, abort it
     if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
+    let is_home = current_text.is_empty() && mode.borrow().as_str() == "all";
     let cancel_flag = Rc::clone(&cancel_flag);
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
-        .filter(|launcher| (home && launcher.home) || (!home && !launcher.only_home))
+        .filter(|launcher| (is_home && launcher.home) || (!is_home && !launcher.only_home))
         .cloned()
         .collect();
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers
@@ -304,18 +305,17 @@ pub fn async_calc(
             }
         })
         .collect();
-
     populate(
         &current_text,
         &mode.borrow(),
         &*results,
         &non_async_launchers,
         Some(&async_widgets),
-        home,
+        animate,
         mod_str,
     );
 
-    // Gather results for aynchronous widgets
+    // Gather results for asynchronous widgets
 
     let task = glib::MainContext::default().spawn_local({
         let current_task_clone = Rc::clone(current_task);
@@ -366,7 +366,7 @@ pub fn populate(
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
     async_launchers: Option<&Vec<AsyncLauncherTile>>,
-    home: bool,
+    animate: bool,
     mod_str: &str,
 ) {
     // Remove all elements inside to avoid duplicates
@@ -386,7 +386,7 @@ pub fn populate(
     if let Some(c) = CONFIG.get() {
         let mut shortcut_index = 1;
         for widget in launcher_tiles {
-            if home && c.behavior.animate {
+            if animate && c.behavior.animate {
                 widget.row_item.add_css_class("animate");
             }
             if let Some(shortcut_holder) = widget.shortcut_holder {

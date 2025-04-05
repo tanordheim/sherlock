@@ -4,7 +4,7 @@ use meval::eval_str;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
-use crate::launcher::clipboard_launcher::{self, ClipboardLauncher};
+use crate::launcher::clipboard_launcher::ClipboardLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
 use super::util::TileBuilder;

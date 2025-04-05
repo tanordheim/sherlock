@@ -168,7 +168,5 @@ pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec
             results.extend(result);
         }
     }
-    // results.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-    // results.into_iter().map(|r| r.row_item).collect()
     results
 }
