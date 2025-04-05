@@ -17,6 +17,7 @@ The launcher can be of the following types:<br>
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
+- **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
 
 ## Common Launcher Attributes
 `[UI]` - used for UI <br>
@@ -229,6 +230,24 @@ Specifies the second offset from the `date` parameter.<br>
     "home": true,
     "only_home": true,
     "spawn_focus": false
+},
+
+```
+
+### Arguments (args):
+None
+
+--- 
+
+## Process Terminator
+```json
+{
+    "name": "Kill Process",
+    "alias": "kill",
+    "type": "process",
+    "args": { },
+    "priority": 6,
+    "home": false
 },
 
 ```
