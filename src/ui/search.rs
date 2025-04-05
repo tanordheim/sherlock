@@ -27,7 +27,7 @@ struct SearchUI {
 }
 
 pub fn search(launchers: Vec<Launcher>) {
-    // Initiallize the view to show all apps
+    // Initialize the view to show all apps
     let (mode, modes, vbox, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
@@ -66,7 +66,7 @@ fn construct_window(
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
-    // Get the requred object references
+    // Get the required object references
     let vbox: HVBox = builder.object("vbox").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
     let ui = SearchUI {
@@ -213,6 +213,7 @@ fn change_event(
         String::new(),
         &results,
         &mod_str,
+        true,
     );
 
     ui.search_bar.connect_changed({
@@ -248,6 +249,7 @@ fn change_event(
                 current_text,
                 &results_clone,
                 &mod_str,
+                false,
             );
         }
     });
@@ -261,6 +263,7 @@ pub fn async_calc(
     current_text: String,
     results: &Rc<ListBox>,
     mod_str: &str,
+    home: bool,
 ) {
     *cancel_flag.borrow_mut() = false;
     // If task is currently running, abort it
@@ -268,7 +271,6 @@ pub fn async_calc(
         t.abort();
     };
     let cancel_flag = Rc::clone(&cancel_flag);
-    let home = current_text.is_empty() && mode.borrow().as_str() == "all";
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
         .filter(|launcher| (home && launcher.home) || (!home && !launcher.only_home))
