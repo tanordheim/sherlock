@@ -26,9 +26,12 @@ impl Tile {
                 builder.category.set_text(&launcher.name);
                 builder.title.set_markup(&value);
                 builder.icon.set_icon_name(Some(&proc.icon));
-                let pid = key.to_string();
+                let ppid = key.0;
+                let cpid = key.1;
+                let parent = ppid.to_string();
+                let child = cpid.to_string();
 
-                let attrs: Vec<(&str, &str)> = vec![("pid", &pid)];
+                let attrs: Vec<(&str, &str)> = vec![("parent-pid", &parent), ("child-pid", &child)];
                 builder.add_default_attrs(
                     Some("kill-process"),
                     Some(value),

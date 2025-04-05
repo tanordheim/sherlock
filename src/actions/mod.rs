@@ -82,11 +82,11 @@ pub fn execute_from_attrs(attrs: HashMap<String, String>) {
                 }
             }
             "kill-process" => {
-                if let Some(pid) = attrs.get("pid") {
-                    if let Some(pid) = pid.parse::<i32>().ok() {
-                        let _ = ProcessLauncher::kill(pid);
-                    }
-                }
+                let _ = attrs
+                    .get("parent-pid")
+                    .and_then(|p| p.parse::<i32>().ok())
+                    .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
+                    .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
                 eval_exit();
             }
             _ => {

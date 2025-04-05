@@ -8,7 +8,7 @@ use crate::loader::util::{SherlockError, SherlockErrorType};
 #[derive(Clone, Debug)]
 pub struct ProcessLauncher {
     pub icon: String,
-    pub processes: HashMap<i32, String>,
+    pub processes: HashMap<(i32, i32), String>,
 }
 
 impl ProcessLauncher {
@@ -22,16 +22,26 @@ impl ProcessLauncher {
             return None;
         }
     }
-    pub fn kill(pid: i32) -> Result<(), SherlockError> {
-        let pid = Pid::from_raw(pid);
-        kill(pid, Signal::SIGKILL).map_err(|e| SherlockError {
-            error: SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", pid)),
+    pub fn kill(pid: (i32, i32)) -> Result<(), SherlockError> {
+        if pid.0 != pid.1 {
+            let child = Pid::from_raw(pid.1);
+            kill(child, Signal::SIGKILL).map_err(|e| SherlockError {
+                error: SherlockErrorType::CommandExecutionError(format!(
+                    "Kill process \"{}\"",
+                    child
+                )),
+                traceback: e.to_string(),
+            })?;
+        };
+        let parent = Pid::from_raw(pid.0);
+        kill(parent, Signal::SIGKILL).map_err(|e| SherlockError {
+            error: SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", parent)),
             traceback: e.to_string(),
         })
     }
 }
 
-fn get_all_processes() -> Option<HashMap<i32, String>> {
+fn get_all_processes() -> Option<HashMap<(i32, i32), String>> {
     match all_processes() {
         Ok(procs) => {
             let user_processes: Vec<Process> = procs
@@ -53,13 +63,13 @@ fn get_all_processes() -> Option<HashMap<i32, String>> {
                 .collect();
 
             let stats = user_processes.iter().filter_map(|p| p.stat().ok());
-            let mut collected: HashMap<i32, String> = HashMap::new();
+            let mut collected: HashMap<(i32, i32), String> = HashMap::new();
             let mut tmp: HashMap<i32, i32> = HashMap::new();
             for item in stats.rev() {
                 if item.ppid == 1 {
                     let named_id = tmp.get(&item.pid).copied().unwrap_or(item.pid);
                     if let Some(name) = process_names.remove(&named_id) {
-                        collected.insert(item.pid, name);
+                        collected.insert((item.pid, named_id), name);
                     }
                 } else if item.tty_nr != 0 {
                     if let Some(r) = tmp.remove(&item.pid) {
