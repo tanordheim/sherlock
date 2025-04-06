@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 use crate::actions::util::read_from_clipboard;
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
+use crate::launcher::calc_launcher::Calculator;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::{
@@ -90,7 +91,20 @@ impl Loader {
                             .unwrap_or_default()
                             .to_string(),
                     }),
-                    "calculation" => LauncherType::Calc(()),
+                    "calculation" => {
+                        let capabilities: Option<HashSet<String>> =
+                            match cmd.args.get("capabilities") {
+                                Some(Value::Array(arr)) => {
+                                    let strings: HashSet<String> = arr
+                                        .iter()
+                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                        .collect();
+                                    Some(strings)
+                                }
+                                _ => None,
+                            };
+                        LauncherType::Calc(Calculator { capabilities })
+                    }
                     "command" => {
                         let prio = cmd.priority;
                         let mut commands: HashMap<String, AppData> =
@@ -131,10 +145,13 @@ impl Loader {
                         if clipboard_content.is_empty() {
                             LauncherType::Empty
                         } else {
-                            LauncherType::Clipboard(ClipboardLauncher {
-                                clipboard_content,
-                                capabilities,
-                            })
+                            LauncherType::Clipboard((
+                                ClipboardLauncher {
+                                    clipboard_content,
+                                    capabilities: capabilities.clone(),
+                                },
+                                Calculator { capabilities },
+                            ))
                         }
                     }
                     "teams_event" => {

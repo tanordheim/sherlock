@@ -408,7 +408,7 @@ pub fn default_calendar_client() -> String {
 }
 
 pub fn default_measurements() -> String {
-    String::from("metric")
+    String::from("meters")
 }
 pub fn default_currency() -> String {
     String::from("eur")

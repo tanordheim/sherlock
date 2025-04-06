@@ -4,6 +4,7 @@ use meval::eval_str;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
+use crate::launcher::calc_launcher::Calculator;
 use crate::launcher::clipboard_launcher::ClipboardLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -30,6 +31,7 @@ impl Tile {
     pub fn clipboard_tile(
         launcher: &Launcher,
         clp: &ClipboardLauncher,
+        calc: &Calculator,
         keyword: &str,
     ) -> Vec<ResultItem> {
         let mut results: Vec<ResultItem> = Default::default();
@@ -37,7 +39,7 @@ impl Tile {
         let clipboard_content = &clp.clipboard_content;
         let capabilities: HashSet<&str> = match &clp.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
-            _ => HashSet::from(["url", "hex", "calc"]),
+            _ => HashSet::from(["url", "hex", "calc.math", "calc.measurements"]),
         };
 
         //TODO implement searchstring before clipboard content
@@ -108,10 +110,10 @@ impl Tile {
                     };
                 }
             };
-            if capabilities.contains("calc") && !is_valid {
+            if !is_valid {
                 name = "From Clipboard";
                 if let Ok(result) = eval_str(clipboard_content) {
-                    return Tile::calc_tile(launcher, clipboard_content, Some(result));
+                    return Tile::calc_tile(launcher, calc, clipboard_content, Some(result));
                 }
             };
 

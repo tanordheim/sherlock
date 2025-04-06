@@ -5,6 +5,7 @@ use gtk4::{Box, Label};
 pub mod app_launcher;
 pub mod audio_launcher;
 pub mod bulk_text_launcher;
+pub mod calc_launcher;
 pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod process_launcher;
@@ -21,6 +22,7 @@ use crate::{
 use app_launcher::App;
 use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
+use calc_launcher::Calculator;
 use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
@@ -31,10 +33,10 @@ use web_launcher::Web;
 pub enum LauncherType {
     App(App),
     Web(Web),
-    Calc(()),
+    Calc(Calculator),
     BulkText(BulkText),
     SystemCommand(SystemCommand),
-    Clipboard(ClipboardLauncher),
+    Clipboard((ClipboardLauncher, Calculator)),
     EventLauncher(EventLauncher),
     MusicPlayerLauncher(MusicPlayerLauncher),
     ProcessLauncher(ProcessLauncher),
@@ -74,14 +76,16 @@ impl Launcher {
                     Tile::app_tile(self, keyword, app.apps.clone(), app_config)
                 }
                 LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
-                LauncherType::Calc(_) => Tile::calc_tile(self, keyword, None),
+                LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword, None),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self, keyword, &bulk_text)
                 }
                 LauncherType::SystemCommand(cmd) => {
                     Tile::app_tile(self, keyword, cmd.commands.clone(), app_config)
                 }
-                LauncherType::Clipboard(clp) => Tile::clipboard_tile(self, &clp, keyword),
+                LauncherType::Clipboard((clp, calc)) => {
+                    Tile::clipboard_tile(self, &clp, &calc, keyword)
+                }
                 LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
                 LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
 
