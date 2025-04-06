@@ -14,6 +14,12 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `calendar_client`        | `thunderbird` | Sets your calendar client used in event tiles. Currently only thunderbird is supported. |
 
 ---
+## Units Section `[units]`
+| **Keyword**       | **Default**          | **Explanation**                                                                                                                  |
+|-------------------|----------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `lengths`        | `meter`| Sets the default unit for any length calculations. |
+
+---
 ## Debug Section `[debug]`
 
 | **Keyword**           | **Default** | **Explanation**                                                                 |

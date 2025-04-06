@@ -30,7 +30,7 @@ impl Calculator {
             let config = CONFIG.get()?;
             let value: f32 = caps[1].parse().ok()?;
             let from = caps[2].to_lowercase();
-            let to = config.units.measurements.to_lowercase();
+            let to = config.units.lengths.to_lowercase();
 
             let (factor_from, _) = self.match_unit(&from)?;
             let (factor_to, name) = self.match_unit(&to)?;

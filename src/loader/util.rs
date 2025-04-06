@@ -241,15 +241,15 @@ impl Default for ConfigDefaultApps {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ConfigUnits {
     #[serde(default = "default_measurements")]
-    pub measurements: String,
+    pub lengths: String,
     #[serde(default = "default_currency")]
-    pub currency: String,
+    pub _currency: String,
 }
 impl Default for ConfigUnits {
     fn default() -> Self {
         Self {
-            measurements: default_measurements(),
-            currency: default_currency(),
+            lengths: default_measurements(),
+            _currency: default_currency(),
         }
     }
 }
