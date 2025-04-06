@@ -25,7 +25,7 @@ impl Tile {
             }
         }
 
-        if capabilities.contains("calc.calc.length") && result.is_none() {
+        if capabilities.contains("calc.length") && result.is_none() {
             if let Some(r) = calc_launcher.measurement(&keyword) {
                 result = Some(r.to_string());
             }
