@@ -15,8 +15,9 @@ When providing json data, the data should follow this formatting:
         "title": "String",
         "description": "String",
         "icon": "String",
+        "icon_size": i32,
         "result": "String",
-        "binary": [binary blob],
+        "binary": Vec<u8>,
         "method": "String",
         "field": "String"
         "hidden": {
@@ -33,6 +34,7 @@ All fields are optional.<br>
 | `title` | This sets the title object where you would normally see application names. |
 | `description` | This sets the description where you would normally see launcher names. |
 | `icon` | This sets the icon name for the tile. |
+| `icon_size` | Sets the size of the icon. |
 | `result` | Sets the content that should be handled as result. Defaults to `title`. |
 | `binary` | The binary will be evaluated as an image. If it succeeds, the icon will be replaced with it. |
 | `field` | Specifies the field which hidden field should be used as the output. |
