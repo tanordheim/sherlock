@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 impl Loader {
-    pub fn load_config() -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
+    pub fn load_config() -> Result<SherlockConfig, SherlockError> {
         let sherlock_flags = FLAGS.get().ok_or_else(|| SherlockError {
             error: SherlockErrorType::ConfigError(None),
             traceback: String::new(),
@@ -73,21 +73,15 @@ impl Loader {
                     }
                 };
                 config = Loader::apply_flags(sherlock_flags, config)?;
-                Ok((config, vec![]))
+                Ok(config)
             }
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    let mut non_breaking = vec![SherlockError {
-                        error: SherlockErrorType::FileExistError(path),
-                        traceback: Default::default(),
-                    }];
-
                     // Unpack non-breaking errors and default config
-                    let (mut config, n) = SherlockConfig::default();
-                    non_breaking.extend(n);
+                    let mut config = SherlockConfig::default();
 
                     config = Loader::apply_flags(sherlock_flags, config)?;
-                    Ok((config, non_breaking))
+                    Ok(config)
                 }
                 _ => Err(SherlockError {
                     error: SherlockErrorType::FileReadError(path),
