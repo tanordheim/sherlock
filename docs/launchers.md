@@ -93,10 +93,20 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 {
     "name": "Calculator",
     "type": "calculation",
-    "args": {},
+    "args": {
+        "capabilities": [
+            "calc.math",
+            "calc.lengths"
+        ]
+    },
     "priority": 1,
 }
 ```
+### Arguments (args):
+**`capabilities`** (optional):<br>
+Specifies what the launcher should parse: 
+- **`calc.math`** - displays the solutions to mathematical problems 
+- **`calc.lengths`** - displays the solutions to length transformations 
 
 ---
 ## Clipboard Launcher
@@ -117,7 +127,7 @@ Specifies what the launcher should parse:
 - **`url`** - parses URLs to launch in the web browser
 - **`hex`** - displays hex colors in Sherlock
 - **`calc.math`** - displays the solutions to mathematical problems 
-- **`calc.measurements`** - displays the solutions to measurement calculations 
+- **`calc.lengths`** - displays the solutions to length transformations 
 
 ---
 ## Command Launcher

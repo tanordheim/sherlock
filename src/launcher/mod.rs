@@ -76,7 +76,7 @@ impl Launcher {
                     Tile::app_tile(self, keyword, app.apps.clone(), app_config)
                 }
                 LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
-                LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword, None),
+                LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
                 LauncherType::BulkText(bulk_text) => {
                     Tile::bulk_text_tile(&self, keyword, &bulk_text)
                 }

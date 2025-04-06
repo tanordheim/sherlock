@@ -10,25 +10,22 @@ impl Tile {
         launcher: &Launcher,
         calc_launcher: &Calculator,
         keyword: &str,
-        just_print: Option<f64>,
     ) -> Vec<ResultItem> {
         let capabilities: HashSet<&str> = match &calc_launcher.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
-            _ => HashSet::from(["calc.math", "calc.measurement"]),
+            _ => HashSet::from(["calc.math", "calc.length"]),
         };
         let mut result: Option<String> = None;
 
         if capabilities.contains("calc.math") {
-            if let Some(r) = just_print {
-                result = Some(format!("= {}", r.to_string()));
-            } else if let Ok(r) = eval_str(keyword.trim()) {
+            if let Ok(r) = eval_str(keyword.trim()) {
                 if r.to_string().as_str() != keyword.trim() {
                     result = Some(format!("= {}", r.to_string()));
                 }
             }
         }
 
-        if capabilities.contains("calc.measurement") && result.is_none() {
+        if capabilities.contains("calc.calc.length") && result.is_none() {
             if let Some(r) = calc_launcher.measurement(&keyword) {
                 result = Some(r.to_string());
             }

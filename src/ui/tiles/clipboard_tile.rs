@@ -1,6 +1,5 @@
 use gio::glib::Bytes;
 use gtk4::{gdk, prelude::*, Image};
-use meval::eval_str;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
@@ -39,7 +38,7 @@ impl Tile {
         let clipboard_content = &clp.clipboard_content;
         let capabilities: HashSet<&str> = match &clp.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
-            _ => HashSet::from(["url", "hex", "calc.math", "calc.measurements"]),
+            _ => HashSet::from(["url", "hex", "calc.math", "calc.length"]),
         };
 
         //TODO implement searchstring before clipboard content
@@ -110,11 +109,10 @@ impl Tile {
                     };
                 }
             };
+            // calc capabilities will be checked inside of calc file
             if !is_valid {
                 name = "From Clipboard";
-                if let Ok(result) = eval_str(clipboard_content) {
-                    return Tile::calc_tile(launcher, calc, clipboard_content, Some(result));
-                }
+                results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
             };
 
             if is_valid {
