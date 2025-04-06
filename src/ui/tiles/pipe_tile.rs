@@ -38,6 +38,9 @@ impl Tile {
                     if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
                         let image = Image::from_pixbuf(Some(&pixbuf));
                         builder.icon_holder.append(&image);
+                        if let Some(size) = &item.icon_size {
+                            image.set_pixel_size(*size);
+                        }
                     }
                 } else {
                     builder.icon.set_visible(false);
@@ -62,7 +65,6 @@ impl Tile {
                 results.push(builder.object);
             }
         }
-
         return results;
     }
 }

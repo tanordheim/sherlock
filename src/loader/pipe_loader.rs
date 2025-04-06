@@ -39,6 +39,24 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                 if i.field.is_none() {
                     i.field = config.behavior.field.clone();
                 }
+                if let Some(title) = &i.title {
+                    let cleaned: String = title.chars()
+                        .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
+                        .collect();
+                    i.title = Some(cleaned);
+                }
+                if let Some(desc) = &i.description {
+                    let cleaned: String = desc.chars()
+                        .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
+                        .collect();
+                    i.description = Some(cleaned);
+                }
+                if let Some(res) = &i.result {
+                    let cleaned: String = res.chars()
+                        .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
+                        .collect();
+                    i.result = Some(cleaned);
+                }
             }
             parsed_data
         }
@@ -69,6 +87,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         description: None,
                         result: cleaned_line,
                         icon: None,
+                        icon_size: None,
                         binary: None,
                         method: None,
                         field: config.behavior.field.clone(),
@@ -81,6 +100,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         description: None,
                         result: None,
                         icon: None,
+                        icon_size: None,
                         binary: Some(chunk.to_vec()),
                         field: config.behavior.field.clone(),
                         method: None,
@@ -101,6 +121,7 @@ pub struct PipeData {
     pub title: Option<String>,
     pub description: Option<String>,
     pub icon: Option<String>,
+    pub icon_size: Option<i32>,
     pub result: Option<String>,
     pub binary: Option<Vec<u8>>,
     pub method: Option<String>,
