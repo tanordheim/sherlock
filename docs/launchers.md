@@ -105,7 +105,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
         "name": "Clipboard",
         "type": "clipboard-execution",
         "args": {
-            "capabilities": ["url", "hex", "calc"]
+            "capabilities": ["url", "hex", "calc.math", "calc.measurements"]
         },
         "priority": 1,
         "home": true
@@ -116,7 +116,8 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 Specifies what the launcher should parse: 
 - **`url`** - parses URLs to launch in the web browser
 - **`hex`** - displays hex colors in Sherlock
-- **`calc`** - displays the solutions to mathematical problems 
+- **`calc.math`** - displays the solutions to mathematical problems 
+- **`calc.measurements`** - displays the solutions to measurement calculations 
 
 ---
 ## Command Launcher
