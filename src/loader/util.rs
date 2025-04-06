@@ -191,6 +191,8 @@ pub struct SherlockConfig {
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,
     #[serde(default)]
+    pub units: ConfigUnits,
+    #[serde(default)]
     pub debug: ConfigDebug,
     #[serde(default)]
     pub appearance: ConfigAppearance,
@@ -204,53 +206,17 @@ pub struct SherlockConfig {
     pub pipe: ConfigPipe,
 }
 impl SherlockConfig {
-    pub fn default() -> (Self, Vec<SherlockError>) {
-        let mut non_breaking: Vec<SherlockError> = Vec::new();
-        (
-            SherlockConfig {
-                default_apps: ConfigDefaultApps {
-                    calendar_client: default_calendar_client(),
-                    teams: default_teams(),
-                    terminal: get_terminal()
-                        .map_err(|e| non_breaking.push(e))
-                        .unwrap_or_default(),
-                },
-                debug: ConfigDebug {
-                    try_suppress_errors: false,
-                    try_suppress_warnings: false,
-                    app_paths: HashSet::new(),
-                },
-                appearance: ConfigAppearance {
-                    width: 900,
-                    height: 593,
-                    gsk_renderer: "cairo".to_string(),
-                    recolor_icons: false,
-                    icon_paths: Default::default(),
-                    icon_size: default_icon_size(),
-                },
-                behavior: ConfigBehavior {
-                    cache: default_cache(),
-                    caching: false,
-                    daemonize: false,
-                    animate: true,
-                    field: None,
-                },
-                binds: ConfigBinds {
-                    prev: None,
-                    next: None,
-                    modifier: None,
-                },
-                files: ConfigFiles {
-                    config: default_config(),
-                    fallback: default_fallback(),
-                    css: default_css(),
-                    alias: default_alias(),
-                    ignore: default_ignore(),
-                },
-                pipe: ConfigPipe { method: None },
-            },
-            non_breaking,
-        )
+    pub fn default() -> Self {
+        SherlockConfig {
+            default_apps: ConfigDefaultApps::default(),
+            units: ConfigUnits::default(),
+            debug: ConfigDebug::default(),
+            appearance: ConfigAppearance::default(),
+            behavior: ConfigBehavior::default(),
+            binds: ConfigBinds::default(),
+            files: ConfigFiles::default(),
+            pipe: ConfigPipe { method: None },
+        }
     }
 }
 
@@ -272,8 +238,70 @@ impl Default for ConfigDefaultApps {
         }
     }
 }
+#[derive(Deserialize, Debug, Clone)]
+pub struct ConfigUnits {
+    #[serde(default = "default_measurements")]
+    pub measurements: String,
+    #[serde(default = "default_currency")]
+    pub currency: String,
+}
+impl Default for ConfigUnits {
+    fn default() -> Self {
+        Self {
+            measurements: default_measurements(),
+            currency: default_currency(),
+        }
+    }
+}
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Debug, Clone)]
+pub struct ConfigDebug {
+    #[serde(default)]
+    pub try_suppress_errors: bool,
+    #[serde(default = "default_true")]
+    pub try_suppress_warnings: bool,
+    #[serde(default)]
+    pub app_paths: HashSet<String>,
+}
+impl Default for ConfigDebug {
+    fn default() -> Self {
+        Self {
+            try_suppress_errors: false,
+            try_suppress_warnings: true,
+            app_paths: HashSet::new(),
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ConfigAppearance {
+    #[serde(default)]
+    pub width: i32,
+    #[serde(default)]
+    pub height: i32,
+    #[serde(default)]
+    pub gsk_renderer: String,
+    #[serde(default)]
+    pub recolor_icons: bool,
+    #[serde(default)]
+    pub icon_paths: Vec<String>,
+    #[serde(default = "default_icon_size")]
+    pub icon_size: i32,
+}
+impl Default for ConfigAppearance {
+    fn default() -> Self {
+        Self {
+            width: 900,
+            height: 593,
+            gsk_renderer: String::from("cairo"),
+            recolor_icons: false,
+            icon_paths: Default::default(),
+            icon_size: default_icon_size(),
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct ConfigBehavior {
     #[serde(default = "default_cache")]
     pub cache: PathBuf,
@@ -284,6 +312,17 @@ pub struct ConfigBehavior {
     #[serde(default = "default_true")]
     pub animate: bool,
     pub field: Option<String>,
+}
+impl Default for ConfigBehavior {
+    fn default() -> Self {
+        Self {
+            cache: default_cache(),
+            caching: false,
+            daemonize: false,
+            animate: true,
+            field: None,
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -327,31 +366,6 @@ pub struct ConfigPipe {
     pub method: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
-pub struct ConfigDebug {
-    #[serde(default)]
-    pub try_suppress_errors: bool,
-    #[serde(default)]
-    pub try_suppress_warnings: bool,
-    #[serde(default)]
-    pub app_paths: HashSet<String>,
-}
-#[derive(Deserialize, Debug, Clone, Default)]
-pub struct ConfigAppearance {
-    #[serde(default)]
-    pub width: i32,
-    #[serde(default)]
-    pub height: i32,
-    #[serde(default)]
-    pub gsk_renderer: String,
-    #[serde(default)]
-    pub recolor_icons: bool,
-    #[serde(default)]
-    pub icon_paths: Vec<String>,
-    #[serde(default = "default_icon_size")]
-    pub icon_size: i32,
-}
-
 pub fn read_file(file_path: &str) -> std::io::Result<String> {
     let file = File::open(file_path)?;
     let mut reader = BufReader::new(file);
@@ -392,6 +406,14 @@ pub fn default_teams() -> String {
 pub fn default_calendar_client() -> String {
     String::from("thunderbird")
 }
+
+pub fn default_measurements() -> String {
+    String::from("metric")
+}
+pub fn default_currency() -> String {
+    String::from("eur")
+}
+
 pub fn default_cache() -> PathBuf {
     PathBuf::from("~/.cache/sherlock_desktop_cache.json")
 }

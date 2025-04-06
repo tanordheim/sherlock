@@ -40,19 +40,22 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                     i.field = config.behavior.field.clone();
                 }
                 if let Some(title) = &i.title {
-                    let cleaned: String = title.chars()
+                    let cleaned: String = title
+                        .chars()
                         .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
                         .collect();
                     i.title = Some(cleaned);
                 }
                 if let Some(desc) = &i.description {
-                    let cleaned: String = desc.chars()
+                    let cleaned: String = desc
+                        .chars()
                         .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
                         .collect();
                     i.description = Some(cleaned);
                 }
                 if let Some(res) = &i.result {
-                    let cleaned: String = res.chars()
+                    let cleaned: String = res
+                        .chars()
                         .filter(|&c| c.is_ascii() && (!c.is_control() || c == '\t' || c == '\n'))
                         .collect();
                     i.result = Some(cleaned);
