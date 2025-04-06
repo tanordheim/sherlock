@@ -10,7 +10,11 @@ impl Tile {
         let result = if let Some(r) = result {
             r
         } else if let Ok(r) = eval_str(equation.trim()) {
-            r
+            if r.to_string().as_str() != equation.trim() {
+                r
+            } else {
+                return vec![];
+            }
         } else {
             return vec![];
         };
