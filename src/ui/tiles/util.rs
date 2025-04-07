@@ -100,7 +100,7 @@ impl EventTileBuilder {
 
         for item in attrs {
             let (key, value) = item;
-            let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
+            let label = Label::new(Some(format!("{}S%|%S{}", key, value).as_str()));
             self.attrs.append(&label);
         }
     }
