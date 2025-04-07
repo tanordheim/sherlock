@@ -258,7 +258,7 @@ impl Default for ConfigUnits {
 pub struct ConfigDebug {
     #[serde(default)]
     pub try_suppress_errors: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub try_suppress_warnings: bool,
     #[serde(default)]
     pub app_paths: HashSet<String>,
@@ -267,7 +267,7 @@ impl Default for ConfigDebug {
     fn default() -> Self {
         Self {
             try_suppress_errors: false,
-            try_suppress_warnings: true,
+            try_suppress_warnings: false,
             app_paths: HashSet::new(),
         }
     }
@@ -392,6 +392,16 @@ pub fn home_dir() -> Result<PathBuf, SherlockError> {
 }
 pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
     priority + 1.0 - count * 10f32.powi(-decimals)
+}
+
+pub fn expand_path(path: &Path, home: &Path) -> PathBuf {
+    let mut components = path.components();
+    if let Some(std::path::Component::Normal(first)) = components.next() {
+        if first == "~" {
+            return home.join(components.as_path());
+        }
+    }
+    path.to_path_buf()
 }
 
 // ====================

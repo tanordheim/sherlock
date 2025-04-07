@@ -38,6 +38,7 @@ static FLAGS: OnceLock<SherlockFlags> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
+    let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
@@ -64,9 +65,20 @@ async fn main() {
     };
 
     // Parse configs from 'config.toml'
-    let app_config = Loader::load_config()
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or(loader::util::SherlockConfig::default());
+    let app_config = Loader::load_config().map_or_else(
+        |e| {
+            startup_errors.push(e);
+            let defaults = loader::util::SherlockConfig::default();
+            loader::Loader::apply_flags(&sherlock_flags, defaults)
+        },
+        |(app_config, n)| {
+            non_breaking.extend(n);
+            app_config
+        },
+    );
+    println!("{:?}", non_breaking);
+    println!("{:?}", app_config.debug);
+
     match CONFIG.set(app_config.clone()) {
         Ok(_) => {}
         Err(_) => {
@@ -97,7 +109,7 @@ async fn main() {
 
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
-        let mut non_breaking: Vec<SherlockError> = Vec::new();
+        let mut non_breaking = non_breaking.clone();
 
         // Initialize launchers from 'fallback.json'
         let (launchers, n) = Loader::load_launchers()

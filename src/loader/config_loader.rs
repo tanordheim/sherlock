@@ -1,11 +1,12 @@
-use super::util::{home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags};
+use super::util::{
+    expand_path, home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags,
+};
 use super::Loader;
 use crate::FLAGS;
 use std::fs;
-use std::path::{Path, PathBuf};
 
 impl Loader {
-    pub fn load_config() -> Result<SherlockConfig, SherlockError> {
+    pub fn load_config() -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
         let sherlock_flags = FLAGS.get().ok_or_else(|| SherlockError {
             error: SherlockErrorType::ConfigError(None),
             traceback: String::new(),
@@ -50,18 +51,18 @@ impl Loader {
 
         match fs::read_to_string(&path) {
             Ok(config_str) => {
-                let mut config: SherlockConfig = match filetype.as_str() {
+                let config_res: Result<SherlockConfig, SherlockError> = match filetype.as_str() {
                     "json" => {
                         let mut bytes = config_str.into_bytes();
                         simd_json::from_slice(&mut bytes).map_err(|e| SherlockError {
                             error: SherlockErrorType::FileParseError(path.clone()),
                             traceback: e.to_string(),
-                        })?
+                        })
                     }
                     "toml" => toml::de::from_str(&config_str).map_err(|e| SherlockError {
                         error: SherlockErrorType::FileParseError(path.clone()),
                         traceback: e.to_string(),
-                    })?,
+                    }),
                     _ => {
                         return Err(SherlockError {
                             error: SherlockErrorType::FileParseError(path.clone()),
@@ -72,16 +73,30 @@ impl Loader {
                         })
                     }
                 };
-                config = Loader::apply_flags(sherlock_flags, config)?;
-                Ok(config)
+                match config_res {
+                    Ok(mut config) => {
+                        config = Loader::apply_flags(sherlock_flags, config);
+                        return Ok((config, vec![]));
+                    }
+                    Err(e) => {
+                        let mut config = SherlockConfig::default();
+
+                        config = Loader::apply_flags(sherlock_flags, config);
+                        Ok((config, vec![e]))
+                    }
+                }
             }
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    // Unpack non-breaking errors and default config
+                    let error = SherlockError {
+                        error: SherlockErrorType::FileExistError(path),
+                        traceback: e.to_string(),
+                    };
+
                     let mut config = SherlockConfig::default();
 
-                    config = Loader::apply_flags(sherlock_flags, config)?;
-                    Ok(config)
+                    config = Loader::apply_flags(sherlock_flags, config);
+                    Ok((config, vec![error]))
                 }
                 _ => Err(SherlockError {
                     error: SherlockErrorType::FileReadError(path),
@@ -90,12 +105,15 @@ impl Loader {
             },
         }
     }
-    fn apply_flags(
+    pub fn apply_flags(
         sherlock_flags: &SherlockFlags,
         mut config: SherlockConfig,
-    ) -> Result<SherlockConfig, SherlockError> {
+    ) -> SherlockConfig {
         // Make paths that contain the ~ dir use the correct path
-        let home = home_dir()?;
+        let home = match home_dir() {
+            Ok(h) => h,
+            Err(_) => return config,
+        };
 
         // Override config files from flags
         config.files.config = expand_path(
@@ -143,16 +161,6 @@ impl Loader {
         if sherlock_flags.daemonize {
             config.behavior.daemonize = true;
         }
-        Ok(config)
+        config
     }
-}
-
-fn expand_path(path: &Path, home: &Path) -> PathBuf {
-    let mut components = path.components();
-    if let Some(std::path::Component::Normal(first)) = components.next() {
-        if first == "~" {
-            return home.join(components.as_path());
-        }
-    }
-    path.to_path_buf()
 }
