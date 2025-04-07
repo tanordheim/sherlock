@@ -16,7 +16,6 @@ pub mod web_launcher;
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
     ui::tiles::{util::AsyncOptions, Tile},
-    CONFIG,
 };
 
 use app_launcher::App;
@@ -70,29 +69,25 @@ pub struct ResultItem {
 impl Launcher {
     // TODO: tile method recreates already stored data...
     pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
-        if let Some(app_config) = CONFIG.get() {
-            match &self.launcher_type {
-                LauncherType::App(app) => {
-                    Tile::app_tile(self, keyword, app.apps.clone(), app_config)
-                }
-                LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
-                LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
-                LauncherType::BulkText(bulk_text) => {
-                    Tile::bulk_text_tile(&self, keyword, &bulk_text)
-                }
-                LauncherType::SystemCommand(cmd) => {
-                    Tile::app_tile(self, keyword, cmd.commands.clone(), app_config)
-                }
-                LauncherType::Clipboard((clp, calc)) => {
-                    Tile::clipboard_tile(self, &clp, &calc, keyword)
-                }
-                LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
-                LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
-
-                _ => Vec::new(),
+        match &self.launcher_type {
+            LauncherType::App(app) => {
+                Tile::app_tile(self, keyword, &app.apps)
             }
-        } else {
-            Vec::new()
+            LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
+            LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
+            LauncherType::BulkText(bulk_text) => {
+                Tile::bulk_text_tile(&self, keyword, &bulk_text)
+            }
+            LauncherType::SystemCommand(cmd) => {
+                Tile::app_tile(self, keyword, &cmd.commands)
+            }
+            LauncherType::Clipboard((clp, calc)) => {
+                Tile::clipboard_tile(self, &clp, &calc, keyword)
+            }
+            LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
+            LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
+
+            _ => Vec::new(),
         }
     }
     pub fn get_execs(&self) -> Option<HashSet<String>> {

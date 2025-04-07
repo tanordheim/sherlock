@@ -282,8 +282,6 @@ pub struct ConfigAppearance {
     #[serde(default)]
     pub gsk_renderer: String,
     #[serde(default)]
-    pub recolor_icons: bool,
-    #[serde(default)]
     pub icon_paths: Vec<String>,
     #[serde(default = "default_icon_size")]
     pub icon_size: i32,
@@ -294,7 +292,6 @@ impl Default for ConfigAppearance {
             width: 900,
             height: 593,
             gsk_renderer: String::from("cairo"),
-            recolor_icons: false,
             icon_paths: Default::default(),
             icon_size: default_icon_size(),
         }

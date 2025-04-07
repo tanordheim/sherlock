@@ -1,6 +1,6 @@
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
-    launcher::{Launcher, ResultItem},
+    launcher::Launcher,
     loader::pipe_loader::PipeData,
     CONFIG,
 };
@@ -10,7 +10,6 @@ use std::collections::HashSet;
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
-    pub result_item: ResultItem,
     pub title: Option<Label>,
     pub body: Option<Label>,
     pub async_opts: Option<AsyncOptions>,
@@ -28,14 +27,6 @@ impl AsyncOptions {
             _icon: None,
             icon_holder_overlay: None,
         }
-    }
-}
-
-pub fn ensure_icon_name(name: String) -> String {
-    if name.ends_with("-symbolic") {
-        name
-    } else {
-        format!("{}-symbolic", name)
     }
 }
 

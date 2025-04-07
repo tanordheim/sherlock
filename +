@@ -290,24 +290,20 @@ pub fn async_calc(
     let current_mode_ref = mode.borrow();
     let current_mode = current_mode_ref.trim();
 
-    // extract result items to reduce cloning
-    let mut async_widgets:Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
-    let async_launchers: Vec<AsyncLauncherTile> = async_launchers
+    let async_widgets: Vec<AsyncLauncherTile> = async_launchers
         .into_iter()
         .filter_map(|launcher| {
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
                 || (current_mode == "all" && launcher.priority > 0)
             {
                 launcher.get_loader_widget(&current_text).map(
-                    |(widget, title, body, async_opts, attrs)| {
-                        async_widgets.push(widget);
-                        AsyncLauncherTile {
+                    |(widget, title, body, async_opts, attrs)| AsyncLauncherTile {
                         launcher,
+                        result_item: widget,
                         title,
                         body,
                         async_opts,
                         attrs,
-                    }
                     },
                 )
             } else {
@@ -320,7 +316,7 @@ pub fn async_calc(
         &mode.borrow(),
         &*results,
         &non_async_launchers,
-        Some(async_widgets),
+        Some(&async_widgets),
         animate,
         mod_str,
     );
@@ -334,7 +330,7 @@ pub fn async_calc(
                 return;
             }
             // get results for aysnc launchers
-            for widget in async_launchers.iter() {
+            for widget in async_widgets.iter() {
                 if let Some((title, body, next_content)) =
                     widget.launcher.get_result(&current_text).await
                 {
@@ -375,7 +371,7 @@ pub fn populate(
     mode: &str,
     results_frame: &ListBox,
     launchers: &Vec<Launcher>,
-    async_widgets: Option<Vec<ResultItem>>,
+    async_launchers: Option<&Vec<AsyncLauncherTile>>,
     animate: bool,
     mod_str: &str,
 ) {
@@ -383,8 +379,10 @@ pub fn populate(
     while let Some(row) = results_frame.last_child() {
         results_frame.remove(&row);
     }
+
     let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
-    if let Some(widgets) = async_widgets {
+    if let Some(a_wid) = async_launchers {
+        let widgets: Vec<ResultItem> = a_wid.into_iter().map(move |l| l.result_item.clone()).collect();
         launcher_tiles.extend(widgets);
     }
 
