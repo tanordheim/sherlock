@@ -10,11 +10,10 @@ use crate::{APP_STATE, CONFIG, LOCK_FILE};
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     // 618 with, 591 without notification bar
-    let (width, height) = if let Some(config) = CONFIG.get() {
-        (config.appearance.width, config.appearance.height)
-    } else {
-        (900, 591)
-    };
+    let (width, height) = CONFIG.get().map_or_else(
+        || (900, 591),
+        |config| (config.appearance.width, config.appearance.height),
+    );
 
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
@@ -84,6 +83,8 @@ pub fn destroy_window() {
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.destroy());
-        } else { std::process::exit(0)}
+        } else {
+            std::process::exit(0)
+        }
     });
 }
