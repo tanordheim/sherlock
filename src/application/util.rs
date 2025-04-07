@@ -42,14 +42,14 @@ pub fn reload_content() -> Option<()> {
     let sherlock_flags = FLAGS.get()?;
     remove_stack_children();
 
-    let (launchers, n) = Loader::load_launchers()
+    let (launchers, n) = Loader::load_launchers_sync()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
 
     non_breaking.extend(n);
     let pipe = Loader::load_pipe_args();
     if pipe.is_empty() {
-        ui::search::search(launchers);
+        ui::search::search(&launchers);
     } else {
         if sherlock_flags.display_raw {
             let pipe = String::from_utf8_lossy(&pipe);

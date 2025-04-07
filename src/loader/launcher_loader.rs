@@ -1,3 +1,5 @@
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
@@ -32,190 +34,193 @@ use crate::CONFIG;
 use util::{AppData, CommandConfig};
 
 impl Loader {
-    pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
-        let mut non_breaking: Vec<SherlockError> = Vec::new();
+    pub async fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
+        wrapped()
+    }
+    pub fn load_launchers_sync() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
+        wrapped()
+    }
+}
 
-        let config = CONFIG.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
+fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
+    let config = CONFIG.get().ok_or_else(|| SherlockError {
+        error: SherlockErrorType::ConfigError(None),
+        traceback: String::new(),
+    })?;
 
-        // Read fallback data here:
-        let (launcher_config, n) = parse_launcher_configs(&config.files.fallback)?;
-        non_breaking.extend(n);
+    // Read fallback data here:
+    let (launcher_config, n) = parse_launcher_configs(&config.files.fallback)?;
 
-        // Read cached counter file
-        let counter_reader = CounterReader::new()?;
-        let counts = counter_reader.read()?;
+    // Read cached counter file
+    let counter_reader = CounterReader::new()?;
+    let counts = counter_reader.read()?;
 
-        // Parse the launchers
-        let launchers: Vec<Launcher> = launcher_config
-            .iter()
-            .filter_map(|cmd| {
-                let counts_clone = counts.clone();
-                let max_decimals = counts_clone
-                    .iter()
-                    .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-                    .map(|(_, v)| v.to_string().len())
-                    .unwrap_or(0) as i32;
-                let launcher_type: LauncherType = match cmd.r#type.as_str() {
-                    "app_launcher" => {
-                        let mut apps: HashMap<String, AppData> = HashMap::new();
-                        if let Some(c) = CONFIG.get() {
-                            apps = match c.behavior.caching {
-                                true => Loader::load_applications(
-                                    cmd.priority as f32,
-                                    counts_clone,
-                                    max_decimals,
-                                )
-                                .map_err(|e| non_breaking.push(e))
-                                .ok()?,
-                                false => Loader::load_applications_from_disk(
-                                    None,
-                                    cmd.priority as f32,
-                                    counts_clone,
-                                    max_decimals,
-                                )
-                                .map_err(|e| non_breaking.push(e))
-                                .ok()?,
-                            };
+    // Parse the launchers
+    let deserialized_launchers: Vec<Result<Launcher, SherlockError>> = launcher_config
+        .into_par_iter()
+        .map(|cmd| {
+            let counts_clone = counts.clone();
+            let max_decimals = counts_clone
+                .iter()
+                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(_, v)| v.to_string().len())
+                .unwrap_or(0) as i32;
+            let launcher_type: LauncherType = match cmd.r#type.as_str() {
+                "app_launcher" => {
+                    let mut apps: HashMap<String, AppData> = HashMap::new();
+                    if let Some(c) = CONFIG.get() {
+                        apps = match c.behavior.caching {
+                            true => Loader::load_applications(
+                                cmd.priority as f32,
+                                counts_clone,
+                                max_decimals,
+                            )?,
+                            false => Loader::load_applications_from_disk(
+                                None,
+                                cmd.priority as f32,
+                                counts_clone,
+                                max_decimals,
+                            )?,
+                        };
+                    }
+
+                    LauncherType::App(App { apps })
+                }
+                "web_launcher" => LauncherType::Web(Web {
+                    display_name: cmd.display_name.clone().unwrap_or("".to_string()),
+                    icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
+                    engine: cmd.args["search_engine"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_string(),
+                }),
+                "calculation" => {
+                    let capabilities: Option<HashSet<String>> = match cmd.args.get("capabilities") {
+                        Some(Value::Array(arr)) => {
+                            let strings: HashSet<String> = arr
+                                .iter()
+                                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                .collect();
+                            Some(strings)
                         }
-
-                        LauncherType::App(App { apps })
-                    }
-                    "web_launcher" => LauncherType::Web(Web {
-                        display_name: cmd.display_name.clone().unwrap_or("".to_string()),
-                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        engine: cmd.args["search_engine"]
-                            .as_str()
-                            .unwrap_or_default()
-                            .to_string(),
-                    }),
-                    "calculation" => {
-                        let capabilities: Option<HashSet<String>> =
-                            match cmd.args.get("capabilities") {
-                                Some(Value::Array(arr)) => {
-                                    let strings: HashSet<String> = arr
-                                        .iter()
-                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                                        .collect();
-                                    Some(strings)
-                                }
-                                _ => None,
-                            };
-                        LauncherType::Calc(Calculator { capabilities })
-                    }
-                    "command" => {
-                        let prio = cmd.priority;
-                        let mut commands: HashMap<String, AppData> =
-                            serde_json::from_value(cmd.args["commands"].clone())
-                                .unwrap_or_default();
-                        commands.iter_mut().for_each(|(_, v)| {
-                            v.priority = match counts_clone.get(&v.exec) {
-                                Some(c) if c == &0.0 => prio,
-                                Some(c) => parse_priority(prio, *c as f32, max_decimals),
-                                _ => prio,
-                            };
-                        });
-                        LauncherType::SystemCommand(SystemCommand { commands })
-                    }
-                    "bulk_text" => LauncherType::BulkText(BulkText {
-                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
-                        args: cmd.args["exec-args"]
-                            .as_str()
-                            .unwrap_or_default()
-                            .to_string(),
-                    }),
-                    "clipboard-execution" => {
-                        let clipboard_content: String = read_from_clipboard()
-                            .map_err(|e| non_breaking.push(e))
-                            .unwrap_or_default();
-                        let capabilities: Option<HashSet<String>> =
-                            match cmd.args.get("capabilities") {
-                                Some(Value::Array(arr)) => {
-                                    let strings: HashSet<String> = arr
-                                        .iter()
-                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                                        .collect();
-                                    Some(strings)
-                                }
-                                _ => None,
-                            };
-                        if clipboard_content.is_empty() {
-                            LauncherType::Empty
-                        } else {
-                            LauncherType::Clipboard((
-                                ClipboardLauncher {
-                                    clipboard_content,
-                                    capabilities: capabilities.clone(),
-                                },
-                                Calculator { capabilities },
-                            ))
+                        _ => None,
+                    };
+                    LauncherType::Calc(Calculator { capabilities })
+                }
+                "command" => {
+                    let prio = cmd.priority;
+                    let mut commands: HashMap<String, AppData> =
+                        serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();
+                    commands.iter_mut().for_each(|(_, v)| {
+                        v.priority = match counts_clone.get(&v.exec) {
+                            Some(c) if c == &0.0 => prio,
+                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                            _ => prio,
+                        };
+                    });
+                    LauncherType::SystemCommand(SystemCommand { commands })
+                }
+                "bulk_text" => LauncherType::BulkText(BulkText {
+                    icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
+                    exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
+                    args: cmd.args["exec-args"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_string(),
+                }),
+                "clipboard-execution" => {
+                    let clipboard_content: String = read_from_clipboard()?;
+                    let capabilities: Option<HashSet<String>> = match cmd.args.get("capabilities") {
+                        Some(Value::Array(arr)) => {
+                            let strings: HashSet<String> = arr
+                                .iter()
+                                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                                .collect();
+                            Some(strings)
                         }
+                        _ => None,
+                    };
+                    if clipboard_content.is_empty() {
+                        LauncherType::Empty
+                    } else {
+                        LauncherType::Clipboard((
+                            ClipboardLauncher {
+                                clipboard_content,
+                                capabilities: capabilities.clone(),
+                            },
+                            Calculator { capabilities },
+                        ))
                     }
-                    "teams_event" => {
-                        let icon = cmd.args["icon"].as_str().unwrap_or("teams").to_string();
-                        let date = cmd.args["event_date"].as_str().unwrap_or("now");
-                        let event_start = cmd.args["event_start"].as_str().unwrap_or("-5 minutes");
-                        let event_end = cmd.args["event_end"].as_str().unwrap_or("+15 minutes");
+                }
+                "teams_event" => {
+                    let icon = cmd.args["icon"].as_str().unwrap_or("teams").to_string();
+                    let date = cmd.args["event_date"].as_str().unwrap_or("now");
+                    let event_start = cmd.args["event_start"].as_str().unwrap_or("-5 minutes");
+                    let event_end = cmd.args["event_end"].as_str().unwrap_or("+15 minutes");
 
-                        let event = EventLauncher::get_event(date, event_start, event_end);
+                    let event = EventLauncher::get_event(date, event_start, event_end);
 
-                        LauncherType::EventLauncher(EventLauncher { event, icon })
-                    }
-                    "audio_sink" => AudioLauncherFunctions::new()
-                        .and_then(|launcher| {
-                            launcher.get_current_player().and_then(|player| {
-                                launcher.get_metadata(&player).and_then(|launcher| {
-                                    Some(LauncherType::MusicPlayerLauncher(launcher))
-                                })
+                    LauncherType::EventLauncher(EventLauncher { event, icon })
+                }
+                "audio_sink" => AudioLauncherFunctions::new()
+                    .and_then(|launcher| {
+                        launcher.get_current_player().and_then(|player| {
+                            launcher.get_metadata(&player).and_then(|launcher| {
+                                Some(LauncherType::MusicPlayerLauncher(launcher))
                             })
                         })
-                        .unwrap_or(LauncherType::Empty),
-                    "process" => {
-                        let icon = cmd.args["icon"].as_str().unwrap_or("sherlock-process");
-                        let launcher = ProcessLauncher::new(icon)?;
+                    })
+                    .unwrap_or(LauncherType::Empty),
+                "process" => {
+                    let icon = cmd.args["icon"].as_str().unwrap_or("sherlock-process");
+                    let launcher = ProcessLauncher::new(icon);
+                    if let Some(launcher) = launcher {
                         LauncherType::ProcessLauncher(launcher)
+                    } else {
+                        LauncherType::Empty
                     }
-                    _ => LauncherType::Empty,
-                };
-                let method: String = if let Some(value) = &cmd.on_return {
-                    value.to_string()
-                } else {
-                    cmd.r#type.clone()
-                };
-                Some(Launcher {
-                    name: cmd.name.to_string(),
-                    alias: cmd.alias.clone(),
-                    tag_start: cmd.tag_start.clone(),
-                    tag_end: cmd.tag_end.clone(),
-                    method,
-                    next_content: cmd.next_content.clone(),
-                    priority: cmd.priority as u32,
-                    r#async: cmd.r#async,
-                    home: cmd.home,
-                    only_home: cmd.only_home,
-                    launcher_type,
-                    shortcut: cmd.shortcut.clone(),
-                    spawn_focus: cmd.spawn_focus.clone(),
-                })
-            })
-            .collect();
-
-        // get and write execution counts if they are empty
-        if counts.is_empty() {
-            let counts: HashMap<String, f32> = launchers
-                .iter()
-                .filter_map(|launcher| launcher.get_execs())
-                .flat_map(|exec_set| exec_set.into_iter().map(|exec| (exec, 0.0)))
-                .collect();
-            if let Err(e) = counter_reader.write(counts) {
-                non_breaking.push(e)
+                }
+                _ => LauncherType::Empty,
             };
-        }
-        Ok((launchers, non_breaking))
+            let method: String = if let Some(value) = &cmd.on_return {
+                value.to_string()
+            } else {
+                cmd.r#type.clone()
+            };
+            Ok(Launcher {
+                name: cmd.name,
+                alias: cmd.alias,
+                tag_start: cmd.tag_start,
+                tag_end: cmd.tag_end,
+                method,
+                next_content: cmd.next_content,
+                priority: cmd.priority as u32,
+                r#async: cmd.r#async,
+                home: cmd.home,
+                only_home: cmd.only_home,
+                launcher_type,
+                shortcut: cmd.shortcut,
+                spawn_focus: cmd.spawn_focus,
+            })
+        })
+        .collect();
+
+    // Get errors and launchers
+    let (oks, errs): (Vec<_>, Vec<_>) = deserialized_launchers.into_iter().partition(Result::is_ok);
+    let launchers: Vec<Launcher> = oks.into_iter().filter_map(Result::ok).collect();
+    let mut non_breaking: Vec<SherlockError> = errs.into_iter().filter_map(Result::err).collect();
+    if counts.is_empty() {
+        let counts: HashMap<String, f32> = launchers
+            .iter()
+            .filter_map(|launcher| launcher.get_execs())
+            .flat_map(|exec_set| exec_set.into_iter().map(|exec| (exec, 0.0)))
+            .collect();
+        if let Err(e) = counter_reader.write(counts) {
+            non_breaking.push(e)
+        };
     }
+    non_breaking.extend(n);
+    Ok((launchers, non_breaking))
 }
 
 pub struct CounterReader {

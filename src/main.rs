@@ -88,6 +88,9 @@ async fn main() {
         .map_err(|e| startup_errors.push(e))
         .ok();
 
+    // Initialize launchers from 'fallback.json'
+    let launcher_get = Loader::load_launchers();
+
     // Initialize application
     let application = Application::new(
         Some("dev.skxxtz.sherlock"),
@@ -104,15 +107,16 @@ async fn main() {
         0
     });
 
+    // Await getters here
+    let (launchers, n) = launcher_get
+        .await
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+    non_breaking.extend(n);
+
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
-
-        // Initialize launchers from 'fallback.json'
-        let (launchers, n) = Loader::load_launchers()
-            .map_err(|e| error_list.push(e))
-            .unwrap_or_default();
-        non_breaking.extend(n);
 
         // Load custom icons from icon path specified in 'config.toml'
         let n = Loader::load_icon_theme();
@@ -139,7 +143,7 @@ async fn main() {
         // Either show user-specified content or show normal search
         let pipe = Loader::load_pipe_args();
         if pipe.is_empty() {
-            ui::search::search(launchers);
+            ui::search::search(&launchers);
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);

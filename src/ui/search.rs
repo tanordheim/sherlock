@@ -26,7 +26,7 @@ struct SearchUI {
     mode_title: Label,
 }
 
-pub fn search(launchers: Vec<Launcher>) {
+pub fn search(launchers: &Vec<Launcher>) {
     // Initialize the view to show all apps
     let (mode, modes, vbox, ui, results) = construct_window(&launchers);
     ui.result_viewport
