@@ -151,30 +151,7 @@ impl Loader {
         counts: HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashMap<String, AppData>, SherlockError> {
-        let config = CONFIG.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
         let system_apps = get_applications_dir();
-
-        // check if sherlock_alias was modified
-        let alias_path = Path::new(&config.files.alias);
-        let cache_path = Path::new(&config.behavior.cache);
-
-        fn modtime(path: &Path) -> Option<SystemTime> {
-            match fs::metadata(path) {
-                Ok(metadata) => metadata.modified().ok(),
-                Err(_) => None,
-            }
-        }
-        match (modtime(&alias_path), modtime(&cache_path)) {
-            (Some(t1), Some(t2)) => {
-                if t1 >= t2 {
-                    return Loader::load_applications_from_disk(None, priority, counts, decimals);
-                }
-            }
-            _ => {}
-        }
 
         // get all desktop files
         let mut desktop_files = get_desktop_files(system_apps);
@@ -224,29 +201,38 @@ impl Loader {
             error: SherlockErrorType::ConfigError(None),
             traceback: String::new(),
         })?;
-        let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
-            .ok()
-            .and_then(|f| simd_json::from_reader(f).ok());
+        // check if sherlock_alias was modified
+        let alias_path = Path::new(&config.files.alias);
+        let ignore_path = Path::new(&config.files.ignore);
+        let cache_path = Path::new(&config.behavior.cache);
+        let changed = file_has_changed(&alias_path, &cache_path) || file_has_changed(&ignore_path, &cache_path);
 
-        if let Some(mut apps) = cached_apps {
-            // apply the current counts
-            for (_, v) in apps.iter_mut() {
-                let count = counts.get(&v.exec).unwrap_or(&0.0);
-                let priority = parse_priority(priority, *count, decimals);
-                v.priority = priority
-            }
+        if !changed {
+            let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
+                .ok()
+                .and_then(|f| simd_json::from_reader(f).ok());
 
-            // Refresh cache in the background
-            let old_apps = apps.clone();
-            rayon::spawn_fifo(move || {
-                if let Ok(new_apps) =
-                    Loader::get_new_applications(old_apps, priority, counts, decimals)
-                {
-                    Loader::write_cache(&new_apps, &config.behavior.cache);
+            if let Some(mut apps) = cached_apps {
+                // apply the current counts
+                for (_, v) in apps.iter_mut() {
+                    let count = counts.get(&v.exec).unwrap_or(&0.0);
+                    let priority = parse_priority(priority, *count, decimals);
+                    v.priority = priority
                 }
-            });
-            return Ok(apps);
+
+                // Refresh cache in the background
+                let old_apps = apps.clone();
+                rayon::spawn_fifo(move || {
+                    if let Ok(new_apps) =
+                        Loader::get_new_applications(old_apps, priority, counts, decimals)
+                    {
+                        Loader::write_cache(&new_apps, &config.behavior.cache);
+                    }
+                });
+                return Ok(apps);
+            }
         }
+
 
         let apps = Loader::load_applications_from_disk(None, priority, counts, decimals)?;
         // Write the cache in the background
@@ -327,6 +313,18 @@ pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
         })
         .flatten()
         .collect::<HashSet<PathBuf>>()
+}
+pub fn file_has_changed(file_path: &Path, cache_path: &Path)->bool {
+    fn modtime(path: &Path) -> Option<SystemTime> {
+        fs::metadata(path).ok().and_then(|m| m.modified().ok())
+    }
+    match (modtime(&file_path), modtime(&cache_path)) {
+        (Some(t1), Some(t2)) if t1 >= t2 => {
+                return true
+        },
+        _ => {}
+    }
+    return false
 }
 
 #[test]
