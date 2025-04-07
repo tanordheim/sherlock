@@ -342,7 +342,7 @@ pub fn async_calc(
                     widget.body.as_ref().map(|b| b.set_text(&body));
                     if let Some(next_content) = next_content {
                         let label =
-                            Label::new(Some(format!("next_content | {}", next_content).as_str()));
+                            Label::new(Some(format!("next_contentS%|%S{}", next_content).as_str()));
                         widget.attrs.append(&label);
                     }
                 }
