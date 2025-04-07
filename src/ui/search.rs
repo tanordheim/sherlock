@@ -62,7 +62,6 @@ fn construct_window(
         .for_each(|(alias, name)| {
             modes.insert(format!("{} ", alias), name.clone());
         });
-        
 
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
@@ -76,10 +75,10 @@ fn construct_window(
         search_bar: builder.object("search-bar").unwrap_or_default(),
         mode_title: builder.object("category-type-label").unwrap_or_default(),
     };
-    if let Some(c) = CONFIG.get() {
+    CONFIG.get().map(|c| {
         ui.result_viewport
             .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
-    }
+    });
 
     APP_STATE.with(|app_state| {
         let new_state = app_state.borrow_mut().take().map(|old_state| {
@@ -145,10 +144,13 @@ fn nav_event(
                 results.focus_first();
             }
             gdk::Key::Return => {
-                if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
-                    let attrs: HashMap<String, String> = get_row_attrs(row);
-                    execute_from_attrs(attrs);
-                }
+                results
+                    .selected_row()
+                    .and_downcast_ref::<SherlockRow>()
+                    .map(|row| {
+                        let attrs: HashMap<String, String> = get_row_attrs(row);
+                        execute_from_attrs(attrs);
+                    });
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
                 if custom_binds
@@ -184,9 +186,10 @@ fn nav_event(
         false.into()
     });
     APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.add_event_listener(event_controller);
-        }
+        state
+            .borrow()
+            .as_ref()
+            .map(|s| s.add_event_listener(event_controller))
     });
 }
 
@@ -284,16 +287,18 @@ pub fn async_calc(
 
     // Create loader widgets
     // TODO
-    let current_mode = mode.borrow().trim().to_string();
+    let current_mode_ref = mode.borrow();
+    let current_mode = current_mode_ref.trim();
+
     let async_widgets: Vec<AsyncLauncherTile> = async_launchers
-        .iter()
+        .into_iter()
         .filter_map(|launcher| {
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
                 || (current_mode == "all" && launcher.priority > 0)
             {
                 launcher.get_loader_widget(&current_text).map(
                     |(widget, title, body, async_opts, attrs)| AsyncLauncherTile {
-                        launcher: launcher.clone(),
+                        launcher,
                         result_item: widget,
                         title,
                         body,
