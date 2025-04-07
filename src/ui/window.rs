@@ -84,6 +84,6 @@ pub fn destroy_window() {
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.window.as_ref().map(|window| window.destroy());
-        }
+        } else { std::process::exit(0)}
     });
 }

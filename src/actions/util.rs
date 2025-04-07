@@ -26,5 +26,7 @@ pub fn eval_exit() {
             true => hide_window(true),
             false => destroy_window(),
         }
+    } else {
+        destroy_window();
     }
 }
