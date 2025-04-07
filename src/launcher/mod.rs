@@ -70,17 +70,11 @@ impl Launcher {
     // TODO: tile method recreates already stored data...
     pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
         match &self.launcher_type {
-            LauncherType::App(app) => {
-                Tile::app_tile(self, keyword, &app.apps)
-            }
+            LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
-            LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile(&self, keyword, &bulk_text)
-            }
-            LauncherType::SystemCommand(cmd) => {
-                Tile::app_tile(self, keyword, &cmd.commands)
-            }
+            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(&self, keyword, &bulk_text),
+            LauncherType::SystemCommand(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
             LauncherType::Clipboard((clp, calc)) => {
                 Tile::clipboard_tile(self, &clp, &calc, keyword)
             }

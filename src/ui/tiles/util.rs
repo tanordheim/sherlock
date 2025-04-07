@@ -1,7 +1,5 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
-    launcher::Launcher,
-    loader::pipe_loader::PipeData,
+    g_subclasses::sherlock_row::SherlockRow, launcher::Launcher, loader::pipe_loader::PipeData,
     CONFIG,
 };
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};

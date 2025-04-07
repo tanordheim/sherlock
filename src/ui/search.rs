@@ -291,7 +291,7 @@ pub fn async_calc(
     let current_mode = current_mode_ref.trim();
 
     // extract result items to reduce cloning
-    let mut async_widgets:Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
+    let mut async_widgets: Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
     let async_launchers: Vec<AsyncLauncherTile> = async_launchers
         .into_iter()
         .filter_map(|launcher| {
@@ -302,12 +302,12 @@ pub fn async_calc(
                     |(widget, title, body, async_opts, attrs)| {
                         async_widgets.push(widget);
                         AsyncLauncherTile {
-                        launcher,
-                        title,
-                        body,
-                        async_opts,
-                        attrs,
-                    }
+                            launcher,
+                            title,
+                            body,
+                            async_opts,
+                            attrs,
+                        }
                     },
                 )
             } else {
@@ -326,7 +326,6 @@ pub fn async_calc(
     );
 
     // Gather results for asynchronous widgets
-
     let task = glib::MainContext::default().spawn_local({
         let current_task_clone = Rc::clone(current_task);
         async move {
