@@ -42,27 +42,24 @@ async fn main() {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let _lock = match lock::ensure_single_instance(LOCK_FILE) {
-        Ok(lock) => lock,
-        Err(msg) => {
-            eprintln!("{}", msg);
-            process::exit(1);
-        }
-    };
+    let _lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        process::exit(1);
+    });
 
     // Setup flags
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
-    match FLAGS.set(sherlock_flags.clone()) {
-        Ok(_) => {}
-        Err(_) => {
+    FLAGS
+        .set(sherlock_flags.clone())
+        .map_err(|_| {
             startup_errors.push(SherlockError {
                 error: SherlockErrorType::ConfigError(None),
                 traceback: format!("should never get to this"),
             });
-        }
-    };
+        })
+        .ok();
 
     // Parse configs from 'config.toml'
     let app_config = Loader::load_config().map_or_else(
@@ -76,20 +73,20 @@ async fn main() {
             app_config
         },
     );
-    println!("{:?}", non_breaking);
-    println!("{:?}", app_config.debug);
 
-    match CONFIG.set(app_config.clone()) {
-        Ok(_) => {}
-        Err(_) => {
+    CONFIG
+        .set(app_config.clone())
+        .map_err(|_| {
             startup_errors.push(SherlockError {
                 error: SherlockErrorType::ConfigError(None),
                 traceback: format!(""),
             });
-        }
-    };
+        })
+        .ok();
 
-    let _ = Loader::load_resources().map_err(|e| startup_errors.push(e));
+    Loader::load_resources()
+        .map_err(|e| startup_errors.push(e))
+        .ok();
 
     // Initialize application
     let application = Application::new(
