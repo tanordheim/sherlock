@@ -205,7 +205,8 @@ impl Loader {
         let alias_path = Path::new(&config.files.alias);
         let ignore_path = Path::new(&config.files.ignore);
         let cache_path = Path::new(&config.behavior.cache);
-        let changed = file_has_changed(&alias_path, &cache_path) || file_has_changed(&ignore_path, &cache_path);
+        let changed = file_has_changed(&alias_path, &cache_path)
+            || file_has_changed(&ignore_path, &cache_path);
 
         if !changed {
             let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
@@ -232,7 +233,6 @@ impl Loader {
                 return Ok(apps);
             }
         }
-
 
         let apps = Loader::load_applications_from_disk(None, priority, counts, decimals)?;
         // Write the cache in the background
@@ -314,17 +314,15 @@ pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
         .flatten()
         .collect::<HashSet<PathBuf>>()
 }
-pub fn file_has_changed(file_path: &Path, cache_path: &Path)->bool {
+pub fn file_has_changed(file_path: &Path, cache_path: &Path) -> bool {
     fn modtime(path: &Path) -> Option<SystemTime> {
         fs::metadata(path).ok().and_then(|m| m.modified().ok())
     }
     match (modtime(&file_path), modtime(&cache_path)) {
-        (Some(t1), Some(t2)) if t1 >= t2 => {
-                return true
-        },
+        (Some(t1), Some(t2)) if t1 >= t2 => return true,
         _ => {}
     }
-    return false
+    return false;
 }
 
 #[test]
