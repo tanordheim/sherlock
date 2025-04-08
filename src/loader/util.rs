@@ -285,6 +285,8 @@ pub struct ConfigAppearance {
     pub icon_paths: Vec<String>,
     #[serde(default = "default_icon_size")]
     pub icon_size: i32,
+    #[serde(default)]
+    pub search_icon: bool,
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
@@ -294,6 +296,7 @@ impl Default for ConfigAppearance {
             gsk_renderer: String::from("cairo"),
             icon_paths: Default::default(),
             icon_size: default_icon_size(),
+            search_icon: false,
         }
     }
 }

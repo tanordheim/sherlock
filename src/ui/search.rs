@@ -23,6 +23,7 @@ struct SearchUI {
     // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
     search_bar: Entry,
+    search_icon: Image,
     mode_title: Label,
 }
 
@@ -73,11 +74,13 @@ fn construct_window(
         result_viewport: builder.object("scrolled-window").unwrap_or_default(),
         preview_box: builder.object("preview_box").unwrap_or_default(),
         search_bar: builder.object("search-bar").unwrap_or_default(),
+        search_icon: builder.object("search-icon").unwrap_or_default(),
         mode_title: builder.object("category-type-label").unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
             .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
+        ui.search_icon.set_visible(c.appearance.search_icon);
     });
 
     APP_STATE.with(|app_state| {
