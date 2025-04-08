@@ -151,7 +151,7 @@ impl ThunderBirdEventManager {
         if let Ok(mut stmt) = conn.prepare(&query) {
             let event_iter = stmt.query_map([], |row| {
                 let id: String = row.get(0)?;
-                let title: String = row.get(1)?;
+                let title: String = row.get(1).unwrap_or(String::from("untitled"));
                 let start_time: i64 = row.get(2)?;
                 let end_time: i64 = row.get(3)?;
                 Ok((id, title, start_time, end_time))
@@ -175,6 +175,7 @@ impl ThunderBirdEventManager {
                 }
             }
         }
+
         return None;
     }
 }
