@@ -4,11 +4,6 @@
         <property name="hexpand">true</property> 
 
         <child>
-            <object class="GtkBox" id="attrs-holder">
-                <property name="visible">false</property>
-            </object>
-        </child>
-        <child>
             <object class="GtkBox" id="bulk-text-tilte-bar">
                 <property name="valign">center</property>
                 <property name="name">bulk-text-title-bar</property>

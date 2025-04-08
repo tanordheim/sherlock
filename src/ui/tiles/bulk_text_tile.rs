@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use std::vec;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
-use gtk4::{Box, Label};
+use gtk4::Label;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::bulk_text_launcher::BulkText;
@@ -20,7 +21,7 @@ impl Tile {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        Box,
+        HashMap<String, String>
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
         builder.object.add_css_class("bulk-text");
@@ -32,7 +33,13 @@ impl Tile {
         builder.icon.set_pixel_size(15);
         builder.content_title.set_text(keyword);
         builder.content_body.set_text("Loading...");
-        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, Vec::new());
+
+        let attrs = get_attrs_map(
+            vec![
+            ("method", &launcher.method),
+            ("keyword", keyword),
+            ]
+        );
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
@@ -49,7 +56,7 @@ impl Tile {
             Some(builder.content_title),
             Some(builder.content_body),
             None,
-            builder.attrs,
+            attrs
         ));
     }
     pub fn bulk_text_tile(

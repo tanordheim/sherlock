@@ -14,7 +14,7 @@ pub struct AsyncLauncherTile {
     pub title: Option<Label>,
     pub body: Option<Label>,
     pub async_opts: Option<AsyncOptions>,
-    pub attrs: Box,
+    pub attrs: HashMap<String, String>,
 }
 
 #[derive(Debug)]
@@ -91,7 +91,6 @@ pub struct TileBuilder {
     pub icon_holder: Box,
     pub title: Label,
     pub category: Label,
-    pub attrs: Box,
     pub tag_start: Label,
     pub tag_end: Label,
     pub shortcut_holder: Option<Box>,
@@ -111,7 +110,6 @@ impl TileBuilder {
         let icon: Image = builder.object("icon-name").unwrap_or_default();
         let title: Label = builder.object("app-name").unwrap_or_default();
         let category: Label = builder.object("launcher-type").unwrap_or_default();
-        let attrs: Box = builder.object("attrs-holder").unwrap_or_default();
         let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
         let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
         let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
@@ -140,7 +138,6 @@ impl TileBuilder {
             icon_holder,
             title,
             category,
-            attrs,
             tag_start,
             tag_end,
             shortcut_holder: builder.object("shortcut-holder"),
@@ -151,34 +148,6 @@ impl TileBuilder {
             equation_holder,
             result_holder,
         }
-    }
-
-    pub fn add_default_attrs(
-        &self,
-        method: Option<&str>,
-        result: Option<&str>,
-        keyword: Option<&str>,
-        exec: Option<&str>,
-        additional_attrs: Vec<Option<(&str, &str)>>,
-    )->HashMap<String, String>{
-        // Construct the k,v pairs
-        let method = method.map(|s| ("method", s));
-        let result = result.map(|s| ("result", s));
-        let exec = exec.map(|s| ("exec", s));
-        let keyword = keyword.map(|s| ("keyword", s));
-
-        // Create the combined vec
-        let mut attrs: Vec<Option<(&str, &str)>> = vec![method, result, exec, keyword];
-        attrs.extend(additional_attrs);
-
-        // Insert the values into the label fields and simultaniously create the return hashmap
-        attrs.into_iter()
-            .filter_map(|v| v)
-            .map(|(key, value)| {
-            let label = Label::new(Some(format!("{}S%|%S{}", &key, &value).as_str()));
-            self.attrs.append(&label);
-            (key.to_string(), value.to_string())
-        }).collect::<HashMap<String, String>>()
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
     where

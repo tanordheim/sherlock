@@ -12,6 +12,7 @@ use std::rc::Rc;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
+use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};
@@ -295,7 +296,7 @@ pub fn async_calc(
                         title,
                         body,
                         async_opts,
-                        attrs,
+                        attrs
                     },
                 )
             } else {
@@ -323,15 +324,14 @@ pub fn async_calc(
             }
             // get results for aysnc launchers
             for widget in async_widgets.iter() {
+                let mut attrs = widget.attrs.clone();
                 if let Some((title, body, next_content)) =
                     widget.launcher.get_result(&current_text).await
                 {
                     widget.title.as_ref().map(|t| t.set_text(&title));
                     widget.body.as_ref().map(|b| b.set_text(&body));
                     if let Some(next_content) = next_content {
-                        let label =
-                            Label::new(Some(format!("next_content | {}", next_content).as_str()));
-                        widget.attrs.append(&label);
+                        attrs.insert(String::from("next_content"), next_content.to_string());
                     }
                 }
                 if let Some(opts) = &widget.async_opts {
@@ -351,6 +351,15 @@ pub fn async_calc(
                         }
                     }
                 }
+                widget.result_item.row_item.connect(
+                    "row-should-activate",
+                    false,
+                    move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    },
+                );
+
             }
             *current_task_clone.borrow_mut() = None;
         }

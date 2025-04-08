@@ -49,13 +49,11 @@ impl Tile {
                 // Create attributes and enable action capability
                 let method = item.method.as_deref().unwrap_or(method);
                 let result = item.result.as_deref().or(item.title.as_deref());
-                let mut constructor: Vec<(&str, &str)> = item.hidden
-                    .as_ref()
-                    .map_or_else(Vec::new, |a| a.iter().map(|(k,v)| (k.as_str(), v.as_str())).collect());
-                constructor.extend([
-                    ("method", method),
-                    ("keyword", keyword),
-                ]);
+                let mut constructor: Vec<(&str, &str)> =
+                    item.hidden.as_ref().map_or_else(Vec::new, |a| {
+                        a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()
+                    });
+                constructor.extend([("method", method), ("keyword", keyword)]);
                 if let Some(result) = result {
                     constructor.push(("result", result))
                 }
@@ -64,15 +62,12 @@ impl Tile {
                 }
                 let attrs = get_attrs_map(constructor);
 
-
-                builder.object.connect(
-                    "row-should-activate",
-                    false,
-                    move |_row| {
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
                         execute_from_attrs(&attrs);
                         None
-                    },
-                );
+                    });
                 results.push(builder.object);
             }
         }

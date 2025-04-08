@@ -1,14 +1,11 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
 use gtk4::{
-    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType,
-    Widget,
+    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType
 };
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::{APP_STATE, CONFIG};
 
@@ -43,8 +40,7 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
             if let Some(row) = child.downcast_ref::<SherlockRow>() {
                 if row.imp().shortcut.get() {
                     if child_counter == index {
-                        let attrs = get_row_attrs(row);
-                        execute_from_attrs(&attrs);
+                        row.emit_by_name::<()>("row-should-activate", &[]);
                         return;
                     } else {
                         child_counter += 1
@@ -54,41 +50,11 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
         }
     }
 }
-pub fn get_row_attrs(selected_row: &SherlockRow) -> HashMap<String, String> {
-    let mut attrs: HashMap<String, String> = Default::default();
-    if let Some(main_holder) = selected_row.first_child() {
-        if let Some(attrs_holder) = main_holder.first_child() {
-            if let Some(first_label_obj) = attrs_holder.first_child() {
-                if let Some(text) = read_from_label(&first_label_obj) {
-                    attrs.insert(text.0, text.1);
-                }
-                let mut current_label_obj = first_label_obj;
-                while let Some(next_label_obj) = current_label_obj.next_sibling() {
-                    if let Some(text) = read_from_label(&next_label_obj) {
-                        attrs.insert(text.0, text.1);
-                    }
-                    current_label_obj = next_label_obj;
-                }
-            }
-        }
-    }
-    attrs
-}
 
 pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, mode_name: &str) {
     let new_mode = ctext.to_string();
     mode_title.set_text(mode_name);
     *mode_c.borrow_mut() = new_mode;
-}
-
-pub fn read_from_label(label_obj: &Widget) -> Option<(String, String)> {
-    if let Some(label) = label_obj.downcast_ref::<Label>() {
-        let text = label.text();
-        if let Some((key, value)) = text.split_once("S%|%S") {
-            return Some((key.to_string(), value.to_string()));
-        }
-    }
-    return None;
 }
 
 pub trait RowOperations {

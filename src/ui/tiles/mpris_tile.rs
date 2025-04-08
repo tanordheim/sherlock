@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 
-use gio::glib::object::ObjectExt;
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
-use gtk4::{gdk, Box, Image, Label, Overlay};
+use gtk4::{gdk, Image, Label, Overlay};
 
 use super::util::{AsyncOptions, TileBuilder};
 use super::Tile;
-use crate::actions::execute_from_attrs;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -20,7 +18,7 @@ impl Tile {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        Box,
+        HashMap<String, String>
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
@@ -68,14 +66,6 @@ impl Tile {
             ("method", &launcher.method),
             ("player", &mpris.player),
         ].into_iter().map(|(k,v)| (k.to_string(), v.to_string())).collect();
-        builder.object.connect(
-            "row-should-activate",
-            false,
-            move |_row| {
-                execute_from_attrs(&attrs);
-                None
-            },
-        );
 
         // Make shortcut holder
         let shortcut_holder = match launcher.shortcut {
@@ -90,6 +80,6 @@ impl Tile {
 
         options.icon_holder_overlay = Some(overlay);
 
-        return Some((res, None, None, Some(options), builder.attrs));
+        return Some((res, None, None, Some(options), attrs));
     }
 }
