@@ -16,6 +16,12 @@ pub mod util;
 pub mod websearch;
 
 pub fn execute_from_attrs(attrs: &HashMap<String, String>) {
+    //construct HashMap
+    let attrs: HashMap<String, String> = attrs
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
             "app_launcher" => {
@@ -100,7 +106,9 @@ pub fn execute_from_attrs(attrs: &HashMap<String, String>) {
         }
     }
 }
-
+pub fn get_attrs_map(in_attrs: Vec<(&str, &str)>)->HashMap<String, String>{
+    in_attrs.into_iter().map(|(k,v)|(k.to_string(), v.to_string())).collect()
+}
 fn increment(key: &str) {
     if let Ok(count_reader) = CounterReader::new() {
         let _ = count_reader.increment(key);

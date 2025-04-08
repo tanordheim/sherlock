@@ -4,7 +4,7 @@ use meval::eval_str;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
-use crate::actions::execute_from_attrs;
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::clipboard_launcher::ClipboardLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -125,13 +125,13 @@ impl Tile {
                 builder.title.set_text(clipboard_content);
                 builder.icon.set_icon_name(Some(&icon));
 
-                let attrs: Vec<Option<(&str, &str)>> = vec![Some(("engine", "plain"))];
-                let attrs = builder.add_default_attrs(
-                    Some(method),
-                    None,
-                    Some(clipboard_content),
-                    None,
-                    attrs,
+                // Add action capabilities
+                let attrs = get_attrs_map(
+                    vec![
+                    ("method", method),
+                    ("result", clipboard_content),
+                    ("engine", "plain")
+                    ]
                 );
 
                 builder.object.connect(

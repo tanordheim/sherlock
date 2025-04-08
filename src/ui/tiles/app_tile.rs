@@ -1,7 +1,7 @@
 use gtk4::prelude::*;
 use std::collections::HashMap;
 
-use crate::actions::execute_from_attrs;
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::{Launcher, ResultItem};
 use crate::loader::util::{AppData, SherlockConfig};
 
@@ -41,12 +41,12 @@ impl Tile {
                 builder.category.set_text(&launcher.name);
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
-                let attrs = builder.add_default_attrs(
-                    Some(&launcher.method),
-                    Some(keyword),
-                    Some(keyword),
-                    Some(&value.exec),
-                    Vec::new(),
+                
+                let attrs = get_attrs_map(
+                    vec![
+                    ("method", &launcher.method),
+                    ("exec", &value.exec)
+                    ]
                 );
 
                 builder.object.connect(

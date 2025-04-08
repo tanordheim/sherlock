@@ -3,7 +3,7 @@ use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::{Box, Label};
 
-use crate::actions::execute_from_attrs;
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::bulk_text_launcher::BulkText;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -64,11 +64,17 @@ impl Tile {
         builder.icon.set_icon_name(Some(&bulk_text.icon));
         builder.icon.set_pixel_size(15);
         builder.title.set_text(keyword);
-        let attrs = builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, Vec::new());
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
             _ => None,
         };
+
+        let attrs = get_attrs_map(
+            vec![
+            ("method", &launcher.method),
+            ("keyword", keyword),
+            ]
+        );
 
         builder.object.connect(
             "row-should-activate",

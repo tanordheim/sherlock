@@ -61,7 +61,6 @@ pub struct EventTileBuilder {
     pub icon: Image,
     pub start_time: Label,
     pub end_time: Label,
-    pub attrs: Box,
     pub shortcut_holder: Option<Box>,
 }
 impl EventTileBuilder {
@@ -80,37 +79,8 @@ impl EventTileBuilder {
             start_time: builder.object("time-label").unwrap_or_default(),
             end_time: builder.object("end-time-label").unwrap_or_default(),
             icon: builder.object("icon-name").unwrap_or_default(),
-            attrs: builder.object("attrs-holder").unwrap_or_default(),
             shortcut_holder: builder.object("shortcut-holder"),
         }
-    }
-
-    pub fn add_default_attrs(
-        &self,
-        method: Option<&str>,
-        result: Option<&str>,
-        keyword: Option<&str>,
-        exec: Option<&str>,
-        additional_attrs: Vec<Option<(&str, &str)>>,
-    )->HashMap<String, String>{
-        // Construct the k,v pairs
-        let method = method.map(|s| ("method", s));
-        let result = result.map(|s| ("result", s));
-        let exec = exec.map(|s| ("exec", s));
-        let keyword = keyword.map(|s| ("keyword", s));
-
-        // Create the combined vec
-        let mut attrs: Vec<Option<(&str, &str)>> = vec![method, result, exec, keyword];
-        attrs.extend(additional_attrs);
-
-        // Insert the values into the label fields and simultaniously create the return hashmap
-        attrs.into_iter()
-            .filter_map(|v| v)
-            .map(|(key, value)| {
-            let label = Label::new(Some(format!("{}S%|%S{}", &key, &value).as_str()));
-            self.attrs.append(&label);
-            (key.to_string(), value.to_string())
-        }).collect::<HashMap<String, String>>()
     }
 }
 

@@ -12,7 +12,6 @@ use std::rc::Rc;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
-use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};

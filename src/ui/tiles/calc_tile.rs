@@ -1,9 +1,10 @@
+use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 use meval::eval_str;
 
 use super::util::TileBuilder;
 use super::Tile;
-use crate::launcher::{Launcher, ResultItem};
+use crate::{actions::{execute_from_attrs, get_attrs_map}, launcher::{Launcher, ResultItem}};
 
 impl Tile {
     pub fn calc_tile(launcher: &Launcher, equation: &str, result: Option<f64>) -> Vec<ResultItem> {
@@ -26,7 +27,22 @@ impl Tile {
             .set_text(format!("= {}", result.to_string()).as_str());
 
         let result = result.to_string();
-        builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, Vec::new());
+
+        // Add action capabilities
+        let attrs = get_attrs_map(
+            vec![
+            ("method", &launcher.method),
+            ("result", &result),
+            ]
+        );
+        builder.object.connect(
+            "row-should-activate",
+            false,
+            move |_row| {
+                execute_from_attrs(&attrs);
+                None
+            },
+        );
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

@@ -2,7 +2,7 @@ use gio::glib::object::ObjectExt;
 
 use super::util::TileBuilder;
 use super::Tile;
-use crate::actions::execute_from_attrs;
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::web_launcher::Web;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -25,18 +25,16 @@ impl Tile {
         builder.display_tag_start(&launcher.tag_start, keyword);
         builder.display_tag_end(&launcher.tag_end, keyword);
 
-        let mut attrs: Vec<Option<(&str, &str)>> = vec![Some(("engine", &web.engine))];
-        if let Some(next) = launcher.next_content.as_deref() {
-            attrs.push(Some(("next_content", next)));
+        // Construct attrs and enable action capabilities
+        let mut attrs = get_attrs_map(vec![
+            ("method", &launcher.method),
+            ("result", keyword),
+            ("keyword", keyword),
+            ("engine", &web.engine),
+        ]);
+        if let Some(next) = launcher.next_content.as_deref(){
+            attrs.insert(String::from("next_content"), next.to_string());
         }
-
-        let attrs = builder.add_default_attrs(
-            Some(&launcher.method),
-            Some(keyword),
-            Some(keyword),
-            None,
-            attrs,
-        );
         builder.object.connect(
             "row-should-activate",
             false,

@@ -5,7 +5,7 @@ use gtk4::prelude::WidgetExt;
 
 use super::util::EventTileBuilder;
 use super::Tile;
-use crate::actions::execute_from_attrs;
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -39,12 +39,16 @@ impl Tile {
             .end_time
             .set_text(format!(".. {}", event.end_time).as_str());
 
-        let mut attrs: Vec<Option<(&str, &str)>> = vec![Some(("meeting_url", &event.meeting_url))];
-        if let Some(next) = launcher.next_content.as_deref() {
-            attrs.push(Some(("next_content", next)));
-        }
 
-        let attrs = builder.add_default_attrs(Some(&launcher.method), None, None, None, attrs);
+        let mut constructor: Vec<(&str, &str)> = vec![
+            ("method", &launcher.method),
+            ("meeting_url", &event.meeting_url)
+            ];
+        if let Some(next) = launcher.next_content.as_deref() {
+            constructor.push(("next_content", next));
+        }
+        let attrs = get_attrs_map(constructor);
+
         builder.object.connect(
             "row-should-activate",
             false,
