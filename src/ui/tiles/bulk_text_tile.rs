@@ -1,8 +1,9 @@
 use std::vec;
-
+use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::{Box, Label};
 
+use crate::actions::execute_from_attrs;
 use crate::launcher::bulk_text_launcher::BulkText;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -31,7 +32,7 @@ impl Tile {
         builder.icon.set_pixel_size(15);
         builder.content_title.set_text(keyword);
         builder.content_body.set_text("Loading...");
-        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
+        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, Vec::new());
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
@@ -63,12 +64,20 @@ impl Tile {
         builder.icon.set_icon_name(Some(&bulk_text.icon));
         builder.icon.set_pixel_size(15);
         builder.title.set_text(keyword);
-        builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, None);
+        let attrs = builder.add_default_attrs(Some(&launcher.method), None, Some(keyword), None, Vec::new());
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
             _ => None,
         };
 
+        builder.object.connect(
+            "row-should-activate",
+            false,
+            move |_row| {
+                execute_from_attrs(&attrs);
+                None
+            },
+        );
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,

@@ -26,7 +26,7 @@ impl Tile {
             .set_text(format!("= {}", result.to_string()).as_str());
 
         let result = result.to_string();
-        builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, None);
+        builder.add_default_attrs(Some(&launcher.method), Some(&result), None, None, Vec::new());
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

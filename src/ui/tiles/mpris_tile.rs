@@ -1,9 +1,11 @@
+use gio::glib::object::ObjectExt;
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
 use gtk4::{gdk, Box, Image, Label, Overlay};
 
 use super::util::{AsyncOptions, TileBuilder};
 use super::Tile;
+use crate::actions::execute_from_attrs;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -59,9 +61,17 @@ impl Tile {
         builder.icon_holder.set_margin_top(10);
         builder.icon_holder.set_margin_bottom(10);
 
-        let attrs: Vec<(&str, &str)> = vec![("player", &mpris.player)];
-        builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
-
+        // Add attrs and implement double click capabilities
+        let attrs: Vec<Option<(&str, &str)>> = vec![Some(("player", &mpris.player))];
+        let attrs = builder.add_default_attrs(Some(&launcher.method), None, None, None, attrs);
+        builder.object.connect(
+            "row-should-activate",
+            false,
+            move |_row| {
+                execute_from_attrs(&attrs);
+                None
+            },
+        );
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
             _ => None,

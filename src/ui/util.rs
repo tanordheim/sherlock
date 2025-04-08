@@ -44,7 +44,7 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
                 if row.imp().shortcut.get() {
                     if child_counter == index {
                         let attrs = get_row_attrs(row);
-                        execute_from_attrs(attrs);
+                        execute_from_attrs(&attrs);
                         return;
                     } else {
                         child_counter += 1

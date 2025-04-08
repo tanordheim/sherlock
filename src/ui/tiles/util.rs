@@ -5,7 +5,7 @@ use crate::{
     CONFIG,
 };
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
@@ -91,27 +91,26 @@ impl EventTileBuilder {
         result: Option<&str>,
         keyword: Option<&str>,
         exec: Option<&str>,
-        additional_attrs: Option<Vec<(&str, &str)>>,
-    ) {
-        let method = method.as_ref().map(|s| ("method", s.as_ref()));
-        let result = result.as_ref().map(|s| ("result", s.as_ref()));
-        let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
-        let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
+        additional_attrs: Vec<Option<(&str, &str)>>,
+    )->HashMap<String, String>{
+        // Construct the k,v pairs
+        let method = method.map(|s| ("method", s));
+        let result = result.map(|s| ("result", s));
+        let exec = exec.map(|s| ("exec", s));
+        let keyword = keyword.map(|s| ("keyword", s));
 
-        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
-            .into_iter()
-            .filter_map(|x| x)
-            .collect();
+        // Create the combined vec
+        let mut attrs: Vec<Option<(&str, &str)>> = vec![method, result, exec, keyword];
+        attrs.extend(additional_attrs);
 
-        if let Some(ads) = additional_attrs {
-            attrs.extend(ads);
-        }
-
-        for item in attrs {
-            let (key, value) = item;
-            let label = Label::new(Some(format!("{} | {}", key, value).as_str()));
+        // Insert the values into the label fields and simultaniously create the return hashmap
+        attrs.into_iter()
+            .filter_map(|v| v)
+            .map(|(key, value)| {
+            let label = Label::new(Some(format!("{}S%|%S{}", &key, &value).as_str()));
             self.attrs.append(&label);
-        }
+            (key.to_string(), value.to_string())
+        }).collect::<HashMap<String, String>>()
     }
 }
 
@@ -190,27 +189,26 @@ impl TileBuilder {
         result: Option<&str>,
         keyword: Option<&str>,
         exec: Option<&str>,
-        additional_attrs: Option<Vec<(&str, &str)>>,
-    ) {
-        let method = method.as_ref().map(|s| ("method", s.as_ref()));
-        let result = result.as_ref().map(|s| ("result", s.as_ref()));
-        let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
-        let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
+        additional_attrs: Vec<Option<(&str, &str)>>,
+    )->HashMap<String, String>{
+        // Construct the k,v pairs
+        let method = method.map(|s| ("method", s));
+        let result = result.map(|s| ("result", s));
+        let exec = exec.map(|s| ("exec", s));
+        let keyword = keyword.map(|s| ("keyword", s));
 
-        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
-            .into_iter()
-            .filter_map(|x| x)
-            .collect();
+        // Create the combined vec
+        let mut attrs: Vec<Option<(&str, &str)>> = vec![method, result, exec, keyword];
+        attrs.extend(additional_attrs);
 
-        if let Some(ads) = additional_attrs {
-            attrs.extend(ads);
-        }
-
-        for item in attrs {
-            let (key, value) = item;
-            let label = Label::new(Some(format!("{}S%|%S{}", key, value).as_str()));
+        // Insert the values into the label fields and simultaniously create the return hashmap
+        attrs.into_iter()
+            .filter_map(|v| v)
+            .map(|(key, value)| {
+            let label = Label::new(Some(format!("{}S%|%S{}", &key, &value).as_str()));
             self.attrs.append(&label);
-        }
+            (key.to_string(), value.to_string())
+        }).collect::<HashMap<String, String>>()
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
     where

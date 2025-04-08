@@ -1,6 +1,7 @@
 use gtk4::prelude::*;
 use std::collections::HashMap;
 
+use crate::actions::execute_from_attrs;
 use crate::launcher::{Launcher, ResultItem};
 use crate::loader::util::{AppData, SherlockConfig};
 
@@ -25,7 +26,6 @@ impl Tile {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);
                 builder.object.set_shortcut(launcher.shortcut);
-
                 let icon = if app_config.appearance.recolor_icons {
                     ensure_icon_name(value.icon)
                 } else {
@@ -41,12 +41,21 @@ impl Tile {
                 builder.category.set_text(&launcher.name);
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
-                builder.add_default_attrs(
+                let attrs = builder.add_default_attrs(
                     Some(&launcher.method),
                     Some(keyword),
                     Some(keyword),
                     Some(&value.exec),
-                    None,
+                    Vec::new(),
+                );
+
+                builder.object.connect(
+                    "row-should-activate",
+                    false,
+                    move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    },
                 );
 
                 let shortcut_holder = match launcher.shortcut {

@@ -1,11 +1,11 @@
+use gio::glib::object::ObjectExt;
+use gio::glib::subclass::Signal;
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
 use std::cell::Cell;
-use std::collections::HashMap;
+use std::sync::OnceLock;
 
-use crate::actions::execute_from_attrs;
-use crate::ui::util::get_row_attrs;
 // Object holding the state
 #[derive(Default)]
 pub struct SherlockRow {
@@ -33,13 +33,17 @@ impl ObjectImpl for SherlockRow {
             let obj_clone = obj.clone();
             move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
-                    let attrs: HashMap<String, String> = get_row_attrs(&obj_clone);
-                    execute_from_attrs(attrs);
+                    obj_clone.emit_by_name::<()>("row-should-activate", &[]);
                 }
             }
         });
-
         obj.add_controller(gesture);
+    }
+    fn signals() -> &'static [glib::subclass::Signal] {
+        static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
+        SIGNALS.get_or_init(|| {
+            vec![Signal::builder("row-should-activate").build()]
+        })
     }
 }
 

@@ -1,9 +1,11 @@
 use std::vec;
 
+use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 
 use super::util::EventTileBuilder;
 use super::Tile;
+use crate::actions::execute_from_attrs;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -28,7 +30,6 @@ impl Tile {
         builder.object.set_spawn_focus(launcher.spawn_focus);
         builder.object.set_shortcut(launcher.shortcut);
 
-        let mut attrs: Vec<(&str, &str)> = vec![];
         builder.title.set_text(&event.title);
         builder
             .icon
@@ -37,13 +38,21 @@ impl Tile {
         builder
             .end_time
             .set_text(format!(".. {}", event.end_time).as_str());
-        attrs.push(("meeting_url", &event.meeting_url));
 
+        let mut attrs: Vec<Option<(&str, &str)>> = vec![Some(("meeting_url", &event.meeting_url))];
         if let Some(next) = launcher.next_content.as_deref() {
-            attrs.push(("next_content", next));
+            attrs.push(Some(("next_content", next)));
         }
 
-        builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
+        let attrs = builder.add_default_attrs(Some(&launcher.method), None, None, None, attrs);
+        builder.object.connect(
+            "row-should-activate",
+            false,
+            move |_row| {
+                execute_from_attrs(&attrs);
+                None
+            },
+        );
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
