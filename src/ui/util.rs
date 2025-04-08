@@ -1,7 +1,7 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
 use gtk4::{
-    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType
+    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType,
 };
 use std::cell::RefCell;
 use std::rc::Rc;

@@ -32,17 +32,15 @@ impl Tile {
             ("keyword", keyword),
             ("engine", &web.engine),
         ]);
-        if let Some(next) = launcher.next_content.as_deref(){
+        if let Some(next) = launcher.next_content.as_deref() {
             attrs.insert(String::from("next_content"), next.to_string());
         }
-        builder.object.connect(
-            "row-should-activate",
-            false,
-            move |_row| {
+        builder
+            .object
+            .connect("row-should-activate", false, move |_row| {
                 execute_from_attrs(&attrs);
                 None
-            },
-        );
+            });
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

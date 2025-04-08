@@ -126,22 +126,18 @@ impl Tile {
                 builder.icon.set_icon_name(Some(&icon));
 
                 // Add action capabilities
-                let attrs = get_attrs_map(
-                    vec![
+                let attrs = get_attrs_map(vec![
                     ("method", method),
                     ("result", clipboard_content),
-                    ("engine", "plain")
-                    ]
-                );
+                    ("engine", "plain"),
+                ]);
 
-                builder.object.connect(
-                    "row-should-activate",
-                    false,
-                    move |_row| {
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
                         execute_from_attrs(&attrs);
                         None
-                    },
-                );
+                    });
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
                     _ => None,

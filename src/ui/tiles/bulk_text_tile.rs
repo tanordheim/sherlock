@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use std::vec;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::Label;
+use std::collections::HashMap;
+use std::vec;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::bulk_text_launcher::BulkText;
@@ -21,7 +21,7 @@ impl Tile {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        HashMap<String, String>
+        HashMap<String, String>,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
         builder.object.add_css_class("bulk-text");
@@ -34,12 +34,7 @@ impl Tile {
         builder.content_title.set_text(keyword);
         builder.content_body.set_text("Loading...");
 
-        let attrs = get_attrs_map(
-            vec![
-            ("method", &launcher.method),
-            ("keyword", keyword),
-            ]
-        );
+        let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
@@ -56,7 +51,7 @@ impl Tile {
             Some(builder.content_title),
             Some(builder.content_body),
             None,
-            attrs
+            attrs,
         ));
     }
     pub fn bulk_text_tile(
@@ -76,21 +71,14 @@ impl Tile {
             _ => None,
         };
 
-        let attrs = get_attrs_map(
-            vec![
-            ("method", &launcher.method),
-            ("keyword", keyword),
-            ]
-        );
+        let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
 
-        builder.object.connect(
-            "row-should-activate",
-            false,
-            move |_row| {
+        builder
+            .object
+            .connect("row-should-activate", false, move |_row| {
                 execute_from_attrs(&attrs);
                 None
-            },
-        );
+            });
         let res = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,

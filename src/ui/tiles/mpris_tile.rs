@@ -18,7 +18,7 @@ impl Tile {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        HashMap<String, String>
+        HashMap<String, String>,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
@@ -62,10 +62,11 @@ impl Tile {
         builder.icon_holder.set_margin_bottom(10);
 
         // Add attrs and implement double click capabilities
-        let attrs: HashMap<String, String> = vec![
-            ("method", &launcher.method),
-            ("player", &mpris.player),
-        ].into_iter().map(|(k,v)| (k.to_string(), v.to_string())).collect();
+        let attrs: HashMap<String, String> =
+            vec![("method", &launcher.method), ("player", &mpris.player)]
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect();
 
         // Make shortcut holder
         let shortcut_holder = match launcher.shortcut {

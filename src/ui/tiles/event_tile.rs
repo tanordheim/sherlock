@@ -39,24 +39,21 @@ impl Tile {
             .end_time
             .set_text(format!(".. {}", event.end_time).as_str());
 
-
         let mut constructor: Vec<(&str, &str)> = vec![
             ("method", &launcher.method),
-            ("meeting_url", &event.meeting_url)
-            ];
+            ("meeting_url", &event.meeting_url),
+        ];
         if let Some(next) = launcher.next_content.as_deref() {
             constructor.push(("next_content", next));
         }
         let attrs = get_attrs_map(constructor);
 
-        builder.object.connect(
-            "row-should-activate",
-            false,
-            move |_row| {
+        builder
+            .object
+            .connect("row-should-activate", false, move |_row| {
                 execute_from_attrs(&attrs);
                 None
-            },
-        );
+            });
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

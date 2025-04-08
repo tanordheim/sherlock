@@ -296,7 +296,7 @@ pub fn async_calc(
                         title,
                         body,
                         async_opts,
-                        attrs
+                        attrs,
                     },
                 )
             } else {
@@ -351,15 +351,13 @@ pub fn async_calc(
                         }
                     }
                 }
-                widget.result_item.row_item.connect(
-                    "row-should-activate",
-                    false,
-                    move |_row| {
+                widget
+                    .result_item
+                    .row_item
+                    .connect("row-should-activate", false, move |_row| {
                         execute_from_attrs(&attrs);
                         None
-                    },
-                );
-
+                    });
             }
             *current_task_clone.borrow_mut() = None;
         }

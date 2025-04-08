@@ -41,22 +41,16 @@ impl Tile {
                 builder.category.set_text(&launcher.name);
                 builder.icon.set_icon_name(Some(&icon));
                 builder.title.set_markup(&tile_name);
-                
-                let attrs = get_attrs_map(
-                    vec![
-                    ("method", &launcher.method),
-                    ("exec", &value.exec)
-                    ]
-                );
 
-                builder.object.connect(
-                    "row-should-activate",
-                    false,
-                    move |_row| {
+                let attrs =
+                    get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
+
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
                         execute_from_attrs(&attrs);
                         None
-                    },
-                );
+                    });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,

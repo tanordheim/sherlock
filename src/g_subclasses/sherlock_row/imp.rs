@@ -41,9 +41,7 @@ impl ObjectImpl for SherlockRow {
     }
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
-        SIGNALS.get_or_init(|| {
-            vec![Signal::builder("row-should-activate").build()]
-        })
+        SIGNALS.get_or_init(|| vec![Signal::builder("row-should-activate").build()])
     }
 }
 

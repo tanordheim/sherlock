@@ -129,7 +129,7 @@ impl Launcher {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        HashMap<String, String>
+        HashMap<String, String>,
     )> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {

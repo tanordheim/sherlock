@@ -41,14 +41,12 @@ impl Tile {
                     ("child-pid", &child),
                 ]);
 
-                builder.object.connect(
-                    "row-should-activate",
-                    false,
-                    move |_row| {
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
                         execute_from_attrs(&attrs);
                         None
-                    },
-                );
+                    });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
