@@ -4,6 +4,8 @@ use std::process::Command;
 use crate::loader::application_loader::{get_applications_dir, get_desktop_files};
 use crate::loader::util::{read_lines, SherlockError, SherlockErrorType};
 
+use super::commandlaunch::command_launch;
+
 pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
     let engines: HashMap<&str, &str> = HashMap::from([
         ("google", "https://www.google.com/search?q={keyword}"),
@@ -70,11 +72,5 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
 
     let url = url_template.replace("{keyword}", query);
     let command = browser.replace("%u", &format!("'{}'", url));
-    match Command::new("sh").arg("-c").arg(command).spawn() {
-        Ok(_) => Ok(()),
-        Err(e) => Err(SherlockError {
-            error: SherlockErrorType::CommandExecutionError("xdg-open".to_string()),
-            traceback: e.to_string(),
-        }),
-    }
+    command_launch(&command, "")
 }
