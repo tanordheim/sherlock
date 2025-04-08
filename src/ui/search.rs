@@ -145,8 +145,7 @@ fn nav_event(
             }
             gdk::Key::Return => {
                 if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
-                    let attrs: HashMap<String, String> = get_row_attrs(row);
-                    execute_from_attrs(&attrs);
+                    row.emit_by_name::<()>("row-should-activate", &[]);
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {

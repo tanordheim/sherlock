@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use gio::glib::object::ObjectExt;
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
@@ -62,8 +64,10 @@ impl Tile {
         builder.icon_holder.set_margin_bottom(10);
 
         // Add attrs and implement double click capabilities
-        let attrs: Vec<Option<(&str, &str)>> = vec![Some(("player", &mpris.player))];
-        let attrs = builder.add_default_attrs(Some(&launcher.method), None, None, None, attrs);
+        let attrs: HashMap<String, String> = vec![
+            ("method", &launcher.method),
+            ("player", &mpris.player),
+        ].into_iter().map(|(k,v)| (k.to_string(), v.to_string())).collect();
         builder.object.connect(
             "row-should-activate",
             false,
@@ -72,6 +76,8 @@ impl Tile {
                 None
             },
         );
+
+        // Make shortcut holder
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
             _ => None,
