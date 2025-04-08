@@ -3,12 +3,6 @@
         <property name="orientation">vertical</property>
         <property name="spacing">0</property>
         <property name="hexpand">true</property> 
-
-        <child>
-            <object class="GtkBox" id="attrs-holder">
-                <property name="visible">false</property>
-            </object>
-        </child>
         <child>
             <object class="GtkLabel" id="equation-holder">
                 <property name="name">calc-tile-quation</property>

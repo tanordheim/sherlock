@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use gtk4::{Box, Label};
 
@@ -122,7 +122,7 @@ impl Launcher {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        Box,
+        HashMap<String, String>,
     )> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => {

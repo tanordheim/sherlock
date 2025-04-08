@@ -147,13 +147,9 @@ fn nav_event(
                 results.focus_first();
             }
             gdk::Key::Return => {
-                results
-                    .selected_row()
-                    .and_downcast_ref::<SherlockRow>()
-                    .map(|row| {
-                        let attrs: HashMap<String, String> = get_row_attrs(row);
-                        execute_from_attrs(attrs);
-                    });
+                if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
+                    row.emit_by_name::<()>("row-should-activate", &[]);
+                }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
                 if custom_binds
@@ -302,12 +298,13 @@ pub fn async_calc(
                 || (current_mode == "all" && launcher.priority > 0)
             {
                 launcher.get_loader_widget(&current_text).map(
-                    |(widget, title, body, async_opts, attrs)| {
-                        async_widgets.push(widget);
+                    |(result_item, title, body, async_opts, attrs)| {
+                        async_widgets.push(result_item.clone());
                         AsyncLauncherTile {
                             launcher,
                             title,
                             body,
+                            result_item,
                             async_opts,
                             attrs,
                         }
@@ -337,15 +334,14 @@ pub fn async_calc(
             }
             // get results for aysnc launchers
             for widget in async_launchers.iter() {
+                let mut attrs = widget.attrs.clone();
                 if let Some((title, body, next_content)) =
                     widget.launcher.get_result(&current_text).await
                 {
                     widget.title.as_ref().map(|t| t.set_text(&title));
                     widget.body.as_ref().map(|b| b.set_text(&body));
                     if let Some(next_content) = next_content {
-                        let label =
-                            Label::new(Some(format!("next_contentS%|%S{}", next_content).as_str()));
-                        widget.attrs.append(&label);
+                        attrs.insert(String::from("next_content"), next_content.to_string());
                     }
                 }
                 if let Some(opts) = &widget.async_opts {
@@ -363,6 +359,13 @@ pub fn async_calc(
                         }
                     }
                 }
+                widget
+                    .result_item
+                    .row_item
+                    .connect("row-should-activate", false, move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    });
             }
             *current_task_clone.borrow_mut() = None;
         }

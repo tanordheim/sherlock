@@ -6,12 +6,11 @@ use gtk4::{
 };
 
 use gtk4::{Box as HVBox, Entry, ListBox, ScrolledWindow};
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
-use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::{loader::pipe_loader::PipeData, APP_STATE};
 
 pub fn display_pipe(pipe_content: Vec<PipeData>, method: &str) {
@@ -94,8 +93,7 @@ fn nav_event(results_ev_nav: Rc<ListBox>, result_viewport: ScrolledWindow) {
                     .selected_row()
                     .and_downcast_ref::<SherlockRow>()
                 {
-                    let attrs: HashMap<String, String> = get_row_attrs(row);
-                    execute_from_attrs(attrs);
+                    row.emit_by_name::<()>("row-should-activate", &[]);
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {

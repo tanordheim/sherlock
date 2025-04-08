@@ -1,8 +1,11 @@
 use std::io::Cursor;
 
+use crate::actions::execute_from_attrs;
+use crate::actions::get_attrs_map;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::loader::pipe_loader::PipeData;
 use gdk_pixbuf::Pixbuf;
+use gio::glib::object::ObjectExt;
 use gtk4::prelude::BoxExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::Image;
@@ -45,23 +48,29 @@ impl Tile {
                 } else {
                     builder.icon.set_visible(false);
                 }
-                let mut attrs: Option<Vec<(&str, &str)>> = match &item.hidden {
-                    Some(a) => Some(a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()),
-                    None => None,
-                };
 
-                if let Some(field) = &item.field {
-                    match &mut attrs {
-                        Some(vec) => vec.push(("field", field.as_str())),
-                        None => attrs = Some(vec![("field", field.as_str())]),
-                    }
+                // Create attributes and enable action capability
+                let method = item.method.as_deref().unwrap_or(method);
+                let result = item.result.as_deref().or(item.title.as_deref());
+                let mut constructor: Vec<(&str, &str)> =
+                    item.hidden.as_ref().map_or_else(Vec::new, |a| {
+                        a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()
+                    });
+                constructor.extend([("method", method), ("keyword", keyword)]);
+                if let Some(result) = result {
+                    constructor.push(("result", result))
                 }
+                if let Some(field) = &item.field {
+                    constructor.push(("field", field));
+                }
+                let attrs = get_attrs_map(constructor);
 
-                let method = item.method.as_deref().or(Some(method));
-                let result: Option<&str> = item.result.as_deref().or(item.title.as_deref());
-
-                builder.add_default_attrs(method, result, Some(keyword), None, attrs);
-
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    });
                 results.push(builder.object);
             }
         }

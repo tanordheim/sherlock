@@ -1,5 +1,6 @@
 use gtk4::prelude::*;
 
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -31,14 +32,21 @@ impl Tile {
                 let parent = ppid.to_string();
                 let child = cpid.to_string();
 
-                let attrs: Vec<(&str, &str)> = vec![("parent-pid", &parent), ("child-pid", &child)];
-                builder.add_default_attrs(
-                    Some("kill-process"),
-                    Some(value),
-                    Some(keyword),
-                    None,
-                    Some(attrs),
-                );
+                // Construct attrs and enable action capabilities
+                let attrs = get_attrs_map(vec![
+                    ("method", "kill-process"),
+                    ("result", value),
+                    ("keyword", keyword),
+                    ("parent-pid", &parent),
+                    ("child-pid", &child),
+                ]);
+
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,

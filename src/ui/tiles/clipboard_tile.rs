@@ -3,6 +3,7 @@ use gtk4::{gdk, prelude::*, Image};
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
+use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::launcher::calc_launcher::Calculator;
 use crate::launcher::clipboard_launcher::ClipboardLauncher;
 use crate::launcher::{Launcher, ResultItem};
@@ -124,15 +125,19 @@ impl Tile {
                 builder.title.set_text(clipboard_content);
                 builder.icon.set_icon_name(Some(&icon));
 
-                let attrs: Vec<(&str, &str)> = vec![("engine", "plain")];
-                builder.add_default_attrs(
-                    Some(method),
-                    None,
-                    Some(clipboard_content),
-                    None,
-                    Some(attrs),
-                );
+                // Add action capabilities
+                let attrs = get_attrs_map(vec![
+                    ("method", method),
+                    ("result", clipboard_content),
+                    ("engine", "plain"),
+                ]);
 
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |_row| {
+                        execute_from_attrs(&attrs);
+                        None
+                    });
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
                     _ => None,

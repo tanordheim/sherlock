@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
-use gtk4::{gdk, Box, Image, Label, Overlay};
+use gtk4::{gdk, Image, Label, Overlay};
 
 use super::util::{AsyncOptions, TileBuilder};
 use super::Tile;
@@ -16,7 +18,7 @@ impl Tile {
         Option<Label>,
         Option<Label>,
         Option<AsyncOptions>,
-        Box,
+        HashMap<String, String>,
     )> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
@@ -59,9 +61,14 @@ impl Tile {
         builder.icon_holder.set_margin_top(10);
         builder.icon_holder.set_margin_bottom(10);
 
-        let attrs: Vec<(&str, &str)> = vec![("player", &mpris.player)];
-        builder.add_default_attrs(Some(&launcher.method), None, None, None, Some(attrs));
+        // Add attrs and implement double click capabilities
+        let attrs: HashMap<String, String> =
+            vec![("method", &launcher.method), ("player", &mpris.player)]
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect();
 
+        // Make shortcut holder
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
             _ => None,
@@ -74,6 +81,6 @@ impl Tile {
 
         options.icon_holder_overlay = Some(overlay);
 
-        return Some((res, None, None, Some(options), builder.attrs));
+        return Some((res, None, None, Some(options), attrs));
     }
 }

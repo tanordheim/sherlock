@@ -1,17 +1,18 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, launcher::Launcher, loader::pipe_loader::PipeData,
+    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, loader::pipe_loader::PipeData,
     CONFIG,
 };
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
     pub title: Option<Label>,
     pub body: Option<Label>,
+    pub result_item: ResultItem,
     pub async_opts: Option<AsyncOptions>,
-    pub attrs: Box,
+    pub attrs: HashMap<String, String>,
 }
 
 #[derive(Debug)]
@@ -50,7 +51,6 @@ pub struct EventTileBuilder {
     pub icon: Image,
     pub start_time: Label,
     pub end_time: Label,
-    pub attrs: Box,
     pub shortcut_holder: Option<Box>,
 }
 impl EventTileBuilder {
@@ -69,37 +69,7 @@ impl EventTileBuilder {
             start_time: builder.object("time-label").unwrap_or_default(),
             end_time: builder.object("end-time-label").unwrap_or_default(),
             icon: builder.object("icon-name").unwrap_or_default(),
-            attrs: builder.object("attrs-holder").unwrap_or_default(),
             shortcut_holder: builder.object("shortcut-holder"),
-        }
-    }
-
-    pub fn add_default_attrs(
-        &self,
-        method: Option<&str>,
-        result: Option<&str>,
-        keyword: Option<&str>,
-        exec: Option<&str>,
-        additional_attrs: Option<Vec<(&str, &str)>>,
-    ) {
-        let method = method.as_ref().map(|s| ("method", s.as_ref()));
-        let result = result.as_ref().map(|s| ("result", s.as_ref()));
-        let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
-        let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
-
-        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
-            .into_iter()
-            .filter_map(|x| x)
-            .collect();
-
-        if let Some(ads) = additional_attrs {
-            attrs.extend(ads);
-        }
-
-        for item in attrs {
-            let (key, value) = item;
-            let label = Label::new(Some(format!("{}S%|%S{}", key, value).as_str()));
-            self.attrs.append(&label);
         }
     }
 }
@@ -111,7 +81,6 @@ pub struct TileBuilder {
     pub icon_holder: Box,
     pub title: Label,
     pub category: Label,
-    pub attrs: Box,
     pub tag_start: Label,
     pub tag_end: Label,
     pub shortcut_holder: Option<Box>,
@@ -131,7 +100,6 @@ impl TileBuilder {
         let icon: Image = builder.object("icon-name").unwrap_or_default();
         let title: Label = builder.object("app-name").unwrap_or_default();
         let category: Label = builder.object("launcher-type").unwrap_or_default();
-        let attrs: Box = builder.object("attrs-holder").unwrap_or_default();
         let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
         let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
         let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
@@ -160,7 +128,6 @@ impl TileBuilder {
             icon_holder,
             title,
             category,
-            attrs,
             tag_start,
             tag_end,
             shortcut_holder: builder.object("shortcut-holder"),
@@ -170,35 +137,6 @@ impl TileBuilder {
 
             equation_holder,
             result_holder,
-        }
-    }
-
-    pub fn add_default_attrs(
-        &self,
-        method: Option<&str>,
-        result: Option<&str>,
-        keyword: Option<&str>,
-        exec: Option<&str>,
-        additional_attrs: Option<Vec<(&str, &str)>>,
-    ) {
-        let method = method.as_ref().map(|s| ("method", s.as_ref()));
-        let result = result.as_ref().map(|s| ("result", s.as_ref()));
-        let exec = exec.as_ref().map(|s| ("exec", s.as_ref()));
-        let keyword = keyword.as_ref().map(|s| ("keyword", s.as_ref()));
-
-        let mut attrs: Vec<(&str, &str)> = vec![method, result, exec, keyword]
-            .into_iter()
-            .filter_map(|x| x)
-            .collect();
-
-        if let Some(ads) = additional_attrs {
-            attrs.extend(ads);
-        }
-
-        for item in attrs {
-            let (key, value) = item;
-            let label = Label::new(Some(format!("{}S%|%S{}", key, value).as_str()));
-            self.attrs.append(&label);
         }
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
