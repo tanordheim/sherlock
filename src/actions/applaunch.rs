@@ -30,5 +30,6 @@ pub fn applaunch(exec: &str) {
             });
     }
 
-    let _output = command.spawn().expect("Failed to start the application");
+    // TODO make error handling so that error tile will show up
+    let _output = command.spawn();
 }
