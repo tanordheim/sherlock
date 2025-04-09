@@ -114,8 +114,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
     "args": {
         "capabilities": [
             "calc.math",
-            "calc.lengths",
-            "calc.weights"
+            "calc.units"
         ]
     },
     "priority": 1,
@@ -127,6 +126,7 @@ Specifies what the launcher should parse:
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
+- **`calc.volumes`** - displays the solutions to volume transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
 ---
@@ -150,6 +150,7 @@ Specifies what the launcher should parse:
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
+- **`calc.volumes`** - displays the solutions to volume transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
 ---
