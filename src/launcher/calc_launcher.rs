@@ -32,7 +32,7 @@ impl Calculator {
             let value: f32 = caps[1].parse().ok()?;
             let from = caps[2].to_lowercase();
             let to = match unit_str {
-                "weight" => config.units.weights.to_lowercase(),
+                "weights" => config.units.weights.to_lowercase(),
                 _ => config.units.lengths.to_lowercase()
             };
             println!("{:?}", to);
@@ -62,7 +62,7 @@ enum Measurements {}
 impl Measurements {
     fn match_unit(unit:&str, unit_str: &str) -> Option<(f32, String)>{
         match unit_str {
-            "weight" => Weight::match_unit(unit),
+            "weights" => Weight::match_unit(unit),
             _ => Length::match_unit(unit)
         }
     }

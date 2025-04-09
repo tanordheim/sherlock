@@ -114,7 +114,8 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
     "args": {
         "capabilities": [
             "calc.math",
-            "calc.lengths"
+            "calc.lengths",
+            "calc.weights"
         ]
     },
     "priority": 1,
@@ -125,6 +126,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 Specifies what the launcher should parse: 
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
+- **`calc.weights`** - displays the solutions to weight transformations 
 
 ---
 ## Clipboard Launcher
@@ -133,7 +135,7 @@ Specifies what the launcher should parse:
         "name": "Clipboard",
         "type": "clipboard-execution",
         "args": {
-            "capabilities": ["url", "hex", "calc.math", "calc.measurements"]
+            "capabilities": ["url", "hex", "calc.math", "calc.lengths", "calc.weights"]
         },
         "priority": 1,
         "home": true
@@ -146,6 +148,7 @@ Specifies what the launcher should parse:
 - **`hex`** - displays hex colors in Sherlock
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
+- **`calc.weights`** - displays the solutions to weight transformations 
 
 ---
 ## Command Launcher
