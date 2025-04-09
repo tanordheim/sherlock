@@ -17,8 +17,9 @@
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage..
 <br>
 
-### Suggested packages
+### Quick Links
 
+- [Documentation](https://github.com/Skxxtz/sherlock/tree/main/docs): Sherlocks documentation
 - [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki): allows you to search Wikipedia from within Sherlock using the `bulk_text` launcher.
 <br><br>
 
