@@ -7,10 +7,8 @@
             <object class="GtkBox" id="search-bar-holder">
                 <property name="name">search-bar-holder</property>
                 <child>
-                    <object class="GtkImage" id="search-icon">
-                        <property name="name">search-icon</property>
-                        <property name="pixel-size">22</property>
-                        <property name="icon-name">search</property>
+                    <object class="GtkBox" id="search-icon-holder">
+                        <property name="name">search-icon-holder</property>
                     </object>
                 </child>
                 <child>

@@ -3,7 +3,7 @@ use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
-    Builder, EventControllerKey, Image,
+    Builder, EventControllerKey, Image, Overlay,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
@@ -24,19 +24,18 @@ struct SearchUI {
     // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
     search_bar: Entry,
-    search_icon: Image,
+    search_icon_holder: HVBox,
     mode_title: Label,
 }
 
 pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
     // Initialize the view to show all apps
-    let (mode, modes, vbox, ui, results) = construct_window(&launchers);
+    let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     ui.search_bar.grab_focus();
 
     let search_bar_clone = ui.search_bar.clone();
-    let mode_title_clone = ui.mode_title.clone();
     let modes_clone = modes.clone();
     let mode_clone = Rc::clone(&mode);
 
@@ -50,13 +49,14 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
         &results,
         &custom_binds,
     );
-    nav_event(results, ui, mode, custom_binds);
+    nav_event(results, ui.search_bar, ui.result_viewport, mode, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
-            state.add_stack_page(vbox, "search-page");
+            state.add_stack_page(stack_page, "search-page");
         }
     });
 
+    // Improved mode selection
     let original_mode = String::from("all");
     let mode_action = ActionEntry::builder("switch-mode")
         .parameter_type(Some(&String::static_variant_type()))
@@ -70,12 +70,14 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
                 let mode_name = modes_clone.get(&parameter);
                 match mode_name {
                     Some(name) => {
+                        ui.search_icon_holder.set_css_classes(&["back"]);
                         *mode_clone.borrow_mut() = parameter.clone();
-                        mode_title_clone.set_text(&name);
+                        ui.mode_title.set_text(&name);
                         state = parameter;
                     }
                     _ => {
-                        mode_title_clone.set_text("All");
+                        ui.search_icon_holder.set_css_classes(&["search"]);
+                        ui.mode_title.set_text("All");
                         parameter = String::from("all ");
                         *mode_clone.borrow_mut() = parameter.clone();
                         state = parameter;
@@ -115,17 +117,36 @@ fn construct_window(
     let vbox: HVBox = builder.object("vbox").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
 
+    let search_icon_holder: HVBox = builder.object("search-icon-holder").unwrap_or_default();
+    search_icon_holder.add_css_class("search");
+    // Create the search icon
+    let search_icon = Image::new();
+    search_icon.set_icon_name(Some("search"));
+    search_icon.set_widget_name("search-icon");
+    // Create the back arrow
+    let search_icon_back = Image::new();
+    search_icon_back.set_icon_name(Some("go-previous"));
+    search_icon_back.set_widget_name("search-icon-back");
+
+    let overlay = Overlay::new();
+    overlay.set_child(Some(&search_icon));
+    overlay.add_overlay(&search_icon_back);
+
+    search_icon_holder.append(&overlay);
+
     let ui = SearchUI {
         result_viewport: builder.object("scrolled-window").unwrap_or_default(),
         preview_box: builder.object("preview_box").unwrap_or_default(),
         search_bar: builder.object("search-bar").unwrap_or_default(),
-        search_icon: builder.object("search-icon").unwrap_or_default(),
+        search_icon_holder,
         mode_title: builder.object("category-type-label").unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
             .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
-        ui.search_icon.set_visible(c.appearance.search_icon);
+        ui.search_icon_holder.set_visible(c.appearance.search_icon);
+        search_icon.set_pixel_size(c.appearance.icon_size);
+        search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
     APP_STATE.with(|app_state| {
@@ -143,7 +164,8 @@ fn construct_window(
 
 fn nav_event(
     results: Rc<ListBox>,
-    ui: SearchUI,
+    search_bar: Entry,
+    result_viewport: ScrolledWindow,
     mode: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
 ) {
@@ -156,7 +178,7 @@ fn nav_event(
                     .prev_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results.focus_prev(&ui.result_viewport);
+                results.focus_prev(&result_viewport);
                 return true.into();
             }
             k if Some(k) == custom_binds.next
@@ -164,31 +186,30 @@ fn nav_event(
                     .next_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results.focus_next(&ui.result_viewport);
+                results.focus_next(&result_viewport);
                 return true.into();
             }
             gdk::Key::Up => {
-                results.focus_prev(&ui.result_viewport);
+                results.focus_prev(&result_viewport);
             }
             gdk::Key::Down => {
-                results.focus_next(&ui.result_viewport);
+                results.focus_next(&result_viewport);
                 return true.into();
             }
             gdk::Key::BackSpace => {
-                let ctext = &ui.search_bar.text();
+                let ctext = search_bar.text();
                 if custom_binds
                     .shortcut_modifier
                     .map_or(false, |modifier| modifiers.contains(modifier))
                 {
-                    let _ = &ui.search_bar.set_text("");
+                    let _ = search_bar.set_text("");
                 } else {
                     if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        let _ = ui
-                            .search_bar
+                        let _ = search_bar
                             .activate_action("win.switch-mode", Some(&"all".to_variant()));
                         // to trigger homescreen rebuild
-                        let _ = &ui.search_bar.set_text("a");
-                        let _ = &ui.search_bar.set_text("");
+                        let _ = search_bar.set_text("a");
+                        let _ = search_bar.set_text("");
                     }
                 }
                 results.focus_first();
@@ -220,10 +241,10 @@ fn nav_event(
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
                 if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                    results.focus_prev(&ui.result_viewport);
+                    results.focus_prev(&result_viewport);
                     return true.into();
                 } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                    results.focus_next(&ui.result_viewport);
+                    results.focus_next(&result_viewport);
                     return true.into();
                 }
             }
