@@ -49,7 +49,13 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
         &results,
         &custom_binds,
     );
-    nav_event(results, ui.search_bar, ui.result_viewport, mode, custom_binds);
+    nav_event(
+        results,
+        ui.search_bar,
+        ui.result_viewport,
+        mode,
+        custom_binds,
+    );
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.add_stack_page(stack_page, "search-page");
