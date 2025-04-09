@@ -8,14 +8,14 @@ These themes are currently based on Sherlock's `0.1.9` version
 ## Gruvbox
 <div align="center" style="text-align:center;">
   <picture>
-    <a href="https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/themes/gruvbox.css">
+    <a href="https://github.com/Skxxtz/sherlock/blob/main/themes/gruvbox.css">
     <img alt="gruvbox theme screenshot" width="100%" src="images/gruvbox.png">
     </a>
   </picture>
 </div>
 <div align="center" style="text-align:center;">
   <picture>
-    <a href="https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/themes/gruvbox2.css">
+    <a href="https://github.com/Skxxtz/sherlock/blob/main/themes/gruvbox2.css">
     <img alt="gruvbox theme screenshot" width="100%" src="images/gruvbox2.png">
     </a>
   </picture>
@@ -24,7 +24,7 @@ These themes are currently based on Sherlock's `0.1.9` version
 ## Whiteout
 <div align="center" style="text-align:center;">
   <picture>
-    <a href="https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/themes/whiteout.css">
+    <a href="https://github.com/Skxxtz/sherlock/blob/main/themes/whiteout.css">
     <img alt="gruvbox theme screenshot" width="100%" src="images/whiteout.png">
     </a>
   </picture>
