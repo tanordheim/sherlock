@@ -16,3 +16,12 @@
     </a>
   </picture>
 </div>
+
+## Whiteout
+<div align="center" style="text-align:center;">
+  <picture>
+    <a href="https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/themes/whiteout.css">
+    <img alt="gruvbox theme screenshot" width="100%" src="images/whiteout.png">
+    </a>
+  </picture>
+</div>
