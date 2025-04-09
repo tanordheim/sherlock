@@ -9,6 +9,11 @@
         "try_suppress_warnings": false,
         "app_paths": ["~/.local/share/applications/"]
     },
+    "units": {
+        "lengths": "meter",
+        "weights": "kg",
+        "volumes": "l"
+    },
     "appearance": {
         "width": 900,
         "height": 593,
@@ -16,6 +21,8 @@
         "recolor_icons": false,
         "icon_paths": ["~/.config/sherlock/icons/"],
         "icon_size": 22
+        "search_icon": true,
+        "use_base_css": true
     },
     "behavior": {
         "caching": true,
