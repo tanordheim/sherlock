@@ -89,7 +89,13 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
                         state = parameter;
                     }
                 }
-                search_bar_clone.set_text("");
+                let search_bar_clone = search_bar_clone.clone();
+                glib::idle_add_local(move || {
+                    // to trigger homescreen rebuild
+                    search_bar_clone.set_text("a");
+                    search_bar_clone.set_text("");
+                    glib::ControlFlow::Break
+                });
                 action.set_state(&state.to_variant());
             }
         })
@@ -215,9 +221,6 @@ fn nav_event(
                     if ctext.is_empty() && mode.borrow().as_str() != "all" {
                         let _ = search_bar
                             .activate_action("win.switch-mode", Some(&"all".to_variant()));
-                        // to trigger homescreen rebuild
-                        let _ = search_bar.set_text("a");
-                        let _ = search_bar.set_text("");
                     }
                 }
                 results.focus_first();

@@ -9,6 +9,7 @@ Launchers are defined in the `fallback.json` file located in your config directo
 
 The launcher can be of the following types:<br>
 
+- **[Category Launcher](#category-launcher):** Groups your launchers.
 - **[App Launcher](#app-launcher):** Launches your apps. 
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default web browser. The used search engine is configurable and the most common search engines are included. 
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Return, it also copies the result into the clipboard.
@@ -36,6 +37,23 @@ The launcher can be of the following types:<br>
 | `spawn_focus`     | `[FC]` (optional) | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` (optional) | Determines whether the tile should have the shortcut indicator on the side. |
 
+---
+
+## Category Launcher
+```json
+{
+    "name": "Categories",
+    "alias": "cat",
+    "type": "categories",
+    "args": {
+        "Kill Processes": {"icon": "sherlock-process", "exec": "kill", "search_string": "terminate;kill;process"},
+        "Power Menu": {"icon": "battery-full-symbolic", "exec": "pm", "search_string": "powermenu;"}
+    },
+    "priority": 3,
+    "home": true
+}
+
+```
 ---
 
 ## App Launcher
