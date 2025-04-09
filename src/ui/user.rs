@@ -5,11 +5,12 @@ use gtk4::{
     Builder, EventControllerKey, Justification,
 };
 
-use gtk4::{Box as HVBox, Entry, ListBox, ScrolledWindow};
+use gtk4::{Box as HVBox, ListBox, ScrolledWindow};
 use std::rc::Rc;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
+use crate::g_subclasses::sherlock_input::SherlockInput;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::{loader::pipe_loader::PipeData, APP_STATE};
 
@@ -19,7 +20,14 @@ pub fn display_pipe(pipe_content: Vec<PipeData>, method: &str) {
 
     // Get the requred object references
     let vbox: HVBox = builder.object("vbox").unwrap();
-    let search_bar: Entry = builder.object("search-bar").unwrap();
+
+    let search_bar_holder: HVBox = builder.object("search-bar-holder").unwrap_or_default();
+    let search_bar = SherlockInput::new();
+    search_bar.set_widget_name("search-bar");
+    search_bar.set_hexpand(true);
+    search_bar.set_placeholder_text(Some("Search:"));
+    search_bar_holder.append(&search_bar);
+
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
 
@@ -122,7 +130,7 @@ fn nav_event(results_ev_nav: Rc<ListBox>, result_viewport: ScrolledWindow) {
 }
 
 fn change_event(
-    search_bar: &Entry,
+    search_bar: &SherlockInput,
     results: &Rc<ListBox>,
     pipe_content: Vec<PipeData>,
     method: &str,

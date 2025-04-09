@@ -5,7 +5,10 @@ use std::collections::HashSet;
 
 use super::util::TileBuilder;
 use super::Tile;
-use crate::{actions::{execute_from_attrs, get_attrs_map}, launcher::{calc_launcher::Calculator, Launcher, ResultItem}};
+use crate::{
+    actions::{execute_from_attrs, get_attrs_map},
+    launcher::{calc_launcher::Calculator, Launcher, ResultItem},
+};
 
 impl Tile {
     pub fn calc_tile(

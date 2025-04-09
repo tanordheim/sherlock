@@ -5,7 +5,7 @@ use gtk4::{
     prelude::*,
     Builder, EventControllerKey, Image,
 };
-use gtk4::{Box as HVBox, Entry, Label, ListBox, ScrolledWindow};
+use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -13,6 +13,7 @@ use std::rc::Rc;
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
+use crate::g_subclasses::sherlock_input::SherlockInput;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};
@@ -22,7 +23,7 @@ struct SearchUI {
     result_viewport: ScrolledWindow,
     // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
-    search_bar: Entry,
+    search_bar: SherlockInput,
     search_icon: Image,
     mode_title: Label,
 }
@@ -70,10 +71,19 @@ fn construct_window(
     // Get the required object references
     let vbox: HVBox = builder.object("vbox").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
+
+    // Append content to the sherlock row
+    let search_bar_holder: HVBox = builder.object("search-bar-holder").unwrap_or_default();
+    let search_bar = SherlockInput::new();
+    search_bar.set_widget_name("search-bar");
+    search_bar.set_hexpand(true);
+    search_bar.set_placeholder_text(Some("Search:"));
+    search_bar_holder.append(&search_bar);
+
     let ui = SearchUI {
         result_viewport: builder.object("scrolled-window").unwrap_or_default(),
         preview_box: builder.object("preview_box").unwrap_or_default(),
-        search_bar: builder.object("search-bar").unwrap_or_default(),
+        search_bar,
         search_icon: builder.object("search-icon").unwrap_or_default(),
         mode_title: builder.object("category-type-label").unwrap_or_default(),
     };

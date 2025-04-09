@@ -1,6 +1,7 @@
 use gtk4::{prelude::*, ApplicationWindow};
-use gtk4::{Entry, EventController, Stack, Widget};
+use gtk4::{EventController, Stack, Widget};
 
+use crate::g_subclasses::sherlock_input::SherlockInput;
 use crate::loader::pipe_loader::deserialize_pipe;
 use crate::loader::util::SherlockError;
 use crate::loader::Loader;
@@ -10,7 +11,7 @@ use crate::{ui, CONFIG, FLAGS};
 pub struct AppState {
     pub window: Option<ApplicationWindow>,
     pub stack: Option<Stack>,
-    pub search_bar: Option<Entry>,
+    pub search_bar: Option<SherlockInput>,
 }
 impl AppState {
     pub fn add_stack_page<T, U>(&self, child: T, name: U)

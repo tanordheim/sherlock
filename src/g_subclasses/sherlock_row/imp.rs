@@ -6,6 +6,7 @@ use gtk4::{glib, GestureClick};
 use std::cell::Cell;
 use std::sync::OnceLock;
 
+// SHERLOCK ROW
 // Object holding the state
 #[derive(Default)]
 pub struct SherlockRow {
