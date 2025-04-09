@@ -21,12 +21,14 @@ impl Loader {
         })?;
 
         // Load the base line css
-        provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
-        gtk4::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
+        if config.appearance.use_base_css {
+            provider.load_from_resource("/dev/skxxtz/sherlock/main.css");
+            gtk4::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+        }
 
         // Load the user css
         if Path::new(&config.files.css).exists() {

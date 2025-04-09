@@ -294,6 +294,9 @@ pub struct ConfigAppearance {
     pub icon_size: i32,
     #[serde(default)]
     pub search_icon: bool,
+    #[serde(default = "default_true")]
+    pub use_base_css: bool,
+
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
@@ -304,6 +307,7 @@ impl Default for ConfigAppearance {
             icon_paths: Default::default(),
             icon_size: default_icon_size(),
             search_icon: false,
+            use_base_css: true,
         }
     }
 }
