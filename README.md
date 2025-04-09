@@ -173,7 +173,7 @@ Make sure you have the following dependencies installed:
 
 #### <ins>Nix Flake</ins>
 
-Add `sherlock.url = "github:Skxxtz/sherlock";` to the `inputs` of `flake.nix`. Sherlcok can be installed either as a standalone package; or managed with `home-manager`, which both installs and generates configuration files.
+Add `sherlock.url = "github:Skxxtz/sherlock";` to the `inputs` of `flake.nix`. Sherlock can be installed either as a standalone package; or managed with `home-manager`, which both installs and generates configuration files.
 
 To install the standalone package, add `sherlock.packages.${pkgs.system}.default` to `environment.systemPackages`. You will need to create the configuration files yourself, see below.
 
