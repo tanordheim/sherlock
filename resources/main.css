@@ -5,7 +5,7 @@
     --border: 0, 0%, 19%;
 
 
-    --tag-background: 180, 13%, 37%;
+    --tag-background: 180, 0%, 30%;
     --tag-color: 220, 10%, 100%;
     --error: 4, 71%, 62%;
     --warning: 55, 100%, 68%;
@@ -16,6 +16,7 @@
 --error: 0, 89%, 59%;
 --success: 102, 36%, 53%;
 */
+
 
 overshoot *,
 undershoot *,
@@ -41,6 +42,7 @@ overshoot:backdrop {
     outline-offset: -3px;
     outline-style: dashed;
     line-height: 1;
+    font-family: "Cantarell";
 }
 
 #overlay spinner{
@@ -53,12 +55,12 @@ overshoot:backdrop {
     background: transparent;
 }
 
-scrolledwindow>viewport *,
 scrolledwindow>viewport,
-window,
-box {
+scrolledwindow>viewport>*,
+window {
     background: hsl(var(--background));
 }
+
 
 label {
     color: hsl(var(--text));
@@ -74,7 +76,7 @@ window {
 /* SEARCH PAGE */
 #search-bar {
     outline: none;
-    border: 1px solid hsla(var(--border), 1);
+    border: none;
     background: hsla(var(--background), 1);
     min-height: 40px;
     color: hsl(var(--text));
@@ -83,7 +85,29 @@ window {
 }
 
 #search-bar-holder {
-    padding: 10px 10px 0px 10px;
+    border-bottom: 2px solid hsl(var(--border));
+    padding: 5px 10px 4px 10px;
+}
+
+/*Setting up animations for search icons*/
+#search-icon-holder image {
+    transition: 0.1s ease;
+}
+#search-icon-holder.search image:nth-child(1){
+    opacity: 1;
+}
+#search-icon-holder.search image:nth-child(2){
+    opacity: 0;
+}
+#search-icon-holder.back image:nth-child(1){
+    opacity: 0;
+}
+#search-icon-holder.back image:nth-child(2){
+    opacity: 1;
+}
+
+#search-icon {
+    margin-left: 10px;
 }
 
 #search-bar:focus {
@@ -133,6 +157,10 @@ image {
     margin-bottom: 5px;
     border-radius: 4px;
 }
+.tile:hover *,
+.tile:hover{
+    background: transparent;
+}
 .tile.animate {
     transform: translateY(20px); 
     opacity: 0;
@@ -151,10 +179,12 @@ image {
 
 @keyframes fadeInUp {
     from {
+        letter-spacing: 1px;
         opacity: 0;
         transform: translateY(20px);
     }
     to {
+        letter-spacing: 0px;
         opacity: 1;
         transform: translate(0px);
     }
@@ -170,12 +200,7 @@ image {
     padding: 0px;
 }
 
-#color-icon-holder{
-    border-radius: 50px;
-}
-
-.tile:selected,
-.tile:selected * {
+.tile:selected {
     transition: 0.1s ease;
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);
@@ -189,6 +214,9 @@ image {
     border-radius: 3px;
     padding: 2px 8px;
     color: hsl(var(--tag-color));
+    box-shadow: 0px 0px 10px 0px rgba(2,2,2,0.4);
+    border: 1px solid hsla(var(--text), 0.1);
+    margin-left: 7px;
 }
 
 .tile:selected .tag-start,
@@ -210,6 +238,9 @@ image {
     color: hsla(var(--text), 0.4);
     margin-left: 0px;
 }
+#color-icon-holder{
+    border-radius: 50px;
+}
 
 
 /*SHORTCUT*/
@@ -218,21 +249,28 @@ image {
     padding: 5px 10px;
     background: hsla(var(--foreground), 0.5);
     border-radius: 5px;
+    border: 1px solid hsla(var(--text), 0.1);
+    box-shadow: 0px 0px 6px 0px rgba(15,15,15,1);
 }
 
 .tile:selected #shortcut-holder {
     background: hsla(var(--background), 0.5);
     background-color: hsla(var(--background), 0.5);
     color: hsla(var(--text), 0.5);
+    box-shadow: 0px 0px 6px 0px rgba(22,22,22,1);
 }
 
-#shortcut {
+#shortcut, #shortcut-modkey{
     background: hsla(var(--background), 0);
     background-color: hsla(var(--background), 0);
     font-size: 11px;
     font-weight: bold;
     color: hsla(var(--text), 0.5);
 }
+#shortcut-modkey{
+    font-size: 13px;
+}
+
 
 /*CALCULATOR*/
 .calc-tile {
@@ -252,12 +290,18 @@ image {
 
 /*EVENT TILE*/
 .tile.tile.event-tile {
-    padding: 10px;
+    padding: 5px 10px;
+}
+.tile.event-tile #title-label {
+    padding: 2px 0px 7px 5px;
+    text-transform: capitalize;
 }
 .tile.event-tile #time-label{
     font-size: 3rem;
 }
-
+#end-time-label {
+    color: gray;
+}
 
 
 
@@ -290,6 +334,31 @@ image {
     min-height: 20px;
 }
 
+
+
+/* MPRIS TILE*/
+#mpris-icon-holder{
+    border-radius: 5px;
+}
+/*Animation for replacing album covers*/
+.image-replace-overlay #album-cover{
+    opacity: 1;
+    /* animation: replace-image 0.5s forwards; */
+}
+@keyframes replace-image {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+    
+}
+
+
+
+
+
 /* NEXT PAGE */
 .next_tile {
     color: hsl(var(--text));
@@ -300,11 +369,12 @@ image {
     padding: 10px;
     color: hsl(var(--text));
 }
-.raw_text .next_tile #content-body {
+.raw_text, .next_tile #content-body {
     font-family: 'Fira Code', monospace;
     font-feature-settings: "kern" off;
     font-kerning: None;
 }
+
 
 /*Error*/
 .error-tile #scroll-window {
