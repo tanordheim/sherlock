@@ -4,7 +4,7 @@ self: {
   pkgs,
   ...
 }: let
-  inherit (lib) mkIf mkOption types;
+  inherit (lib) mkIf mkMerge mkOption types;
   cfg = config.programs.sherlock;
   aliasType = with types;
     submodule {
@@ -27,7 +27,8 @@ self: {
         };
       };
     };
-  # TODO(Vanta_1): fix this up into a proper type
+  # TODO(Vanta_1): fix these up into proper types
+  configType = types.anything;
   launcherType = types.anything;
 in {
   options.programs.sherlock = with types; {
@@ -39,7 +40,6 @@ in {
       type = submodule {
         options = {
           aliases = mkOption {
-            default = null;
             description = ''
               'sherlock_alias.json' file contents in Nix syntax, e.g.
 
@@ -55,16 +55,24 @@ in {
               }
               ```
             '';
+            default = {};
             type = nullOr (attrsOf aliasType);
           };
+          config = mkOption {
+            description = ''
+              `config.json` in Nix syntax.
+            '';
+            default = {};
+            type = nullOr (attrsOf configType);
+          };
           ignore = mkOption {
-            default = "";
             description = "'sherlockignore' file contents.";
-            type = lines;
+            default = "";
+            type = nullOr lines;
           };
           launchers = mkOption {
-            default = null;
             description = "'fallback.json' in Nix syntax. See ```settings.aliases``` for a similar example.";
+            default = [];
             type = nullOr (listOf launcherType);
           };
         };
@@ -72,20 +80,25 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    home.packages = [self.packages.${pkgs.system}.default];
-
-    # sherlock expects all these files to exist
-    xdg.configFile."sherlock/sherlock_alias.json".text =
-      if cfg.settings.aliases != null
-      then builtins.toJSON cfg.settings.aliases
-      else "{}";
-
-    xdg.configFile."sherlock/sherlockignore".text = cfg.settings.ignore;
-
-    xdg.configFile."sherlock/fallback.json".text =
-      if cfg.settings.launchers != null
-      then builtins.toJSON cfg.settings.launchers
-      else "[]";
-  };
+  config = mkIf cfg.enable (mkMerge [
+    {
+      # always install the package, because why else would you include the home-manager module.
+      # this could be made more customizable if `flake.nix` outputted nightly/unstable & release packages
+      home.packages = [self.packages.${pkgs.system}.default];
+    }
+    (mkIf (cfg.settings != null) (mkMerge [
+      (mkIf (cfg.settings.aliases != null) {
+        xdg.configFile."sherlock/sherlock_alias.json".text = builtins.toJSON cfg.settings.aliases;
+      })
+      (mkIf (cfg.settings.config != null) {
+        xdg.configFile."sherlock/config.json".text = builtins.toJSON cfg.settings.config;
+      })
+      (mkIf (cfg.settings.ignore != null) {
+        xdg.configFile."sherlock/sherlockignore".text = cfg.settings.ignore;
+      })
+      (mkIf (cfg.settings.launchers != null) {
+        xdg.configFile."sherlock/fallback.json".text = builtins.toJSON cfg.settings.launchers;
+      })
+    ]))
+  ]);
 }
