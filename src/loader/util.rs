@@ -245,6 +245,8 @@ pub struct ConfigUnits {
     pub lengths: String,
     #[serde(default = "default_weights")]
     pub weights: String,
+    #[serde(default = "default_volumes")]
+    pub volumes: String,
     #[serde(default = "default_currency")]
     pub _currency: String,
 }
@@ -253,6 +255,7 @@ impl Default for ConfigUnits {
         Self {
             lengths: default_measurements(),
             weights: default_weights(),
+            volumes: default_volumes(),
             _currency: default_currency(),
         }
     }
@@ -420,11 +423,14 @@ pub fn default_teams() -> String {
 pub fn default_calendar_client() -> String {
     String::from("thunderbird")
 }
+pub fn default_measurements() -> String {
+    String::from("meters")
+}
 pub fn default_weights() -> String {
     String::from("kg")
 }
-pub fn default_measurements() -> String {
-    String::from("meters")
+pub fn default_volumes() -> String {
+    String::from("l")
 }
 pub fn default_currency() -> String {
     String::from("eur")

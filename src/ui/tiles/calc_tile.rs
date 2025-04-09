@@ -19,7 +19,7 @@ impl Tile {
     ) -> Vec<ResultItem> {
         let capabilities: HashSet<&str> = match &calc_launcher.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
-            _ => HashSet::from(["calc.math", "calc.lengths", "calc.weights"]),
+            _ => HashSet::from(["calc.math", "calc.units"]),
         };
         let mut result: Option<String> = None;
 
@@ -31,12 +31,16 @@ impl Tile {
             }
         }
 
-        if capabilities.contains("calc.lengths") && result.is_none() {
+        if (capabilities.contains("calc.lengths") || capabilities.contains("calc.units")) && result.is_none() {
             result = calc_launcher.measurement(&keyword, "lengths").map(|r| r.to_string());
         }
 
-        if capabilities.contains("calc.weights") && result.is_none() {
+        if  (capabilities.contains("calc.weights") || capabilities.contains("calc.units")) && result.is_none() {
             result = calc_launcher.measurement(&keyword, "weights").map(|r| r.to_string());
+        }
+
+        if  (capabilities.contains("calc.volumes") || capabilities.contains("calc.units")) && result.is_none() {
+            result = calc_launcher.measurement(&keyword, "volumes").map(|r| r.to_string());
         }
 
         if let Some(r) = result {

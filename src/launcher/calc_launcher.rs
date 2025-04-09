@@ -33,9 +33,9 @@ impl Calculator {
             let from = caps[2].to_lowercase();
             let to = match unit_str {
                 "weights" => config.units.weights.to_lowercase(),
+                "volumes" => config.units.volumes.to_lowercase(),
                 _ => config.units.lengths.to_lowercase()
             };
-            println!("{:?}", to);
 
             let (factor_from, _) = Measurements::match_unit(&from, unit_str)?;
             let (factor_to, name) = Measurements::match_unit(&to, unit_str)?;
@@ -63,6 +63,7 @@ impl Measurements {
     fn match_unit(unit:&str, unit_str: &str) -> Option<(f32, String)>{
         match unit_str {
             "weights" => Weight::match_unit(unit),
+            "volumes" => Volume::match_unit(unit),
             _ => Length::match_unit(unit)
         }
     }
@@ -118,6 +119,11 @@ impl Weight {
     pub const POUND: f32 = 0.453592;
     pub const OUNCE: f32 = 0.0283495;
 
+    pub const TABLESPOON: f32 = 0.015;
+    pub const TEASPOON: f32 = 0.005;
+    pub const PINCH: f32 = 0.00036;
+    pub const DASH: f32 = 0.0006;
+
     fn match_unit(unit: &str) -> Option<(f32, String)> {
         match unit.to_lowercase().as_str() {
             "kilograms" | "kilogram" | "kg" => {
@@ -134,8 +140,40 @@ impl Weight {
                 Some((Weight::OUNCE, String::from("Ounce")))
             }
 
+            "tablespoons" | "tablespoon" | "tbsp" => Some((Weight::TABLESPOON, String::from("Tablespoon"))),
+            "teaspoons" | "teaspoon" | "tsp" => Some((Weight::TEASPOON, String::from("Teaspoon"))),
+            "pinch" | "pinches" => Some((Weight::PINCH, String::from("Pinch"))),
+            "dash" | "dashes" => Some((Weight::DASH, String::from("Dash"))),
+
             _ => None,
         }
     }
 
 }
+pub struct Volume;
+impl Volume {
+    pub const LITER: f32 = 1.0;
+    pub const MILLILITER: f32 = 0.001;
+    pub const CUBIC_METER: f32 = 1000.0;
+    pub const GALLON: f32 = 3.78541;
+    pub const QUART: f32 = 0.946353;
+    pub const PINT: f32 = 0.473176;
+    pub const CUP: f32 = 0.24;
+    pub const FLUID_OUNCE: f32 = 0.0295735;
+
+    pub fn match_unit(unit: &str) -> Option<(f32, String)> {
+        match unit.to_lowercase().as_str() {
+            "liters" | "liter" | "l" => Some((Volume::LITER, String::from("Liter"))),
+            "milliliters" | "milliliter" | "ml" => Some((Volume::MILLILITER, String::from("Milliliter"))),
+            "cubicmeters" | "cubicmeter" | "m3" => Some((Volume::CUBIC_METER, String::from("Cubic Meter"))),
+            "gallons" | "gallon" | "gal" => Some((Volume::GALLON, String::from("Gallon"))),
+            "quarts" | "quart" | "qt" => Some((Volume::QUART, String::from("Quart"))),
+            "pints" | "pint" | "pt" => Some((Volume::PINT, String::from("Pint"))),
+            "cups" | "cup" => Some((Volume::CUP, String::from("Cup"))),
+            "fluidounces" | "fluidounce" | "fl oz" | "oz" => Some((Volume::FLUID_OUNCE, String::from("Fluid Ounce"))),
+
+            _ => None,
+        }
+    }
+}
+
