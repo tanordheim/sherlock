@@ -1,12 +1,11 @@
 use gio::ActionEntry;
-use gtk4::subclass::application_window;
-use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, EventControllerKey, Image,
 };
+use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -43,7 +42,14 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
 
     let custom_binds = ConfKeys::new();
 
-    change_event(&ui.search_bar, modes, &mode, &launchers, &results, &custom_binds);
+    change_event(
+        &ui.search_bar,
+        modes,
+        &mode,
+        &launchers,
+        &results,
+        &custom_binds,
+    );
     nav_event(results, ui, mode, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
@@ -56,11 +62,8 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
         .parameter_type(Some(&String::static_variant_type()))
         .state(original_mode.to_variant())
         .activate(move |_, action, parameter| {
-            let state = action
-                .state()
-                .and_then(|s| s.get::<String>());
-            let parameter = parameter
-                .and_then(|p| p.get::<String>());
+            let state = action.state().and_then(|s| s.get::<String>());
+            let parameter = parameter.and_then(|p| p.get::<String>());
 
             if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
                 parameter.push_str(" ");
@@ -180,7 +183,9 @@ fn nav_event(
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        let _ = ui.search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+                        let _ = ui
+                            .search_bar
+                            .activate_action("win.switch-mode", Some(&"all".to_variant()));
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
@@ -276,7 +281,8 @@ fn change_event(
             if !trimmed.is_empty() && modes.contains_key(&current_text) {
                 // Logic to apply modes
                 if modes.contains_key(&current_text) {
-                    let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+                    let _ =
+                        search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
                     current_text.clear();
                 }
             }

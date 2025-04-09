@@ -6,11 +6,11 @@ pub mod app_launcher;
 pub mod audio_launcher;
 pub mod bulk_text_launcher;
 pub mod calc_launcher;
+pub mod category_launcher;
 pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
-pub mod category_launcher;
 mod utils;
 pub mod web_launcher;
 
@@ -20,10 +20,10 @@ use crate::{
 };
 
 use app_launcher::App;
-use category_launcher::CategoryLauncher;
 use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calculator;
+use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;

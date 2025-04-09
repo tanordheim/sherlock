@@ -6,7 +6,9 @@ use std::collections::HashSet;
 use super::util::TileBuilder;
 use super::Tile;
 use crate::{
-    actions::{execute_from_attrs, get_attrs_map}, g_subclasses::sherlock_row::SherlockRow, launcher::{calc_launcher::Calculator, Launcher, ResultItem}
+    actions::{execute_from_attrs, get_attrs_map},
+    g_subclasses::sherlock_row::SherlockRow,
+    launcher::{calc_launcher::Calculator, Launcher, ResultItem},
 };
 
 impl Tile {

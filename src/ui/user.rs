@@ -1,5 +1,8 @@
 use gtk4::{
-    self, gdk::{self, Key}, prelude::*, Builder, Entry, EventControllerKey, Justification
+    self,
+    gdk::{self, Key},
+    prelude::*,
+    Builder, Entry, EventControllerKey, Justification,
 };
 
 use gtk4::{Box as HVBox, ListBox, ScrolledWindow};

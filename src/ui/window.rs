@@ -1,8 +1,8 @@
 use std::fs;
 
 use gio::ActionEntry;
-use gtk4::{Builder, Stack};
 use gtk4::{prelude::*, Application, ApplicationWindow};
+use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
 
 use crate::application::util::reload_content;
@@ -28,12 +28,11 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
 
     let action_close = ActionEntry::builder("close")
         .activate(|window: &ApplicationWindow, _, _| {
-            if let Some(c) = CONFIG.get(){
+            if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
                     true => hide_app(),
                     false => window.destroy(),
                 }
-
             };
         })
         .build();
