@@ -347,7 +347,7 @@ pub fn async_calc(
     if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
-    let is_home = current_text.is_empty() && mode.borrow().as_str() == "all";
+    let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
     let cancel_flag = Rc::clone(&cancel_flag);
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
