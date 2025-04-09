@@ -83,20 +83,6 @@ image.reactive {
 }
 
 /*EVENT TILE*/
-.tile.event-tile {
-    padding: 5px 10px;
-}
-.tile.event-tile #title-label {
-    padding: 2px 0px 7px 5px;
-    text-transform: capitalize;
-}
-.tile.event-tile #time-label{
-    font-size: 3rem;
-}
-#end-time-label {
-    color: gray;
-}
-
 .tile.event-tile:selected #time-label,
 .tile.event-tile:selected #title-label{
     color: hsla(var(--text-active), 0.6);
