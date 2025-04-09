@@ -34,7 +34,7 @@ impl Calculator {
             let to = match unit_str {
                 "weights" => config.units.weights.to_lowercase(),
                 "volumes" => config.units.volumes.to_lowercase(),
-                _ => config.units.lengths.to_lowercase()
+                _ => config.units.lengths.to_lowercase(),
             };
 
             let (factor_from, _) = Measurements::match_unit(&from, unit_str)?;
@@ -55,16 +55,13 @@ impl Calculator {
     }
 }
 
-
-
-
 enum Measurements {}
 impl Measurements {
-    fn match_unit(unit:&str, unit_str: &str) -> Option<(f32, String)>{
+    fn match_unit(unit: &str, unit_str: &str) -> Option<(f32, String)> {
         match unit_str {
             "weights" => Weight::match_unit(unit),
             "volumes" => Volume::match_unit(unit),
-            _ => Length::match_unit(unit)
+            _ => Length::match_unit(unit),
         }
     }
 }
@@ -81,7 +78,7 @@ impl Length {
     pub const YARD: f32 = 0.9144;
     pub const MILE: f32 = 1609.34;
 
-    fn match_unit(unit:&str) -> Option<(f32, String)> {
+    fn match_unit(unit: &str) -> Option<(f32, String)> {
         match unit.to_lowercase().as_str() {
             // Metric units
             "kilometers" | "kilometer" | "kilos" | "km" => {
@@ -109,7 +106,6 @@ impl Length {
     }
 }
 
-
 pub struct Weight;
 impl Weight {
     // Weight units
@@ -126,21 +122,17 @@ impl Weight {
 
     fn match_unit(unit: &str) -> Option<(f32, String)> {
         match unit.to_lowercase().as_str() {
-            "kilograms" | "kilogram" | "kg" => {
-                Some((Weight::KILOGRAM, String::from("Kilogram")))
-            }
+            "kilograms" | "kilogram" | "kg" => Some((Weight::KILOGRAM, String::from("Kilogram"))),
             "grams" | "gram" | "g" => Some((Weight::GRAM, String::from("Gram"))),
             "milligrams" | "milligram" | "mg" => {
                 Some((Weight::MILLIGRAM, String::from("Milligram")))
             }
-            "pounds" | "pound" | "lbs" => {
-                Some((Weight::POUND, String::from("Pound")))
-            }
-            "ounces" | "ounce" | "oz" => {
-                Some((Weight::OUNCE, String::from("Ounce")))
-            }
+            "pounds" | "pound" | "lbs" => Some((Weight::POUND, String::from("Pound"))),
+            "ounces" | "ounce" | "oz" => Some((Weight::OUNCE, String::from("Ounce"))),
 
-            "tablespoons" | "tablespoon" | "tbsp" => Some((Weight::TABLESPOON, String::from("Tablespoon"))),
+            "tablespoons" | "tablespoon" | "tbsp" => {
+                Some((Weight::TABLESPOON, String::from("Tablespoon")))
+            }
             "teaspoons" | "teaspoon" | "tsp" => Some((Weight::TEASPOON, String::from("Teaspoon"))),
             "pinch" | "pinches" => Some((Weight::PINCH, String::from("Pinch"))),
             "dash" | "dashes" => Some((Weight::DASH, String::from("Dash"))),
@@ -148,7 +140,6 @@ impl Weight {
             _ => None,
         }
     }
-
 }
 pub struct Volume;
 impl Volume {
@@ -164,16 +155,21 @@ impl Volume {
     pub fn match_unit(unit: &str) -> Option<(f32, String)> {
         match unit.to_lowercase().as_str() {
             "liters" | "liter" | "l" => Some((Volume::LITER, String::from("Liter"))),
-            "milliliters" | "milliliter" | "ml" => Some((Volume::MILLILITER, String::from("Milliliter"))),
-            "cubicmeters" | "cubicmeter" | "m3" => Some((Volume::CUBIC_METER, String::from("Cubic Meter"))),
+            "milliliters" | "milliliter" | "ml" => {
+                Some((Volume::MILLILITER, String::from("Milliliter")))
+            }
+            "cubicmeters" | "cubicmeter" | "m3" => {
+                Some((Volume::CUBIC_METER, String::from("Cubic Meter")))
+            }
             "gallons" | "gallon" | "gal" => Some((Volume::GALLON, String::from("Gallon"))),
             "quarts" | "quart" | "qt" => Some((Volume::QUART, String::from("Quart"))),
             "pints" | "pint" | "pt" => Some((Volume::PINT, String::from("Pint"))),
             "cups" | "cup" => Some((Volume::CUP, String::from("Cup"))),
-            "fluidounces" | "fluidounce" | "fl oz" | "oz" => Some((Volume::FLUID_OUNCE, String::from("Fluid Ounce"))),
+            "fluidounces" | "fluidounce" | "fl oz" | "oz" => {
+                Some((Volume::FLUID_OUNCE, String::from("Fluid Ounce")))
+            }
 
             _ => None,
         }
     }
 }
-

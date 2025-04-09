@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use zbus::zvariant::Str;
 use std::collections::HashSet;
 use std::env;
 use std::fs::File;
@@ -296,7 +295,6 @@ pub struct ConfigAppearance {
     pub search_icon: bool,
     #[serde(default = "default_true")]
     pub use_base_css: bool,
-
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
