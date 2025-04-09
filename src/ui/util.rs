@@ -3,8 +3,6 @@ use gtk4::gdk::{Key, ModifierType, Rectangle};
 use gtk4::{
     prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType,
 };
-use std::cell::RefCell;
-use std::rc::Rc;
 
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::{APP_STATE, CONFIG};
@@ -49,12 +47,6 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
             }
         }
     }
-}
-
-pub fn set_mode(mode_title: &Label, mode_c: &Rc<RefCell<String>>, ctext: &str, mode_name: &str) {
-    let new_mode = ctext.to_string();
-    mode_title.set_text(mode_name);
-    *mode_c.borrow_mut() = new_mode;
 }
 
 pub trait RowOperations {

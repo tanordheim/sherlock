@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
+use gio::glib::variant::ToVariant;
+use gtk4::prelude::WidgetExt;
 use teamslaunch::teamslaunch;
 use util::eval_exit;
 
 use crate::{
-    launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
-    loader::launcher_loader::CounterReader,
-    ui::user::{display_next, display_raw},
+    g_subclasses::sherlock_row::SherlockRow, launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher}, loader::launcher_loader::CounterReader, ui::user::{display_next, display_raw}
 };
 
 pub mod applaunch;
@@ -15,7 +15,7 @@ pub mod teamslaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs(attrs: &HashMap<String, String>) {
+pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
     //construct HashMap
     let attrs: HashMap<String, String> = attrs
         .into_iter()
@@ -24,6 +24,11 @@ pub fn execute_from_attrs(attrs: &HashMap<String, String>) {
 
     if let Some(method) = attrs.get("method") {
         match method.as_str() {
+            "categories" => {
+                attrs.get("exec").map(|mode| {
+                    let _ =row.activate_action("win.switch-mode", Some(&mode.to_variant()));
+                });
+            },
             "app_launcher" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);

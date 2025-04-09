@@ -136,6 +136,7 @@ async fn main() {
         app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
 
         // creating app state
+        let window_clone = window.clone();
         let state = Rc::new(AppState {
             window: Some(window),
             stack: Some(stack),
@@ -147,7 +148,7 @@ async fn main() {
         // Either show user-specified content or show normal search
         let pipe = Loader::load_pipe_args();
         if pipe.is_empty() {
-            ui::search::search(&launchers);
+            ui::search::search(&launchers, &window_clone);
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);

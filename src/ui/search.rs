@@ -1,4 +1,6 @@
-use gtk4::glib;
+use gio::ActionEntry;
+use gtk4::subclass::application_window;
+use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
@@ -13,7 +15,6 @@ use std::rc::Rc;
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
 use crate::actions::execute_from_attrs;
-use crate::g_subclasses::sherlock_input::SherlockInput;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
 use crate::{AppState, APP_STATE, CONFIG};
@@ -23,27 +24,66 @@ struct SearchUI {
     result_viewport: ScrolledWindow,
     // will be later used for split view to display information about apps/commands
     preview_box: HVBox,
-    search_bar: SherlockInput,
+    search_bar: Entry,
     search_icon: Image,
     mode_title: Label,
 }
 
-pub fn search(launchers: &Vec<Launcher>) {
+pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
     // Initialize the view to show all apps
     let (mode, modes, vbox, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     ui.search_bar.grab_focus();
 
+    let search_bar_clone = ui.search_bar.clone();
+    let mode_title_clone = ui.mode_title.clone();
+    let modes_clone = modes.clone();
+    let mode_clone = Rc::clone(&mode);
+
     let custom_binds = ConfKeys::new();
 
-    change_event(&ui, modes, &mode, &launchers, &results, &custom_binds);
+    change_event(&ui.search_bar, modes, &mode, &launchers, &results, &custom_binds);
     nav_event(results, ui, mode, custom_binds);
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
             state.add_stack_page(vbox, "search-page");
         }
     });
+
+    let original_mode = String::from("all");
+    let mode_action = ActionEntry::builder("switch-mode")
+        .parameter_type(Some(&String::static_variant_type()))
+        .state(original_mode.to_variant())
+        .activate(move |_, action, parameter| {
+            let state = action
+                .state()
+                .and_then(|s| s.get::<String>());
+            let parameter = parameter
+                .and_then(|p| p.get::<String>());
+
+            if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
+                parameter.push_str(" ");
+                let mode_name = modes_clone.get(&parameter);
+                match mode_name {
+                    Some(name) => {
+                        *mode_clone.borrow_mut() = parameter.clone();
+                        mode_title_clone.set_text(&name);
+                        state = parameter;
+                    }
+                    _ => {
+                        mode_title_clone.set_text("All");
+                        parameter = String::from("all ");
+                        *mode_clone.borrow_mut() = parameter.clone();
+                        state = parameter;
+                    }
+                }
+                search_bar_clone.set_text("");
+                action.set_state(&state.to_variant());
+            }
+        })
+        .build();
+    window.add_action_entries([mode_action]);
 }
 
 fn construct_window(
@@ -72,18 +112,10 @@ fn construct_window(
     let vbox: HVBox = builder.object("vbox").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
 
-    // Append content to the sherlock row
-    let search_bar_holder: HVBox = builder.object("search-bar-holder").unwrap_or_default();
-    let search_bar = SherlockInput::new();
-    search_bar.set_widget_name("search-bar");
-    search_bar.set_hexpand(true);
-    search_bar.set_placeholder_text(Some("Search:"));
-    search_bar_holder.append(&search_bar);
-
     let ui = SearchUI {
         result_viewport: builder.object("scrolled-window").unwrap_or_default(),
         preview_box: builder.object("preview_box").unwrap_or_default(),
-        search_bar,
+        search_bar: builder.object("search-bar").unwrap_or_default(),
         search_icon: builder.object("search-icon").unwrap_or_default(),
         mode_title: builder.object("category-type-label").unwrap_or_default(),
     };
@@ -148,7 +180,7 @@ fn nav_event(
                     let _ = &ui.search_bar.set_text("");
                 } else {
                     if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        set_mode(&ui.mode_title, &mode, "all", &"All".to_string());
+                        let _ = ui.search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
                         // to trigger homescreen rebuild
                         let _ = &ui.search_bar.set_text("a");
                         let _ = &ui.search_bar.set_text("");
@@ -203,7 +235,7 @@ fn nav_event(
 }
 
 fn change_event(
-    ui: &SearchUI,
+    search_bar: &Entry,
     modes: HashMap<String, String>,
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
@@ -229,8 +261,7 @@ fn change_event(
         true,
     );
 
-    ui.search_bar.connect_changed({
-        let mode_title_clone = ui.mode_title.clone();
+    search_bar.connect_changed({
         let launchers_clone = launchers.clone();
         let mode_clone = Rc::clone(mode);
         let results_clone = Rc::clone(results);
@@ -241,16 +272,11 @@ fn change_event(
                 task.abort();
             };
             *cancel_flag.borrow_mut() = true;
-            if !current_text.trim().is_empty() && modes.contains_key(&current_text) {
+            let trimmed = current_text.trim();
+            if !trimmed.is_empty() && modes.contains_key(&current_text) {
                 // Logic to apply modes
-                if let Some(mode_name) = modes.get(&current_text) {
-                    set_mode(&mode_title_clone, &mode_clone, &current_text, mode_name);
-                    // Logic to safely reset the search bar
-                    let search_bar_clone = search_bar.clone();
-                    glib::idle_add_local(move || {
-                        search_bar_clone.set_text("");
-                        glib::ControlFlow::Break
-                    });
+                if modes.contains_key(&current_text) {
+                    let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
                     current_text.clear();
                 }
             }
@@ -372,8 +398,9 @@ pub fn async_calc(
                 widget
                     .result_item
                     .row_item
-                    .connect("row-should-activate", false, move |_row| {
-                        execute_from_attrs(&attrs);
+                    .connect("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        execute_from_attrs(&row, &attrs);
                         None
                     });
             }

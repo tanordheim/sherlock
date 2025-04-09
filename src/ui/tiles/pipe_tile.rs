@@ -67,8 +67,9 @@ impl Tile {
 
                 builder
                     .object
-                    .connect("row-should-activate", false, move |_row| {
-                        execute_from_attrs(&attrs);
+                    .connect("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        execute_from_attrs(&row, &attrs);
                         None
                     });
                 results.push(builder.object);

@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use crate::actions::util::read_from_clipboard;
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
 use crate::launcher::calc_launcher::Calculator;
+use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::{
@@ -66,6 +67,19 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                 .map(|(_, v)| v.to_string().len())
                 .unwrap_or(0) as i32;
             let launcher_type: LauncherType = match cmd.r#type.as_str() {
+                "categories" => {
+                    let prio = cmd.priority;
+                    let mut categories: HashMap<String, AppData> =
+                        serde_json::from_value(cmd.args["categories"].clone()).unwrap_or_default();
+                    categories.iter_mut().for_each(|(_, v)| {
+                        v.priority = match counts_clone.get(&v.exec) {
+                            Some(c) if c == &0.0 => prio,
+                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                            _ => prio,
+                        };
+                    });
+                    LauncherType::CategoryLauncher(CategoryLauncher { categories })
+                }
                 "app_launcher" => {
                     let mut apps: HashMap<String, AppData> = HashMap::new();
                     if let Some(c) = CONFIG.get() {

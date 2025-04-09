@@ -3,6 +3,7 @@ use gio::glib::object::ObjectExt;
 use super::util::TileBuilder;
 use super::Tile;
 use crate::actions::{execute_from_attrs, get_attrs_map};
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::web_launcher::Web;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -37,8 +38,9 @@ impl Tile {
         }
         builder
             .object
-            .connect("row-should-activate", false, move |_row| {
-                execute_from_attrs(&attrs);
+            .connect("row-should-activate", false, move |row| {
+                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                execute_from_attrs(&row, &attrs);
                 None
             });
 

@@ -13,6 +13,13 @@
                         <property name="icon-name">search</property>
                     </object>
                 </child>
+                <child>
+                    <object class="GtkEntry" id="search-bar">
+                        <property name="placeholder-text">Search:</property>
+                        <property name="name">search-bar</property>
+                        <property name="hexpand">true</property>
+                    </object>
+                </child>
             </object>
         </child>
 

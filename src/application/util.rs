@@ -1,7 +1,6 @@
-use gtk4::{prelude::*, ApplicationWindow};
+use gtk4::{prelude::*, ApplicationWindow, Entry};
 use gtk4::{EventController, Stack, Widget};
 
-use crate::g_subclasses::sherlock_input::SherlockInput;
 use crate::loader::pipe_loader::deserialize_pipe;
 use crate::loader::util::SherlockError;
 use crate::loader::Loader;
@@ -11,7 +10,7 @@ use crate::{ui, CONFIG, FLAGS};
 pub struct AppState {
     pub window: Option<ApplicationWindow>,
     pub stack: Option<Stack>,
-    pub search_bar: Option<SherlockInput>,
+    pub search_bar: Option<Entry>,
 }
 impl AppState {
     pub fn add_stack_page<T, U>(&self, child: T, name: U)
@@ -36,7 +35,7 @@ impl AppState {
     }
 }
 
-pub fn reload_content() -> Option<()> {
+pub fn reload_content(window: &ApplicationWindow) -> Option<()> {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let app_config = CONFIG.get()?;
@@ -50,7 +49,7 @@ pub fn reload_content() -> Option<()> {
     non_breaking.extend(n);
     let pipe = Loader::load_pipe_args();
     if pipe.is_empty() {
-        ui::search::search(&launchers);
+        ui::search::search(&launchers, &window);
     } else {
         if sherlock_flags.display_raw {
             let pipe = String::from_utf8_lossy(&pipe);

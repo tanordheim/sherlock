@@ -51,12 +51,14 @@ fn hide_app() {
 }
 
 pub fn show_window(reload: bool) {
-    if reload {
-        reload_content();
-    };
     APP_STATE.with(|state| {
         if let Some(ref state) = *state.borrow() {
-            state.window.as_ref().map(|window| window.present());
+            state.window.as_ref().map(|window| {
+                if reload {
+                    reload_content(&window);
+                };
+                window.present();
+            });
         }
     });
 }

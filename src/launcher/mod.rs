@@ -10,6 +10,7 @@ pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
+pub mod category_launcher;
 mod utils;
 pub mod web_launcher;
 
@@ -19,6 +20,7 @@ use crate::{
 };
 
 use app_launcher::App;
+use category_launcher::CategoryLauncher;
 use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkText;
 use calc_launcher::Calculator;
@@ -30,6 +32,7 @@ use web_launcher::Web;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
+    CategoryLauncher(CategoryLauncher),
     App(App),
     Web(Web),
     Calc(Calculator),
@@ -70,6 +73,7 @@ impl Launcher {
     // TODO: tile method recreates already stored data...
     pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
         match &self.launcher_type {
+            LauncherType::CategoryLauncher(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
             LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
@@ -100,6 +104,14 @@ impl Launcher {
             LauncherType::SystemCommand(cmd) => {
                 let execs: HashSet<String> = cmd
                     .commands
+                    .iter()
+                    .map(|(_, v)| v.exec.to_string())
+                    .collect();
+                Some(execs)
+            }
+            LauncherType::CategoryLauncher(ctg) => {
+                let execs: HashSet<String> = ctg
+                    .categories
                     .iter()
                     .map(|(_, v)| v.exec.to_string())
                     .collect();
