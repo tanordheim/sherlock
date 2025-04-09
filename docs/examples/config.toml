@@ -20,6 +20,7 @@ gsk_renderer            = "cairo"
 recolor_icons           = false                                     
 icon_paths              = [ "~/.config/sherlock/icons"]             
 icon_size               = 22                                        
+search_icon             = true                                        
 use_base_css            = true
 
 [behavior]

@@ -42,6 +42,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `recolor_icons` | `false`     | REMOVED |
 | `icon_paths`    | `[]`        | Defines custom paths for the application to search for icons. This is useful for adding custom icons for commands or aliases through the `sherlockalias` file. |
 | `icon_size`    | `22`        | Sets the default icon size for the icons in each tile. |
+| `search_icon`    | `true`        | Enables or disables the use of the search icon |
 | `use_base_css`    | `true`        | Enables or disables the extension of Sherlock's default style sheet. |
 
 ---
