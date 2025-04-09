@@ -1,5 +1,6 @@
 // CRATES
 use gio::prelude::*;
+use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
 use loader::util::{SherlockErrorType, SherlockFlags};
@@ -130,6 +131,9 @@ async fn main() {
 
         // Main logic for the Search-View
         let (window, stack) = ui::window::window(&app);
+
+        // Add closing logic
+        app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
 
         // creating app state
         let state = Rc::new(AppState {
