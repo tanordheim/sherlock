@@ -35,7 +35,10 @@ impl Tile {
                     builder.category.set_visible(false);
                 }
                 builder.category.set_text(&launcher.name);
+
+                // Icon stuff
                 builder.icon.set_icon_name(Some(&value.icon));
+                value.icon_class.as_ref().map(|c| builder.icon.add_css_class(c));
                 builder.title.set_markup(&tile_name);
 
                 let attrs =

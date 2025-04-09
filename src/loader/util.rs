@@ -35,6 +35,7 @@ pub struct CommandConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AppData {
     pub icon: String,
+    pub icon_class: Option<String>,
     pub exec: String,
     pub search_string: String,
     pub tag_start: Option<String>,

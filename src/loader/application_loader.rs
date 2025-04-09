@@ -129,6 +129,7 @@ impl Loader {
                             name,
                             AppData {
                                 icon,
+                                icon_class: None,
                                 exec,
                                 search_string,
                                 tag_start: None,

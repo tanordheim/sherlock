@@ -46,14 +46,37 @@ The launcher can be of the following types:<br>
     "alias": "cat",
     "type": "categories",
     "args": {
-        "Kill Processes": {"icon": "sherlock-process", "exec": "kill", "search_string": "terminate;kill;process"},
-        "Power Menu": {"icon": "battery-full-symbolic", "exec": "pm", "search_string": "powermenu;"}
+        "Kill Processes": {
+            "icon": "sherlock-process", 
+            "icon_class": "reactive", 
+            "exec": "kill", 
+            "search_string": "terminate;kill;process"
+            },
+        "Power Menu": {
+            "icon": "battery-full-symbolic",
+            "icon_class": "reactive", 
+            "exec": "pm", 
+            "search_string": "powermenu;"
+            }
     },
     "priority": 3,
     "home": true
 }
 
 ```
+### Arguments (args):
+**commands**:<br>
+(required)<br>
+1. `name field` / the name you want to have displayed for the category
+2. `icon` / the icon-name for the icon to display 
+3. `exec` / the alias of the launcher you want to execute
+
+<br>
+(optional)<br>
+1. `icon_class` / Sets the css class for the icon to style it according to your theme
+2. `search_string` / the string to match to on search
+
+<br>
 ---
 
 ## App Launcher
@@ -164,6 +187,7 @@ Specifies what the launcher should parse:
         "commands": {
             "command name": {
                 "icon": "icon-name",
+                "icon_class": "reactive",
                 "exec": "command to execute", 
                 "search_string": "examplecommand"
                 "tag_start": "{keyword}"
@@ -184,12 +208,13 @@ Specifies what the launcher should parse:
 ### Arguments (args):
 **commands** (required):<br>
 Has following fields of its own:
-1. `name field` / the name of the application
+1. `name field` / the name of the application (is the field where command name is the value currently)
 2. `icon` / the icon-name for the icon to display 
-3. `exec` / the command to execute
-4. `search_string` / the string to match to on search
-5. `tag_start` / specifies what will be displayed in the start tag
-6. `tag_end` / specifies what will be displayed in the end tag
+3. `icon_class` / Sets the css class for the icon to style it according to your theme
+4. `exec` / the command to execute
+5. `search_string` / the string to match to on search
+6. `tag_start` / specifies what will be displayed in the start tag
+7. `tag_end` / specifies what will be displayed in the end tag
 
 ---
 
