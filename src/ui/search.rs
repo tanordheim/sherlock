@@ -123,10 +123,12 @@ fn construct_window(
     let search_icon = Image::new();
     search_icon.set_icon_name(Some("search"));
     search_icon.set_widget_name("search-icon");
+    search_icon.set_halign(gtk4::Align::End);
     // Create the back arrow
     let search_icon_back = Image::new();
     search_icon_back.set_icon_name(Some("go-previous"));
     search_icon_back.set_widget_name("search-icon-back");
+    search_icon_back.set_halign(gtk4::Align::End);
 
     let overlay = Overlay::new();
     overlay.set_child(Some(&search_icon));
