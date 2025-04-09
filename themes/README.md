@@ -1,5 +1,5 @@
 # Example themes
-> **💡 Note:** You can go to the css file of the theme by clicking the image.
+> 💡 You can go to the css file of the theme by clicking the image.
 
 ## Gruvbox
 <div align="center" style="text-align:center;">
