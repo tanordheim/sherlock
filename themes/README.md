@@ -1,4 +1,6 @@
-# Example themes
+# Base Theme Extensions
+For one of these themes to apply, you need to create a custom css file inside the `~/.config/sherlock/` directory. You also must have the `use_custom_css` config key set to `true`. This is enabled by default. Then you just have to reference the new stylesheet in your config as the field `config.files.css` [documentation](https://github.com/Skxxtz/sherlock/blob/main/docs/config.md#appearance-section-appearance).
+<br>
 > 💡 You can go to the css file of the theme by clicking the image.
 
 ## Gruvbox
