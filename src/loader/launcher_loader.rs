@@ -194,6 +194,19 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                         LauncherType::Empty
                     }
                 }
+                "debug" => {
+                    let prio = cmd.priority;
+                    let mut commands: HashMap<String, AppData> =
+                        serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();
+                    commands.iter_mut().for_each(|(_, v)| {
+                        v.priority = match counts_clone.get(&v.exec) {
+                            Some(c) if c == &0.0 => prio,
+                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                            _ => prio,
+                        };
+                    });
+                    LauncherType::SystemCommand(SystemCommand { commands })
+                }
                 _ => LauncherType::Empty,
             };
             let method: String = if let Some(value) = &cmd.on_return {

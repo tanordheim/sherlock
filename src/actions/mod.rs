@@ -112,11 +112,17 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
                 let _ = row.activate_action("win.close", None);
             }
-            "show_errors" => {
-                let _ = row.activate_action(
-                    "win.switch-page",
-                    Some(&String::from("error-page").to_variant()),
-                );
+            "debug" => {
+                let exec = attrs.get("exec").map_or("", |s| s.as_str());
+                match exec {
+                    "show_errors" => {
+                        let _ = row.activate_action(
+                            "win.switch-page",
+                            Some(&String::from("error-page").to_variant()),
+                        );
+                    }
+                    _ => {}
+                }
             }
             _ => {
                 if let Some(out) = attrs.get("result") {
