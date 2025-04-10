@@ -9,7 +9,7 @@ use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::{alloc::alloc, cell::RefCell};
+use std::cell::RefCell;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
