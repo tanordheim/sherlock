@@ -90,6 +90,8 @@ pub enum SherlockErrorType {
     DBusMessageConstructError(String),
     HttpRequestError(String),
     SocketRemoveError(String),
+    SocketConnectError(String),
+    SoecktWriteError(String),
 }
 
 impl SherlockErrorType {
@@ -102,6 +104,14 @@ impl SherlockErrorType {
             SherlockErrorType::SocketRemoveError(socket) => (
                 "SocketRemoveError".to_string(),
                 format!("Failed to close socket at location \"{}\"", socket),
+            ),
+            SherlockErrorType::SocketConnectError(socket) => (
+                "SocketConnectError".to_string(),
+                format!("Failed to connect to socket at location \"{}\"", socket),
+            ),
+            SherlockErrorType::SoecktWriteError(socket) => (
+                "SoecktWriteError".to_string(),
+                format!("Failed to send message to socket at location \"{}\"", socket),
             ),
             SherlockErrorType::FileExistError(file) => (
                 "FileExistError".to_string(),

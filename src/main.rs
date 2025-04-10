@@ -1,7 +1,7 @@
-use gio::glib::MainContext;
 // CRATES
+use gio::glib::MainContext;
 use gio::prelude::*;
-use gtk4::prelude::{GtkApplicationExt, GtkWindowExt};
+use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
 use loader::util::{SherlockErrorType, SherlockFlags};
@@ -200,7 +200,7 @@ async fn main() {
 
                     thread::spawn(move || {
                         async_std::task::block_on(async {
-                            let _daemon = SherlockDaemon::new(sender, SOCKET_PATH).await;
+                            let _daemon = SherlockDaemon::new(sender).await;
                             // Once the daemon is initialized, notify via the channel
                         });
                     });
@@ -211,7 +211,6 @@ async fn main() {
                                 "win.open",
                                 None,
                             );
-                            println!("{:?}", window_clone.focus());
                         }
                     });
                 }
