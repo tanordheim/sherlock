@@ -5,8 +5,6 @@ use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
 use loader::util::{SherlockErrorType, SherlockFlags};
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::sync::OnceLock;
 use std::{env, process, thread};
 
@@ -21,7 +19,6 @@ mod ui;
 
 // IMPORTS
 use application::lock;
-use application::util::AppState;
 use daemon::daemon::SherlockDaemon;
 use loader::{
     util::{SherlockConfig, SherlockError},
@@ -31,9 +28,6 @@ use loader::{
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
-thread_local! {
-    static APP_STATE: RefCell<Option<Rc<AppState>>> = RefCell::new(None);
-}
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 static FLAGS: OnceLock<SherlockFlags> = OnceLock::new();
 
@@ -135,20 +129,10 @@ async fn main() {
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
 
-        // creating app state
-        let window_clone = window.clone();
-        let state = Rc::new(AppState {
-            window: Some(window),
-            search_bar: None,
-        });
-
-        APP_STATE.with(|app_state| *app_state.borrow_mut() = Some(state));
-
         // Either show user-specified content or show normal search
-
         let pipe = Loader::load_pipe_args();
         let search_stack = if pipe.is_empty() {
-            ui::search::search(&launchers, &window_clone, &current_stack_page)
+            ui::search::search(&launchers, &window, &current_stack_page)
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);
@@ -157,7 +141,7 @@ async fn main() {
                 let parsed = deserialize_pipe(pipe);
                 if let Some(c) = CONFIG.get() {
                     let method: &str = c.pipe.method.as_deref().unwrap_or("print");
-                    ui::user::display_pipe(&window_clone, parsed, method)
+                    ui::user::display_pipe(&window, parsed, method)
                 } else {
                     return;
                 }
@@ -173,13 +157,13 @@ async fn main() {
             let show_warnings = !app_config.debug.try_suppress_warnings && !non_breaking.is_empty();
             if show_errors || show_warnings {
                 let _ = gtk4::prelude::WidgetExt::activate_action(
-                    &window_clone,
+                    &window,
                     "win.switch-page",
                     Some(&String::from("error-page").to_variant()),
                 );
             } else {
                 let _ = gtk4::prelude::WidgetExt::activate_action(
-                    &window_clone,
+                    &window,
                     "win.switch-page",
                     Some(&String::from("search-page").to_variant()),
                 );
@@ -191,10 +175,8 @@ async fn main() {
             match c.behavior.daemonize {
                 true => {
                     // Used to cache render
-                    let _ =
-                        gtk4::prelude::WidgetExt::activate_action(&window_clone, "win.open", None);
-                    let _ =
-                        gtk4::prelude::WidgetExt::activate_action(&window_clone, "win.close", None);
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
 
                     let (sender, receiver) = async_channel::bounded(1);
 
@@ -207,17 +189,14 @@ async fn main() {
                     MainContext::default().spawn_local(async move {
                         while let Ok(_msg) = receiver.recv().await {
                             let _ = gtk4::prelude::WidgetExt::activate_action(
-                                &window_clone,
-                                "win.open",
-                                None,
+                                &window, "win.open", None,
                             );
                         }
                     });
                 }
                 false => {
                     // Show window without daemonizing
-                    let _ =
-                        gtk4::prelude::WidgetExt::activate_action(&window_clone, "win.open", None);
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
                 }
             }
         }

@@ -9,6 +9,8 @@ use gtk4_layer_shell::{Layer, LayerShell};
 use crate::application::util::reload_content;
 use crate::CONFIG;
 
+use super::tiles::util::TextViewTileBuilder;
+
 pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCell<String>>) {
     // 618 with, 591 without notification bar
     let (width, height) = CONFIG.get().map_or_else(
@@ -80,8 +82,28 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
             }
         })
         .build();
+    let stack_clone = stack.clone();
+    let action_next_page = ActionEntry::builder("add-page")
+        .parameter_type(Some(&String::static_variant_type()))
+        .activate(move |_: &ApplicationWindow, _, parameter| {
+            if let Some(parameter) = parameter.and_then(|p| p.get::<String>()) {
+                let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+                builder.content.set_wrap_mode(gtk4::WrapMode::Word);
+                let buf = builder.content.buffer();
+                buf.set_text(parameter.as_ref());
+                stack_clone.add_named(&builder.object, Some("next-page"));
+                stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
+                stack_clone.set_visible_child_name("next-page");
+            }
+        })
+        .build();
 
-    window.add_action_entries([action_close, action_open, action_stack_switch]);
+    window.add_action_entries([
+        action_close,
+        action_open,
+        action_stack_switch,
+        action_next_page,
+    ]);
 
     window.set_child(Some(&stack));
     return (window, stack, current_stack_page);

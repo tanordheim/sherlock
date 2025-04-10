@@ -2,17 +2,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use gtk4::Stack;
-use gtk4::{prelude::*, ApplicationWindow, Entry};
+use gtk4::{prelude::*, ApplicationWindow};
 
 use crate::loader::pipe_loader::deserialize_pipe;
 use crate::loader::util::SherlockError;
 use crate::loader::Loader;
 use crate::{ui, CONFIG, FLAGS};
-
-pub struct AppState {
-    pub window: Option<ApplicationWindow>,
-    pub search_bar: Option<Entry>,
-}
 
 pub fn reload_content(
     window: &ApplicationWindow,

@@ -111,7 +111,10 @@ impl SherlockErrorType {
             ),
             SherlockErrorType::SoecktWriteError(socket) => (
                 "SoecktWriteError".to_string(),
-                format!("Failed to send message to socket at location \"{}\"", socket),
+                format!(
+                    "Failed to send message to socket at location \"{}\"",
+                    socket
+                ),
             ),
             SherlockErrorType::FileExistError(file) => (
                 "FileExistError".to_string(),

@@ -15,7 +15,7 @@ pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
                     Ok(_) => {
                         let _ = SherlockDaemon::open();
                         std::process::exit(0)
-                    },
+                    }
                     Err(_) => {
                         let _ = fs::remove_file(lock_file);
                     }

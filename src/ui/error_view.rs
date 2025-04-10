@@ -1,6 +1,5 @@
-use gtk4::subclass::window;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
-use gtk4::{ApplicationWindow, Box as HVBox, ListBox, ScrolledWindow};
+use gtk4::{Box as HVBox, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -43,7 +42,6 @@ fn nav_event(
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, _| {
         if stack_page.borrow().as_str() != "error-page" {
-            println!("not error: {:?}", stack_page.borrow().as_str());
             return false.into();
         }
         match key {

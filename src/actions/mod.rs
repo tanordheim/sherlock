@@ -8,7 +8,7 @@ use crate::{
     g_subclasses::sherlock_row::SherlockRow,
     launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
     loader::launcher_loader::CounterReader,
-    ui::user::{display_next, display_raw},
+    ui::user::display_raw,
 };
 
 pub mod applaunch;
@@ -91,7 +91,8 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let next_content = attrs
                     .get("next_content")
                     .map_or("No next_content provided...", |s| s);
-                display_next(next_content);
+                let _ = row
+                    .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
             "display_raw" => {
                 if let Some(next_content) = attrs.get("next_content") {

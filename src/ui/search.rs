@@ -203,7 +203,6 @@ fn nav_event(
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, i, modifiers| {
         if stack_page.borrow().as_str() != "search-page" {
-            println!("{:?}", stack_page.borrow());
             return false.into();
         };
         match key {
@@ -328,11 +327,8 @@ fn change_event(
             let trimmed = current_text.trim();
             if !trimmed.is_empty() && modes.contains_key(&current_text) {
                 // Logic to apply modes
-                if modes.contains_key(&current_text) {
-                    let _ =
-                        search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
-                    current_text.clear();
-                }
+                let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+                current_text.clear();
             }
             async_calc(
                 &cancel_flag,

@@ -11,7 +11,7 @@ use std::rc::Rc;
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::{loader::pipe_loader::PipeData, APP_STATE};
+use crate::loader::pipe_loader::PipeData;
 
 pub fn display_pipe(
     window: &ApplicationWindow,
@@ -54,21 +54,6 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
         builder.content.set_justification(Justification::Center);
     }
     return builder.object;
-}
-pub fn display_next<T: AsRef<str>>(content: T) {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
-            builder.content.set_wrap_mode(gtk4::WrapMode::Word);
-            let buf = builder.content.buffer();
-            buf.set_text(content.as_ref());
-
-            // if let Some(stack) = &state.stack {
-            //     stack.add_named(&builder.object, Some("next-page"));
-            //     // show_stack_page("next-page", Some(gtk4::StackTransitionType::SlideLeft));
-            // }
-        }
-    });
 }
 
 fn nav_event(

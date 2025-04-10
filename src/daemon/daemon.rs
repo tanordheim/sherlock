@@ -1,7 +1,5 @@
 use std::os::unix::net::UnixStream;
 
-use nix::sys::wait::wait;
-
 use crate::loader::util::{SherlockError, SherlockErrorType};
 use crate::SOCKET_PATH;
 use std::io::{Read, Write};
