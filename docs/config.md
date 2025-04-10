@@ -44,6 +44,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `icon_size`    | `22`        | Sets the default icon size for the icons in each tile. |
 | `search_icon`    | `true`        | Enables or disables the use of the search icon |
 | `use_base_css`    | `true`        | Enables or disables the extension of Sherlock's default style sheet. |
+| `status_bar`    | `true`        | Enables or disables the status bar. |
 
 ---
 ## Behavior Section `[behavior]`
