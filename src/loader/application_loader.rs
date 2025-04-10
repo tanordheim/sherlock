@@ -265,7 +265,7 @@ fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), Sh
 }
 
 pub fn get_applications_dir() -> HashSet<PathBuf> {
-    match env::var("XDG_DATA_DIRS").ok() {
+    let xdg_paths = match env::var("XDG_DATA_DIRS").ok() {
         Some(paths) => {
             let app_dirs: HashSet<PathBuf> = paths
                 .split(":")
@@ -273,24 +273,24 @@ pub fn get_applications_dir() -> HashSet<PathBuf> {
                 .collect();
             app_dirs
         }
-        _ => {
-            let home = env::var("HOME").ok().unwrap_or("~".to_string());
-            let mut default_paths = vec![
-                String::from("/usr/share/applications/"),
-                String::from("~/.local/share/applications/"),
-            ];
-            if let Some(c) = CONFIG.get() {
-                default_paths.extend(c.debug.app_paths.clone());
-            };
+        _ => HashSet::new(),
+    };
+    let home = env::var("HOME").ok().unwrap_or("~".to_string());
+    let mut default_paths = vec![
+        String::from("/usr/share/applications/"),
+        String::from("~/.local/share/applications/"),
+    ];
+    if let Some(c) = CONFIG.get() {
+        default_paths.extend(c.debug.app_paths.clone());
+    };
 
-            let paths: HashSet<PathBuf> = default_paths
-                .iter()
-                .map(|path| path.replace("~", &home))
-                .map(|path| PathBuf::from(path))
-                .collect();
-            paths
-        }
-    }
+    let mut paths: HashSet<PathBuf> = default_paths
+        .iter()
+        .map(|path| path.replace("~", &home))
+        .map(|path| PathBuf::from(path))
+        .collect();
+    paths.extend(xdg_paths);
+    paths
 }
 
 pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
