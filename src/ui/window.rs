@@ -1,4 +1,5 @@
-use std::fs;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use gio::ActionEntry;
 use gtk4::{prelude::*, Application, ApplicationWindow};
@@ -6,14 +7,16 @@ use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
 
 use crate::application::util::reload_content;
-use crate::{APP_STATE, CONFIG, LOCK_FILE};
+use crate::CONFIG;
 
-pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
+pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCell<String>>) {
     // 618 with, 591 without notification bar
     let (width, height) = CONFIG.get().map_or_else(
         || (900, 591),
         |config| (config.appearance.width, config.appearance.height),
     );
+
+    let current_stack_page = Rc::new(RefCell::new(String::from("search-page")));
 
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
@@ -26,63 +29,60 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack) {
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
 
+    //Build main fame here that holds logic for stacking
+    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
+    let stack: Stack = builder.object("stack").unwrap();
+
+    let page_clone = Rc::clone(&current_stack_page);
     let action_close = ActionEntry::builder("close")
-        .activate(|window: &ApplicationWindow, _, _| {
+        .activate(move |window: &ApplicationWindow, _, _| {
             if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
-                    true => hide_app(),
+                    true => {
+                        window.hide();
+                        let _ = gtk4::prelude::WidgetExt::activate_action(
+                            window,
+                            "win.clear-search",
+                            None,
+                        );
+                    }
                     false => window.destroy(),
                 }
             };
         })
         .build();
-    window.add_action_entries([action_close]);
 
-    //Build main fame here that holds logic for stacking
-    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
-    let holder: Stack = builder.object("stack").unwrap();
+    let stack_clone = stack.clone();
+    let action_open = ActionEntry::builder("open")
+        .activate(move |window: &ApplicationWindow, _, _| {
+            if let Some(c) = CONFIG.get() {
+                match c.behavior.daemonize {
+                    true => {
+                        reload_content(window, &stack_clone, &page_clone);
+                        window.present();
+                    }
+                    false => window.present(),
+                }
+            };
+        })
+        .build();
+    let stack_clone = stack.clone();
+    let page_clone = Rc::clone(&current_stack_page);
+    let action_stack_switch = ActionEntry::builder("switch-page")
+        .parameter_type(Some(&String::static_variant_type()))
+        .activate(move |_: &ApplicationWindow, _, parameter| {
+            let parameter = parameter.and_then(|p| p.get::<String>());
 
-    window.set_child(Some(&holder));
-    return (window, holder);
-}
-fn hide_app() {
-    hide_window(true);
-}
-
-pub fn show_window(reload: bool) {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.window.as_ref().map(|window| {
-                if reload {
-                    reload_content(&window);
-                };
-                window.present();
-            });
-        }
-    });
-}
-pub fn hide_window(clear_search: bool) {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.window.as_ref().map(|window| window.hide());
-            if clear_search {
-                state
-                    .search_bar
-                    .as_ref()
-                    .map(|search_bar| search_bar.set_text(""));
-            } else {
-                let _ = fs::remove_file(LOCK_FILE);
+            if let Some(parameter) = parameter {
+                stack_clone.set_transition_type(gtk4::StackTransitionType::SlideRight);
+                stack_clone.set_visible_child_name(&parameter);
+                *page_clone.borrow_mut() = parameter
             }
-        }
-    });
-}
+        })
+        .build();
 
-pub fn destroy_window() {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.window.as_ref().map(|window| window.destroy());
-        } else {
-            std::process::exit(0)
-        }
-    });
+    window.add_action_entries([action_close, action_open, action_stack_switch]);
+
+    window.set_child(Some(&stack));
+    return (window, stack, current_stack_page);
 }

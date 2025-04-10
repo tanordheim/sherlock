@@ -17,7 +17,7 @@ pub struct SherlockRow {
 // The central trait for subclassing a GObject
 #[glib::object_subclass]
 impl ObjectSubclass for SherlockRow {
-    const NAME: &'static str = "MyGtkAppCustomButton";
+    const NAME: &'static str = "CustomSherlockRow";
     type Type = super::SherlockRow;
     type ParentType = gtk4::ListBoxRow;
 }

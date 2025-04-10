@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use gio::glib::variant::ToVariant;
 use gtk4::prelude::WidgetExt;
 use teamslaunch::teamslaunch;
-use util::eval_exit;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
@@ -36,7 +35,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
                 increment(&exec);
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
@@ -44,14 +43,14 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let _ = websearch::websearch(engine, query);
                 let exec = format!("websearch-{}", engine);
                 increment(&exec);
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
                 increment(&exec);
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
             "copy" => {
                 if let Some(field) = attrs.get("field") {
@@ -61,7 +60,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
             "print" => {
                 if let Some(field) = attrs.get("field") {
@@ -71,13 +70,22 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
                 }
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
-                    teamslaunch(meeting);
+                    match teamslaunch(meeting) {
+                        Ok(_) => {
+                            let _ = row.activate_action("win.close", None);
+                        }
+                        Err(_) => {
+                            let _ = row.activate_action(
+                                "win.switch-page",
+                                Some(&String::from("error-page").to_variant()),
+                            );
+                        }
+                    }
                 }
-                eval_exit();
             }
             "next" => {
                 let next_content = attrs
@@ -101,7 +109,13 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     .and_then(|p| p.parse::<i32>().ok())
                     .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
                     .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
+            }
+            "show_errors" => {
+                let _ = row.activate_action(
+                    "win.switch-page",
+                    Some(&String::from("error-page").to_variant()),
+                );
             }
             _ => {
                 if let Some(out) = attrs.get("result") {
@@ -109,7 +123,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else {
                     println!("Return method \"{}\" not recognized", method);
                 }
-                eval_exit();
+                let _ = row.activate_action("win.close", None);
             }
         }
     }

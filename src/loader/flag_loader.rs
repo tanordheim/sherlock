@@ -1,7 +1,5 @@
 use std::{env, path::PathBuf};
 
-use crate::actions::util::eval_exit;
-
 use super::{
     util::{SherlockError, SherlockFlags},
     Loader,
@@ -12,15 +10,15 @@ impl Loader {
         let args: Vec<String> = env::args().collect();
         if args.contains(&"--help".to_string()) {
             let _ = print_help();
-            eval_exit();
+            std::process::exit(0);
         }
         if args.contains(&"-h".to_string()) {
             let _ = print_help();
-            eval_exit();
+            std::process::exit(0);
         }
         if args.contains(&"--version".to_string()) {
             let _ = print_version();
-            eval_exit();
+            std::process::exit(0);
         }
 
         SherlockFlags::new(args)

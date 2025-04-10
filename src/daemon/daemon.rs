@@ -1,6 +1,4 @@
 use crate::loader::util::{SherlockError, SherlockErrorType};
-use crate::ui::window::show_window;
-use gtk4::glib::{self, ControlFlow};
 use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 
@@ -8,7 +6,8 @@ pub struct SherlockDaemon {
     socket: String,
 }
 impl SherlockDaemon {
-    pub fn new(socket_path: &str) -> Self {
+    pub async fn new(sender: async_channel::Sender<&str>, socket_path: &str) -> Self {
+        println!("try");
         let _ = std::fs::remove_file(socket_path);
         let listener = UnixListener::bind(socket_path).expect("Failed to bind socket");
         println!("Daemon listening on {}", socket_path);
@@ -22,10 +21,7 @@ impl SherlockDaemon {
                             let received_data = String::from_utf8_lossy(&buffer[..bytes_read]);
                             match received_data.trim() {
                                 "show" => {
-                                    glib::idle_add(move || {
-                                        show_window(true);
-                                        ControlFlow::Break
-                                    });
+                                    let _ = sender.send("open-window").await;
                                 }
                                 _ => println!("Received: {}", received_data),
                             }

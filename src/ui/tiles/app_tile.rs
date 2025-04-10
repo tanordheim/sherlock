@@ -38,7 +38,10 @@ impl Tile {
 
                 // Icon stuff
                 builder.icon.set_icon_name(Some(&value.icon));
-                value.icon_class.as_ref().map(|c| builder.icon.add_css_class(c));
+                value
+                    .icon_class
+                    .as_ref()
+                    .map(|c| builder.icon.add_css_class(c));
                 builder.title.set_markup(&tile_name);
 
                 let attrs =

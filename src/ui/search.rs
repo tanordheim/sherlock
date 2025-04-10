@@ -16,7 +16,7 @@ use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
-use crate::{AppState, APP_STATE, CONFIG};
+use crate::CONFIG;
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -28,7 +28,11 @@ struct SearchUI {
     mode_title: Label,
 }
 
-pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
+pub fn search(
+    launchers: &Vec<Launcher>,
+    window: &ApplicationWindow,
+    stack_page_ref: &Rc<RefCell<String>>,
+) -> HVBox {
     // Initialize the view to show all apps
     let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
     ui.result_viewport
@@ -36,8 +40,18 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
     ui.search_bar.grab_focus();
 
     let search_bar_clone = ui.search_bar.clone();
+    let search_bar_clone2 = ui.search_bar.clone();
     let modes_clone = modes.clone();
     let mode_clone = Rc::clone(&mode);
+
+    if let Some(c) = CONFIG.get() {
+        if c.behavior.daemonize && stack_page_ref.borrow().as_str() == "search-page" {
+            let search_bar = ui.search_bar.clone();
+            window.connect_show(move |_| {
+                search_bar.grab_focus();
+            });
+        }
+    }
 
     let custom_binds = ConfKeys::new();
 
@@ -50,17 +64,14 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
         &custom_binds,
     );
     nav_event(
+        &stack_page,
         results,
         ui.search_bar,
         ui.result_viewport,
         mode,
         custom_binds,
+        stack_page_ref,
     );
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.add_stack_page(stack_page, "search-page");
-        }
-    });
 
     // Improved mode selection
     let original_mode = String::from("all");
@@ -100,7 +111,19 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
             }
         })
         .build();
-    window.add_action_entries([mode_action]);
+
+    let action_clear_win = ActionEntry::builder("clear-search")
+        .activate(move |_: &ApplicationWindow, _, _| {
+            let search_bar_clone = search_bar_clone2.clone();
+            glib::idle_add_local(move || {
+                search_bar_clone.set_text("");
+                glib::ControlFlow::Break
+            });
+        })
+        .build();
+    window.add_action_entries([mode_action, action_clear_win]);
+
+    return stack_page;
 }
 
 fn construct_window(
@@ -163,29 +186,26 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    APP_STATE.with(|app_state| {
-        let new_state = app_state.borrow_mut().take().map(|old_state| {
-            Rc::new(AppState {
-                window: old_state.window.clone(),
-                stack: old_state.stack.clone(),
-                search_bar: Some(ui.search_bar.clone()),
-            })
-        });
-        *app_state.borrow_mut() = new_state;
-    });
     (mode, modes, vbox, ui, results)
 }
 
 fn nav_event(
+    stack: &HVBox,
     results: Rc<ListBox>,
     search_bar: Entry,
     result_viewport: ScrolledWindow,
     mode: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
+    stack_page: &Rc<RefCell<String>>,
 ) {
+    let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, i, modifiers| {
+        if stack_page.borrow().as_str() != "search-page" {
+            println!("{:?}", stack_page.borrow());
+            return false.into();
+        };
         match key {
             k if Some(k) == custom_binds.prev
                 && custom_binds
@@ -263,12 +283,8 @@ fn nav_event(
         }
         false.into()
     });
-    APP_STATE.with(|state| {
-        state
-            .borrow()
-            .as_ref()
-            .map(|s| s.add_event_listener(event_controller))
-    });
+
+    stack.add_controller(event_controller);
 }
 
 fn change_event(
