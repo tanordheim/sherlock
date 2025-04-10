@@ -309,17 +309,20 @@ pub struct ConfigAppearance {
     pub search_icon: bool,
     #[serde(default = "default_true")]
     pub use_base_css: bool,
+    #[serde(default = "default_true")]
+    pub notification_bar: bool,
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
         Self {
             width: 900,
-            height: 593,
+            height: 593, // 617 with, 593 without notification bar
             gsk_renderer: String::from("cairo"),
             icon_paths: Default::default(),
             icon_size: default_icon_size(),
             search_icon: false,
             use_base_css: true,
+            notification_bar: true,
         }
     }
 }
@@ -334,6 +337,7 @@ pub struct ConfigBehavior {
     pub daemonize: bool,
     #[serde(default = "default_true")]
     pub animate: bool,
+    #[serde(default)]
     pub field: Option<String>,
 }
 impl Default for ConfigBehavior {

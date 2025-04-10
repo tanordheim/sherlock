@@ -70,7 +70,7 @@
         </child>
 
         <child>
-            <object class="GtkBox" id="notification_center">
+            <object class="GtkBox" id="notification-bar">
                 <property name="name">notification-center</property>
                 <property name="orientation">horizontal</property>
                 <style>

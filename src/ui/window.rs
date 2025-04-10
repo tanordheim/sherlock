@@ -12,9 +12,9 @@ use crate::CONFIG;
 use super::tiles::util::TextViewTileBuilder;
 
 pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCell<String>>) {
-    // 618 with, 591 without notification bar
+    // 617 with, 593 without notification bar
     let (width, height) = CONFIG.get().map_or_else(
-        || (900, 591),
+        || (900, 593),
         |config| (config.appearance.width, config.appearance.height),
     );
 
