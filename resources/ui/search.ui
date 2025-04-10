@@ -70,11 +70,11 @@
         </child>
 
         <child>
-            <object class="GtkBox" id="notification-bar">
-                <property name="name">notification-center</property>
+            <object class="GtkBox" id="status-bar">
+                <property name="name">status-bar</property>
                 <property name="orientation">horizontal</property>
                 <style>
-                    <class name="notification-center"/>
+                    <class name="status-bar"/>
                 </style>
                 
                 <child>
@@ -86,7 +86,7 @@
                     </object>
                 </child>
                 <child>
-                    <object class="GtkSpinner" id="notification-bar-spinner">
+                    <object class="GtkSpinner" id="status-bar-spinner">
                         <property name="name">spinner</property>
                         <property name="spinning">false</property>
                     </object>

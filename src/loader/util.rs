@@ -310,7 +310,7 @@ pub struct ConfigAppearance {
     #[serde(default = "default_true")]
     pub use_base_css: bool,
     #[serde(default = "default_true")]
-    pub notification_bar: bool,
+    pub status_bar: bool,
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
@@ -322,7 +322,7 @@ impl Default for ConfigAppearance {
             icon_size: default_icon_size(),
             search_icon: false,
             use_base_css: true,
-            notification_bar: true,
+            status_bar: true,
         }
     }
 }

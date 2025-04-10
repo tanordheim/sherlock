@@ -7,9 +7,9 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -180,9 +180,9 @@ fn construct_window(
     overlay.add_overlay(&search_icon_back);
 
     // Show notification-bar
-    CONFIG.get().map(|c| {
-        if !c.appearance.notification_bar {
-            let n: Option<HVBox> = builder.object("notification-bar");
+    CONFIG.get().map(|c|{
+        if !c.appearance.status_bar {
+            let n: Option<HVBox> = builder.object("status-bar");
             n.map(|n| n.set_visible(false));
         }
     });
@@ -196,7 +196,7 @@ fn construct_window(
         search_icon_holder,
         mode_title: builder.object("category-type-label").unwrap_or_default(),
         spinner: builder
-            .object("notification-bar-spinner")
+            .object("status-bar-spinner")
             .unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
