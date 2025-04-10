@@ -4,7 +4,7 @@ use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
-use loader::util::{SherlockErrorType, SherlockFlags};
+use loader::util::SherlockErrorType;
 use std::sync::OnceLock;
 use std::{env, process, thread};
 
@@ -29,7 +29,6 @@ const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
-static FLAGS: OnceLock<SherlockFlags> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
@@ -46,18 +45,9 @@ async fn main() {
     let sherlock_flags = Loader::load_flags()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
-    FLAGS
-        .set(sherlock_flags.clone())
-        .map_err(|_| {
-            startup_errors.push(SherlockError {
-                error: SherlockErrorType::ConfigError(None),
-                traceback: format!("should never get to this"),
-            });
-        })
-        .ok();
 
     // Parse configs from 'config.toml'
-    let app_config = Loader::load_config().map_or_else(
+    let app_config = Loader::load_config(&sherlock_flags).map_or_else(
         |e| {
             startup_errors.push(e);
             let defaults = loader::util::SherlockConfig::default();
