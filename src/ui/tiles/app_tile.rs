@@ -6,7 +6,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{Launcher, ResultItem};
 use crate::loader::util::AppData;
 
-use super::util::TileBuilder;
+use super::util::{SherlockSearch, TileBuilder};
 use super::Tile;
 
 impl Tile {
@@ -21,7 +21,7 @@ impl Tile {
             if value
                 .search_string
                 .to_lowercase()
-                .contains(&keyword.to_lowercase())
+                .fuzzy_match(&keyword.to_lowercase())
             {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);

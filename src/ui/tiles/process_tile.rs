@@ -5,7 +5,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
-use super::util::TileBuilder;
+use super::util::{SherlockSearch, TileBuilder};
 use super::Tile;
 
 impl Tile {
@@ -17,7 +17,7 @@ impl Tile {
         let mut results: Vec<ResultItem> = Default::default();
 
         for (key, value) in proc.processes.iter() {
-            if value.to_lowercase().contains(&keyword.to_lowercase()) {
+            if value.to_lowercase().fuzzy_match(&keyword.to_lowercase()) {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);
                 builder.object.set_shortcut(launcher.shortcut);
