@@ -69,6 +69,31 @@
             </object>
         </child>
 
+        <child>
+            <object class="GtkBox" id="notification_center">
+                <property name="name">notification-center</property>
+                <property name="orientation">horizontal</property>
+                <style>
+                    <class name="notification-center"/>
+                </style>
+                
+                <child>
+                    <object class="GtkLabel">
+                        <property name="name">logo</property>
+                        <property name="hexpand">true</property>
+                        <property name="label">Sherlock</property>
+                        <property name="xalign">0.0</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkSpinner" id="notification-bar-spinner">
+                        <property name="name">spinner</property>
+                        <property name="spinning">false</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+
 
     </object>
 

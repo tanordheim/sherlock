@@ -3,13 +3,13 @@ use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
-    Builder, EventControllerKey, Image, Overlay,
+    Builder, EventControllerKey, Image, Overlay, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::{alloc::alloc, cell::RefCell};
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -26,6 +26,7 @@ struct SearchUI {
     search_bar: Entry,
     search_icon_holder: HVBox,
     mode_title: Label,
+    spinner: Spinner,
 }
 
 pub fn search(
@@ -112,6 +113,15 @@ pub fn search(
         })
         .build();
 
+    // Spinner action
+    let action_spinner = ActionEntry::builder("spinner-mode")
+        .parameter_type(Some(&bool::static_variant_type()))
+        .activate(move |_, _, parameter| {
+            let parameter = parameter.and_then(|p| p.get::<bool>());
+            parameter.map(|p| ui.spinner.set_spinning(p));
+        })
+        .build();
+
     let action_clear_win = ActionEntry::builder("clear-search")
         .activate(move |_: &ApplicationWindow, _, _| {
             let search_bar_clone = search_bar_clone2.clone();
@@ -121,7 +131,7 @@ pub fn search(
             });
         })
         .build();
-    window.add_action_entries([mode_action, action_clear_win]);
+    window.add_action_entries([mode_action, action_clear_win, action_spinner]);
 
     return stack_page;
 }
@@ -177,6 +187,9 @@ fn construct_window(
         search_bar: builder.object("search-bar").unwrap_or_default(),
         search_icon_holder,
         mode_title: builder.object("category-type-label").unwrap_or_default(),
+        spinner: builder
+            .object("notification-bar-spinner")
+            .unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
@@ -418,6 +431,12 @@ pub fn async_calc(
             if *cancel_flag.borrow() {
                 return;
             }
+            if let Some(row) = async_launchers.get(0) {
+                let _ = row
+                    .result_item
+                    .row_item
+                    .activate_action("win.spinner-mode", Some(&true.to_variant()));
+            }
             // get results for aysnc launchers
             for widget in async_launchers.iter() {
                 let mut attrs = widget.attrs.clone();
@@ -453,6 +472,13 @@ pub fn async_calc(
                         execute_from_attrs(&row, &attrs);
                         None
                     });
+            }
+            // Set spinner inactive
+            if let Some(row) = async_launchers.get(0) {
+                let _ = row
+                    .result_item
+                    .row_item
+                    .activate_action("win.spinner-mode", Some(&false.to_variant()));
             }
             *current_task_clone.borrow_mut() = None;
         }
