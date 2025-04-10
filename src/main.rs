@@ -168,14 +168,14 @@ async fn main() {
                     let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
                     let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
 
+                    // Create async pipeline
                     let (sender, receiver) = async_channel::bounded(1);
-
                     thread::spawn(move || {
                         async_std::task::block_on(async {
                             let _daemon = SherlockDaemon::new(sender).await;
-                            // Once the daemon is initialized, notify via the channel
                         });
                     });
+                    // Handle receiving using pipline
                     MainContext::default().spawn_local(async move {
                         while let Ok(_msg) = receiver.recv().await {
                             let _ = gtk4::prelude::WidgetExt::activate_action(

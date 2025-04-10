@@ -35,6 +35,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
     let stack: Stack = builder.object("stack").unwrap();
 
+    // Setup action to close the window
     let page_clone = Rc::clone(&current_stack_page);
     let action_close = ActionEntry::builder("close")
         .activate(move |window: &ApplicationWindow, _, _| {
@@ -54,6 +55,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         })
         .build();
 
+    // Setup action to open the window
     let stack_clone = stack.clone();
     let action_open = ActionEntry::builder("open")
         .activate(move |window: &ApplicationWindow, _, _| {
@@ -68,6 +70,8 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
             };
         })
         .build();
+
+    // Setup action to switch to a specific stack page
     let stack_clone = stack.clone();
     let page_clone = Rc::clone(&current_stack_page);
     let action_stack_switch = ActionEntry::builder("switch-page")
@@ -82,6 +86,8 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
             }
         })
         .build();
+
+    // Setup action to add a stackpage
     let stack_clone = stack.clone();
     let action_next_page = ActionEntry::builder("add-page")
         .parameter_type(Some(&String::static_variant_type()))
