@@ -56,6 +56,9 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `cache` | `~/.cache/sherlock/sherlock_desktop_cache.json`   | Overrides the default caching location. ||
 | `daemonize` | `false`     | If set to `true`, Sherlock will run in daemon mode. This will consume more memory because the rendered application will be kept in memory. Daemonizing will allow faster startup times. Send the `open` message to socket `/tmp/sherlock_daemon.socket` to open the window. |[Daemonizing](https://github.com/Skxxtz/sherlock/blob/documentation/docs/features/daemonizing.md)|
 | `animate` | `true`   | Sets if startup animation should play. (Only works on daemonize=false) ||
+| `global_prefix` | `None`   | Prepends this to every application's execution command. ||
+| `global_flags` | `None`   | Appends these flags to every application's execution command. ||
+
 ---
 ## Binds Section `[binds]`
 
