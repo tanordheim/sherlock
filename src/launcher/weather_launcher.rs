@@ -44,10 +44,10 @@ impl WeatherLauncher {
         ]);
         let wind = if imperials.contains(config.units.lengths.to_lowercase().as_str()) {
             let speed = current_condition["windspeedMiles"].as_str()?;
-            format!("{}{}mph", wind_dir, speed)
+            format!("{} {}mph", wind_dir, speed)
         } else {
             let speed = current_condition["windspeedKmph"].as_str()?;
-            format!("{}{}km/h", wind_dir, speed)
+            format!("{} {}km/h", wind_dir, speed)
         };
 
         return Some((temp, icon, wind));
