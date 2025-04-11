@@ -97,7 +97,7 @@ impl WeatherLauncher {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct WeatherData{
     pub temperature: String,
     pub icon: String,
@@ -114,7 +114,7 @@ impl WeatherData {
         }
         let mtime = modtime(&path)?;
         let time_since = SystemTime::now().duration_since(mtime).ok()?;
-        if time_since > Duration::from_secs(60 * launcher.update_interval){
+        if time_since < Duration::from_secs(60 * launcher.update_interval){
             let cached_data: Option<Self> = File::open(&path)
                 .ok()
                 .and_then(|f| simd_json::from_reader(f).ok());
