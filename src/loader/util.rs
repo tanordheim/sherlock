@@ -260,6 +260,8 @@ pub struct ConfigUnits {
     pub weights: String,
     #[serde(default = "default_volumes")]
     pub volumes: String,
+    #[serde(default = "default_temperatures")]
+    pub temperatures: String,
     #[serde(default = "default_currency")]
     pub _currency: String,
 }
@@ -269,6 +271,7 @@ impl Default for ConfigUnits {
             lengths: default_measurements(),
             weights: default_weights(),
             volumes: default_volumes(),
+            temperatures: default_temperatures(),
             _currency: default_currency(),
         }
     }
@@ -451,6 +454,9 @@ pub fn default_weights() -> String {
 }
 pub fn default_volumes() -> String {
     String::from("l")
+}
+pub fn default_temperatures() -> String {
+    String::from("C")
 }
 pub fn default_currency() -> String {
     String::from("eur")
