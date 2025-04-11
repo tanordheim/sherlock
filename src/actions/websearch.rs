@@ -70,7 +70,7 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
             traceback: String::new(),
         })?;
 
-    let url = url_template.replace("{keyword}", query);
+    let url = url_template.replace("{keyword}", &query.replace(" ", "+"));
     let command = if browser.contains("%u") {
         browser.replace("%u", &url)
     } else {
