@@ -12,7 +12,8 @@
     "units": {
         "lengths": "meter",
         "weights": "kg",
-        "volumes": "l"
+        "volumes": "l",
+        "temperatures": "C"
     },
     "appearance": {
         "width": 900,

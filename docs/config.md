@@ -20,6 +20,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `lengths`        | `meter`| Sets the default unit for any length calculations. |
 | `weights`        | `kg`| Sets the default unit for any weight calculations. |
 | `volumes`        | `l`| Sets the default unit for any volume calculations. |
+| `temperatures`        | `C`| Sets the default unit for any temperatues. |
 
 ---
 ## Debug Section `[debug]`

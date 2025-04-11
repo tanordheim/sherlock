@@ -12,6 +12,7 @@ app_paths               =   ["~/.local/share/applications/"]
 lengths                 =   "meter"
 weights                 =   "kg"
 volumes                 =   "l"
+temperatures            =   "C"
 
 [appearance]
 width                   = 900                                       
