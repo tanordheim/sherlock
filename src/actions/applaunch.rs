@@ -1,22 +1,15 @@
 use std::{
     os::unix::process::CommandExt,
-    process::{exit, Command, Stdio},
+    process::{Command, Stdio},
 };
 
-pub fn applaunch(exec: &str) {
-    let parts: Vec<String> = exec.split_whitespace().map(String::from).collect();
+pub fn applaunch(exec: &str) -> Option<()> {
+    let mut parts = exec.trim()
+        .split_whitespace()
+        .filter(|s| !s.starts_with("%"));
 
-    if parts.is_empty() {
-        eprintln!("Error: Command is empty");
-        exit(1);
-    }
-
-    let mut command = Command::new(&parts[0]);
-    for arg in &parts[1..] {
-        if !arg.starts_with("%") {
-            command.arg(arg);
-        }
-    }
+    let mut command = Command::new(parts.next()?);
+    command.args(parts);
 
     #[cfg(target_family = "unix")]
     unsafe {
@@ -29,7 +22,6 @@ pub fn applaunch(exec: &str) {
                 Ok(())
             });
     }
-
-    // TODO make error handling so that error tile will show up
-    let _output = command.spawn();
+    let _ = command.spawn().map_err(|e| eprintln!("Error executing command: {}", e));
+    None
 }
