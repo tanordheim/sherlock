@@ -472,11 +472,14 @@ pub fn async_calc(
 
                     // Process weather tile
                     if let Some(opts) = &widget_clone.weather_tile {
-                        if let Some((temperature, icon)) = widget_clone.launcher.get_weather().await {
+                        if let Some((temperature, icon, format_text)) = widget_clone.launcher.get_weather().await {
                             widget_clone.result_item.row_item.add_css_class("go-active");
                             opts.temperature.set_text(&temperature);
                             opts.spinner.set_spinning(false);
-                            opts.icon.set_visible(true);
+                            opts.icon.set_icon_name(Some(&icon));
+                            attrs.get("location").map(|loc| {
+                                opts.location.set_text(&format!("{}  {}", loc, format_text));
+                            });
                         }
                     }
 

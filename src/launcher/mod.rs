@@ -153,7 +153,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_weather(&self) -> Option<(String, String)> {
+    pub async fn get_weather(&self) -> Option<(String, String, String)> {
         match &self.launcher_type {
             LauncherType::WeatherLauncher(wtr) => wtr.get_result().await,
             _ => None,

@@ -38,6 +38,7 @@ impl ImageReplacementElements {
 #[derive(Debug)]
 pub struct WeatherTileElements {
     pub temperature: Label,
+    pub location: Label,
     pub icon: Image,
     pub spinner: Spinner,
 }
