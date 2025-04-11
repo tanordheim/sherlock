@@ -57,7 +57,7 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
             traceback: String::new(),
         })?;
     // read default browser desktop file
-    let browser = read_lines(browser_file)
+    let mut browser = read_lines(browser_file)
         .map_err(|e| SherlockError {
             error: SherlockErrorType::FileReadError(browser_file.clone()),
             traceback: e.to_string(),
@@ -70,7 +70,12 @@ pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
             traceback: String::new(),
         })?;
 
-    let url = url_template.replace("{keyword}", query);
-    let command = browser.replace("%u", &format!("'{}'", url));
+    let url = url_template.replace("{keyword}", &query.replace(" ", "+"));
+    let command = if browser.contains("%u") {
+        browser.replace("%u", &url)
+    } else {
+        browser.push_str(&format!(" {}", url));
+        browser
+    };
     command_launch(&command, "")
 }
