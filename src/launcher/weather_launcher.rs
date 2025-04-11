@@ -1,5 +1,7 @@
-use std::collections::HashSet;
+use gio::glib::subclass::interface;
 use regex::Regex;
+use simd_json::base::{ValueAsArray, ValueAsScalar};
+use std::collections::HashSet;
 
 use crate::CONFIG;
 
@@ -9,68 +11,69 @@ pub struct WeatherLauncher {
 }
 impl WeatherLauncher {
     pub async fn get_result(&self) -> Option<(String, String, String)> {
-        let url = format!("https://wttr.in/{}?format=%w--+%C--+%t", self.location);
-        let pattern = r"^(.)(.*)km\/h--(.*)--\s(.*)°C$";
-        let re = Regex::new(&pattern).ok()?;
+        let config = CONFIG.get()?;
+        let url = format!("https://wttr.in/{}?format=j2", self.location);
 
         let response = reqwest::get(url).await.ok()?.text().await.ok()?;
-        let matches = re.captures(&response)?;
-        let wind_dir = matches.get(1)?.as_str();
-        let wind_speed = matches.get(2)?.as_str().parse::<i32>().ok()?;
-        let condition_raw = matches.get(3)?.as_str().trim();
-        let temp_raw = matches.get(4)?.as_str().parse::<i32>().ok()?;
+        let mut response_bytes = response.into_bytes();
+        let json: simd_json::OwnedValue = simd_json::to_owned_value(&mut response_bytes).ok()?;
+        let current_condition = json["current_condition"].as_array()?.get(0)?;
 
-        let config = CONFIG.get()?;
-        let temp_format = match config.units.temperatures.as_str() {
-            "f" | "F" => {
-                let farenheit = (temp_raw as f32 * 9.0 / 5.0) + 32.0;
-                format!("{:.0}°F", farenheit)
-        
-            },
-            _ => format!("{}°C", temp_raw)
+        // Parse Temperature
+        let temp = match config.units.temperatures.as_str() {
+            "t" | "T" => format!("{}°F", current_condition["temp_F"].as_str()?),
+            _ => format!("{}°C", current_condition["temp_C"].as_str()?),
         };
-        let imperial_lengths: HashSet<&str> = HashSet::from([
+
+        // Parse Icon
+        let code = current_condition["weatherCode"].as_str()?;
+        let icon = WeatherLauncher::match_weather_code(code);
+
+        // Parse wind dir
+        let wind_deg = current_condition["winddirDegree"]
+            .as_str()?
+            .parse::<f32>()
+            .ok()?;
+        let sector_size: f32 = 45.0;
+        let index = ((wind_deg + sector_size / 2.0) / sector_size).floor() as usize % 8;
+        let win_dirs = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+        let wind_dir = win_dirs.get(index)?;
+
+        // Parse wind speed
+        let imperials: HashSet<&str> = HashSet::from([
             "inches", "inch", "in",
             "feet", "foot", "ft",
             "yards", "yard", "yd",
             "miles", "mile", "mi"
         ]);
-        let wind_speed_format = if imperial_lengths.contains(config.units.lengths.to_lowercase().as_str()) {
-            let mph = wind_speed as f32 * 0.621371;
-            format!("{} {:.0}mph", wind_dir, mph)
-
+        let wind = if imperials.contains(config.units.lengths.to_lowercase().as_str()){
+            let speed = current_condition["windspeedMiles"].as_str()?;
+            format!("{}{}mph", wind_dir, speed)
         } else {
-            format!("{} {:.0}km/h", wind_dir, wind_speed)
+            let speed = current_condition["windspeedKmph"].as_str()?;
+            format!("{}{}km/h", wind_dir, speed)
         };
-        println!("{} - {}", condition_raw, wind_speed_format);
-        let condition_format = WeatherLauncher::match_weather_code(condition_raw);
-        let full_format = format!("{}  {}", condition_raw, wind_speed_format);
 
-
-        return Some((temp_format, condition_format, full_format));
+        return Some((temp, icon, wind));
     }
     fn match_weather_code(code: &str) -> String {
-        let icon_name = match code.to_lowercase().as_str() {
-            "sunny" | "clear" => "weather-clear",
-            "partly cloudy" => "weather-few-clouds",
-            "cloudy" => "weather-many-clouds",
-            "very cloudy" => "weather-many-clouds",
-            "fog" => "weather-mist",
-            "light showers" => "weather-showers",
-            "light sleet showers" => "weather-freezing-scattered-rain-storm",
-            "light sleet" => "weather-freezing-scattered-rain",
-            "thundery showers" => "weather-storm",
-            "light snow" => "weather-snow-scattered-day",
-            "heavy snow" => "weather-snow-storm",
-            "heavy snow showers" => "weather-snow-scattered-storm",
-            "heavy showers" => "weather-showers",
-            "heavy rain" => "weather-storm",
-            "light rain" => "weather-showers-scattered",
-            "light snow showers" => "weather-snow-scattered-storm",
-            "thundery heavy rain" => "weather-storm",
-            "thundery snow showers" => "weather-snow-scattered-storm",
+        let icon = match code {
+            "113" => "weather-clear",
+            "116" => "weather-few-clouds",
+            "119" | "122" => "weather-many-clouds",
+            "143" | "248" | "260" => "weather-mist",
+            "176" | "263" | "299" | "305" | "353" | "356" => "weather-showers",
+            "179" | "362" | "365" | "374" => "weather-freezing-scattered-rain-storm",
+            "182" | "185" | "281" | "284" | "311" | "314" | "317" | "350" | "377" => {
+                "weather-freezing-scattered-rain"
+            }
+            "200" | "302" | "308" | "359" | "386" | "389" => "weather-storm",
+            "227" | "320" => "weather-snow-scattered-day",
+            "230" | "329" | "332" | "338" => "weather-snow-storm",
+            "323" | "326" | "335" | "368" | "371" | "392" | "395" => "weather-snow-scattered-storm",
+            "266" | "293" | "296" => "weather-showers-scattered",
             _ => "weather-none-available",
         };
-        String::from(icon_name)
+        String::from(icon)
     }
 }
