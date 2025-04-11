@@ -148,13 +148,12 @@ fn construct_window(
 ) {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
-    let mut modes: HashMap<String, String> = HashMap::new();
-    launchers
+    let modes: HashMap<String, String> = launchers
         .iter()
         .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))
-        .for_each(|(alias, name)| {
-            modes.insert(format!("{} ", alias), name.clone());
-        });
+        .map(|(alias, name)| (format!("{} ", alias), name.clone()))
+        .collect();
+
 
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
