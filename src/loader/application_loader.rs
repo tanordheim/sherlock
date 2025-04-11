@@ -205,9 +205,11 @@ impl Loader {
         // check if sherlock_alias was modified
         let alias_path = Path::new(&config.files.alias);
         let ignore_path = Path::new(&config.files.ignore);
+        let config_path = Path::new(&config.files.config);
         let cache_path = Path::new(&config.behavior.cache);
         let changed = file_has_changed(&alias_path, &cache_path)
-            || file_has_changed(&ignore_path, &cache_path);
+            || file_has_changed(&ignore_path, &cache_path)
+            || file_has_changed(&config_path, &cache_path);
 
         if !changed {
             let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
