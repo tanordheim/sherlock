@@ -53,10 +53,10 @@ impl MusicPlayerLauncher {
         })?;
 
         let home_dir = PathBuf::from(home);
-        let path = home_dir.join(".sherlock/mpris-cache/").join(loc);
+        let path = home_dir.join(".cache/sherlock/mpris-cache/").join(loc);
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(|e| SherlockError {
-                error: SherlockErrorType::DirCreateError(".sherlock/mpris-cache/".to_string()),
+                error: SherlockErrorType::DirCreateError("~/.cache/sherlock/mpris-cache/".to_string()),
                 traceback: e.to_string(),
             })?;
         };
@@ -84,7 +84,7 @@ impl MusicPlayerLauncher {
             traceback: e.to_string(),
         })?;
         let home_dir = PathBuf::from(home);
-        let path = home_dir.join(".sherlock/mpris-cache/").join(loc);
+        let path = home_dir.join("~/.cache/sherlock/mpris-cache/").join(loc);
 
         let mut file = File::open(&path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileExistError(path.clone()),
