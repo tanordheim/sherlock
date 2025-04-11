@@ -84,7 +84,7 @@ impl MusicPlayerLauncher {
             traceback: e.to_string(),
         })?;
         let home_dir = PathBuf::from(home);
-        let path = home_dir.join("~/.cache/sherlock/mpris-cache/").join(loc);
+        let path = home_dir.join(".cache/sherlock/mpris-cache/").join(loc);
 
         let mut file = File::open(&path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileExistError(path.clone()),
