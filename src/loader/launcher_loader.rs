@@ -196,9 +196,11 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                     }
                 }
                 "weather" => {
-                    if let Some(location) = cmd.args["location"].as_str() {
+                    if let Some(location) = cmd.args["location"].as_str(){
+                        let update_interval = cmd.args["update_interval"].as_u64().unwrap_or(60);
                         LauncherType::WeatherLauncher(WeatherLauncher {
                             location: location.to_string(),
+                            update_interval
                         })
                     } else {
                         LauncherType::Empty

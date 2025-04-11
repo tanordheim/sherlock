@@ -1,16 +1,28 @@
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
 use simd_json::base::{ValueAsArray, ValueAsScalar};
 use std::collections::HashSet;
+use std::fs::{self, File};
+use std::time::{SystemTime, Duration};
 
-use crate::CONFIG;
+use crate::{loader::util::home_dir, CONFIG};
+
+use super::utils::to_title_case;
 
 #[derive(Clone, Debug)]
 pub struct WeatherLauncher {
     pub location: String,
+    pub update_interval: u64,
 }
 impl WeatherLauncher {
-    pub async fn get_result(&self) -> Option<(String, String, String)> {
+    pub async fn get_result(&self) -> Option<WeatherData> {
         let config = CONFIG.get()?;
-        let url = format!("https://wttr.in/{}?format=j2", self.location);
+        // try read cache 
+        if let Some(data) = WeatherData::from(&self){
+            return Some(data);
+        };
+
+        let url = format!("https://de.wttr.in/{}?format=j2", self.location);
 
         let response = reqwest::get(url).await.ok()?.text().await.ok()?;
         let mut response_bytes = response.into_bytes();
@@ -18,7 +30,7 @@ impl WeatherLauncher {
         let current_condition = json["current_condition"].as_array()?.get(0)?;
 
         // Parse Temperature
-        let temp = match config.units.temperatures.as_str() {
+        let temperature = match config.units.temperatures.as_str() {
             "t" | "T" => format!("{}°F", current_condition["temp_F"].as_str()?),
             _ => format!("{}°C", current_condition["temp_C"].as_str()?),
         };
@@ -50,7 +62,18 @@ impl WeatherLauncher {
             format!("{} {}km/h", wind_dir, speed)
         };
 
-        return Some((temp, icon, wind));
+        let loc = to_title_case(&self.location);
+        let format_str = format!("{}  {}", loc, wind);
+        let data = WeatherData {
+            temperature,
+            icon,
+            format_str,
+            location: self.location.clone(),
+        };
+        data.cache();
+
+
+        Some(data)
     }
     fn match_weather_code(code: &str) -> String {
         let icon = match code {
@@ -71,5 +94,49 @@ impl WeatherLauncher {
             _ => "weather-none-available",
         };
         String::from(icon)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WeatherData{
+    pub temperature: String,
+    pub icon: String,
+    pub format_str: String,
+    pub location: String,
+}
+impl WeatherData {
+    fn from(launcher: &WeatherLauncher)->Option<Self>{
+        let mut path = home_dir().ok()?;
+        path.push(format!(".cache/sherlock/weather/{}.json", launcher.location));
+
+        fn modtime(path: &PathBuf) -> Option<SystemTime> {
+            fs::metadata(path).ok().and_then(|m| m.modified().ok())
+        }
+        let mtime = modtime(&path)?;
+        let time_since = SystemTime::now().duration_since(mtime).ok()?;
+        if time_since > Duration::from_secs(60 * launcher.update_interval){
+            let cached_data: Option<Self> = File::open(&path)
+                .ok()
+                .and_then(|f| simd_json::from_reader(f).ok());
+            return cached_data
+        } else {
+            return None
+        }
+    }
+    fn cache(&self)->Option<()>{
+        let mut path = home_dir().ok()?;
+        path.push(format!(".cache/sherlock/weather/{}.json", self.location));
+        if let Some(parent) = path.parent(){
+            fs::create_dir_all(parent).ok()?;
+        }
+        let tmp_path = path.with_extension(".tmp");
+        if let Ok(f) = File::create(&tmp_path) {
+            if let Ok(_) = simd_json::to_writer(f, &self) {
+                let _ = fs::rename(&tmp_path, &path);
+            } else {
+                let _ = fs::remove_file(&tmp_path);
+            }
+        }
+        None
     }
 }
