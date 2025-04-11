@@ -463,7 +463,7 @@ pub fn default_currency() -> String {
 }
 
 pub fn default_cache() -> PathBuf {
-    PathBuf::from("~/.cache/sherlock_desktop_cache.json")
+    PathBuf::from("~/.cache/sherlock/sherlock_desktop_cache.json")
 }
 pub fn default_config() -> PathBuf {
     PathBuf::from("~/.config/sherlock/config.toml")

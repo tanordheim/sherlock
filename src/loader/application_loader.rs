@@ -183,7 +183,12 @@ impl Loader {
     }
 
     fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
-        let tmp_path = cache_loc.as_ref().with_extension(".tmp");
+        let path = cache_loc.as_ref();
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let tmp_path = path.with_extension(".tmp");
+    
         if let Ok(f) = File::create(&tmp_path) {
             if let Ok(_) = simd_json::to_writer(f, &apps) {
                 let _ = fs::rename(&tmp_path, &cache_loc);
