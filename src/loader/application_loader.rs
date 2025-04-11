@@ -91,12 +91,18 @@ impl Loader {
                         }
 
                         // Construct the executable command
-                        let exec_path = parse_field(&content, &exec_re);
-                        let mut exec = if parse_field(&content, &terminal_re) == "true" {
-                            format!("{} {}", &config.default_apps.terminal, exec_path)
-                        } else {
-                            exec_path.to_string()
-                        };
+                        let mut exec = config.behavior.global_prefix
+                            .as_ref()
+                            .map_or(String::new(), |pre| format!("{} ", pre));
+                        if parse_field(&content, &terminal_re) == "true" {
+                            exec.push_str(&config.default_apps.terminal);
+                            exec.push(' ');
+                        }
+                        exec.push_str(&parse_field(&content, &exec_re));
+                        if let Some(flag) = &config.behavior.global_flags {
+                            exec.push(' ');
+                            exec.push_str(&flag);
+                        }
 
                         // apply aliases
                         if let Some(alias) = aliases.get(&name) {

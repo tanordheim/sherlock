@@ -342,6 +342,8 @@ pub struct ConfigBehavior {
     pub animate: bool,
     #[serde(default)]
     pub field: Option<String>,
+    pub global_prefix: Option<String>,
+    pub global_flags: Option<String>,
 }
 impl Default for ConfigBehavior {
     fn default() -> Self {
@@ -351,6 +353,8 @@ impl Default for ConfigBehavior {
             daemonize: false,
             animate: true,
             field: None,
+            global_prefix: None,
+            global_flags: None,
         }
     }
 }
