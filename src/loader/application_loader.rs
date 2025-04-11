@@ -322,11 +322,11 @@ pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
         .flatten()
         .collect::<HashSet<PathBuf>>()
 }
-pub fn file_has_changed(file_path: &Path, cache_path: &Path) -> bool {
+pub fn file_has_changed(file_path: &Path, compare_to: &Path) -> bool {
     fn modtime(path: &Path) -> Option<SystemTime> {
         fs::metadata(path).ok().and_then(|m| m.modified().ok())
     }
-    match (modtime(&file_path), modtime(&cache_path)) {
+    match (modtime(&file_path), modtime(&compare_to)) {
         (Some(t1), Some(t2)) if t1 >= t2 => return true,
         _ => {}
     }

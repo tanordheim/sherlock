@@ -479,17 +479,17 @@ pub fn async_calc(
 
                         // Process weather tile
                         if let Some(wtr) = &widget_clone.weather_tile {
-                            if let Some((temperature, icon, format_text)) =
+                            if let Some(data) =
                                 widget_clone.launcher.get_weather().await
                             {
                                 widget_clone.result_item.row_item.add_css_class("go-active");
-                                widget_clone.result_item.row_item.add_css_class(&icon);
-                                wtr.temperature.set_text(&temperature);
+                                widget_clone.result_item.row_item.add_css_class(&data.icon);
+                                wtr.temperature.set_text(&data.temperature);
                                 wtr.spinner.set_spinning(false);
-                                wtr.icon.set_icon_name(Some(&icon));
-                                attrs.get("location").map(|loc| {
-                                    wtr.location.set_text(&format!("{}  {}", loc, format_text));
-                                });
+                                wtr.icon.set_icon_name(Some(&data.icon));
+                                wtr.location.set_text(&data.format_str);
+                            } else {
+                                widget_clone.result_item.row_item.set_visible(false);
                             }
                         }
 

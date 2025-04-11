@@ -29,7 +29,7 @@ use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::SystemCommand;
-use weather_launcher::WeatherLauncher;
+use weather_launcher::{WeatherData, WeatherLauncher};
 use web_launcher::Web;
 
 #[derive(Clone, Debug)]
@@ -134,7 +134,7 @@ impl Launcher {
                 Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
             }
             LauncherType::MusicPlayerLauncher(mpris) => Tile::mpris_tile(self, &mpris),
-            LauncherType::WeatherLauncher(wtr) => Tile::weather_tile_loader(self, &wtr),
+            LauncherType::WeatherLauncher(_) => Tile::weather_tile_loader(self),
             _ => None,
         }
     }
@@ -150,7 +150,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_weather(&self) -> Option<(String, String, String)> {
+    pub async fn get_weather(&self) -> Option<WeatherData> {
         match &self.launcher_type {
             LauncherType::WeatherLauncher(wtr) => wtr.get_result().await,
             _ => None,
