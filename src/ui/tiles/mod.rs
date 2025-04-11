@@ -9,5 +9,6 @@ pub mod pipe_tile;
 pub mod process_tile;
 pub mod util;
 pub mod web_tile;
+pub mod weather_tile;
 
 pub struct Tile {}

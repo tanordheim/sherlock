@@ -556,16 +556,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ctrlc"
-version = "3.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "697b5419f348fd5ae2478e8018cb016c00a5881c7f46c717de98ffd135a5651c"
-dependencies = [
- "nix 0.29.0",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "derive-new"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -778,6 +768,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures"
+version = "0.3.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65bc07b1a8bc7c85c5f2e110c476c7389b4554ba72af57d8445ea63a576b0876"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-sink",
+ "futures-task",
+ "futures-util",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -852,6 +857,7 @@ version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fa08315bb612088cc391249efdc3bc77536f16c91f6cf495e6fbe85b20a4a81"
 dependencies = [
+ "futures-channel",
  "futures-core",
  "futures-io",
  "futures-macro",
@@ -2536,7 +2542,7 @@ dependencies = [
  "chrono",
  "cli-clipboard",
  "criterion",
- "ctrlc",
+ "futures",
  "gdk-pixbuf",
  "gio",
  "glob",

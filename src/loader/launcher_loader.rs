@@ -13,6 +13,7 @@ use crate::launcher::calc_launcher::Calculator;
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
+use crate::launcher::weather_launcher::WeatherLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
     Launcher, LauncherType,
@@ -193,7 +194,14 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                     } else {
                         LauncherType::Empty
                     }
-                }
+                },
+                "weather" => {
+                    if let Some(location) = cmd.args["location"].as_str(){
+                        LauncherType::WeatherLauncher(WeatherLauncher { location: location.to_string() })
+                    } else {
+                        LauncherType::Empty
+                    }
+                },
                 "debug" => {
                     let prio = cmd.priority;
                     let mut commands: HashMap<String, AppData> =

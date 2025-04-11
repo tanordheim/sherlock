@@ -2,24 +2,18 @@ use std::collections::HashMap;
 
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
-use gtk4::{gdk, Image, Label, Overlay};
+use gtk4::{gdk, Image, Overlay};
 
-use super::util::{AsyncOptions, TileBuilder};
+use super::util::{AsyncLauncherTile, ImageReplacementElements, TileBuilder};
 use super::Tile;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
     pub fn mpris_tile(
-        launcher: &Launcher,
+        launcher: Launcher,
         mpris: &MusicPlayerLauncher,
-    ) -> Option<(
-        ResultItem,
-        Option<Label>,
-        Option<Label>,
-        Option<AsyncOptions>,
-        HashMap<String, String>,
-    )> {
+    ) -> Option<AsyncLauncherTile> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
         builder.object.set_spawn_focus(launcher.spawn_focus);
@@ -32,7 +26,7 @@ impl Tile {
         builder.object.set_overflow(gtk4::Overflow::Hidden);
 
         let overlay = Overlay::new();
-        let mut options = AsyncOptions::new();
+        let mut options = ImageReplacementElements::new();
 
         builder.icon.set_visible(false);
 
@@ -73,7 +67,7 @@ impl Tile {
             true => builder.shortcut_holder,
             _ => None,
         };
-        let res = ResultItem {
+        let result_item = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder,
@@ -81,6 +75,13 @@ impl Tile {
 
         options.icon_holder_overlay = Some(overlay);
 
-        return Some((res, None, None, Some(options), attrs));
+        return Some(AsyncLauncherTile{
+            launcher,
+            result_item,
+            text_tile: None,
+            image_replacement: Some(options),
+            weather_tile: None,
+            attrs
+        });
     }
 }

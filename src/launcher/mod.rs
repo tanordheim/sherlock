@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use gtk4::{Box, Label};
+use gtk4::Box;
 
 pub mod app_launcher;
 pub mod audio_launcher;
@@ -11,12 +11,13 @@ pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
-mod utils;
 pub mod web_launcher;
+pub mod weather_launcher;
+mod utils;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
-    ui::tiles::{util::AsyncOptions, Tile},
+    ui::tiles::{util::AsyncLauncherTile, Tile},
 };
 
 use app_launcher::App;
@@ -28,6 +29,7 @@ use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::SystemCommand;
+use weather_launcher::WeatherLauncher;
 use web_launcher::Web;
 
 #[derive(Clone, Debug)]
@@ -42,6 +44,7 @@ pub enum LauncherType {
     EventLauncher(EventLauncher),
     MusicPlayerLauncher(MusicPlayerLauncher),
     ProcessLauncher(ProcessLauncher),
+    WeatherLauncher(WeatherLauncher),
     Empty,
 }
 
@@ -73,17 +76,16 @@ impl Launcher {
     // TODO: tile method recreates already stored data...
     pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
         match &self.launcher_type {
-            LauncherType::CategoryLauncher(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
             LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
-            LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
-            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(&self, keyword, &bulk_text),
-            LauncherType::SystemCommand(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
+            LauncherType::CategoryLauncher(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
             LauncherType::Clipboard((clp, calc)) => {
                 Tile::clipboard_tile(self, &clp, &calc, keyword)
             }
             LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
             LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
+            LauncherType::SystemCommand(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
+            LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
 
             _ => Vec::new(),
         }
@@ -127,20 +129,15 @@ impl Launcher {
         }
     }
     pub fn get_loader_widget(
-        &self,
+        self,
         keyword: &str,
-    ) -> Option<(
-        ResultItem,
-        Option<Label>,
-        Option<Label>,
-        Option<AsyncOptions>,
-        HashMap<String, String>,
-    )> {
-        match &self.launcher_type {
+    ) -> Option<AsyncLauncherTile> {
+        match self.launcher_type.clone() {
             LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile_loader(&self, keyword, &bulk_text)
+                Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
             }
-            LauncherType::MusicPlayerLauncher(mpris) => Tile::mpris_tile(&self, &mpris),
+            LauncherType::MusicPlayerLauncher(mpris) => Tile::mpris_tile(self, &mpris),
+            LauncherType::WeatherLauncher(wtr) => Tile::weather_tile_loader(self, &wtr),
             _ => None,
         }
     }
@@ -153,6 +150,12 @@ impl Launcher {
     pub async fn get_image(&self) -> Option<(gdk_pixbuf::Pixbuf, bool)> {
         match &self.launcher_type {
             LauncherType::MusicPlayerLauncher(mpis) => mpis.get_image().await,
+            _ => None,
+        }
+    }
+    pub async fn get_weather(&self) -> Option<(String, String)> {
+        match &self.launcher_type {
+            LauncherType::WeatherLauncher(wtr) => wtr.get_result().await,
             _ => None,
         }
     }

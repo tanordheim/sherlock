@@ -1,3 +1,4 @@
+use futures::future::join_all;
 use gio::ActionEntry;
 use gtk4::{
     self,
@@ -7,9 +8,9 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
@@ -180,7 +181,7 @@ fn construct_window(
     overlay.add_overlay(&search_icon_back);
 
     // Show notification-bar
-    CONFIG.get().map(|c|{
+    CONFIG.get().map(|c| {
         if !c.appearance.status_bar {
             let n: Option<HVBox> = builder.object("status-bar");
             n.map(|n| n.set_visible(false));
@@ -195,9 +196,7 @@ fn construct_window(
         search_bar: builder.object("search-bar").unwrap_or_default(),
         search_icon_holder,
         mode_title: builder.object("category-type-label").unwrap_or_default(),
-        spinner: builder
-            .object("status-bar-spinner")
-            .unwrap_or_default(),
+        spinner: builder.object("status-bar-spinner").unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
@@ -404,19 +403,10 @@ pub fn async_calc(
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
                 || (current_mode == "all" && launcher.priority > 0)
             {
-                launcher.get_loader_widget(&current_text).map(
-                    |(result_item, title, body, async_opts, attrs)| {
-                        async_widgets.push(result_item.clone());
-                        AsyncLauncherTile {
-                            launcher,
-                            title,
-                            body,
-                            result_item,
-                            async_opts,
-                            attrs,
-                        }
-                    },
-                )
+                launcher.get_loader_widget(&current_text).map(|tile| {
+                    async_widgets.push(tile.result_item.clone());
+                    tile
+                })
             } else {
                 None
             }
@@ -445,42 +435,61 @@ pub fn async_calc(
                     .row_item
                     .activate_action("win.spinner-mode", Some(&true.to_variant()));
             }
-            // get results for aysnc launchers
-            for widget in async_launchers.iter() {
-                let mut attrs = widget.attrs.clone();
-                if let Some((title, body, next_content)) =
-                    widget.launcher.get_result(&current_text).await
-                {
-                    widget.title.as_ref().map(|t| t.set_text(&title));
-                    widget.body.as_ref().map(|b| b.set_text(&body));
-                    if let Some(next_content) = next_content {
-                        attrs.insert(String::from("next_content"), next_content.to_string());
-                    }
-                }
-                if let Some(opts) = &widget.async_opts {
-                    // Replace one image with another
-                    if let Some(overlay) = &opts.icon_holder_overlay {
-                        if let Some((image, was_cached)) = widget.launcher.get_image().await {
-                            // Also check for animate key
-                            if !was_cached {
-                                overlay.add_css_class("image-replace-overlay");
+            // Make them update concurrently
+            let futures: Vec<_> = async_launchers.iter().map(|widget| {
+                let widget_clone = widget;
+                let current_text = current_text.clone();
+                async move {
+                    let mut attrs = widget_clone.attrs.clone();
+
+                    // Process text tile
+                    if let Some(opts) = &widget_clone.text_tile {
+                        if let Some((title, body, next_content)) =
+                            widget_clone.launcher.get_result(&current_text).await
+                        {
+                            opts.title.set_text(&title);
+                            opts.body.set_text(&body);
+                            if let Some(next_content) = next_content {
+                                attrs.insert(String::from("next_content"), next_content.to_string());
                             }
-                            let gtk_image = Image::from_pixbuf(Some(&image));
-                            gtk_image.set_widget_name("album-cover");
-                            gtk_image.set_pixel_size(50);
-                            overlay.add_overlay(&gtk_image);
                         }
                     }
-                }
-                widget
-                    .result_item
-                    .row_item
-                    .connect("row-should-activate", false, move |row| {
+
+                    // Process image replacement
+                    if let Some(opts) = &widget_clone.image_replacement {
+                        if let Some(overlay) = &opts.icon_holder_overlay {
+                            if let Some((image, was_cached)) = widget_clone.launcher.get_image().await {
+                                if !was_cached {
+                                    overlay.add_css_class("image-replace-overlay");
+                                }
+                                let gtk_image = Image::from_pixbuf(Some(&image));
+                                gtk_image.set_widget_name("album-cover");
+                                gtk_image.set_pixel_size(50);
+                                overlay.add_overlay(&gtk_image);
+                            }
+                        }
+                    }
+
+                    // Process weather tile
+                    if let Some(opts) = &widget_clone.weather_tile {
+                        if let Some((temperature, icon)) = widget_clone.launcher.get_weather().await {
+                            widget_clone.result_item.row_item.add_css_class("go-active");
+                            opts.temperature.set_text(&temperature);
+                            opts.spinner.set_spinning(false);
+                            opts.icon.set_visible(true);
+                        }
+                    }
+
+                    // Connect row-should-activate signal
+                    widget_clone.result_item.row_item.connect("row-should-activate", false, move |row| {
                         let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                         execute_from_attrs(&row, &attrs);
                         None
                     });
-            }
+                }
+            }).collect();
+
+            let _ = join_all(futures).await;
             // Set spinner inactive
             if let Some(row) = async_launchers.get(0) {
                 let _ = row
