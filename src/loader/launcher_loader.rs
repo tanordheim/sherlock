@@ -194,14 +194,16 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                     } else {
                         LauncherType::Empty
                     }
-                },
+                }
                 "weather" => {
-                    if let Some(location) = cmd.args["location"].as_str(){
-                        LauncherType::WeatherLauncher(WeatherLauncher { location: location.to_string() })
+                    if let Some(location) = cmd.args["location"].as_str() {
+                        LauncherType::WeatherLauncher(WeatherLauncher {
+                            location: location.to_string(),
+                        })
                     } else {
                         LauncherType::Empty
                     }
-                },
+                }
                 "debug" => {
                     let prio = cmd.priority;
                     let mut commands: HashMap<String, AppData> =

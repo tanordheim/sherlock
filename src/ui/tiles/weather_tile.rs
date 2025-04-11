@@ -12,8 +12,8 @@ impl Tile {
     pub fn weather_tile_loader(
         launcher: Launcher,
         wtr: &WeatherLauncher,
-    ) -> Option<AsyncLauncherTile>  {
-        let title_case = |input_str:&str| {
+    ) -> Option<AsyncLauncherTile> {
+        let title_case = |input_str: &str| {
             let mut result = String::with_capacity(input_str.len());
             let mut cap_next = true;
             for c in input_str.chars() {
@@ -39,18 +39,17 @@ impl Tile {
 
         let loc = title_case(&wtr.location);
         // Add attrs and implement double click capabilities
-        let attrs: HashMap<String, String> =
-            vec![("method", &launcher.method), ("location", &loc)]
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect();
+        let attrs: HashMap<String, String> = vec![("method", &launcher.method), ("location", &loc)]
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
 
         builder.icon.set_pixel_size(40);
 
         let result_item = ResultItem {
             priority: launcher.priority as f32,
             row_item: builder.object,
-            shortcut_holder: None
+            shortcut_holder: None,
         };
         let weather_tile = Some(WeatherTileElements {
             icon: builder.icon,
@@ -58,7 +57,7 @@ impl Tile {
             location: builder.location,
             spinner: builder.spinner,
         });
-        return Some(AsyncLauncherTile{
+        return Some(AsyncLauncherTile {
             launcher,
             result_item,
             text_tile: None,

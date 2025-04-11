@@ -75,13 +75,13 @@ impl Tile {
 
         options.icon_holder_overlay = Some(overlay);
 
-        return Some(AsyncLauncherTile{
+        return Some(AsyncLauncherTile {
             launcher,
             result_item,
             text_tile: None,
             image_replacement: Some(options),
             weather_tile: None,
-            attrs
+            attrs,
         });
     }
 }

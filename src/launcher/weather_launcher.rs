@@ -1,5 +1,3 @@
-use gio::glib::subclass::interface;
-use regex::Regex;
 use simd_json::base::{ValueAsArray, ValueAsScalar};
 use std::collections::HashSet;
 
@@ -41,12 +39,10 @@ impl WeatherLauncher {
 
         // Parse wind speed
         let imperials: HashSet<&str> = HashSet::from([
-            "inches", "inch", "in",
-            "feet", "foot", "ft",
-            "yards", "yard", "yd",
-            "miles", "mile", "mi"
+            "inches", "inch", "in", "feet", "foot", "ft", "yards", "yard", "yd", "miles", "mile",
+            "mi",
         ]);
-        let wind = if imperials.contains(config.units.lengths.to_lowercase().as_str()){
+        let wind = if imperials.contains(config.units.lengths.to_lowercase().as_str()) {
             let speed = current_condition["windspeedMiles"].as_str()?;
             format!("{}{}mph", wind_dir, speed)
         } else {

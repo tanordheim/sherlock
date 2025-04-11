@@ -436,61 +436,75 @@ pub fn async_calc(
                     .activate_action("win.spinner-mode", Some(&true.to_variant()));
             }
             // Make them update concurrently
-            let futures: Vec<_> = async_launchers.iter().map(|widget| {
-                let widget_clone = widget;
-                let current_text = current_text.clone();
-                async move {
-                    let mut attrs = widget_clone.attrs.clone();
+            let futures: Vec<_> = async_launchers
+                .iter()
+                .map(|widget| {
+                    let widget_clone = widget;
+                    let current_text = current_text.clone();
+                    async move {
+                        let mut attrs = widget_clone.attrs.clone();
 
-                    // Process text tile
-                    if let Some(opts) = &widget_clone.text_tile {
-                        if let Some((title, body, next_content)) =
-                            widget_clone.launcher.get_result(&current_text).await
-                        {
-                            opts.title.set_text(&title);
-                            opts.body.set_text(&body);
-                            if let Some(next_content) = next_content {
-                                attrs.insert(String::from("next_content"), next_content.to_string());
-                            }
-                        }
-                    }
-
-                    // Process image replacement
-                    if let Some(opts) = &widget_clone.image_replacement {
-                        if let Some(overlay) = &opts.icon_holder_overlay {
-                            if let Some((image, was_cached)) = widget_clone.launcher.get_image().await {
-                                if !was_cached {
-                                    overlay.add_css_class("image-replace-overlay");
+                        // Process text tile
+                        if let Some(opts) = &widget_clone.text_tile {
+                            if let Some((title, body, next_content)) =
+                                widget_clone.launcher.get_result(&current_text).await
+                            {
+                                opts.title.set_text(&title);
+                                opts.body.set_text(&body);
+                                if let Some(next_content) = next_content {
+                                    attrs.insert(
+                                        String::from("next_content"),
+                                        next_content.to_string(),
+                                    );
                                 }
-                                let gtk_image = Image::from_pixbuf(Some(&image));
-                                gtk_image.set_widget_name("album-cover");
-                                gtk_image.set_pixel_size(50);
-                                overlay.add_overlay(&gtk_image);
                             }
                         }
-                    }
 
-                    // Process weather tile
-                    if let Some(opts) = &widget_clone.weather_tile {
-                        if let Some((temperature, icon, format_text)) = widget_clone.launcher.get_weather().await {
-                            widget_clone.result_item.row_item.add_css_class("go-active");
-                            opts.temperature.set_text(&temperature);
-                            opts.spinner.set_spinning(false);
-                            opts.icon.set_icon_name(Some(&icon));
-                            attrs.get("location").map(|loc| {
-                                opts.location.set_text(&format!("{}  {}", loc, format_text));
-                            });
+                        // Process image replacement
+                        if let Some(opts) = &widget_clone.image_replacement {
+                            if let Some(overlay) = &opts.icon_holder_overlay {
+                                if let Some((image, was_cached)) =
+                                    widget_clone.launcher.get_image().await
+                                {
+                                    if !was_cached {
+                                        overlay.add_css_class("image-replace-overlay");
+                                    }
+                                    let gtk_image = Image::from_pixbuf(Some(&image));
+                                    gtk_image.set_widget_name("album-cover");
+                                    gtk_image.set_pixel_size(50);
+                                    overlay.add_overlay(&gtk_image);
+                                }
+                            }
                         }
-                    }
 
-                    // Connect row-should-activate signal
-                    widget_clone.result_item.row_item.connect("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
-                }
-            }).collect();
+                        // Process weather tile
+                        if let Some(opts) = &widget_clone.weather_tile {
+                            if let Some((temperature, icon, format_text)) =
+                                widget_clone.launcher.get_weather().await
+                            {
+                                widget_clone.result_item.row_item.add_css_class("go-active");
+                                opts.temperature.set_text(&temperature);
+                                opts.spinner.set_spinning(false);
+                                opts.icon.set_icon_name(Some(&icon));
+                                attrs.get("location").map(|loc| {
+                                    opts.location.set_text(&format!("{}  {}", loc, format_text));
+                                });
+                            }
+                        }
+
+                        // Connect row-should-activate signal
+                        widget_clone.result_item.row_item.connect(
+                            "row-should-activate",
+                            false,
+                            move |row| {
+                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                execute_from_attrs(&row, &attrs);
+                                None
+                            },
+                        );
+                    }
+                })
+                .collect();
 
             let _ = join_all(futures).await;
             // Set spinner inactive

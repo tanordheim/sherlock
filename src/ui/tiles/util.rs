@@ -186,7 +186,6 @@ pub struct WeatherTileBuilder {
     pub location: Label,
     pub temperature: Label,
     pub spinner: Spinner,
-    pub body: Box,
 }
 
 impl WeatherTileBuilder {
@@ -203,11 +202,11 @@ impl WeatherTileBuilder {
 
         let overlay = Overlay::new();
         overlay.set_child(Some(&body));
-        
+
         let spinner = Spinner::new();
         spinner.set_spinning(true);
         spinner.set_size_request(20, 20);
-        spinner.set_halign(gtk4::Align::Center);  // Horizontal alignment: center
+        spinner.set_halign(gtk4::Align::Center);
         spinner.set_valign(gtk4::Align::Center);
         overlay.add_overlay(&spinner);
 
@@ -224,15 +223,9 @@ impl WeatherTileBuilder {
             location,
             temperature,
             spinner,
-            body
         }
     }
 }
-
-
-
-
-
 
 pub trait SherlockSearch {
     fn fuzzy_match<T: AsRef<str>>(&self, substring: T) -> bool;

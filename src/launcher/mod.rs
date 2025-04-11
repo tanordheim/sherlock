@@ -11,9 +11,9 @@ pub mod clipboard_launcher;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
-pub mod web_launcher;
-pub mod weather_launcher;
 mod utils;
+pub mod weather_launcher;
+pub mod web_launcher;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
@@ -128,10 +128,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub fn get_loader_widget(
-        self,
-        keyword: &str,
-    ) -> Option<AsyncLauncherTile> {
+    pub fn get_loader_widget(self, keyword: &str) -> Option<AsyncLauncherTile> {
         match self.launcher_type.clone() {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(self, keyword, &bulk_text)

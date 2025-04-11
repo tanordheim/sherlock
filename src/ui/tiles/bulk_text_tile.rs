@@ -40,13 +40,13 @@ impl Tile {
             title: builder.content_title,
             body: builder.content_body,
         });
-        return  Some(AsyncLauncherTile{
+        return Some(AsyncLauncherTile {
             launcher,
             result_item,
             text_tile,
-            image_replacement:None,
+            image_replacement: None,
             weather_tile: None,
-            attrs
+            attrs,
         });
     }
 }
