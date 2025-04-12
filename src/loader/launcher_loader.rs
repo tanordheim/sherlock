@@ -33,7 +33,7 @@ use super::{
     Loader,
 };
 use crate::CONFIG;
-use util::{AppData, CommandConfig};
+use util::{AppData, RawLauncher};
 
 impl Loader {
     pub async fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
@@ -196,11 +196,11 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                     }
                 }
                 "weather" => {
-                    if let Some(location) = cmd.args["location"].as_str(){
+                    if let Some(location) = cmd.args["location"].as_str() {
                         let update_interval = cmd.args["update_interval"].as_u64().unwrap_or(60);
                         LauncherType::WeatherLauncher(WeatherLauncher {
                             location: location.to_string(),
-                            update_interval
+                            update_interval,
                         })
                     } else {
                         LauncherType::Empty
@@ -321,13 +321,13 @@ impl CounterReader {
 
 fn parse_launcher_configs(
     fallback_path: &PathBuf,
-) -> Result<(Vec<CommandConfig>, Vec<SherlockError>), SherlockError> {
+) -> Result<(Vec<RawLauncher>, Vec<SherlockError>), SherlockError> {
     // Reads all the configurations of launchers. Either from fallback.json or from default
     // file.
 
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
-    fn load_user_fallback(fallback_path: &PathBuf) -> Result<Vec<CommandConfig>, SherlockError> {
+    fn load_user_fallback(fallback_path: &PathBuf) -> Result<Vec<RawLauncher>, SherlockError> {
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
         match File::open(&fallback_path) {
@@ -349,7 +349,7 @@ fn parse_launcher_configs(
         }
     }
 
-    fn load_default_fallback() -> Result<Vec<CommandConfig>, SherlockError> {
+    fn load_default_fallback() -> Result<Vec<RawLauncher>, SherlockError> {
         // Loads default fallback.json file and loads the launcher configurations within.
         let data = gio::resources_lookup_data(
             "/dev/skxxtz/sherlock/fallback.json",

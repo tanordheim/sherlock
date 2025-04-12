@@ -1,9 +1,9 @@
-use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use simd_json::base::{ValueAsArray, ValueAsScalar};
 use std::collections::HashSet;
 use std::fs::{self, File};
-use std::time::{SystemTime, Duration};
+use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
 
 use crate::{loader::util::home_dir, CONFIG};
 
@@ -17,8 +17,8 @@ pub struct WeatherLauncher {
 impl WeatherLauncher {
     pub async fn get_result(&self) -> Option<(WeatherData, bool)> {
         let config = CONFIG.get()?;
-        // try read cache 
-        if let Some(data) = WeatherData::from(&self){
+        // try read cache
+        if let Some(data) = WeatherData::from(&self) {
             return Some((data, false));
         };
 
@@ -72,7 +72,6 @@ impl WeatherLauncher {
         };
         data.cache();
 
-
         Some((data, true))
     }
     fn match_weather_code(code: &str) -> String {
@@ -98,35 +97,38 @@ impl WeatherLauncher {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WeatherData{
+pub struct WeatherData {
     pub temperature: String,
     pub icon: String,
     pub format_str: String,
     pub location: String,
 }
 impl WeatherData {
-    fn from(launcher: &WeatherLauncher)->Option<Self>{
+    fn from(launcher: &WeatherLauncher) -> Option<Self> {
         let mut path = home_dir().ok()?;
-        path.push(format!(".cache/sherlock/weather/{}.json", launcher.location));
+        path.push(format!(
+            ".cache/sherlock/weather/{}.json",
+            launcher.location
+        ));
 
         fn modtime(path: &PathBuf) -> Option<SystemTime> {
             fs::metadata(path).ok().and_then(|m| m.modified().ok())
         }
         let mtime = modtime(&path)?;
         let time_since = SystemTime::now().duration_since(mtime).ok()?;
-        if time_since < Duration::from_secs(60 * launcher.update_interval){
+        if time_since < Duration::from_secs(60 * launcher.update_interval) {
             let cached_data: Option<Self> = File::open(&path)
                 .ok()
                 .and_then(|f| simd_json::from_reader(f).ok());
-            return cached_data
+            return cached_data;
         } else {
-            return None
+            return None;
         }
     }
-    fn cache(&self)->Option<()>{
+    fn cache(&self) -> Option<()> {
         let mut path = home_dir().ok()?;
         path.push(format!(".cache/sherlock/weather/{}.json", self.location));
-        if let Some(parent) = path.parent(){
+        if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).ok()?;
         }
         let tmp_path = path.with_extension(".tmp");

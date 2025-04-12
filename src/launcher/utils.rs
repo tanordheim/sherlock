@@ -31,7 +31,7 @@ pub struct MetaData {
     pub art: String,
 }
 
-pub fn to_title_case(input_str: &str)->String{
+pub fn to_title_case(input_str: &str) -> String {
     let mut result = String::with_capacity(input_str.len());
     let mut cap_next = true;
     for c in input_str.chars() {

@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Deserialize, Debug)]
-pub struct CommandConfig {
-    pub name: String,
+pub struct RawLauncher {
+    pub name: Option<String>,
     pub alias: Option<String>,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,

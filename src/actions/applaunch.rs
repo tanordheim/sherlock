@@ -4,7 +4,8 @@ use std::{
 };
 
 pub fn applaunch(exec: &str) -> Option<()> {
-    let mut parts = exec.trim()
+    let mut parts = exec
+        .trim()
         .split_whitespace()
         .filter(|s| !s.starts_with("%"));
 
@@ -22,6 +23,8 @@ pub fn applaunch(exec: &str) -> Option<()> {
                 Ok(())
             });
     }
-    let _ = command.spawn().map_err(|e| eprintln!("Error executing command: {}", e));
+    let _ = command
+        .spawn()
+        .map_err(|e| eprintln!("Error executing command: {}", e));
     None
 }

@@ -91,7 +91,9 @@ impl Loader {
                         }
 
                         // Construct the executable command
-                        let mut exec = config.behavior.global_prefix
+                        let mut exec = config
+                            .behavior
+                            .global_prefix
                             .as_ref()
                             .map_or(String::new(), |pre| format!("{} ", pre));
                         if parse_field(&content, &terminal_re) == "true" {
@@ -194,7 +196,7 @@ impl Loader {
             let _ = fs::create_dir_all(parent);
         }
         let tmp_path = path.with_extension(".tmp");
-    
+
         if let Ok(f) = File::create(&tmp_path) {
             if let Ok(_) = simd_json::to_writer(f, &apps) {
                 let _ = fs::rename(&tmp_path, &cache_loc);

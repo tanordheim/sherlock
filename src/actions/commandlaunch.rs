@@ -3,15 +3,26 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::{loader::util::{SherlockError, SherlockErrorType}, CONFIG};
+use crate::{
+    loader::util::{SherlockError, SherlockErrorType},
+    CONFIG,
+};
 
 pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
     let config = CONFIG.get().ok_or(SherlockError {
         error: SherlockErrorType::ConfigError(None),
         traceback: String::new(),
     })?;
-    let prefix = config.behavior.global_prefix.as_ref().map_or(String::new(), |p| format!("{} ", p));
-    let flags = config.behavior.global_flags.as_ref().map_or(String::new(), |f| format!(" {}", f));
+    let prefix = config
+        .behavior
+        .global_prefix
+        .as_ref()
+        .map_or(String::new(), |p| format!("{} ", p));
+    let flags = config
+        .behavior
+        .global_flags
+        .as_ref()
+        .map_or(String::new(), |f| format!(" {}", f));
 
     let exec = exec.replace("{keyword}", &keyword);
     let commands = exec.split("&").map(|s| s.trim()).filter(|s| !s.is_empty());
@@ -22,14 +33,17 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
     Ok(())
 }
 
-fn asynchronous_execution(cmd: &str, prefix: &str, flags:&str) -> Result<(), SherlockError> {
+fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
     let raw_command = format!("{}{}{}", prefix, cmd, flags);
-    let mut parts = raw_command.split_whitespace()
+    let mut parts = raw_command
+        .split_whitespace()
         .filter(|s| !s.starts_with("%"));
 
     let mut command = Command::new(parts.next().ok_or_else(|| SherlockError {
-        error: SherlockErrorType::CommandExecutionError(String::from("The command list was empty.")),
-        traceback: String::from("Location: src/commandlaunch.rs")
+        error: SherlockErrorType::CommandExecutionError(String::from(
+            "The command list was empty.",
+        )),
+        traceback: String::from("Location: src/commandlaunch.rs"),
     })?);
     command.args(parts);
 

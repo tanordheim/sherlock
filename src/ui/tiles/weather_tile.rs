@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use gtk4::prelude::*;
+use std::collections::HashMap;
 
 use crate::launcher::{Launcher, ResultItem};
 
@@ -7,9 +7,7 @@ use super::util::{AsyncLauncherTile, WeatherTileBuilder, WeatherTileElements};
 use super::Tile;
 
 impl Tile {
-    pub fn weather_tile_loader(
-        launcher: Launcher,
-    ) -> Option<AsyncLauncherTile> {
+    pub fn weather_tile_loader(launcher: Launcher) -> Option<AsyncLauncherTile> {
         let builder = WeatherTileBuilder::new("/dev/skxxtz/sherlock/ui/weather_tile.ui");
         builder.object.add_css_class("weather-tile");
         builder.object.set_spawn_focus(launcher.spawn_focus);

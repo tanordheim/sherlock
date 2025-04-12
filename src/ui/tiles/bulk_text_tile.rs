@@ -19,7 +19,11 @@ impl Tile {
         builder.object.set_spawn_focus(launcher.spawn_focus);
         builder.object.set_shortcut(launcher.shortcut);
 
-        builder.category.set_text(&launcher.name);
+        if let Some(name) = &launcher.name {
+            builder.category.set_text(name);
+        } else {
+            builder.category.set_visible(false);
+        }
         builder.icon.set_icon_name(Some(&bulk_text.icon));
         builder.icon.set_pixel_size(15);
         builder.content_title.set_text(keyword);

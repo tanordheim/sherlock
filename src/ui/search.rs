@@ -91,7 +91,7 @@ pub fn search(
                     Some(name) => {
                         ui.search_icon_holder.set_css_classes(&["back"]);
                         *mode_clone.borrow_mut() = parameter.clone();
-                        ui.mode_title.set_text(&name);
+                        ui.mode_title.set_text(name.as_deref().unwrap_or_default());
                         state = parameter;
                     }
                     _ => {
@@ -148,19 +148,18 @@ fn construct_window(
     launchers: &Vec<Launcher>,
 ) -> (
     Rc<RefCell<String>>,
-    HashMap<String, String>,
+    HashMap<String, Option<String>>,
     HVBox,
     SearchUI,
     Rc<ListBox>,
 ) {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
-    let modes: HashMap<String, String> = launchers
+    let modes: HashMap<String, Option<String>> = launchers
         .iter()
         .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))
         .map(|(alias, name)| (format!("{} ", alias), name.clone()))
         .collect();
-
 
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
@@ -314,7 +313,7 @@ fn nav_event(
 
 fn change_event(
     search_bar: &Entry,
-    modes: HashMap<String, String>,
+    modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
     results: &Rc<ListBox>,
@@ -491,7 +490,10 @@ pub fn async_calc(
                                 if was_changed {
                                     widget_clone.result_item.row_item.add_css_class("animate");
                                 } else {
-                                    widget_clone.result_item.row_item.add_css_class("no-animate");
+                                    widget_clone
+                                        .result_item
+                                        .row_item
+                                        .add_css_class("no-animate");
                                 }
                                 widget_clone.result_item.row_item.add_css_class(&data.icon);
                                 wtr.temperature.set_text(&data.temperature);

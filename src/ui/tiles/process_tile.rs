@@ -22,10 +22,11 @@ impl Tile {
                 builder.object.set_spawn_focus(launcher.spawn_focus);
                 builder.object.set_shortcut(launcher.shortcut);
 
-                if launcher.name.is_empty() {
+                if let Some(name) = &launcher.name {
+                    builder.category.set_text(name);
+                } else {
                     builder.category.set_visible(false);
                 }
-                builder.category.set_text(&launcher.name);
                 builder.title.set_markup(&value);
                 builder.icon.set_icon_name(Some(&proc.icon));
                 let ppid = key.0;

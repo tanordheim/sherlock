@@ -50,7 +50,7 @@ pub enum LauncherType {
 
 #[derive(Clone, Debug)]
 pub struct Launcher {
-    pub name: String,
+    pub name: Option<String>,
     pub alias: Option<String>,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,

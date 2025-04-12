@@ -31,10 +31,11 @@ impl Tile {
                 builder.display_tag_start(&value.tag_start, keyword);
                 builder.display_tag_end(&value.tag_end, keyword);
 
-                if launcher.name.is_empty() {
+                if let Some(name) = &launcher.name {
+                    builder.category.set_text(name);
+                } else {
                     builder.category.set_visible(false);
                 }
-                builder.category.set_text(&launcher.name);
 
                 // Icon stuff
                 builder.icon.set_icon_name(Some(&value.icon));
