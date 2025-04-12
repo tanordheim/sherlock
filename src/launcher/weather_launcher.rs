@@ -15,11 +15,11 @@ pub struct WeatherLauncher {
     pub update_interval: u64,
 }
 impl WeatherLauncher {
-    pub async fn get_result(&self) -> Option<WeatherData> {
+    pub async fn get_result(&self) -> Option<(WeatherData, bool)> {
         let config = CONFIG.get()?;
         // try read cache 
         if let Some(data) = WeatherData::from(&self){
-            return Some(data);
+            return Some((data, false));
         };
 
         let url = format!("https://de.wttr.in/{}?format=j2", self.location);
@@ -73,7 +73,7 @@ impl WeatherLauncher {
         data.cache();
 
 
-        Some(data)
+        Some((data, true))
     }
     fn match_weather_code(code: &str) -> String {
         let icon = match code {

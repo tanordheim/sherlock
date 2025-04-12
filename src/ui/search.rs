@@ -119,7 +119,14 @@ pub fn search(
         .parameter_type(Some(&bool::static_variant_type()))
         .activate(move |_, _, parameter| {
             let parameter = parameter.and_then(|p| p.get::<bool>());
-            parameter.map(|p| ui.spinner.set_spinning(p));
+            parameter.map(|p| {
+                if p {
+                    ui.spinner.set_css_classes(&["spinner-appear"]);
+                } else {
+                    ui.spinner.set_css_classes(&["spinner-disappear"]);
+                };
+                ui.spinner.set_spinning(p);
+            });
         })
         .build();
 
@@ -478,10 +485,14 @@ pub fn async_calc(
 
                         // Process weather tile
                         if let Some(wtr) = &widget_clone.weather_tile {
-                            if let Some(data) =
+                            if let Some((data, was_changed)) =
                                 widget_clone.launcher.get_weather().await
                             {
-                                widget_clone.result_item.row_item.add_css_class("go-active");
+                                if was_changed {
+                                    widget_clone.result_item.row_item.add_css_class("animate");
+                                } else {
+                                    widget_clone.result_item.row_item.add_css_class("no-animate");
+                                }
                                 widget_clone.result_item.row_item.add_css_class(&data.icon);
                                 wtr.temperature.set_text(&data.temperature);
                                 wtr.spinner.set_spinning(false);

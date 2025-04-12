@@ -87,6 +87,24 @@ window {
     border: 2px solid hsl(var(--border));
 }
 
+/* STATUS BAR */
+.status-bar {
+    background: hsla(var(--foreground), 0.2);
+    border-top: 1px solid hsl(var(--border));
+    padding: 4px 10px 4px 20px;
+}
+.status-bar label {
+    color: hsl(var(--text), 0.3);
+}
+.spinner-disappear {
+    animation: vanish-rotate 0.3s ease forwards;
+}
+.spinner-appear {
+    animation: ease-opacity 0.3s ease forwards;
+    animation: rotate 0.3s linear infinite;
+}
+
+
 /* SEARCH PAGE */
 #search-bar {
     outline: none;
@@ -360,17 +378,10 @@ image {
 /*Animation for replacing album covers*/
 .image-replace-overlay #album-cover{
     opacity: 1;
-    /* animation: replace-image 0.5s forwards; */
+    animation: ease-opacity 0.5s forwards;
 }
-@keyframes replace-image {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-    
-}
+
+
 
 
 
@@ -464,6 +475,38 @@ image {
     }
 }
 
+
+
+/* WEATHER TILE */
+.tile.weather-tile {
+    padding: 0px 20px 0px 10px;
+    background: darkgray;
+}
+.tile.weather-tile box {
+    opacity: 0;
+}
+.tile.weather-tile.no-animate box {
+    opacity: 1;
+}
+.tile.weather-tile.animate box {
+    animation: ease-opacity 0.3s forwards;
+    transition: background 0.3s ease;
+    opacity: 1;
+}
+.tile.weather-tile #location {
+    margin-left: 5px;
+    padding: 10px 0px;
+    font-size: 10px;
+}
+.tile.weather-tile #temperature {
+    font-size: 30px;
+}
+.tile.weather-tile #content-holder {
+    margin-bottom: 15px;
+}
+
+
+
 /*WEATHER CLASSES*/
 .tile.weather-tile.weather-clear {
     background: hsl(var(--weather-clear)); /* Light sky blue */
@@ -554,5 +597,48 @@ image {
 }
 .tile.weather-tile.weather-none-available label {
     color: hsl(var(--text));
+}
+
+
+
+/*ANIMATIONS*/
+@keyframes vanish-rotate{
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: rotate(360deg);
+    }
+    
+}
+@keyframes rotate{
+    from {
+        transform: rotate(0deg);
+        --start-rotation: 0deg;
+    }
+    to {
+        transform: rotate(360deg);
+        --start-rotation: 360deg;
+    }
+
+}
+@keyframes ease-opacity {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+    
+}
+@keyframes slide {
+    from {
+        transform: translate(0px, 0px);
+    }
+
+    to {
+        transform: translate(-20px, 0px);
+    }
 }
 
