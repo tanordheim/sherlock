@@ -26,7 +26,7 @@ The launcher can be of the following types:<br>
 `[FC]` - used to specify behaviour <br>
 | Attribute   | Type | Description |
 |-------------|------|-------------|
-| `name`      | `[UI]` (required) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
+| `name`      | `[UI]` (optional) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
 | `alias`     | `[FC]` (optional) | The command used to search within this category. |
 | `home`      | `[FC]` (optional) | Determines if the elements of this launcher are displayed at startup. |
 | `only_home`      | `[FC]` (optional) | Determines if the launcher should be included in searches or only be shown on startup. |
