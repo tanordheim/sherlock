@@ -35,7 +35,7 @@ impl Tile {
         calc: &Calculator,
         keyword: &str,
     ) -> Vec<ResultItem> {
-        let mut results: Vec<ResultItem> = Default::default();
+        let mut results: Vec<ResultItem> = Vec::with_capacity(1);
         let mut is_valid = false;
         let clipboard_content = &clp.clipboard_content;
         let capabilities: HashSet<&str> = match &clp.capabilities {
@@ -46,7 +46,7 @@ impl Tile {
         //TODO implement searchstring before clipboard content
         if !clipboard_content.is_empty() && clipboard_content.contains(keyword) {
             let mut builder = TileBuilder::default();
-            let mut name = "";
+            let name = "From Clipboard";
             let mut method = "";
             let mut icon = "";
 
@@ -63,7 +63,6 @@ impl Tile {
             let hex_re = Regex::new(hex_raw).unwrap();
             if capabilities.contains("url") {
                 if let Some(captures) = url_re.captures(clipboard_content) {
-                    name = "From Clipboard";
                     if let Some(main_domain) = captures.get(3) {
                         // setting up builder
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
@@ -79,11 +78,12 @@ impl Tile {
             };
             if capabilities.contains("hex") && !is_valid {
                 if let Some(captures) = hex_re.captures(clipboard_content) {
-                    name = "From Clipboard";
                     if let Some(hex_color) = captures.get(1) {
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                         builder.object.set_spawn_focus(launcher.spawn_focus);
                         builder.object.set_shortcut(launcher.shortcut);
+
+                        // Create color preview
                         let (r, g, b) = hex_to_rgb(hex_color.as_str());
                         let pix_buf = vec![r, g, b];
                         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -113,16 +113,14 @@ impl Tile {
             };
             // calc capabilities will be checked inside of calc tile
             if !is_valid {
-                name = "From Clipboard";
                 results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
-            };
-
-            if is_valid {
+            } else { 
                 if name.is_empty() {
                     builder.category.set_visible(false);
+                } else {
+                    builder.category.set_text(name);
                 }
 
-                builder.category.set_text(name);
                 builder.title.set_text(clipboard_content);
                 builder.icon.set_icon_name(Some(&icon));
 
