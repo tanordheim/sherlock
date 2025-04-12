@@ -19,6 +19,7 @@ The launcher can be of the following types:<br>
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
+- **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
 
 ## Common Launcher Attributes
 `[UI]` - used for UI <br>
@@ -314,5 +315,35 @@ None
 
 ### Arguments (args):
 None
+
+--- 
+
+## Weather Launcher
+```json
+{
+    "name": "Weather",
+    "type": "weather",
+    "args": {
+        "location": "berlin",
+        "update_interval": 60
+    },
+    "priority": 1,
+    "home": true,
+    "only_home": true,
+    "async": true,
+    "shortcut": false,
+    "spawn_focus": false
+},
+
+
+```
+
+### Arguments (args):
+
+**`location`** (required):<br>
+Specifies the location for which the weather should be gathered.<br>
+
+**`update_interval`** (optional):<br>
+Specifies how often you want to update the weather. In minutes.<br>
 
 --- 
