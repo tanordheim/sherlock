@@ -21,7 +21,7 @@ The launcher can be of the following types:<br>
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
 - **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
 
-## Common Launcher Attributes
+## Shared Launcher Attributes
 `[UI]` - used for UI <br>
 `[FC]` - used to specify behaviour <br>
 | Attribute   | Type | Description |
