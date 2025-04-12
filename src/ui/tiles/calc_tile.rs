@@ -24,9 +24,11 @@ impl Tile {
         let mut result: Option<String> = None;
 
         if capabilities.contains("calc.math") {
-            if let Ok(r) = eval_str(keyword.trim()) {
-                if r.to_string().as_str() != keyword.trim() {
-                    result = Some(format!("= {}", r.to_string()));
+            let trimmed_keyword = keyword.trim();
+            if let Ok(r) = eval_str(trimmed_keyword) {
+                let r = r.to_string();
+                if &r != trimmed_keyword {
+                    result = Some(format!("= {}", r));
                 }
             }
         }
