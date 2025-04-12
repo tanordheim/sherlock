@@ -111,7 +111,7 @@ impl Tile {
                     };
                 }
             };
-            // calc capabilities will be checked inside of calc file
+            // calc capabilities will be checked inside of calc tile
             if !is_valid {
                 name = "From Clipboard";
                 results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
