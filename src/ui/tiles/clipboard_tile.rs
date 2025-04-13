@@ -99,7 +99,7 @@ impl Tile {
         let clipboard_content = &clp.clipboard_content;
         let capabilities: HashSet<&str> = match &clp.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
-            _ => HashSet::from(["url", "hex", "calc.math", "calc.length"]),
+            _ => HashSet::from(["url", "calc.math", "calc.units", "colors.all"]),
         };
 
         //TODO implement searchstring before clipboard content
@@ -135,31 +135,49 @@ impl Tile {
                     }
                 };
             };
-            if capabilities.contains("hex") && !is_valid {
+            if !is_valid {
                 if let Some(captures) = color_re.captures(clipboard_content) {
                     // Groups: 2: RGB, 3: HSL, 4: HEX
                     let rgb = if let Some(rgb) = captures.get(2) {
-                        Some(RGB::from_str(rgb.as_str()))
+                        if capabilities.contains("colors.rgb")
+                            || capabilities.contains("colors.all")
+                        {
+                            Some(RGB::from_str(rgb.as_str()))
+                        } else {
+                            None
+                        }
                     } else if let Some(hsl) = captures.get(3) {
-                        let mut res: Vec<u32> = Vec::with_capacity(3);
-                        let mut tmp = 0;
-                        let mut was_changed: u8 = 0;
-                        hsl.as_str()
-                            .chars()
-                            .filter(|s| !s.is_whitespace())
-                            .for_each(|s| {
-                                if let Some(digit) = s.to_digit(10) {
-                                    tmp = tmp * 10 + digit;
-                                    was_changed = 1;
-                                } else if was_changed > 0 {
-                                    res.push(tmp);
-                                    was_changed = 0;
-                                    tmp = 0;
-                                }
-                            });
-                        Some(RGB::from_hsl(res))
+                        if capabilities.contains("colors.hsl")
+                            || capabilities.contains("colors.all")
+                        {
+                            let mut res: Vec<u32> = Vec::with_capacity(3);
+                            let mut tmp = 0;
+                            let mut was_changed: u8 = 0;
+                            hsl.as_str()
+                                .chars()
+                                .filter(|s| !s.is_whitespace())
+                                .for_each(|s| {
+                                    if let Some(digit) = s.to_digit(10) {
+                                        tmp = tmp * 10 + digit;
+                                        was_changed = 1;
+                                    } else if was_changed > 0 {
+                                        res.push(tmp);
+                                        was_changed = 0;
+                                        tmp = 0;
+                                    }
+                                });
+                            Some(RGB::from_hsl(res))
+                        } else {
+                            None
+                        }
                     } else if let Some(hex) = captures.get(4) {
-                        Some(RGB::from_hex(hex.as_str()))
+                        if capabilities.contains("colors.hex")
+                            || capabilities.contains("colors.all")
+                        {
+                            Some(RGB::from_hex(hex.as_str()))
+                        } else {
+                            None
+                        }
                     } else {
                         None
                     };
@@ -194,8 +212,8 @@ impl Tile {
                     }
                 }
             };
-            // calc capabilities will be checked inside of calc tile
             if !is_valid {
+                // calc capabilities will be checked inside of calc tile
                 results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
             } else {
                 if name.is_empty() {
