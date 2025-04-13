@@ -8,7 +8,6 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
-use simd_json::prelude::ObjectMut;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -90,7 +89,7 @@ pub fn search(
                     "search" => {
                         ui.search_icon_holder.set_css_classes(&["back"]);
                         ui.mode_title.set_text("Search");
-                    },
+                    }
                     _ => {
                         parameter.push_str(" ");
                         let mode_name = modes_clone.get(&parameter);
@@ -506,10 +505,7 @@ pub fn async_calc(
                                 } else {
                                     "weather-no-animate"
                                 };
-                                widget_clone
-                                    .result_item
-                                    .row_item
-                                    .add_css_class(css_class);
+                                widget_clone.result_item.row_item.add_css_class(css_class);
                                 widget_clone.result_item.row_item.add_css_class(&data.icon);
                                 wtr.temperature.set_text(&data.temperature);
                                 wtr.spinner.set_spinning(false);
