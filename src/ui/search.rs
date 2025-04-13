@@ -487,14 +487,15 @@ pub fn async_calc(
                             if let Some((data, was_changed)) =
                                 widget_clone.launcher.get_weather().await
                             {
-                                if was_changed {
-                                    widget_clone.result_item.row_item.add_css_class("animate");
+                                let css_class = if was_changed {
+                                    "weather-animate"
                                 } else {
-                                    widget_clone
-                                        .result_item
-                                        .row_item
-                                        .add_css_class("no-animate");
-                                }
+                                    "weather-no-animate"
+                                };
+                                widget_clone
+                                    .result_item
+                                    .row_item
+                                    .add_css_class(css_class);
                                 widget_clone.result_item.row_item.add_css_class(&data.icon);
                                 wtr.temperature.set_text(&data.temperature);
                                 wtr.spinner.set_spinning(false);

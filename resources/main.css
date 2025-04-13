@@ -475,22 +475,21 @@ image {
     }
 }
 
-
-
 /* WEATHER TILE */
-.tile.weather-tile {
+.weather-tile {
     padding: 0px 20px 0px 10px;
     background: darkgray;
+    margin-bottom: 10px;
 }
-.tile.weather-tile box {
+.tile.weather-tile #content-holder{
     opacity: 0;
 }
-.tile.weather-tile.no-animate box {
-    opacity: 1;
-}
-.tile.weather-tile.animate box {
+.tile.weather-tile.weather-animate #content-holder {
     animation: ease-opacity 0.3s forwards;
     transition: background 0.3s ease;
+    opacity: 1;
+}
+.tile.weather-tile.weather-no-animate #content-holder{
     opacity: 1;
 }
 .tile.weather-tile #location {
@@ -504,6 +503,9 @@ image {
 .tile.weather-tile #content-holder {
     margin-bottom: 15px;
 }
+
+
+
 
 
 
