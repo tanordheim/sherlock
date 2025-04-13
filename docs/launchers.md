@@ -170,12 +170,16 @@ Specifies what the launcher should parse:
 **`capabilities`** (optional):<br>
 Specifies what the launcher should parse: 
 - **`url`** - parses URLs to launch in the web browser
-- **`hex`** - displays hex colors in Sherlock
+- **`colors.hex`** - displays hex colors in Sherlock. Format supports #[a-fA-F0-9]{6,8}
+- **`colors.rgb`** - displays rgb colors in Sherlock. Format supports optional rgb prefix and optional parentheses.
+- **`colors.hsl`** - displays hsl colors in Sherlock. Format supports optional hsl prefix and optional parentheses.
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
-> **💡 Note:** You can also use `calc.units` to use all available unit transformations
+> **💡 Note:** 
+> - You can also use `colors.all` to use all available color formats
+> - You can also use `calc.units` to use all available unit transformations
 
 ---
 ## Command Launcher
