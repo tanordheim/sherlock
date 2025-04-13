@@ -179,7 +179,7 @@ Specifies what the launcher should parse:
 - **`calc.volumes`** - displays the solutions to volume transformations 
 > **💡 Note:** 
 > - You can also use `colors.all` to use all available color formats
-> - You can also use `calc.units` to use all available unit transformations
+> - And `calc.units` to use all available unit transformations
 
 ---
 ## Command Launcher
