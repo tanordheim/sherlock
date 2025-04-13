@@ -8,6 +8,7 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
+use simd_json::prelude::ObjectMut;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -85,31 +86,39 @@ pub fn search(
             let parameter = parameter.and_then(|p| p.get::<String>());
 
             if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
-                parameter.push_str(" ");
-                let mode_name = modes_clone.get(&parameter);
-                match mode_name {
-                    Some(name) => {
+                match parameter.as_str() {
+                    "search" => {
                         ui.search_icon_holder.set_css_classes(&["back"]);
-                        *mode_clone.borrow_mut() = parameter.clone();
-                        ui.mode_title.set_text(name.as_deref().unwrap_or_default());
-                        state = parameter;
-                    }
+                        ui.mode_title.set_text("Search");
+                    },
                     _ => {
-                        ui.search_icon_holder.set_css_classes(&["search"]);
-                        ui.mode_title.set_text("All");
-                        parameter = String::from("all ");
-                        *mode_clone.borrow_mut() = parameter.clone();
-                        state = parameter;
+                        parameter.push_str(" ");
+                        let mode_name = modes_clone.get(&parameter);
+                        match mode_name {
+                            Some(name) => {
+                                ui.search_icon_holder.set_css_classes(&["back"]);
+                                *mode_clone.borrow_mut() = parameter.clone();
+                                ui.mode_title.set_text(name.as_deref().unwrap_or_default());
+                                state = parameter;
+                            }
+                            _ => {
+                                ui.search_icon_holder.set_css_classes(&["search"]);
+                                ui.mode_title.set_text("All");
+                                parameter = String::from("all ");
+                                *mode_clone.borrow_mut() = parameter.clone();
+                                state = parameter;
+                            }
+                        }
+                        let search_bar_clone = search_bar_clone.clone();
+                        glib::idle_add_local(move || {
+                            // to trigger homescreen rebuild
+                            search_bar_clone.set_text("\n");
+                            search_bar_clone.set_text("");
+                            glib::ControlFlow::Break
+                        });
+                        action.set_state(&state.to_variant());
                     }
                 }
-                let search_bar_clone = search_bar_clone.clone();
-                glib::idle_add_local(move || {
-                    // to trigger homescreen rebuild
-                    search_bar_clone.set_text("a");
-                    search_bar_clone.set_text("");
-                    glib::ControlFlow::Break
-                });
-                action.set_state(&state.to_variant());
             }
         })
         .build();
@@ -345,6 +354,11 @@ fn change_event(
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
+            if current_text.len() == 1 && current_text != "\n" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
+            } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+            }
             if let Some(task) = current_task.borrow_mut().take() {
                 task.abort();
             };
