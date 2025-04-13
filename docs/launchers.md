@@ -178,8 +178,9 @@ Specifies what the launcher should parse:
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
 > **💡 Note:** 
-> - You can also use `colors.all` to use all available color formats
-> - And `calc.units` to use all available unit transformations
+> You can also use
+> - `colors.all` to use all available color formats
+> - `calc.units` to use all available unit transformations
 
 ---
 ## Command Launcher
