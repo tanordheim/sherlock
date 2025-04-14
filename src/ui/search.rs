@@ -70,7 +70,6 @@ pub fn search(
         results,
         ui.search_bar,
         ui.result_viewport,
-        mode,
         custom_binds,
         stack_page_ref,
     );
@@ -227,7 +226,6 @@ fn nav_event(
     results: Rc<ListBox>,
     search_bar: Entry,
     result_viewport: ScrolledWindow,
-    mode: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
 ) {
@@ -272,8 +270,8 @@ fn nav_event(
                     ctext.clear();
                 }
                 if ctext.is_empty() {
-                    let _ = search_bar
-                        .activate_action("win.switch-mode", Some(&"all".to_variant()));
+                    let _ =
+                        search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
                 }
                 results.focus_first();
             }
