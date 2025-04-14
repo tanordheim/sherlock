@@ -151,6 +151,7 @@ Specifies what the launcher should parse:
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
+- **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
 ---
@@ -177,6 +178,7 @@ Specifies what the launcher should parse:
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
+- **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** 
 > You can also use
 > - `colors.all` to use all available color formats
