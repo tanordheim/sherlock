@@ -263,17 +263,17 @@ fn nav_event(
                 return true.into();
             }
             gdk::Key::BackSpace => {
-                let ctext = search_bar.text();
+                let mut ctext = search_bar.text().to_string();
                 if custom_binds
                     .shortcut_modifier
                     .map_or(false, |modifier| modifiers.contains(modifier))
                 {
                     let _ = search_bar.set_text("");
-                } else {
-                    if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        let _ = search_bar
-                            .activate_action("win.switch-mode", Some(&"all".to_variant()));
-                    }
+                    ctext.clear();
+                }
+                if ctext.is_empty() {
+                    let _ = search_bar
+                        .activate_action("win.switch-mode", Some(&"all".to_variant()));
                 }
                 results.focus_first();
             }
