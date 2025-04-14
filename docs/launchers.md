@@ -2,7 +2,7 @@
 
 In the Sherlock Application Launcher, each tile is associated with a specific "launcher." You can think of a launcher as a category to which tiles belong. For example, if a launcher is set to invisible, all tiles under that launcher will also be invisible.<br>
 
-Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [fallback.json](resources/fallback.json).<br>
+Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [resources/fallback.json](https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/resources/fallback.json).<br>
 
 > **Example File:** [fallback.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json)
 <br>
@@ -19,13 +19,14 @@ The launcher can be of the following types:<br>
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
+- **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
 
-## Common Launcher Attributes
+## Shared Launcher Attributes
 `[UI]` - used for UI <br>
 `[FC]` - used to specify behaviour <br>
 | Attribute   | Type | Description |
 |-------------|------|-------------|
-| `name`      | `[UI]` (required) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
+| `name`      | `[UI]` (optional) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
 | `alias`     | `[FC]` (optional) | The command used to search within this category. |
 | `home`      | `[FC]` (optional) | Determines if the elements of this launcher are displayed at startup. |
 | `only_home`      | `[FC]` (optional) | Determines if the launcher should be included in searches or only be shown on startup. |
@@ -46,14 +47,37 @@ The launcher can be of the following types:<br>
     "alias": "cat",
     "type": "categories",
     "args": {
-        "Kill Processes": {"icon": "sherlock-process", "exec": "kill", "search_string": "terminate;kill;process"},
-        "Power Menu": {"icon": "battery-full-symbolic", "exec": "pm", "search_string": "powermenu;"}
+        "Kill Processes": {
+            "icon": "sherlock-process", 
+            "icon_class": "reactive", 
+            "exec": "kill", 
+            "search_string": "terminate;kill;process"
+            },
+        "Power Menu": {
+            "icon": "battery-full-symbolic",
+            "icon_class": "reactive", 
+            "exec": "pm", 
+            "search_string": "powermenu;"
+            }
     },
     "priority": 3,
     "home": true
 }
 
 ```
+### Arguments (args):
+**commands**:<br>
+(required)<br>
+1. `name field` / the name you want to have displayed for the category
+2. `icon` / the icon-name for the icon to display 
+3. `exec` / the alias of the launcher you want to execute
+
+<br>
+(optional)<br>
+1. `icon_class` / Sets the css class for the icon to style it according to your theme
+2. `search_string` / the string to match to on search
+
+<br>
 ---
 
 ## App Launcher
@@ -127,6 +151,7 @@ Specifies what the launcher should parse:
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
+- **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
 ---
@@ -146,12 +171,18 @@ Specifies what the launcher should parse:
 **`capabilities`** (optional):<br>
 Specifies what the launcher should parse: 
 - **`url`** - parses URLs to launch in the web browser
-- **`hex`** - displays hex colors in Sherlock
+- **`colors.hex`** - displays hex colors in Sherlock. Format supports #[a-fA-F0-9]{6,8}
+- **`colors.rgb`** - displays rgb colors in Sherlock. Format supports optional rgb prefix and optional parentheses.
+- **`colors.hsl`** - displays hsl colors in Sherlock. Format supports optional hsl prefix and optional parentheses.
 - **`calc.math`** - displays the solutions to mathematical problems 
 - **`calc.lengths`** - displays the solutions to length transformations 
 - **`calc.weights`** - displays the solutions to weight transformations 
 - **`calc.volumes`** - displays the solutions to volume transformations 
-> **💡 Note:** You can also use `calc.units` to use all available unit transformations
+- **`calc.temperatures`** - displays the solutions to temerature transformations 
+> **💡 Note:** 
+> You can also use
+> - `colors.all` to use all available color formats
+> - `calc.units` to use all available unit transformations
 
 ---
 ## Command Launcher
@@ -164,6 +195,7 @@ Specifies what the launcher should parse:
         "commands": {
             "command name": {
                 "icon": "icon-name",
+                "icon_class": "reactive",
                 "exec": "command to execute", 
                 "search_string": "examplecommand"
                 "tag_start": "{keyword}"
@@ -184,12 +216,13 @@ Specifies what the launcher should parse:
 ### Arguments (args):
 **commands** (required):<br>
 Has following fields of its own:
-1. `name field` / the name of the application
+1. `name field` / the name of the application (is the field where command name is the value currently)
 2. `icon` / the icon-name for the icon to display 
-3. `exec` / the command to execute
-4. `search_string` / the string to match to on search
-5. `tag_start` / specifies what will be displayed in the start tag
-6. `tag_end` / specifies what will be displayed in the end tag
+3. `icon_class` / Sets the css class for the icon to style it according to your theme
+4. `exec` / the command to execute
+5. `search_string` / the string to match to on search
+6. `tag_start` / specifies what will be displayed in the start tag
+7. `tag_end` / specifies what will be displayed in the end tag
 
 ---
 
@@ -289,5 +322,35 @@ None
 
 ### Arguments (args):
 None
+
+--- 
+
+## Weather Launcher
+```json
+{
+    "name": "Weather",
+    "type": "weather",
+    "args": {
+        "location": "berlin",
+        "update_interval": 60
+    },
+    "priority": 1,
+    "home": true,
+    "only_home": true,
+    "async": true,
+    "shortcut": false,
+    "spawn_focus": false
+},
+
+
+```
+
+### Arguments (args):
+
+**`location`** (required):<br>
+Specifies the location for which the weather should be gathered.<br>
+
+**`update_interval`** (optional):<br>
+Specifies how often you want to update the weather. In minutes.<br>
 
 --- 

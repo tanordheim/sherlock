@@ -13,6 +13,7 @@ use crate::launcher::calc_launcher::Calculator;
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
+use crate::launcher::weather_launcher::WeatherLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
     Launcher, LauncherType,
@@ -32,7 +33,7 @@ use super::{
     Loader,
 };
 use crate::CONFIG;
-use util::{AppData, CommandConfig};
+use util::{AppData, RawLauncher};
 
 impl Loader {
     pub async fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
@@ -194,6 +195,30 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                         LauncherType::Empty
                     }
                 }
+                "weather" => {
+                    if let Some(location) = cmd.args["location"].as_str() {
+                        let update_interval = cmd.args["update_interval"].as_u64().unwrap_or(60);
+                        LauncherType::WeatherLauncher(WeatherLauncher {
+                            location: location.to_string(),
+                            update_interval,
+                        })
+                    } else {
+                        LauncherType::Empty
+                    }
+                }
+                "debug" => {
+                    let prio = cmd.priority;
+                    let mut commands: HashMap<String, AppData> =
+                        serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();
+                    commands.iter_mut().for_each(|(_, v)| {
+                        v.priority = match counts_clone.get(&v.exec) {
+                            Some(c) if c == &0.0 => prio,
+                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                            _ => prio,
+                        };
+                    });
+                    LauncherType::SystemCommand(SystemCommand { commands })
+                }
                 _ => LauncherType::Empty,
             };
             let method: String = if let Some(value) = &cmd.on_return {
@@ -296,13 +321,13 @@ impl CounterReader {
 
 fn parse_launcher_configs(
     fallback_path: &PathBuf,
-) -> Result<(Vec<CommandConfig>, Vec<SherlockError>), SherlockError> {
+) -> Result<(Vec<RawLauncher>, Vec<SherlockError>), SherlockError> {
     // Reads all the configurations of launchers. Either from fallback.json or from default
     // file.
 
     let mut non_breaking: Vec<SherlockError> = Vec::new();
 
-    fn load_user_fallback(fallback_path: &PathBuf) -> Result<Vec<CommandConfig>, SherlockError> {
+    fn load_user_fallback(fallback_path: &PathBuf) -> Result<Vec<RawLauncher>, SherlockError> {
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
         match File::open(&fallback_path) {
@@ -324,7 +349,7 @@ fn parse_launcher_configs(
         }
     }
 
-    fn load_default_fallback() -> Result<Vec<CommandConfig>, SherlockError> {
+    fn load_default_fallback() -> Result<Vec<RawLauncher>, SherlockError> {
         // Loads default fallback.json file and loads the launcher configurations within.
         let data = gio::resources_lookup_data(
             "/dev/skxxtz/sherlock/fallback.json",

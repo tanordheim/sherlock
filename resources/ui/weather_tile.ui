@@ -1,0 +1,57 @@
+<interface>
+    <object class="GtkBox" id="holder">
+        <property name="orientation">vertical</property>
+        <property name="hexpand">true</property> 
+
+        <child>
+            <object class="GtkBox" id="title-holder">
+                <child>
+                    <object class="GtkLabel" id="location">
+                        <property name="name">location</property>
+                        <property name="label">Location</property>
+                    </object>
+                </child>
+            </object>
+        </child>
+
+        <child>
+            <object class="GtkBox" id="content-holder">
+                <property name="orientation">horizontal</property>
+                <property name="spacing">20</property>
+                <property name="hexpand">true</property> 
+                <property name="name">content-holder</property> 
+                <child>
+                    <object class="GtkBox" id="app-icon-holder">
+                        <property name="valign">center</property>
+                        <property name="orientation">vertical</property>
+                        <property name="name">icon-holder</property>
+                        <child>
+                            <object class="GtkImage" id="icon-name">
+                                <property name="name">icon</property>
+                                <property name="icon-name">application-x-executable</property>
+                                <property name="pixel-size">40</property>   
+                            </object>
+                        </child>
+                    </object>
+                </child>
+
+                <child>
+                    <object class="GtkBox" id="app-name-holder">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">5</property>
+                        <property name="hexpand">true</property>
+                        <property name="valign">center</property>
+                        <property name="halign">start</property>
+                        <child>
+                            <object class="GtkLabel" id="temperature">
+                                <property name="name">temperature</property>
+                                <property name="label">20°</property>
+                            </object>
+                        </child>
+
+                    </object>
+                </child>
+            </object>
+        </child>
+    </object>
+</interface>

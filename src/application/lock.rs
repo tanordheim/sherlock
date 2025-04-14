@@ -4,13 +4,18 @@ use std::path::{Path, PathBuf};
 
 use procfs::process::Process;
 
+use crate::daemon::daemon::SherlockDaemon;
+
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
     let path = PathBuf::from(lock_file);
     if path.exists() {
         if let Some(content) = fs::read_to_string(&path).ok() {
             if let Some(pid) = content.parse::<i32>().ok() {
                 match Process::new(pid) {
-                    Ok(_) => std::process::exit(0),
+                    Ok(_) => {
+                        let _ = SherlockDaemon::open();
+                        std::process::exit(0)
+                    }
                     Err(_) => {
                         let _ = fs::remove_file(lock_file);
                     }

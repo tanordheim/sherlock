@@ -1,9 +1,10 @@
+use futures::future::join_all;
 use gio::ActionEntry;
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
-    Builder, EventControllerKey, Image, Overlay,
+    Builder, EventControllerKey, Image, Overlay, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
@@ -16,7 +17,7 @@ use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{construct_tiles, Launcher, ResultItem};
-use crate::{AppState, APP_STATE, CONFIG};
+use crate::CONFIG;
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -26,9 +27,14 @@ struct SearchUI {
     search_bar: Entry,
     search_icon_holder: HVBox,
     mode_title: Label,
+    spinner: Spinner,
 }
 
-pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
+pub fn search(
+    launchers: &Vec<Launcher>,
+    window: &ApplicationWindow,
+    stack_page_ref: &Rc<RefCell<String>>,
+) -> HVBox {
     // Initialize the view to show all apps
     let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
     ui.result_viewport
@@ -36,8 +42,18 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
     ui.search_bar.grab_focus();
 
     let search_bar_clone = ui.search_bar.clone();
+    let search_bar_clone2 = ui.search_bar.clone();
     let modes_clone = modes.clone();
     let mode_clone = Rc::clone(&mode);
+
+    if let Some(c) = CONFIG.get() {
+        if c.behavior.daemonize && stack_page_ref.borrow().as_str() == "search-page" {
+            let search_bar = ui.search_bar.clone();
+            window.connect_show(move |_| {
+                search_bar.grab_focus();
+            });
+        }
+    }
 
     let custom_binds = ConfKeys::new();
 
@@ -50,17 +66,13 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
         &custom_binds,
     );
     nav_event(
+        &stack_page,
         results,
         ui.search_bar,
         ui.result_viewport,
-        mode,
         custom_binds,
+        stack_page_ref,
     );
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.add_stack_page(stack_page, "search-page");
-        }
-    });
 
     // Improved mode selection
     let original_mode = String::from("all");
@@ -72,55 +84,89 @@ pub fn search(launchers: &Vec<Launcher>, window: &ApplicationWindow) {
             let parameter = parameter.and_then(|p| p.get::<String>());
 
             if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
-                parameter.push_str(" ");
-                let mode_name = modes_clone.get(&parameter);
-                match mode_name {
-                    Some(name) => {
+                match parameter.as_str() {
+                    "search" => {
                         ui.search_icon_holder.set_css_classes(&["back"]);
-                        *mode_clone.borrow_mut() = parameter.clone();
-                        ui.mode_title.set_text(&name);
-                        state = parameter;
+                        ui.mode_title.set_text("Search");
                     }
                     _ => {
-                        ui.search_icon_holder.set_css_classes(&["search"]);
-                        ui.mode_title.set_text("All");
-                        parameter = String::from("all ");
-                        *mode_clone.borrow_mut() = parameter.clone();
-                        state = parameter;
+                        parameter.push_str(" ");
+                        let mode_name = modes_clone.get(&parameter);
+                        match mode_name {
+                            Some(name) => {
+                                ui.search_icon_holder.set_css_classes(&["back"]);
+                                *mode_clone.borrow_mut() = parameter.clone();
+                                ui.mode_title.set_text(name.as_deref().unwrap_or_default());
+                                state = parameter;
+                            }
+                            _ => {
+                                ui.search_icon_holder.set_css_classes(&["search"]);
+                                ui.mode_title.set_text("All");
+                                parameter = String::from("all ");
+                                *mode_clone.borrow_mut() = parameter.clone();
+                                state = parameter;
+                            }
+                        }
+                        let search_bar_clone = search_bar_clone.clone();
+                        glib::idle_add_local(move || {
+                            // to trigger homescreen rebuild
+                            search_bar_clone.set_text("\n");
+                            search_bar_clone.set_text("");
+                            glib::ControlFlow::Break
+                        });
+                        action.set_state(&state.to_variant());
                     }
                 }
-                let search_bar_clone = search_bar_clone.clone();
-                glib::idle_add_local(move || {
-                    // to trigger homescreen rebuild
-                    search_bar_clone.set_text("a");
-                    search_bar_clone.set_text("");
-                    glib::ControlFlow::Break
-                });
-                action.set_state(&state.to_variant());
             }
         })
         .build();
-    window.add_action_entries([mode_action]);
+
+    // Spinner action
+    let action_spinner = ActionEntry::builder("spinner-mode")
+        .parameter_type(Some(&bool::static_variant_type()))
+        .activate(move |_, _, parameter| {
+            let parameter = parameter.and_then(|p| p.get::<bool>());
+            parameter.map(|p| {
+                if p {
+                    ui.spinner.set_css_classes(&["spinner-appear"]);
+                } else {
+                    ui.spinner.set_css_classes(&["spinner-disappear"]);
+                };
+                ui.spinner.set_spinning(p);
+            });
+        })
+        .build();
+
+    let action_clear_win = ActionEntry::builder("clear-search")
+        .activate(move |_: &ApplicationWindow, _, _| {
+            let search_bar_clone = search_bar_clone2.clone();
+            glib::idle_add_local(move || {
+                search_bar_clone.set_text("");
+                glib::ControlFlow::Break
+            });
+        })
+        .build();
+    window.add_action_entries([mode_action, action_clear_win, action_spinner]);
+
+    return stack_page;
 }
 
 fn construct_window(
     launchers: &Vec<Launcher>,
 ) -> (
     Rc<RefCell<String>>,
-    HashMap<String, String>,
+    HashMap<String, Option<String>>,
     HVBox,
     SearchUI,
     Rc<ListBox>,
 ) {
     // Collect Modes
     let mode = Rc::new(RefCell::new("all".to_string()));
-    let mut modes: HashMap<String, String> = HashMap::new();
-    launchers
+    let modes: HashMap<String, Option<String>> = launchers
         .iter()
         .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))
-        .for_each(|(alias, name)| {
-            modes.insert(format!("{} ", alias), name.clone());
-        });
+        .map(|(alias, name)| (format!("{} ", alias), name.clone()))
+        .collect();
 
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
@@ -146,6 +192,14 @@ fn construct_window(
     overlay.set_child(Some(&search_icon));
     overlay.add_overlay(&search_icon_back);
 
+    // Show notification-bar
+    CONFIG.get().map(|c| {
+        if !c.appearance.status_bar {
+            let n: Option<HVBox> = builder.object("status-bar");
+            n.map(|n| n.set_visible(false));
+        }
+    });
+
     search_icon_holder.append(&overlay);
 
     let ui = SearchUI {
@@ -154,6 +208,7 @@ fn construct_window(
         search_bar: builder.object("search-bar").unwrap_or_default(),
         search_icon_holder,
         mode_title: builder.object("category-type-label").unwrap_or_default(),
+        spinner: builder.object("status-bar-spinner").unwrap_or_default(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
@@ -163,29 +218,24 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    APP_STATE.with(|app_state| {
-        let new_state = app_state.borrow_mut().take().map(|old_state| {
-            Rc::new(AppState {
-                window: old_state.window.clone(),
-                stack: old_state.stack.clone(),
-                search_bar: Some(ui.search_bar.clone()),
-            })
-        });
-        *app_state.borrow_mut() = new_state;
-    });
     (mode, modes, vbox, ui, results)
 }
 
 fn nav_event(
+    stack: &HVBox,
     results: Rc<ListBox>,
     search_bar: Entry,
     result_viewport: ScrolledWindow,
-    mode: Rc<RefCell<String>>,
     custom_binds: ConfKeys,
+    stack_page: &Rc<RefCell<String>>,
 ) {
+    let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, i, modifiers| {
+        if stack_page.borrow().as_str() != "search-page" {
+            return false.into();
+        };
         match key {
             k if Some(k) == custom_binds.prev
                 && custom_binds
@@ -211,17 +261,17 @@ fn nav_event(
                 return true.into();
             }
             gdk::Key::BackSpace => {
-                let ctext = search_bar.text();
+                let mut ctext = search_bar.text().to_string();
                 if custom_binds
                     .shortcut_modifier
                     .map_or(false, |modifier| modifiers.contains(modifier))
                 {
                     let _ = search_bar.set_text("");
-                } else {
-                    if ctext.is_empty() && mode.borrow().as_str() != "all" {
-                        let _ = search_bar
-                            .activate_action("win.switch-mode", Some(&"all".to_variant()));
-                    }
+                    ctext.clear();
+                }
+                if ctext.is_empty() {
+                    let _ =
+                        search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
                 }
                 results.focus_first();
             }
@@ -263,17 +313,13 @@ fn nav_event(
         }
         false.into()
     });
-    APP_STATE.with(|state| {
-        state
-            .borrow()
-            .as_ref()
-            .map(|s| s.add_event_listener(event_controller))
-    });
+
+    stack.add_controller(event_controller);
 }
 
 fn change_event(
     search_bar: &Entry,
-    modes: HashMap<String, String>,
+    modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
     results: &Rc<ListBox>,
@@ -305,6 +351,11 @@ fn change_event(
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
+            if current_text.len() == 1 && current_text != "\n" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
+            } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+            }
             if let Some(task) = current_task.borrow_mut().take() {
                 task.abort();
             };
@@ -312,11 +363,8 @@ fn change_event(
             let trimmed = current_text.trim();
             if !trimmed.is_empty() && modes.contains_key(&current_text) {
                 // Logic to apply modes
-                if modes.contains_key(&current_text) {
-                    let _ =
-                        search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
-                    current_text.clear();
-                }
+                let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+                current_text.clear();
             }
             async_calc(
                 &cancel_flag,
@@ -371,19 +419,10 @@ pub fn async_calc(
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
                 || (current_mode == "all" && launcher.priority > 0)
             {
-                launcher.get_loader_widget(&current_text).map(
-                    |(result_item, title, body, async_opts, attrs)| {
-                        async_widgets.push(result_item.clone());
-                        AsyncLauncherTile {
-                            launcher,
-                            title,
-                            body,
-                            result_item,
-                            async_opts,
-                            attrs,
-                        }
-                    },
-                )
+                launcher.get_loader_widget(&current_text).map(|tile| {
+                    async_widgets.push(tile.result_item.clone());
+                    tile
+                })
             } else {
                 None
             }
@@ -406,41 +445,96 @@ pub fn async_calc(
             if *cancel_flag.borrow() {
                 return;
             }
-            // get results for aysnc launchers
-            for widget in async_launchers.iter() {
-                let mut attrs = widget.attrs.clone();
-                if let Some((title, body, next_content)) =
-                    widget.launcher.get_result(&current_text).await
-                {
-                    widget.title.as_ref().map(|t| t.set_text(&title));
-                    widget.body.as_ref().map(|b| b.set_text(&body));
-                    if let Some(next_content) = next_content {
-                        attrs.insert(String::from("next_content"), next_content.to_string());
-                    }
-                }
-                if let Some(opts) = &widget.async_opts {
-                    // Replace one image with another
-                    if let Some(overlay) = &opts.icon_holder_overlay {
-                        if let Some((image, was_cached)) = widget.launcher.get_image().await {
-                            // Also check for animate key
-                            if !was_cached {
-                                overlay.add_css_class("image-replace-overlay");
-                            }
-                            let gtk_image = Image::from_pixbuf(Some(&image));
-                            gtk_image.set_widget_name("album-cover");
-                            gtk_image.set_pixel_size(50);
-                            overlay.add_overlay(&gtk_image);
-                        }
-                    }
-                }
-                widget
+            if let Some(row) = async_launchers.get(0) {
+                let _ = row
                     .result_item
                     .row_item
-                    .connect("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
+                    .activate_action("win.spinner-mode", Some(&true.to_variant()));
+            }
+            // Make them update concurrently
+            let futures: Vec<_> = async_launchers
+                .iter()
+                .map(|widget| {
+                    let widget_clone = widget;
+                    let current_text = current_text.clone();
+                    async move {
+                        let mut attrs = widget_clone.attrs.clone();
+
+                        // Process text tile
+                        if let Some(opts) = &widget_clone.text_tile {
+                            if let Some((title, body, next_content)) =
+                                widget_clone.launcher.get_result(&current_text).await
+                            {
+                                opts.title.set_text(&title);
+                                opts.body.set_text(&body);
+                                if let Some(next_content) = next_content {
+                                    attrs.insert(
+                                        String::from("next_content"),
+                                        next_content.to_string(),
+                                    );
+                                }
+                            }
+                        }
+
+                        // Process image replacement
+                        if let Some(opts) = &widget_clone.image_replacement {
+                            if let Some(overlay) = &opts.icon_holder_overlay {
+                                if let Some((image, was_cached)) =
+                                    widget_clone.launcher.get_image().await
+                                {
+                                    if !was_cached {
+                                        overlay.add_css_class("image-replace-overlay");
+                                    }
+                                    let gtk_image = Image::from_pixbuf(Some(&image));
+                                    gtk_image.set_widget_name("album-cover");
+                                    gtk_image.set_pixel_size(50);
+                                    overlay.add_overlay(&gtk_image);
+                                }
+                            }
+                        }
+
+                        // Process weather tile
+                        if let Some(wtr) = &widget_clone.weather_tile {
+                            if let Some((data, was_changed)) =
+                                widget_clone.launcher.get_weather().await
+                            {
+                                let css_class = if was_changed {
+                                    "weather-animate"
+                                } else {
+                                    "weather-no-animate"
+                                };
+                                widget_clone.result_item.row_item.add_css_class(css_class);
+                                widget_clone.result_item.row_item.add_css_class(&data.icon);
+                                wtr.temperature.set_text(&data.temperature);
+                                wtr.spinner.set_spinning(false);
+                                wtr.icon.set_icon_name(Some(&data.icon));
+                                wtr.location.set_text(&data.format_str);
+                            } else {
+                                widget_clone.result_item.row_item.set_visible(false);
+                            }
+                        }
+
+                        // Connect row-should-activate signal
+                        widget_clone.result_item.row_item.connect(
+                            "row-should-activate",
+                            false,
+                            move |row| {
+                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                execute_from_attrs(&row, &attrs);
+                                None
+                            },
+                        );
+                    }
+                })
+                .collect();
+
+            let _ = join_all(futures).await;
+            // Set spinner inactive
+            if let Some(row) = async_launchers.get(0) {
+                let _ = row
+                    .result_item
+                    .row_item
+                    .activate_action("win.spinner-mode", Some(&false.to_variant()));
             }
             *current_task_clone.borrow_mut() = None;
         }

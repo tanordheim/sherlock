@@ -4,31 +4,43 @@ use crate::{
     loader::pipe_loader::PipeData,
     CONFIG,
 };
-use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, TextView};
+use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
-    pub title: Option<Label>,
-    pub body: Option<Label>,
     pub result_item: ResultItem,
-    pub async_opts: Option<AsyncOptions>,
+    pub text_tile: Option<TextTileElements>,
+    pub image_replacement: Option<ImageReplacementElements>,
+    pub weather_tile: Option<WeatherTileElements>,
     pub attrs: HashMap<String, String>,
 }
 
 #[derive(Debug)]
-pub struct AsyncOptions {
+pub struct TextTileElements {
+    pub title: Label,
+    pub body: Label,
+}
+#[derive(Debug)]
+pub struct ImageReplacementElements {
     pub _icon: Option<Image>,
     pub icon_holder_overlay: Option<Overlay>,
 }
-impl AsyncOptions {
+impl ImageReplacementElements {
     pub fn new() -> Self {
-        AsyncOptions {
+        ImageReplacementElements {
             _icon: None,
             icon_holder_overlay: None,
         }
     }
+}
+#[derive(Debug)]
+pub struct WeatherTileElements {
+    pub temperature: Label,
+    pub location: Label,
+    pub icon: Image,
+    pub spinner: Spinner,
 }
 
 #[derive(Default)]
@@ -163,6 +175,54 @@ impl TileBuilder {
                 self.tag_end.set_text(&text);
                 self.tag_end.set_visible(true);
             }
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct WeatherTileBuilder {
+    pub object: SherlockRow,
+    pub icon: Image,
+    pub location: Label,
+    pub temperature: Label,
+    pub spinner: Spinner,
+}
+
+impl WeatherTileBuilder {
+    pub fn new(resource: &str) -> Self {
+        let builder = Builder::from_resource(resource);
+        let body: Box = builder.object("holder").unwrap_or_default();
+        let icon: Image = builder.object("icon-name").unwrap_or_default();
+        let location: Label = builder.object("location").unwrap_or_default();
+        let temperature: Label = builder.object("temperature").unwrap_or_default();
+
+        // Append content to the sherlock row
+        let object = SherlockRow::new();
+        object.set_css_classes(&vec!["tile"]);
+
+        let overlay = Overlay::new();
+        overlay.set_child(Some(&body));
+
+        let spinner = Spinner::new();
+        spinner.set_spinning(true);
+        spinner.set_size_request(20, 20);
+        spinner.set_halign(gtk4::Align::Center);
+        spinner.set_valign(gtk4::Align::Center);
+        overlay.add_overlay(&spinner);
+
+        object.set_child(Some(&overlay));
+
+        // Set the icon size to the user-specified one
+        if let Some(c) = CONFIG.get() {
+            icon.set_pixel_size(c.appearance.icon_size);
+        }
+
+        WeatherTileBuilder {
+            object,
+            icon,
+            location,
+            temperature,
+            spinner,
         }
     }
 }

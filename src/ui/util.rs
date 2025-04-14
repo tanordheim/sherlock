@@ -1,35 +1,9 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
-use gtk4::{
-    prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow, StackTransitionType,
-};
+use gtk4::{prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow};
 
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::{APP_STATE, CONFIG};
-
-pub fn show_stack_page<T: AsRef<str>>(page_name: T, transition: Option<StackTransitionType>) {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.stack.as_ref().map(|stack| {
-                if let Some(transition) = transition {
-                    stack.set_transition_type(transition);
-                };
-                stack.set_visible_child_name(page_name.as_ref());
-            });
-        }
-    });
-}
-pub fn remove_stack_children() {
-    APP_STATE.with(|state| {
-        if let Some(ref state) = *state.borrow() {
-            state.stack.as_ref().map(|stack| {
-                while let Some(x) = stack.first_child() {
-                    stack.remove(&x);
-                }
-            });
-        }
-    });
-}
+use crate::CONFIG;
 
 pub fn execute_by_index(results: &ListBox, index: i32) {
     let mut child_counter = 1;

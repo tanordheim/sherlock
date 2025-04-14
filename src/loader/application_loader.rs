@@ -91,12 +91,20 @@ impl Loader {
                         }
 
                         // Construct the executable command
-                        let exec_path = parse_field(&content, &exec_re);
-                        let mut exec = if parse_field(&content, &terminal_re) == "true" {
-                            format!("{} {}", &config.default_apps.terminal, exec_path)
-                        } else {
-                            exec_path.to_string()
-                        };
+                        let mut exec = config
+                            .behavior
+                            .global_prefix
+                            .as_ref()
+                            .map_or(String::new(), |pre| format!("{} ", pre));
+                        if parse_field(&content, &terminal_re) == "true" {
+                            exec.push_str(&config.default_apps.terminal);
+                            exec.push(' ');
+                        }
+                        exec.push_str(&parse_field(&content, &exec_re));
+                        if let Some(flag) = &config.behavior.global_flags {
+                            exec.push(' ');
+                            exec.push_str(&flag);
+                        }
 
                         // apply aliases
                         if let Some(alias) = aliases.get(&name) {
@@ -129,6 +137,7 @@ impl Loader {
                             name,
                             AppData {
                                 icon,
+                                icon_class: None,
                                 exec,
                                 search_string,
                                 tag_start: None,
@@ -182,7 +191,12 @@ impl Loader {
     }
 
     fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
-        let tmp_path = cache_loc.as_ref().with_extension(".tmp");
+        let path = cache_loc.as_ref();
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let tmp_path = path.with_extension(".tmp");
+
         if let Ok(f) = File::create(&tmp_path) {
             if let Ok(_) = simd_json::to_writer(f, &apps) {
                 let _ = fs::rename(&tmp_path, &cache_loc);
@@ -204,9 +218,11 @@ impl Loader {
         // check if sherlock_alias was modified
         let alias_path = Path::new(&config.files.alias);
         let ignore_path = Path::new(&config.files.ignore);
+        let config_path = Path::new(&config.files.config);
         let cache_path = Path::new(&config.behavior.cache);
         let changed = file_has_changed(&alias_path, &cache_path)
-            || file_has_changed(&ignore_path, &cache_path);
+            || file_has_changed(&ignore_path, &cache_path)
+            || file_has_changed(&config_path, &cache_path);
 
         if !changed {
             let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
@@ -314,11 +330,11 @@ pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
         .flatten()
         .collect::<HashSet<PathBuf>>()
 }
-pub fn file_has_changed(file_path: &Path, cache_path: &Path) -> bool {
+pub fn file_has_changed(file_path: &Path, compare_to: &Path) -> bool {
     fn modtime(path: &Path) -> Option<SystemTime> {
         fs::metadata(path).ok().and_then(|m| m.modified().ok())
     }
-    match (modtime(&file_path), modtime(&cache_path)) {
+    match (modtime(&file_path), modtime(&compare_to)) {
         (Some(t1), Some(t2)) if t1 >= t2 => return true,
         _ => {}
     }

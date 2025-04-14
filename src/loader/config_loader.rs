@@ -2,15 +2,12 @@ use super::util::{
     expand_path, home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags,
 };
 use super::Loader;
-use crate::FLAGS;
 use std::fs;
 
 impl Loader {
-    pub fn load_config() -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
-        let sherlock_flags = FLAGS.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
+    pub fn load_config(
+        sherlock_flags: &SherlockFlags,
+    ) -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
         let home = home_dir()?;
         let mut path = match &sherlock_flags.config {
             Some(path) => expand_path(path, &home),

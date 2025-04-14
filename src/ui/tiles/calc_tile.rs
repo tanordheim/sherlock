@@ -24,9 +24,11 @@ impl Tile {
         let mut result: Option<String> = None;
 
         if capabilities.contains("calc.math") {
-            if let Ok(r) = eval_str(keyword.trim()) {
-                if r.to_string().as_str() != keyword.trim() {
-                    result = Some(format!("= {}", r.to_string()));
+            let trimmed_keyword = keyword.trim();
+            if let Ok(r) = eval_str(trimmed_keyword) {
+                let r = r.to_string();
+                if &r != trimmed_keyword {
+                    result = Some(format!("= {}", r));
                 }
             }
         }
@@ -34,25 +36,25 @@ impl Tile {
         if (capabilities.contains("calc.lengths") || capabilities.contains("calc.units"))
             && result.is_none()
         {
-            result = calc_launcher
-                .measurement(&keyword, "lengths")
-                .map(|r| r.to_string());
+            result = calc_launcher.measurement(&keyword, "lengths")
         }
 
         if (capabilities.contains("calc.weights") || capabilities.contains("calc.units"))
             && result.is_none()
         {
-            result = calc_launcher
-                .measurement(&keyword, "weights")
-                .map(|r| r.to_string());
+            result = calc_launcher.measurement(&keyword, "weights")
         }
 
         if (capabilities.contains("calc.volumes") || capabilities.contains("calc.units"))
             && result.is_none()
         {
-            result = calc_launcher
-                .measurement(&keyword, "volumes")
-                .map(|r| r.to_string());
+            result = calc_launcher.measurement(&keyword, "volumes")
+        }
+
+        if (capabilities.contains("calc.temperatures") || capabilities.contains("calc.units"))
+            && result.is_none()
+        {
+            result = calc_launcher.temperature(&keyword)
         }
 
         if let Some(r) = result {
@@ -64,10 +66,8 @@ impl Tile {
             builder.equation_holder.set_text(&keyword);
             builder.result_holder.set_text(&r);
 
-            let result = r.to_string();
-
             // Add action capabilities
-            let attrs = get_attrs_map(vec![("method", &launcher.method), ("result", &result)]);
+            let attrs = get_attrs_map(vec![("method", &launcher.method), ("result", &r)]);
             builder
                 .object
                 .connect("row-should-activate", false, move |row| {

@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Deserialize, Debug)]
-pub struct CommandConfig {
-    pub name: String,
+pub struct RawLauncher {
+    pub name: Option<String>,
     pub alias: Option<String>,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
@@ -35,6 +35,7 @@ pub struct CommandConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AppData {
     pub icon: String,
+    pub icon_class: Option<String>,
     pub exec: String,
     pub search_string: String,
     pub tag_start: Option<String>,
@@ -89,6 +90,8 @@ pub enum SherlockErrorType {
     DBusMessageConstructError(String),
     HttpRequestError(String),
     SocketRemoveError(String),
+    SocketConnectError(String),
+    SoecktWriteError(String),
 }
 
 impl SherlockErrorType {
@@ -101,6 +104,17 @@ impl SherlockErrorType {
             SherlockErrorType::SocketRemoveError(socket) => (
                 "SocketRemoveError".to_string(),
                 format!("Failed to close socket at location \"{}\"", socket),
+            ),
+            SherlockErrorType::SocketConnectError(socket) => (
+                "SocketConnectError".to_string(),
+                format!("Failed to connect to socket at location \"{}\"", socket),
+            ),
+            SherlockErrorType::SoecktWriteError(socket) => (
+                "SoecktWriteError".to_string(),
+                format!(
+                    "Failed to send message to socket at location \"{}\"",
+                    socket
+                ),
             ),
             SherlockErrorType::FileExistError(file) => (
                 "FileExistError".to_string(),
@@ -246,6 +260,8 @@ pub struct ConfigUnits {
     pub weights: String,
     #[serde(default = "default_volumes")]
     pub volumes: String,
+    #[serde(default = "default_temperatures")]
+    pub temperatures: String,
     #[serde(default = "default_currency")]
     pub _currency: String,
 }
@@ -255,6 +271,7 @@ impl Default for ConfigUnits {
             lengths: default_measurements(),
             weights: default_weights(),
             volumes: default_volumes(),
+            temperatures: default_temperatures(),
             _currency: default_currency(),
         }
     }
@@ -295,17 +312,20 @@ pub struct ConfigAppearance {
     pub search_icon: bool,
     #[serde(default = "default_true")]
     pub use_base_css: bool,
+    #[serde(default = "default_true")]
+    pub status_bar: bool,
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
         Self {
             width: 900,
-            height: 593,
+            height: 593, // 617 with, 593 without notification bar
             gsk_renderer: String::from("cairo"),
             icon_paths: Default::default(),
             icon_size: default_icon_size(),
             search_icon: false,
             use_base_css: true,
+            status_bar: true,
         }
     }
 }
@@ -320,7 +340,10 @@ pub struct ConfigBehavior {
     pub daemonize: bool,
     #[serde(default = "default_true")]
     pub animate: bool,
+    #[serde(default)]
     pub field: Option<String>,
+    pub global_prefix: Option<String>,
+    pub global_flags: Option<String>,
 }
 impl Default for ConfigBehavior {
     fn default() -> Self {
@@ -330,6 +353,8 @@ impl Default for ConfigBehavior {
             daemonize: false,
             animate: true,
             field: None,
+            global_prefix: None,
+            global_flags: None,
         }
     }
 }
@@ -434,12 +459,15 @@ pub fn default_weights() -> String {
 pub fn default_volumes() -> String {
     String::from("l")
 }
+pub fn default_temperatures() -> String {
+    String::from("C")
+}
 pub fn default_currency() -> String {
     String::from("eur")
 }
 
 pub fn default_cache() -> PathBuf {
-    PathBuf::from("~/.cache/sherlock_desktop_cache.json")
+    PathBuf::from("~/.cache/sherlock/sherlock_desktop_cache.json")
 }
 pub fn default_config() -> PathBuf {
     PathBuf::from("~/.config/sherlock/config.toml")

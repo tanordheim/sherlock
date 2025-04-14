@@ -6,7 +6,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{Launcher, ResultItem};
 use crate::loader::util::AppData;
 
-use super::util::TileBuilder;
+use super::util::{SherlockSearch, TileBuilder};
 use super::Tile;
 
 impl Tile {
@@ -21,7 +21,7 @@ impl Tile {
             if value
                 .search_string
                 .to_lowercase()
-                .contains(&keyword.to_lowercase())
+                .fuzzy_match(&keyword.to_lowercase())
             {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                 builder.object.set_spawn_focus(launcher.spawn_focus);
@@ -31,11 +31,18 @@ impl Tile {
                 builder.display_tag_start(&value.tag_start, keyword);
                 builder.display_tag_end(&value.tag_end, keyword);
 
-                if launcher.name.is_empty() {
+                if let Some(name) = &launcher.name {
+                    builder.category.set_text(name);
+                } else {
                     builder.category.set_visible(false);
                 }
-                builder.category.set_text(&launcher.name);
+
+                // Icon stuff
                 builder.icon.set_icon_name(Some(&value.icon));
+                value
+                    .icon_class
+                    .as_ref()
+                    .map(|c| builder.icon.add_css_class(c));
                 builder.title.set_markup(&tile_name);
 
                 let attrs =

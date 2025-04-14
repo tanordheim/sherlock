@@ -1,4 +1,5 @@
 use gio::glib::object::ObjectExt;
+use gtk4::prelude::WidgetExt;
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -13,7 +14,12 @@ impl Tile {
         builder.object.set_spawn_focus(launcher.spawn_focus);
         builder.object.set_shortcut(launcher.shortcut);
 
-        builder.category.set_text(&launcher.name);
+        if let Some(name) = &launcher.name {
+            builder.category.set_text(name);
+        } else {
+            builder.category.set_visible(false);
+        }
+
         builder.icon.set_icon_name(Some(&web.icon));
 
         let tile_name = if web.display_name.contains("{keyword}") {

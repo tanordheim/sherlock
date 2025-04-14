@@ -20,6 +20,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `lengths`        | `meter`| Sets the default unit for any length calculations. |
 | `weights`        | `kg`| Sets the default unit for any weight calculations. |
 | `volumes`        | `l`| Sets the default unit for any volume calculations. |
+| `temperatures`        | `C`| Sets the default unit for any temperatues. |
 
 ---
 ## Debug Section `[debug]`
@@ -44,16 +45,20 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `icon_size`    | `22`        | Sets the default icon size for the icons in each tile. |
 | `search_icon`    | `true`        | Enables or disables the use of the search icon |
 | `use_base_css`    | `true`        | Enables or disables the extension of Sherlock's default style sheet. |
+| `status_bar`    | `true`        | Enables or disables the status bar. |
 
 ---
 ## Behavior Section `[behavior]`
 
 | **Keyword**           | **Default** | **Explanation**| **Documentation** |
 |-----------------------|-------------|---------------------------------------------------------------------------------|-------------------|
-| `caching` | `false`     | If set to `true`, Desktop file caching will be activated to either the specified or the default location `~/.cache/sherlock_desktop_cache.json`. |[Caching](https://github.com/Skxxtz/sherlock/blob/documentation/docs/features/daemonizing.md)|
-| `cache` | `~/.cache/sherlock_desktop_cache.json`   | Overrides the default caching location. ||
+| `caching` | `false`     | If set to `true`, Desktop file caching will be activated to either the specified or the default location `~/sherlock/.cache/sherlock/sherlock_desktop_cache.json`. |[Caching](https://github.com/Skxxtz/sherlock/blob/documentation/docs/features/daemonizing.md)|
+| `cache` | `~/.cache/sherlock/sherlock_desktop_cache.json`   | Overrides the default caching location. ||
 | `daemonize` | `false`     | If set to `true`, Sherlock will run in daemon mode. This will consume more memory because the rendered application will be kept in memory. Daemonizing will allow faster startup times. Send the `open` message to socket `/tmp/sherlock_daemon.socket` to open the window. |[Daemonizing](https://github.com/Skxxtz/sherlock/blob/documentation/docs/features/daemonizing.md)|
 | `animate` | `true`   | Sets if startup animation should play. (Only works on daemonize=false) ||
+| `global_prefix` | `None`   | Prepends this to every command. ||
+| `global_flags` | `None`   | Appends these flags to every command. ||
+
 ---
 ## Binds Section `[binds]`
 

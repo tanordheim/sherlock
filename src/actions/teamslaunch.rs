@@ -1,10 +1,13 @@
-use crate::{actions::util::eval_exit, CONFIG};
+use crate::{
+    loader::util::{SherlockError, SherlockErrorType},
+    CONFIG,
+};
 use std::{
     os::unix::process::CommandExt,
     process::{Command, Stdio},
 };
 
-pub fn teamslaunch(meeting_url: &str) {
+pub fn teamslaunch(meeting_url: &str) -> Result<(), SherlockError> {
     if let Some(c) = CONFIG.get() {
         let teams_command = c.default_apps.teams.clone();
         let exec = teams_command.replace("{meeting_url}", meeting_url);
@@ -12,8 +15,10 @@ pub fn teamslaunch(meeting_url: &str) {
         let parts: Vec<String> = exec.split_whitespace().map(String::from).collect();
 
         if parts.is_empty() {
-            eprintln!("Error: Command is empty");
-            eval_exit();
+            return Err(SherlockError {
+                error: SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
+                traceback: String::from("Command is empty."),
+            });
         }
 
         let mut command = Command::new(&parts[0]);
@@ -35,6 +40,16 @@ pub fn teamslaunch(meeting_url: &str) {
                 });
         }
 
-        let _output = command.spawn().expect("Failed to start the application");
+        let _output = command.spawn().map_err(|e| SherlockError {
+            error: SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
+            traceback: e.to_string(),
+        })?;
+
+        Ok(())
+    } else {
+        Err(SherlockError {
+            error: SherlockErrorType::ConfigError(None),
+            traceback: String::from("It should never get to this. Location: Teams Launch"),
+        })
     }
 }
