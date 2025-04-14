@@ -14,7 +14,6 @@ impl Calculator {
             let value: f32 = caps[1].parse().ok()?;
             let from = caps[2].to_lowercase();
             let to = caps[4].to_lowercase();
-            println!("{:?} → {:?}", from, to);
 
             let (factor_from, _) = Measurements::match_unit(&from, unit_str)?;
             let (factor_to, name) = Measurements::match_unit(&to, unit_str)?;
@@ -46,6 +45,42 @@ impl Calculator {
             return Some(format!("= {:.2} {}{}", res, name, postfix));
         }
         None
+    }
+    pub fn temperature(&self, keyword: &str) -> Option<String> {
+        let ctof = |c: f32| (c * 9.0 / 5.0) + 32.0;
+        let ftoc = |f: f32| (f - 32.0) * 5.0 / 9.0;
+        let parse_unit = |unit: &str| {
+            if unit == "c" || unit.len() > 1 && "celsius".contains(&unit) {
+                "C"
+            } else if unit == "f" || unit.len() > 1 && "fahrenheit".contains(&unit) {
+                "F"
+            } else {
+                "C"
+            }
+        };
+        let full_pattern = r"(?i)^(?P<value>\d+(?:\.\d+)?)\s*(?:degrees?|°)?\s*(?P<from>(c|f)(elsius|ahrenheit)?)?\s*(?:to|as|in)?\s*(?:degrees?|°)?\s*(?P<to>(c|f)(elsius|ahrenheit)?)?$";
+
+        let full_re = Regex::new(full_pattern).unwrap();
+        match full_re.captures(keyword) {
+            Some(caps) => {
+                let value = caps.name("value")?.as_str().parse::<f32>().ok()?;
+                let from = parse_unit(&caps.name("from")?.as_str().to_lowercase());
+                println!("to: {:?}", from);
+                let to = caps
+                    .name("to")
+                    .map_or(if from == "C" { "F" } else { "C" }, |v| {
+                        parse_unit(v.as_str())
+                    });
+                match to {
+                    "C" => Some(format!("= {} °C", ftoc(value))),
+                    _ => Some(format!("= {} °F", ctof(value))),
+                }
+            }
+            _ => {
+                println!("test");
+                None
+            }
+        }
     }
     fn to_basis(&self, factor: f32, value: f32) -> f32 {
         value * factor

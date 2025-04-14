@@ -51,6 +51,12 @@ impl Tile {
             result = calc_launcher.measurement(&keyword, "volumes")
         }
 
+        if (capabilities.contains("calc.temperatures") || capabilities.contains("calc.units"))
+            && result.is_none()
+        {
+            result = calc_launcher.temperature(&keyword)
+        }
+
         if let Some(r) = result {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
             builder.object.add_css_class("calc-tile");
