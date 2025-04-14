@@ -228,7 +228,7 @@ impl Tile {
                 // Add action capabilities
                 let attrs = get_attrs_map(vec![
                     ("method", method),
-                    ("result", clipboard_content),
+                    ("keyword", clipboard_content),
                     ("engine", "plain"),
                 ]);
 
