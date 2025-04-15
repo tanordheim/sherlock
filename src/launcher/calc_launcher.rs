@@ -65,7 +65,6 @@ impl Calculator {
             Some(caps) => {
                 let value = caps.name("value")?.as_str().parse::<f32>().ok()?;
                 let from = parse_unit(&caps.name("from")?.as_str().to_lowercase());
-                println!("to: {:?}", from);
                 let to = caps
                     .name("to")
                     .map_or(if from == "C" { "F" } else { "C" }, |v| {
@@ -77,7 +76,6 @@ impl Calculator {
                 }
             }
             _ => {
-                println!("test");
                 None
             }
         }
