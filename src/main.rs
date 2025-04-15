@@ -101,6 +101,9 @@ async fn main() {
         .unwrap_or_default();
     non_breaking.extend(n);
 
+    if sherlock_flags.time_inspect {
+        println!("Loading content took: {:?}", t0.elapsed());
+    }
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
