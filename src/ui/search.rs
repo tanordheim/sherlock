@@ -40,6 +40,7 @@ pub fn search(
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
 
+    let initial_mode = mode.borrow().clone();
     let search_bar_clone = ui.search_bar.clone();
     let search_bar_clone2 = ui.search_bar.clone();
     let modes_clone = modes.clone();
@@ -70,10 +71,9 @@ pub fn search(
     );
 
     // Improved mode selection
-    let original_mode = String::from("all");
     let mode_action = ActionEntry::builder("switch-mode")
         .parameter_type(Some(&String::static_variant_type()))
-        .state(original_mode.to_variant())
+        .state(initial_mode.to_variant())
         .activate(move |_, action, parameter| {
             let state = action.state().and_then(|s| s.get::<String>());
             let parameter = parameter.and_then(|p| p.get::<String>());
@@ -156,7 +156,11 @@ fn construct_window(
     Rc<ListBox>,
 ) {
     // Collect Modes
-    let mode = Rc::new(RefCell::new("all".to_string()));
+    let original_mode = CONFIG
+        .get()
+        .and_then(|c| c.behavior.sub_menu.as_deref())
+        .unwrap_or("all");
+    let mode = Rc::new(RefCell::new(original_mode.to_string()));
     let modes: HashMap<String, Option<String>> = launchers
         .iter()
         .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))

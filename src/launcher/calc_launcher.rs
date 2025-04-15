@@ -75,9 +75,7 @@ impl Calculator {
                     _ => Some(format!("= {} °F", ctof(value))),
                 }
             }
-            _ => {
-                None
-            }
+            _ => None,
         }
     }
     fn to_basis(&self, factor: f32, value: f32) -> f32 {

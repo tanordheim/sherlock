@@ -152,6 +152,7 @@ impl Loader {
                 .unwrap_or(&config.behavior.cache),
             &home,
         );
+        config.behavior.sub_menu = sherlock_flags.sub_menu.clone();
         config.pipe.method = sherlock_flags.method.clone();
         config.behavior.field = sherlock_flags.field.clone();
 
