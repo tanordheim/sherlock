@@ -2,14 +2,14 @@
  Sherlock Application Launcher for Linux
 </h1>
 
-<div align="center" style="text-align:center;">
+<div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
   <picture>
-    <img alt="application screenshot" width="100%" src="images/showcase.gif">
+    <img alt="application screenshot" width="100%" style="border-radius: 10px" src="images/showcase.png">
   </picture>
 </div>
 
@@ -172,7 +172,7 @@ Make sure you have the following dependencies installed:
     Once the package is built, you can install it using:
 
     ```bash
-    sudo dpkg -i target/debian/sherlock-launcher_0.1.10_amd64.deb
+    sudo dpkg -i target/debian/sherlock-launcher_0.1.11_amd64.deb
     ```
 
     (Make sure to replace the filename if the version number is different.)

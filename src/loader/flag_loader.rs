@@ -57,6 +57,7 @@ impl SherlockFlags {
             daemonize: check_flag_existance("--daemonize"),
             method: extract_flag_value("--method"),
             field: extract_flag_value("--field"),
+            time_inspect: check_flag_existance("--time-inspect"),
         })
     }
 }

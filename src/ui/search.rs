@@ -39,21 +39,16 @@ pub fn search(
     let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
     ui.result_viewport
         .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-    ui.search_bar.grab_focus();
 
     let search_bar_clone = ui.search_bar.clone();
     let search_bar_clone2 = ui.search_bar.clone();
     let modes_clone = modes.clone();
     let mode_clone = Rc::clone(&mode);
 
-    if let Some(c) = CONFIG.get() {
-        if c.behavior.daemonize && stack_page_ref.borrow().as_str() == "search-page" {
-            let search_bar = ui.search_bar.clone();
-            window.connect_show(move |_| {
-                search_bar.grab_focus();
-            });
-        }
-    }
+    let search_bar = ui.search_bar.clone();
+    stack_page.connect_realize(move |_| {
+        search_bar.grab_focus();
+    });
 
     let custom_binds = ConfKeys::new();
 

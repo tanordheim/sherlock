@@ -58,6 +58,7 @@ pub struct SherlockFlags {
     pub daemonize: bool,
     pub method: Option<String>,
     pub field: Option<String>,
+    pub time_inspect: bool,
 }
 
 #[derive(Deserialize, Clone, Debug)]

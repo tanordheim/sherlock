@@ -6,6 +6,7 @@ use gtk4::Application;
 use loader::pipe_loader::deserialize_pipe;
 use loader::util::SherlockErrorType;
 use std::sync::OnceLock;
+use std::time::Instant;
 use std::{env, process, thread};
 
 // MODS
@@ -32,6 +33,7 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
+    let t0 = Instant::now();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
@@ -99,6 +101,9 @@ async fn main() {
         .unwrap_or_default();
     non_breaking.extend(n);
 
+    if sherlock_flags.time_inspect {
+        println!("Loading content took: {:?}", t0.elapsed());
+    }
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
@@ -118,6 +123,9 @@ async fn main() {
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
+
+        // Significantly better id done here
+        let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
 
         // Either show user-specified content or show normal search
         let pipe = Loader::load_pipe_args();
@@ -184,11 +192,11 @@ async fn main() {
                         }
                     });
                 }
-                false => {
-                    // Show window without daemonizing
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-                }
+                false => {}
             }
+        }
+        if sherlock_flags.time_inspect {
+            println!("Startup time 0 → full content: {:?}", t0.elapsed());
         }
     });
     application.run();
