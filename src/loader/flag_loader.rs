@@ -58,7 +58,7 @@ impl SherlockFlags {
             method: extract_flag_value("--method"),
             field: extract_flag_value("--field"),
             time_inspect: check_flag_existance("--time-inspect"),
-            sub_menu: extract_flag_value("--sm"),
+            sub_menu: extract_flag_value("--sub-menu"),
         })
     }
 }
