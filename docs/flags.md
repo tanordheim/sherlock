@@ -13,6 +13,7 @@
 | --cache      | Specify the location for the caching file. Sets caching active |Recommended location: `~/.cache/sherlock/sherlock_desktop_cache.json`       |
 | --daemonize      | Overrides the daemonizing value in `config.toml` | |
 | --time-inspect      | Prints startup time from 0 to content | |
+| --sub-menu      | Launch Sherlock with a custom alias from the beginning. For example `sherlock --sub-menu pm`, where `pm` is an alias you defined in your fallbacks.| |
 
 ## Pipe Mode Flags
 | Flag         | Description | Note |
