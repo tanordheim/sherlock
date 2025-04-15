@@ -12,6 +12,7 @@
 | --alias      | Specify the Sherlock alias file. |Recommended location: `~/.config/sherlock/sherlock_alias.json`       |
 | --cache      | Specify the location for the caching file. Sets caching active |Recommended location: `~/.cache/sherlock/sherlock_desktop_cache.json`       |
 | --daemonize      | Overrides the daemonizing value in `config.toml` | |
+| --time-inspect      | Prints startup time from 0 to content. | |
 
 ## Pipe Mode Flags
 | Flag         | Description | Note |
