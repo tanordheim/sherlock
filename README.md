@@ -9,7 +9,7 @@
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
   <picture>
-    <img alt="application screenshot" width="100%" src="images/showcase.png">
+    <img alt="application screenshot" width="100%" style="border-radius: 10px" src="images/showcase.png">
   </picture>
 </div>
 
