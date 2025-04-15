@@ -2,7 +2,7 @@
  Sherlock Application Launcher for Linux
 </h1>
 
-<div align="center" style="text-align:center;">
+<div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
