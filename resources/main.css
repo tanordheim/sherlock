@@ -19,7 +19,7 @@
     --weather-freezing-scattered-rain-storm: 220, 30%, 35%; /* Cold stormy gray-blue */
     --weather-freezing-scattered-rain: 220, 40%, 45%;    /* Chilly wet gray */
     --weather-snow-scattered-day: 200, 40%, 95%;         /* Bright, snowy blue-white */
-    --weather-storm: 240, 30%, 20%;                      /* Deep stormy indigo */
+    --weather-storm: 240, 10%, 20%;                      /* Deep stormy indigo */
     --weather-snow-storm: 210, 20%, 92%;                 /* Snowy light gray-blue */
     --weather-snow-scattered-storm: 210, 10%, 25%;       /* Soft overcast snow blend */
     --weather-showers-scattered: 200, 30%, 65%;          /* Lighter scattered rain */
