@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use gio::glib::variant::ToVariant;
 use gtk4::prelude::WidgetExt;
 use teamslaunch::teamslaunch;
-use util::{reset_app_counter, clear_cached_files};
+use util::{clear_cached_files, reset_app_counter};
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
@@ -96,10 +96,14 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
             "display_raw" => {
-                attrs.get("next_content").map(|content| display_raw(content, false));
+                attrs
+                    .get("next_content")
+                    .map(|content| display_raw(content, false));
             }
             "play-pause" | "audio_sink" => {
-                attrs.get("player").map(|player| MusicPlayerLauncher::playpause(player));
+                attrs
+                    .get("player")
+                    .map(|player| MusicPlayerLauncher::playpause(player));
             }
             "kill-process" => {
                 let _ = attrs
@@ -117,11 +121,11 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                             "win.switch-page",
                             Some(&String::from("error-page").to_variant()),
                         );
-                    },
+                    }
                     "clear_cache" => {
                         let _ = clear_cached_files();
                         eval_close(row);
-                    },
+                    }
                     "reset_counts" => {
                         let _ = reset_app_counter();
                         eval_close(row);
@@ -151,6 +155,6 @@ fn increment(key: &str) {
         let _ = count_reader.increment(key);
     };
 }
-fn eval_close(row: &SherlockRow){
+fn eval_close(row: &SherlockRow) {
     let _ = row.activate_action("win.close", None);
 }
