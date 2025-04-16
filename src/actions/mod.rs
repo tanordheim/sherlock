@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use gio::glib::variant::ToVariant;
 use gtk4::prelude::WidgetExt;
 use teamslaunch::teamslaunch;
+use util::{reset_app_counter, clear_cached_files};
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
@@ -35,7 +36,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 applaunch::applaunch(exec);
                 increment(&exec);
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "web_launcher" => {
                 let query = attrs.get("keyword").map_or("", |s| s.as_str());
@@ -43,14 +44,14 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let _ = websearch::websearch(engine, query);
                 let exec = format!("websearch-{}", engine);
                 increment(&exec);
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
                 increment(&exec);
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "copy" => {
                 if let Some(field) = attrs.get("field") {
@@ -60,7 +61,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "print" => {
                 if let Some(field) = attrs.get("field") {
@@ -70,7 +71,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
                 }
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "teams_event" => {
                 if let Some(meeting) = attrs.get("meeting_url") {
@@ -95,14 +96,10 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
             "display_raw" => {
-                if let Some(next_content) = attrs.get("next_content") {
-                    display_raw(next_content, false);
-                }
+                attrs.get("next_content").map(|content| display_raw(content, false));
             }
             "play-pause" | "audio_sink" => {
-                if let Some(player) = attrs.get("player") {
-                    let _ = MusicPlayerLauncher::playpause(player);
-                }
+                attrs.get("player").map(|player| MusicPlayerLauncher::playpause(player));
             }
             "kill-process" => {
                 let _ = attrs
@@ -110,7 +107,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     .and_then(|p| p.parse::<i32>().ok())
                     .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
                     .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
             "debug" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
@@ -120,6 +117,14 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                             "win.switch-page",
                             Some(&String::from("error-page").to_variant()),
                         );
+                    },
+                    "clear_cache" => {
+                        let _ = clear_cached_files();
+                        eval_close(row);
+                    },
+                    "reset_counts" => {
+                        let _ = reset_app_counter();
+                        eval_close(row);
                     }
                     _ => {}
                 }
@@ -130,7 +135,7 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 } else {
                     println!("Return method \"{}\" not recognized", method);
                 }
-                let _ = row.activate_action("win.close", None);
+                eval_close(row);
             }
         }
     }
@@ -145,4 +150,7 @@ fn increment(key: &str) {
     if let Ok(count_reader) = CounterReader::new() {
         let _ = count_reader.increment(key);
     };
+}
+fn eval_close(row: &SherlockRow){
+    let _ = row.activate_action("win.close", None);
 }
