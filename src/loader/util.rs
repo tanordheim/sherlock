@@ -212,7 +212,7 @@ pub struct SherlockError {
     pub traceback: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct SherlockConfig {
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,
@@ -246,7 +246,7 @@ impl SherlockConfig {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigDefaultApps {
     #[serde(default = "default_teams")]
     pub teams: String,
@@ -264,7 +264,7 @@ impl Default for ConfigDefaultApps {
         }
     }
 }
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigUnits {
     #[serde(default = "default_measurements")]
     pub lengths: String,
@@ -289,7 +289,7 @@ impl Default for ConfigUnits {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigDebug {
     #[serde(default)]
     pub try_suppress_errors: bool,
@@ -308,7 +308,7 @@ impl Default for ConfigDebug {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigAppearance {
     #[serde(default)]
     pub width: i32,
@@ -316,7 +316,7 @@ pub struct ConfigAppearance {
     pub height: i32,
     #[serde(default)]
     pub gsk_renderer: String,
-    #[serde(default)]
+    #[serde(default = "default_icon_paths")]
     pub icon_paths: Vec<String>,
     #[serde(default = "default_icon_size")]
     pub icon_size: i32,
@@ -333,7 +333,7 @@ impl Default for ConfigAppearance {
             width: 900,
             height: 593, // 617 with, 593 without notification bar
             gsk_renderer: String::from("cairo"),
-            icon_paths: Default::default(),
+            icon_paths: default_icon_paths(),
             icon_size: default_icon_size(),
             search_icon: false,
             use_base_css: true,
@@ -342,7 +342,7 @@ impl Default for ConfigAppearance {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigBehavior {
     #[serde(default = "default_cache")]
     pub cache: PathBuf,
@@ -373,7 +373,7 @@ impl Default for ConfigBehavior {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigFiles {
     #[serde(default = "default_config")]
     pub config: PathBuf,
@@ -398,7 +398,7 @@ impl Default for ConfigFiles {
     }
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct ConfigBinds {
     #[serde(default)]
     pub prev: Option<String>,
@@ -408,7 +408,7 @@ pub struct ConfigBinds {
     pub modifier: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct ConfigPipe {
     #[serde(default)]
     pub method: Option<String>,
@@ -501,6 +501,9 @@ pub fn default_ignore() -> PathBuf {
 
 pub fn default_true() -> bool {
     true
+}
+pub fn default_icon_paths() -> Vec<String> {
+    vec![String::from("~/.config/sherlock/icons/")]
 }
 pub fn default_icon_size() -> i32 {
     22

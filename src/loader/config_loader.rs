@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use super::util::{
     expand_path, home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags,
 };
@@ -160,5 +162,110 @@ impl Loader {
             config.behavior.daemonize = true;
         }
         config
+    }
+
+    /// # Arguments
+    /// loc: PathBuf
+    /// Pathbuf should be a directory **not** a file
+    pub fn write_defaults_to_file(loc: PathBuf) -> Result<(), SherlockError> {
+        let create_dir = |path: PathBuf| {
+            fs::create_dir(&path).map_err(|e| SherlockError {
+                error: SherlockErrorType::DirCreateError(format!("{:?}", path)),
+                traceback: e.to_string(),
+            })
+        };
+
+        // create config location
+        let home = home_dir()?;
+        let path = expand_path(&loc, &home);
+
+        // build default config
+        let config = SherlockConfig::default();
+        let toml_str = toml::to_string(&config).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileWriteError(path.clone()),
+            traceback: e.to_string(),
+        })?;
+
+        // mkdir -p
+        fs::create_dir_all(&path).map_err(|e| SherlockError {
+            error: SherlockErrorType::DirCreateError(format!("{:?}", path)),
+            traceback: e.to_string(),
+        })?;
+        // create subdirs
+        create_dir(path.join("icons/"))?;
+        create_dir(path.join("scripts/"))?;
+        create_dir(path.join("themes/"))?;
+
+        // write config.toml file
+        let config_path = path.join("config.toml");
+        if !config_path.exists() {
+            fs::write(&config_path, toml_str).map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(config_path),
+                traceback: e.to_string(),
+            })?;
+        } else {
+            println!("Skipping 'config.toml' since file exists already.")
+        }
+
+        // write sherlockignore file
+        let ignore_path = path.join("sherlockignore");
+        if !ignore_path.exists() {
+            fs::write(&ignore_path, "").map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(ignore_path),
+                traceback: e.to_string(),
+            })?;
+        } else {
+            println!("Skipping 'sherlockignore' since file exists already.")
+        }
+
+        // write sherlock_alias file
+        let alias_path = path.join("sherlock_alias.json");
+        if !alias_path.exists() {
+            fs::write(&alias_path, "{}").map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(alias_path),
+                traceback: e.to_string(),
+            })?;
+        } else {
+            println!("Skipping 'sherlock_alias.json' since file exists already.")
+        }
+
+        // write main.css file
+        let css_path = path.join("main.css");
+        if !css_path.exists() {
+            fs::write(&css_path, "").map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(css_path),
+                traceback: e.to_string(),
+            })?;
+        } else {
+            println!("Skipping 'main.css' since file exists already.")
+        }
+
+        // load default fallbacks
+        let fallback_path = path.join("fallback.json");
+        if !fallback_path.exists() {
+            // load resources
+            Loader::load_resources()?;
+            let data = gio::resources_lookup_data(
+                "/dev/skxxtz/sherlock/fallback.json",
+                gio::ResourceLookupFlags::NONE,
+            )
+            .map_err(|e| SherlockError {
+                error: SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
+                traceback: e.to_string(),
+            })?;
+
+            let json_str = std::str::from_utf8(&data).map_err(|e| SherlockError {
+                error: SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
+                traceback: e.to_string(),
+            })?;
+            fs::write(&fallback_path, json_str).map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(fallback_path),
+                traceback: e.to_string(),
+            })?;
+        } else {
+            println!("Skipping 'fallback.json' since file exists already.")
+        }
+
+        std::process::exit(0);
     }
 }

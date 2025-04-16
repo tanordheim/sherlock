@@ -45,6 +45,12 @@ impl SherlockFlags {
                 .cloned()
         };
 
+        if check_flag_existance("init") {
+            let path = extract_path_value("init").unwrap_or(PathBuf::from("~/.config/sherlock/"));
+            let x = Loader::write_defaults_to_file(path);
+            println!("{:?}", x);
+        }
+
         Ok(SherlockFlags {
             config: extract_path_value("--config"),
             fallback: extract_path_value("--fallback"),
