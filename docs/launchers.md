@@ -157,15 +157,24 @@ Specifies what the launcher should parse:
 ---
 ## Clipboard Launcher
 ```json
-    {
-        "name": "Clipboard",
+{
+    "name": "Clipboard",
         "type": "clipboard-execution",
         "args": {
-            "capabilities": ["url", "hex", "calc.math", "calc.lengths", "calc.weights"]
+            "capabilities": [
+                "url",
+                "colors.hex",
+                "colors.rgb",
+                "colors.hsl",
+                "calc.math",
+                "calc.lengths",
+                "calc.weights",
+                "calc.temperatures"
+            ]
         },
         "priority": 1,
         "home": true
-    }
+},
 ```
 ### Arguments (args):
 **`capabilities`** (optional):<br>
