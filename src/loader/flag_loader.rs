@@ -61,10 +61,10 @@ impl SherlockFlags {
             center_raw: check_flag_existance("--center"),
             cache: extract_path_value("--cache"),
             daemonize: check_flag_existance("--daemonize"),
-            method: extract_flag_value("--method"),
-            field: extract_flag_value("--field"),
             time_inspect: check_flag_existance("--time-inspect"),
             sub_menu: extract_flag_value("--sub-menu"),
+            method: extract_flag_value("--method"),
+            field: extract_flag_value("--field"),
         })
     }
 }
@@ -78,25 +78,42 @@ pub fn print_version() -> Result<(), SherlockError> {
 }
 pub fn print_help() -> Result<(), SherlockError> {
     let allowed_flags: Vec<(&str, &str)> = vec![
+        ("\nBASICS:", ""),
         ("--version", "Print the version of the application."),
         ("--help", "Show this help message with allowed flags."),
+        ("init", "Writes default configs into your config directory."),
+        ("\nFILES:", ""),
         ("--config", "Specify the configuration file to load."),
         ("--fallback", "Specify the fallback file to load."),
         ("--style", "Set the style configuration file."),
         ("--ignore", "Specify the sherlock ignore file"),
         ("--alias", "Specify the sherlock alias file (.json)."),
-        (
-            "--display-raw",
-            "Force Sherlock to use a singular tile to display the piped content",
-        ),
         ("--cache", "Specify the sherlock cache file (.json)."),
+        ("\nBEHAVIOR:", ""),
         (
             "--daemonize",
             "If this flag is set, sherlock will run in daemon mode.",
         ),
         (
+            "--sub-menu",
+            "Start sherlock with an alias active already. For example 'pm' for power menu",
+        ),
+        (
+            "--time-inspect",
+            "Show time for loading launchers and from 0 to full content",
+        ),
+        ("\nPIPE MODE:", ""),
+        (
+            "--display-raw",
+            "Force Sherlock to use a singular tile to display the piped content",
+        ),
+        (
             "--method",
-            "For pipe mode only: Specifies what to do with the selected data row",
+            "Specifies what to do with the selected data row",
+        ),
+        (
+            "--field",
+            "Specifies which of your fields should be printed on return press",
         ),
     ];
 
