@@ -59,6 +59,7 @@ pub struct SherlockFlags {
     pub method: Option<String>,
     pub field: Option<String>,
     pub time_inspect: bool,
+    pub sub_menu: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -355,6 +356,7 @@ pub struct ConfigBehavior {
     pub field: Option<String>,
     pub global_prefix: Option<String>,
     pub global_flags: Option<String>,
+    pub sub_menu: Option<String>,
 }
 impl Default for ConfigBehavior {
     fn default() -> Self {
@@ -366,6 +368,7 @@ impl Default for ConfigBehavior {
             field: None,
             global_prefix: None,
             global_flags: None,
+            sub_menu: None,
         }
     }
 }
