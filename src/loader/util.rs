@@ -59,7 +59,6 @@ pub struct SherlockFlags {
     pub method: Option<String>,
     pub field: Option<String>,
     pub time_inspect: bool,
-    pub sub_menu: Option<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -75,10 +74,12 @@ pub enum SherlockErrorType {
     EnvVarNotFoundError(String),
     FileExistError(PathBuf),
     FileWriteError(PathBuf),
+    FileRemoveError(PathBuf),
     FileReadError(PathBuf),
     FileParseError(PathBuf),
     DirReadError(String),
     DirCreateError(String),
+    DirRemoveError(String),
     ResourceParseError,
     ResourceLookupError(String),
     DisplayError,
@@ -126,6 +127,10 @@ impl SherlockErrorType {
                 "FileWriteError".to_string(),
                 format!("Failed to write file \"{}\"", file.to_string_lossy()),
             ),
+            SherlockErrorType::FileRemoveError(file) => (
+                "FileRemoveError".to_string(),
+                format!("Failed to remove file \"{}\"", file.to_string_lossy()),
+            ),
             SherlockErrorType::FileReadError(file) => (
                 "FileReadError".to_string(),
                 format!("Failed to read file \"{}\"", file.to_string_lossy()),
@@ -137,6 +142,10 @@ impl SherlockErrorType {
             SherlockErrorType::DirReadError(file) => (
                 "DirReadError".to_string(),
                 format!("Failed to read/access dir \"{}\"", file),
+            ),
+            SherlockErrorType::DirRemoveError(file) => (
+                "DirRemoveError".to_string(),
+                format!("Failed to remove dir \"{}\"", file),
             ),
             SherlockErrorType::DirCreateError(file) => (
                 "DirCreateError".to_string(),
@@ -346,7 +355,6 @@ pub struct ConfigBehavior {
     pub field: Option<String>,
     pub global_prefix: Option<String>,
     pub global_flags: Option<String>,
-    pub sub_menu: Option<String>,
 }
 impl Default for ConfigBehavior {
     fn default() -> Self {
@@ -358,7 +366,6 @@ impl Default for ConfigBehavior {
             field: None,
             global_prefix: None,
             global_flags: None,
-            sub_menu: None,
         }
     }
 }
