@@ -36,7 +36,11 @@ pub fn display_pipe(
 
     result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     results.focus_first();
-    search_bar.grab_focus();
+
+    let search_bar_clone = search_bar.clone();
+    vbox.connect_realize(move |_| {
+        search_bar_clone.grab_focus();
+    });
 
     change_event(&search_bar, &results, pipe_content, &method);
 
