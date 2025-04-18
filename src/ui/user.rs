@@ -1,6 +1,6 @@
 use gtk4::{
     self,
-    gdk::{self, Key},
+    gdk::{self, Key, ModifierType},
     prelude::*,
     ApplicationWindow, Builder, Entry, EventControllerKey, Justification,
 };
@@ -14,7 +14,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::loader::pipe_loader::PipeData;
 
 pub fn display_pipe(
-    window: &ApplicationWindow,
+    _window: &ApplicationWindow,
     pipe_content: Vec<PipeData>,
     method: &str,
 ) -> HVBox {
@@ -22,7 +22,7 @@ pub fn display_pipe(
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
     // Get the requred object references
-    let vbox: HVBox = builder.object("vbox").unwrap();
+    let stack_page: HVBox = builder.object("vbox").unwrap();
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
     let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
@@ -38,14 +38,22 @@ pub fn display_pipe(
     results.focus_first();
 
     let search_bar_clone = search_bar.clone();
-    vbox.connect_realize(move |_| {
+    stack_page.connect_realize(move |_| {
         search_bar_clone.grab_focus();
     });
 
+    let custom_binds = ConfKeys::new();
+
     change_event(&search_bar, &results, pipe_content, &method);
 
-    nav_event(window, results, result_viewport);
-    return vbox;
+    nav_event(
+        &stack_page,
+        results,
+        search_bar,
+        result_viewport,
+        custom_binds,
+    );
+    return stack_page;
 }
 pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
@@ -61,31 +69,64 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
 }
 
 fn nav_event(
-    window: &ApplicationWindow,
-    results_ev_nav: Rc<ListBox>,
+    stack: &HVBox,
+    results: Rc<ListBox>,
+    search_bar: Entry,
     result_viewport: ScrolledWindow,
+    custom_binds: ConfKeys,
 ) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, modifiers| {
+    event_controller.connect_key_pressed(move |_, key, i, modifiers| {
         match key {
-            gdk::Key::Up => {
-                results_ev_nav.focus_prev(&result_viewport);
-            }
-            gdk::Key::Down => {
-                results_ev_nav.focus_next(&result_viewport);
+            k if Some(k) == custom_binds.prev
+                && custom_binds
+                    .prev_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results.focus_prev(&result_viewport);
                 return true.into();
             }
-            gdk::Key::Return => {
-                if let Some(row) = results_ev_nav
-                    .selected_row()
-                    .and_downcast_ref::<SherlockRow>()
+            k if Some(k) == custom_binds.next
+                && custom_binds
+                    .next_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results.focus_next(&result_viewport);
+                return true.into();
+            }
+            gdk::Key::Up => {
+                results.focus_prev(&result_viewport);
+            }
+            gdk::Key::Down => {
+                results.focus_next(&result_viewport);
+                return true.into();
+            }
+            gdk::Key::BackSpace => {
+                let mut ctext = search_bar.text().to_string();
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
                 {
+                    let _ = search_bar.set_text("");
+                    ctext.clear();
+                }
+                if ctext.is_empty() {
+                    let _ =
+                        search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+                }
+                results.focus_first();
+            }
+            gdk::Key::Return => {
+                if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
                     row.emit_by_name::<()>("row-should-activate", &[]);
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
+                {
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
@@ -94,14 +135,28 @@ fn nav_event(
                         Key::_5 => 5,
                         _ => return false.into(),
                     };
-                    execute_by_index(&*results_ev_nav, key_index);
+                    execute_by_index(&*results, key_index);
+                    return true.into();
+                }
+            }
+            // Pain - solution for shift-tab since gtk handles it as an individual event
+            _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
+                let shift = Some(ModifierType::SHIFT_MASK);
+                let tab = Some(Key::Tab);
+                if custom_binds.prev_mod == shift && custom_binds.prev == tab {
+                    results.focus_prev(&result_viewport);
+                    return true.into();
+                } else if custom_binds.next_mod == shift && custom_binds.next == tab {
+                    results.focus_next(&result_viewport);
+                    return true.into();
                 }
             }
             _ => (),
         }
         false.into()
     });
-    window.add_controller(event_controller);
+
+    stack.add_controller(event_controller);
 }
 
 fn change_event(
