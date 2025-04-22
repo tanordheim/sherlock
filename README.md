@@ -1,4 +1,4 @@
-<div align="center" style="text-align:center; border-radius:10px;">
+<div align="center" style="text-align:center; border-radius:10px; display: grid; gap: 5px;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
