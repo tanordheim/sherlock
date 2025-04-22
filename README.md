@@ -6,7 +6,6 @@
   </picture>
 
   [![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
-
   <picture>
     <img alt="application screenshot" width="100%" style="border-radius: 10px" src="images/showcase.png">
   </picture>
