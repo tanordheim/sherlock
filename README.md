@@ -2,7 +2,6 @@
  Sherlock Application Launcher for Linux
 </h1>
 
-[![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
@@ -10,6 +9,9 @@
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
+
+  [![Discord](https://img.shields.io/discord/1357746313646833946.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
+
   <picture>
     <img alt="application screenshot" width="100%" style="border-radius: 10px" src="images/showcase.png">
   </picture>
