@@ -2,6 +2,8 @@
  Sherlock Application Launcher for Linux
 </h1>
 
+[![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
@@ -18,7 +20,6 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 <br>
 
 ### Quick Links
-
 - [Documentation](https://github.com/Skxxtz/sherlock/tree/main/docs): Sherlocks documentation
 - [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki): allows you to search Wikipedia from within Sherlock using the `bulk_text` launcher.
 <br><br>
