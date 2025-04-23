@@ -265,7 +265,7 @@ fn should_ignore(ignore_apps: &Vec<Pattern>, app: &str) -> bool {
 
 fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), SherlockError> {
     fn construct_pattern(key: &str) -> Result<Regex, SherlockError> {
-        let pattern = format!(r"(?i)\n{}\s*=\s*(.*)\n", key);
+        let pattern = format!(r#"(?i)\n{}\s*=\s*['\"]?(.*?)(?:['\"])?\n?$"#, key);
         Regex::new(&pattern).map_err(|e| SherlockError {
             error: SherlockErrorType::RegexError(key.to_string()),
             traceback: e.to_string(),
@@ -370,3 +370,54 @@ fn test_get_applications_dir() {
     // Assert that the result matches the expected HashSet
     assert_eq!(res, expected_app_dirs);
 }
+#[test]
+fn test_desktop_file_entries() {
+    let test_cases = vec![
+        String::from("\ntest=1.0"),
+        String::from("\ntest='Application'"),
+        String::from("\ntest=Example App"),
+        String::from("\ntest=\"Sample Utility\""),
+        String::from("\ntest='This is an example application'"),
+        String::from("\ntest=\"/usr/bin/example-app --example-flag\""),
+        String::from("\ntest='/usr/bin/example-app'"),
+        String::from("\ntest=example-icon"),
+        String::from("\ntest=\"false\""),
+        String::from("\ntest='true'"),
+        String::from("\ntest=application/x-example;"),
+        String::from("\ntest=false"),
+        String::from("\ntest='false'"),
+        String::from("\ntest='/opt/example'"),
+        String::from("\ntest=example-app"),
+    ];
+
+    let expected_values: Vec<String> = vec![
+        String::from("1.0"),
+        String::from("Application"),
+        String::from("Example App"),
+        String::from("Sample Utility"),
+        String::from("This is an example application"),
+        String::from("/usr/bin/example-app --example-flag"),
+        String::from("/usr/bin/example-app"),
+        String::from("example-icon"),
+        String::from("false"),
+        String::from("true"),
+        String::from("application/x-example;"),
+        String::from("false"),
+        String::from("false"),
+        String::from("/opt/example"),
+        String::from("example-app"),
+    ];
+
+    // Fixed regex pattern: simpler and correctly matching optional quotes
+    let pattern = r#"(?i)\ntest\s*=\s*['\"]?(.*?)(?:['\"])?\n?$"#;
+    let re = Regex::new(pattern).expect("Failed to construct regex pattern");
+
+    // Iterate over the test cases and expected results
+    test_cases.iter().zip(expected_values.iter()).for_each(|(case, res)| {
+        let catch = re.captures(case).expect(&format!("Didn't match the pattern. String: {}", case));
+        let group = catch.get(1).expect("Group 1 is non-existent").as_str().to_string();
+        assert_eq!(group, *res);
+    });
+}
+
+
