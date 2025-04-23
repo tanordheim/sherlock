@@ -1,5 +1,5 @@
 use futures::future::join_all;
-use gio::ActionEntry;
+use gio::{glib::WeakRef, ActionEntry};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
@@ -52,6 +52,7 @@ pub fn search(
     });
 
     let custom_binds = ConfKeys::new();
+    let results = results.downgrade();
 
     change_event(
         &ui.search_bar,
@@ -222,7 +223,7 @@ fn construct_window(
 
 fn nav_event(
     stack: &HVBox,
-    results: Rc<ListBox>,
+    results: WeakRef<ListBox>,
     search_bar: Entry,
     result_viewport: ScrolledWindow,
     custom_binds: ConfKeys,
@@ -241,7 +242,7 @@ fn nav_event(
                     .prev_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results.focus_prev(&result_viewport);
+                results.upgrade().map(|results| results.focus_prev(&result_viewport));
                 return true.into();
             }
             k if Some(k) == custom_binds.next
@@ -249,14 +250,14 @@ fn nav_event(
                     .next_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results.focus_next(&result_viewport);
+                results.upgrade().map(|results| results.focus_next(&result_viewport));
                 return true.into();
             }
             gdk::Key::Up => {
-                results.focus_prev(&result_viewport);
+                results.upgrade().map(|results| results.focus_prev(&result_viewport));
             }
             gdk::Key::Down => {
-                results.focus_next(&result_viewport);
+                results.upgrade().map(|results| results.focus_next(&result_viewport));
                 return true.into();
             }
             gdk::Key::BackSpace => {
@@ -272,11 +273,13 @@ fn nav_event(
                     let _ =
                         search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
                 }
-                results.focus_first();
+                results.upgrade().map(|results| results.focus_first());
             }
             gdk::Key::Return => {
-                if let Some(row) = results.selected_row().and_downcast_ref::<SherlockRow>() {
-                    row.emit_by_name::<()>("row-should-activate", &[]);
+                if let Some(upgr) = results.upgrade(){
+                    if let Some(row) = upgr.selected_row().and_downcast_ref::<SherlockRow>(){
+                        row.emit_by_name::<()>("row-should-activate", &[]);
+                    }
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
@@ -292,7 +295,7 @@ fn nav_event(
                         Key::_5 => 5,
                         _ => return false.into(),
                     };
-                    execute_by_index(&*results, key_index);
+                    results.upgrade().map(|r| execute_by_index(&r, key_index));
                     return true.into();
                 }
             }
@@ -301,10 +304,10 @@ fn nav_event(
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
                 if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                    results.focus_prev(&result_viewport);
+                    results.upgrade().map(|results| results.focus_prev(&result_viewport));
                     return true.into();
                 } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                    results.focus_next(&result_viewport);
+                    results.upgrade().map(|results| results.focus_next(&result_viewport));
                     return true.into();
                 }
             }
@@ -321,7 +324,7 @@ fn change_event(
     modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
-    results: &Rc<ListBox>,
+    results: &WeakRef<ListBox>,
     custom_binds: &ConfKeys,
 ) {
     // Setting up async capabilities
@@ -346,7 +349,7 @@ fn change_event(
     search_bar.connect_changed({
         let launchers_clone = launchers.clone();
         let mode_clone = Rc::clone(mode);
-        let results_clone = Rc::clone(results);
+        let results = results.clone();
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
@@ -371,7 +374,7 @@ fn change_event(
                 &launchers_clone,
                 &mode_clone,
                 current_text,
-                &results_clone,
+                &results,
                 &mod_str,
                 false,
             );
@@ -385,7 +388,7 @@ pub fn async_calc(
     launchers: &[Launcher],
     mode: &Rc<RefCell<String>>,
     current_text: String,
-    results: &Rc<ListBox>,
+    results: &WeakRef<ListBox>,
     mod_str: &str,
     animate: bool,
 ) {
@@ -454,15 +457,14 @@ pub fn async_calc(
             let futures: Vec<_> = async_launchers
                 .iter()
                 .map(|widget| {
-                    let widget_clone = widget;
                     let current_text = current_text.clone();
                     async move {
-                        let mut attrs = widget_clone.attrs.clone();
+                        let mut attrs = widget.attrs.clone();
 
                         // Process text tile
-                        if let Some(opts) = &widget_clone.text_tile {
+                        if let Some(opts) = &widget.text_tile {
                             if let Some((title, body, next_content)) =
-                                widget_clone.launcher.get_result(&current_text).await
+                                widget.launcher.get_result(&current_text).await
                             {
                                 opts.title.set_text(&title);
                                 opts.body.set_text(&body);
@@ -476,10 +478,10 @@ pub fn async_calc(
                         }
 
                         // Process image replacement
-                        if let Some(opts) = &widget_clone.image_replacement {
+                        if let Some(opts) = &widget.image_replacement {
                             if let Some(overlay) = &opts.icon_holder_overlay {
                                 if let Some((image, was_cached)) =
-                                    widget_clone.launcher.get_image().await
+                                    widget.launcher.get_image().await
                                 {
                                     if !was_cached {
                                         overlay.add_css_class("image-replace-overlay");
@@ -493,28 +495,28 @@ pub fn async_calc(
                         }
 
                         // Process weather tile
-                        if let Some(wtr) = &widget_clone.weather_tile {
+                        if let Some(wtr) = &widget.weather_tile {
                             if let Some((data, was_changed)) =
-                                widget_clone.launcher.get_weather().await
+                                widget.launcher.get_weather().await
                             {
                                 let css_class = if was_changed {
                                     "weather-animate"
                                 } else {
                                     "weather-no-animate"
                                 };
-                                widget_clone.result_item.row_item.add_css_class(css_class);
-                                widget_clone.result_item.row_item.add_css_class(&data.icon);
+                                widget.result_item.row_item.add_css_class(css_class);
+                                widget.result_item.row_item.add_css_class(&data.icon);
                                 wtr.temperature.set_text(&data.temperature);
                                 wtr.spinner.set_spinning(false);
                                 wtr.icon.set_icon_name(Some(&data.icon));
                                 wtr.location.set_text(&data.format_str);
                             } else {
-                                widget_clone.result_item.row_item.set_visible(false);
+                                widget.result_item.row_item.set_visible(false);
                             }
                         }
 
                         // Connect row-should-activate signal
-                        widget_clone.result_item.row_item.connect(
+                        widget.result_item.row_item.connect(
                             "row-should-activate",
                             false,
                             move |row| {
@@ -544,15 +546,17 @@ pub fn async_calc(
 pub fn populate(
     keyword: &str,
     mode: &str,
-    results_frame: &ListBox,
+    results_frame: &WeakRef<ListBox>,
     launchers: &Vec<Launcher>,
     async_widgets: Option<Vec<ResultItem>>,
     animate: bool,
     mod_str: &str,
 ) {
     // Remove all elements inside to avoid duplicates
-    while let Some(row) = results_frame.last_child() {
-        results_frame.remove(&row);
+    if let Some(frame) = results_frame.upgrade(){
+        while let Some(row) = frame.last_child() {
+            frame.remove(&row);
+        }
     }
     let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
     if let Some(widgets) = async_widgets {
@@ -563,15 +567,17 @@ pub fn populate(
 
     if let Some(c) = CONFIG.get() {
         let mut shortcut_index = 1;
-        for widget in launcher_tiles {
-            if animate && c.behavior.animate {
-                widget.row_item.add_css_class("animate");
+        if let Some(frame) = results_frame.upgrade(){
+            for widget in launcher_tiles {
+                if animate && c.behavior.animate {
+                    widget.row_item.add_css_class("animate");
+                }
+                if let Some(shortcut_holder) = widget.shortcut_holder {
+                    shortcut_index += shortcut_holder.apply_shortcut(shortcut_index, mod_str);
+                }
+                frame.append(&widget.row_item);
             }
-            if let Some(shortcut_holder) = widget.shortcut_holder {
-                shortcut_index += shortcut_holder.apply_shortcut(shortcut_index, mod_str);
-            }
-            results_frame.append(&widget.row_item);
         }
     }
-    results_frame.focus_first();
+    results_frame.upgrade().map(|r| r.focus_first());
 }
