@@ -326,7 +326,7 @@ pub struct ConfigAppearance {
     pub use_base_css: bool,
     #[serde(default = "default_true")]
     pub status_bar: bool,
-    #[serde(default)]
+    #[serde(default = "default_1")]
     pub opacity: f64,
 }
 impl Default for ConfigAppearance {
@@ -504,6 +504,9 @@ pub fn default_ignore() -> PathBuf {
 
 pub fn default_true() -> bool {
     true
+}
+pub fn default_1() -> f64 {
+    1.0
 }
 pub fn default_icon_paths() -> Vec<String> {
     vec![String::from("~/.config/sherlock/icons/")]
