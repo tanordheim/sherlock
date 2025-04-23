@@ -1,6 +1,6 @@
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
-    launcher::{Launcher, ResultItem},
+    launcher::Launcher,
     loader::pipe_loader::PipeData,
     CONFIG,
 };
@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
     pub launcher: Launcher,
-    pub result_item: ResultItem,
+    pub row: WeakRef<SherlockRow>,
     pub text_tile: Option<TextTileElements>,
     pub image_replacement: Option<ImageReplacementElements>,
     pub weather_tile: Option<WeatherTileElements>,

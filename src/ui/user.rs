@@ -1,3 +1,4 @@
+use gio::glib::WeakRef;
 use gtk4::{
     self,
     gdk::{self, Key},
@@ -38,7 +39,7 @@ pub fn display_pipe(
 
     change_event(&search_bar, &results, pipe_content, &method);
 
-    nav_event(window, results, result_viewport);
+    nav_event(window, results, result_viewport.downgrade());
     return vbox;
 }
 pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
@@ -57,7 +58,7 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
 fn nav_event(
     window: &ApplicationWindow,
     results_ev_nav: Rc<ListBox>,
-    result_viewport: ScrolledWindow,
+    result_viewport: WeakRef<ScrolledWindow>,
 ) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);

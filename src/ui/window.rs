@@ -64,7 +64,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         .build();
 
     // Setup action to open the window
-    let stack_clone = stack.clone();
+    let stack_clone = stack.downgrade().clone();
     let action_open = ActionEntry::builder("open")
         .activate(move |window: &ApplicationWindow, _, _| {
             if let Some(c) = CONFIG.get() {
@@ -80,7 +80,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         .build();
 
     // Setup action to switch to a specific stack page
-    let stack_clone = stack.clone();
+    let stack_clone = stack.downgrade().clone();
     let page_clone = Rc::clone(&current_stack_page);
     let action_stack_switch = ActionEntry::builder("switch-page")
         .parameter_type(Some(&String::static_variant_type()))
@@ -88,8 +88,10 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
             let parameter = parameter.and_then(|p| p.get::<String>());
 
             if let Some(parameter) = parameter {
-                stack_clone.set_transition_type(gtk4::StackTransitionType::SlideRight);
-                stack_clone.set_visible_child_name(&parameter);
+                stack_clone.upgrade().map(|stack| {
+                    stack.set_transition_type(gtk4::StackTransitionType::SlideRight);
+                    stack.set_visible_child_name(&parameter);
+                });
                 *page_clone.borrow_mut() = parameter
             }
         })

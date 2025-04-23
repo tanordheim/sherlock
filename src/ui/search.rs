@@ -21,13 +21,13 @@ use crate::CONFIG;
 
 #[allow(dead_code)]
 struct SearchUI {
-    result_viewport: ScrolledWindow,
+    result_viewport: WeakRef<ScrolledWindow>,
     // will be later used for split view to display information about apps/commands
-    preview_box: HVBox,
-    search_bar: Entry,
-    search_icon_holder: HVBox,
-    mode_title: Label,
-    spinner: Spinner,
+    preview_box: WeakRef<HVBox>,
+    search_bar: WeakRef<Entry>,
+    search_icon_holder: WeakRef<HVBox>,
+    mode_title: WeakRef<Label>,
+    spinner: WeakRef<Spinner>,
 }
 
 pub fn search(
@@ -37,8 +37,7 @@ pub fn search(
 ) -> HVBox {
     // Initialize the view to show all apps
     let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
-    ui.result_viewport
-        .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
+    ui.result_viewport.upgrade().map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
 
     let initial_mode = mode.borrow().clone();
     let search_bar_clone = ui.search_bar.clone();
@@ -48,25 +47,25 @@ pub fn search(
 
     let search_bar = ui.search_bar.clone();
     stack_page.connect_realize(move |_| {
-        search_bar.grab_focus();
+        search_bar.upgrade().map(|search_bar|search_bar.grab_focus());
     });
 
     let custom_binds = ConfKeys::new();
     let results = results.downgrade();
 
     change_event(
-        &ui.search_bar,
+        ui.search_bar.clone(),
         modes,
         &mode,
         &launchers,
-        &results,
+        results.clone(),
         &custom_binds,
     );
     nav_event(
         &stack_page,
         results,
-        ui.search_bar,
-        ui.result_viewport,
+        ui.search_bar.clone(),
+        ui.result_viewport.clone(),
         custom_binds,
         stack_page_ref,
     );
@@ -82,22 +81,22 @@ pub fn search(
             if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
                 match parameter.as_str() {
                     "search" => {
-                        ui.search_icon_holder.set_css_classes(&["back"]);
-                        ui.mode_title.set_text("Search");
+                        ui.search_icon_holder.upgrade().map(|holder| holder.set_css_classes(&["back"]));
+                        ui.mode_title.upgrade().map(|title| title.set_text("Search"));
                     }
                     _ => {
                         parameter.push_str(" ");
                         let mode_name = modes_clone.get(&parameter);
                         match mode_name {
                             Some(name) => {
-                                ui.search_icon_holder.set_css_classes(&["back"]);
+                                ui.search_icon_holder.upgrade().map(|holder| holder.set_css_classes(&["back"]));
+                                ui.mode_title.upgrade().map(|title| title.set_text(name.as_deref().unwrap_or_default()));
                                 *mode_clone.borrow_mut() = parameter.clone();
-                                ui.mode_title.set_text(name.as_deref().unwrap_or_default());
                                 state = parameter;
                             }
                             _ => {
-                                ui.search_icon_holder.set_css_classes(&["search"]);
-                                ui.mode_title.set_text("All");
+                                ui.search_icon_holder.upgrade().map(|holder| holder.set_css_classes(&["search"]));
+                                ui.mode_title.upgrade().map(|title| title.set_text("All"));
                                 parameter = String::from("all ");
                                 *mode_clone.borrow_mut() = parameter.clone();
                                 state = parameter;
@@ -106,8 +105,10 @@ pub fn search(
                         let search_bar_clone = search_bar_clone.clone();
                         glib::idle_add_local(move || {
                             // to trigger homescreen rebuild
-                            search_bar_clone.set_text("\n");
-                            search_bar_clone.set_text("");
+                            search_bar_clone.upgrade().map(|entry| {
+                                entry.set_text("\n");
+                                entry.set_text("");
+                            });
                             glib::ControlFlow::Break
                         });
                         action.set_state(&state.to_variant());
@@ -118,17 +119,18 @@ pub fn search(
         .build();
 
     // Spinner action
+    let spinner_clone = ui.spinner;
     let action_spinner = ActionEntry::builder("spinner-mode")
         .parameter_type(Some(&bool::static_variant_type()))
         .activate(move |_, _, parameter| {
             let parameter = parameter.and_then(|p| p.get::<bool>());
             parameter.map(|p| {
                 if p {
-                    ui.spinner.set_css_classes(&["spinner-appear"]);
+                    spinner_clone.upgrade().map(|spinner| spinner.set_css_classes(&["spinner-appear"]));
                 } else {
-                    ui.spinner.set_css_classes(&["spinner-disappear"]);
+                    spinner_clone.upgrade().map(|spinner| spinner.set_css_classes(&["spinner-disappear"]));
                 };
-                ui.spinner.set_spinning(p);
+                spinner_clone.upgrade().map(|spinner| spinner.set_spinning(p));
             });
         })
         .build();
@@ -137,7 +139,7 @@ pub fn search(
         .activate(move |_: &ApplicationWindow, _, _| {
             let search_bar_clone = search_bar_clone2.clone();
             glib::idle_add_local(move || {
-                search_bar_clone.set_text("");
+                search_bar_clone.upgrade().map(|entry| entry.set_text(""));
                 glib::ControlFlow::Break
             });
         })
@@ -202,18 +204,26 @@ fn construct_window(
 
     search_icon_holder.append(&overlay);
 
+    let spinner: Spinner = builder.object("status-bar-spinner").unwrap_or_default();
+    let preview_box: HVBox = builder.object("preview_box").unwrap_or_default();
+    let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
+    let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
+    let mode_title: Label = builder.object("category-type-label").unwrap_or_default();
     let ui = SearchUI {
-        result_viewport: builder.object("scrolled-window").unwrap_or_default(),
-        preview_box: builder.object("preview_box").unwrap_or_default(),
-        search_bar: builder.object("search-bar").unwrap_or_default(),
-        search_icon_holder,
-        mode_title: builder.object("category-type-label").unwrap_or_default(),
-        spinner: builder.object("status-bar-spinner").unwrap_or_default(),
+        result_viewport: result_viewport.downgrade(),
+        preview_box: preview_box.downgrade(),
+        search_bar: search_bar.downgrade(),
+        search_icon_holder: search_icon_holder.downgrade(),
+        mode_title: mode_title.downgrade(),
+        spinner: spinner.downgrade(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport
-            .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
-        ui.search_icon_holder.set_visible(c.appearance.search_icon);
+            .upgrade()
+            .map(|viewport| {
+                viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
+            });
+        ui.search_icon_holder.upgrade().map(|holder| holder.set_visible(c.appearance.search_icon));
         search_icon.set_pixel_size(c.appearance.icon_size);
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
@@ -224,8 +234,8 @@ fn construct_window(
 fn nav_event(
     stack: &HVBox,
     results: WeakRef<ListBox>,
-    search_bar: Entry,
-    result_viewport: ScrolledWindow,
+    search_bar: WeakRef<Entry>,
+    result_viewport: WeakRef<ScrolledWindow>,
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
 ) {
@@ -261,17 +271,16 @@ fn nav_event(
                 return true.into();
             }
             gdk::Key::BackSpace => {
-                let mut ctext = search_bar.text().to_string();
+                let mut ctext = search_bar.upgrade().map_or(String::new(), |entry| entry.text().to_string());
                 if custom_binds
                     .shortcut_modifier
                     .map_or(false, |modifier| modifiers.contains(modifier))
                 {
-                    let _ = search_bar.set_text("");
+                    search_bar.upgrade().map(|entry| entry.set_text(""));
                     ctext.clear();
                 }
                 if ctext.is_empty() {
-                    let _ =
-                        search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+                    let _ = search_bar.upgrade().map(|entry| entry.activate_action("win.switch-mode", Some(&"all".to_variant())));
                 }
                 results.upgrade().map(|results| results.focus_first());
             }
@@ -320,13 +329,13 @@ fn nav_event(
 }
 
 fn change_event(
-    search_bar: &Entry,
+    search_bar: WeakRef<Entry>,
     modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     launchers: &Vec<Launcher>,
-    results: &WeakRef<ListBox>,
+    results: WeakRef<ListBox>,
     custom_binds: &ConfKeys,
-) {
+)->Option<()>{
     // Setting up async capabilities
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     let cancel_flag = Rc::new(RefCell::new(false));
@@ -346,6 +355,7 @@ fn change_event(
         true,
     );
 
+    let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
         let launchers_clone = launchers.clone();
         let mode_clone = Rc::clone(mode);
@@ -380,6 +390,7 @@ fn change_event(
             );
         }
     });
+    Some(())
 }
 
 pub fn async_calc(
@@ -421,8 +432,8 @@ pub fn async_calc(
             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
                 || (current_mode == "all" && launcher.priority > 0)
             {
-                launcher.get_loader_widget(&current_text).map(|tile| {
-                    async_widgets.push(tile.result_item.clone());
+                launcher.get_loader_widget(&current_text).map(|(tile, result_item)| {
+                    async_widgets.push(result_item);
                     tile
                 })
             } else {
@@ -443,19 +454,18 @@ pub fn async_calc(
     // Gather results for asynchronous widgets
     let task = glib::MainContext::default().spawn_local({
         let current_task_clone = Rc::clone(current_task);
+        let results = results.clone();
         async move {
             if *cancel_flag.borrow() {
                 return;
             }
-            if let Some(row) = async_launchers.get(0) {
-                let _  = row
-                    .result_item
-                    .row_item
-                    .activate_action("win.spinner-mode", Some(&true.to_variant()));
-            }
-            // Make them update concurrently
+            // Set spinner active
+            results
+                .upgrade()
+                .map(|r| r.activate_action("win.spinner-mode", Some(&true.to_variant())));
+            // Make async tiles update concurrently
             let futures: Vec<_> = async_launchers
-                .iter()
+                .into_iter()
                 .map(|widget| {
                     let current_text = current_text.clone();
                     async move {
@@ -504,20 +514,22 @@ pub fn async_calc(
                                 } else {
                                     "weather-no-animate"
                                 };
-                                widget.result_item.row_item.add_css_class(css_class);
-                                widget.result_item.row_item.add_css_class(&data.icon);
+                                widget.row.upgrade().map(|row| {
+                                    row.add_css_class(css_class);
+                                    row.add_css_class(&data.icon);
+                                });
                                 wtr.temperature.upgrade().map(|tmp| tmp.set_text(&data.temperature));
                                 wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
                                 wtr.icon.upgrade().map(|ico| ico.set_icon_name(Some(&data.icon)));
                                 wtr.location.upgrade().map(|loc| loc.set_text(&data.format_str));
                             } else {
-                                widget.result_item.row_item.set_visible(false);
+                                widget.row.upgrade().map(|row| row.set_visible(false));
                             }
                         }
 
                         // Connect row-should-activate signal
-                        widget.result_item.row_item
-                            .connect(
+                        widget.row.upgrade().map(|row| {
+                            row.connect(
                                 "row-should-activate",
                                 false,
                                 move |row| {
@@ -526,18 +538,16 @@ pub fn async_calc(
                                     None
                                 },
                             );
+                        })
                     }
                 })
                 .collect();
 
             let _ = join_all(futures).await;
             // Set spinner inactive
-            if let Some(row) = async_launchers.get(0) {
-                let _ = row
-                    .result_item
-                    .row_item
-                    .activate_action("win.spinner-mode", Some(&false.to_variant()));
-            }
+            results
+                .upgrade()
+                .map(|r| r.activate_action("win.spinner-mode", Some(&false.to_variant())));
             *current_task_clone.borrow_mut() = None;
         }
     });

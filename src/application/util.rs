@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use gio::glib::WeakRef;
 use gtk4::Stack;
 use gtk4::{prelude::*, ApplicationWindow};
 
@@ -10,12 +11,13 @@ use crate::{ui, CONFIG};
 
 pub fn reload_content(
     window: &ApplicationWindow,
-    stack: &Stack,
+    stack: &WeakRef<Stack>,
     stack_page: &Rc<RefCell<String>>,
 ) -> Option<()> {
     let mut startup_errors: Vec<SherlockError> = Vec::new();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let app_config = CONFIG.get()?;
+    let stack = stack.upgrade()?;
 
     let (launchers, n) = Loader::load_launchers_sync()
         .map_err(|e| startup_errors.push(e))

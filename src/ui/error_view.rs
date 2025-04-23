@@ -1,3 +1,4 @@
+use gio::glib::WeakRef;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
 use gtk4::{Box as HVBox, ListBox, ScrolledWindow};
 use std::cell::RefCell;
@@ -24,13 +25,13 @@ pub fn errors(
     breaking_error_tiles.into_iter().for_each(|tile| results.append(&tile));
     error_tiles.into_iter().for_each(|tile| results.append(&tile));
 
-    nav_event(&vbox, results, result_viewport, stack_page);
+    nav_event(&vbox, results, result_viewport.downgrade(), stack_page);
     return vbox;
 }
 fn nav_event(
     stack: &HVBox,
     result_holder: ListBox,
-    result_viewport: ScrolledWindow,
+    result_viewport: WeakRef<ScrolledWindow>,
     stack_page: &Rc<RefCell<String>>,
 ) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability

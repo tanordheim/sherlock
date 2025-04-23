@@ -1,4 +1,5 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
+use gio::glib::WeakRef;
 use gtk4::gdk::{Key, ModifierType, Rectangle};
 use gtk4::{prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow};
 
@@ -24,41 +25,43 @@ pub fn execute_by_index(results: &ListBox, index: i32) {
 }
 
 pub trait RowOperations {
-    fn focus_next(&self, result_viewport: &ScrolledWindow);
-    fn focus_prev(&self, result_viewport: &ScrolledWindow);
+    fn focus_next(&self, result_viewport: &WeakRef<ScrolledWindow>);
+    fn focus_prev(&self, result_viewport: &WeakRef<ScrolledWindow>);
     fn focus_first(&self);
     fn select_offset_row(&self, offset: i32) -> ListBoxRow;
 }
 
 impl RowOperations for ListBox {
-    fn focus_next(&self, result_viewport: &ScrolledWindow) {
-        let new_row = self.select_offset_row(1);
-        let allocation = result_viewport.allocation();
-        let list_box_rect = Rectangle::from(allocation);
+    fn focus_next(&self, result_viewport: &WeakRef<ScrolledWindow>) {
+        if let Some(result_viewport) = result_viewport.upgrade() {
+            let new_row = self.select_offset_row(1);
+            let allocation = result_viewport.allocation();
+            let list_box_rect = Rectangle::from(allocation);
 
-        let row_allocation = new_row.allocation();
-        let row_rect = Rectangle::from(row_allocation);
+            let row_allocation = new_row.allocation();
+            let row_rect = Rectangle::from(row_allocation);
 
-        let list_height = list_box_rect.height() as f64;
-        let row_end = (row_rect.y() + row_rect.height() + 14) as f64;
-        let vadjustment = result_viewport.vadjustment();
+            let list_height = list_box_rect.height() as f64;
+            let row_end = (row_rect.y() + row_rect.height() + 14) as f64;
+            let vadjustment = result_viewport.vadjustment();
 
-        let current_value = vadjustment.value();
-        let list_end = list_height + current_value;
-        if row_end > list_end {
-            let delta = row_end - list_end;
-            let new_value = current_value + delta;
-            vadjustment.set_value(new_value);
+            let current_value = vadjustment.value();
+            let list_end = list_height + current_value;
+            if row_end > list_end {
+                let delta = row_end - list_end;
+                let new_value = current_value + delta;
+                vadjustment.set_value(new_value);
+            }
         }
     }
-    fn focus_prev(&self, result_viewport: &ScrolledWindow) {
+    fn focus_prev(&self, result_viewport: &WeakRef<ScrolledWindow>) {
         let new_row = self.select_offset_row(-1);
 
         let row_allocation = new_row.allocation();
         let row_rect = Rectangle::from(row_allocation);
 
         let row_start = (row_rect.y()) as f64;
-        let vadjustment = result_viewport.vadjustment();
+        let vadjustment = result_viewport.upgrade().and_then(|view| Some(view.vadjustment())).unwrap_or_default();
 
         let current_value = vadjustment.value();
         if current_value > row_start {

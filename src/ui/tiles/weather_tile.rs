@@ -7,7 +7,7 @@ use super::util::{AsyncLauncherTile, WeatherTileBuilder, WeatherTileElements};
 use super::Tile;
 
 impl Tile {
-    pub fn weather_tile_loader(launcher: Launcher) -> Option<AsyncLauncherTile> {
+    pub fn weather_tile_loader(launcher: Launcher) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = WeatherTileBuilder::new("/dev/skxxtz/sherlock/ui/weather_tile.ui");
         builder.object.add_css_class("weather-tile");
         builder.object.set_spawn_focus(launcher.spawn_focus);
@@ -32,13 +32,13 @@ impl Tile {
             location: builder.location,
             spinner: builder.spinner,
         });
-        return Some(AsyncLauncherTile {
+        return Some((AsyncLauncherTile {
             launcher,
-            result_item,
+            row: result_item.row_item.downgrade(),
             text_tile: None,
             image_replacement: None,
             weather_tile,
             attrs,
-        });
+        }, result_item));
     }
 }

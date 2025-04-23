@@ -129,7 +129,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub fn get_loader_widget(self, keyword: &str) -> Option<AsyncLauncherTile> {
+    pub fn get_loader_widget(self, keyword: &str) -> Option<(AsyncLauncherTile, ResultItem)> {
         match self.launcher_type.clone() {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(self, keyword, &bulk_text)

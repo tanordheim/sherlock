@@ -15,7 +15,7 @@ impl Tile {
         launcher: Launcher,
         keyword: &str,
         bulk_text: &BulkText,
-    ) -> Option<AsyncLauncherTile> {
+    ) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 
         builder.category.upgrade().map(|cat| {
@@ -58,13 +58,13 @@ impl Tile {
             title: builder.content_title,
             body: builder.content_body,
         });
-        return Some(AsyncLauncherTile {
+        return Some((AsyncLauncherTile {
             launcher,
-            result_item,
+            row: result_item.row_item.downgrade(),
             text_tile,
             image_replacement: None,
             weather_tile: None,
             attrs,
-        });
+        }, result_item));
     }
 }
