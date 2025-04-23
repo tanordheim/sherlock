@@ -22,7 +22,13 @@ impl Tile {
         builder
             .icon
             .upgrade()
-            .map(|icon| icon.set_icon_name(Some(&web.icon)));
+            .map(|icon| {
+                if web.icon.starts_with("/") {
+                    icon.set_from_file(Some(&web.icon));
+                } else {
+                    icon.set_icon_name(Some(&web.icon));
+                }
+            });
 
         let tile_name = if web.display_name.contains("{keyword}") {
             web.display_name.replace("{keyword}", keyword)

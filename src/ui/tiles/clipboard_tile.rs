@@ -228,7 +228,14 @@ impl Tile {
                 builder
                     .icon
                     .upgrade()
-                    .map(|ico| ico.set_icon_name(Some(&icon)));
+                    .map(|ico| {
+                        if icon.starts_with("/") {
+                            ico.set_from_file(Some(&icon));
+                        } else {
+                            ico.set_icon_name(Some(&icon));
+                        }
+                        ico.set_pixel_size(15);
+                    });
                 builder
                     .title
                     .upgrade()

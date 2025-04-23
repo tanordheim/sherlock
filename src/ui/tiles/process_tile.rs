@@ -34,7 +34,13 @@ impl Tile {
                 builder
                     .icon
                     .upgrade()
-                    .map(|icon| icon.set_icon_name(Some(&proc.icon)));
+                    .map(|icon| {
+                        if proc.icon.starts_with("/") {
+                            icon.set_from_file(Some(&proc.icon));
+                        } else {
+                            icon.set_icon_name(Some(&proc.icon));
+                        }
+                    });
 
                 let ppid = key.0;
                 let cpid = key.1;

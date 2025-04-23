@@ -26,10 +26,17 @@ impl Tile {
             }
         });
 
-        builder.icon.upgrade().map(|icon| {
-            icon.set_icon_name(Some(&bulk_text.icon));
-            icon.set_pixel_size(15);
-        });
+        builder
+            .icon
+            .upgrade()
+            .map(|icon| {
+                if bulk_text.icon.starts_with("/") {
+                    icon.set_from_file(Some(&bulk_text.icon));
+                } else {
+                    icon.set_icon_name(Some(&bulk_text.icon));
+                }
+                icon.set_pixel_size(15);
+            });
 
         builder
             .content_title
