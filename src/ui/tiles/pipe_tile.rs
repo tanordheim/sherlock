@@ -33,20 +33,17 @@ impl Tile {
                     }
                 });
 
-                builder
-                    .icon
-                    .upgrade()
-                    .map(|ico| {
-                        if let Some(icon) = &item.icon{
-                            if icon.starts_with("/") {
-                                ico.set_from_file(Some(&icon));
-                            } else {
-                                ico.set_icon_name(Some(&icon));
-                            }
+                builder.icon.upgrade().map(|ico| {
+                    if let Some(icon) = &item.icon {
+                        if icon.starts_with("/") {
+                            ico.set_from_file(Some(&icon));
                         } else {
-                            ico.set_visible(false);
+                            ico.set_icon_name(Some(&icon));
                         }
-                    });
+                    } else {
+                        ico.set_visible(false);
+                    }
+                });
 
                 // Custom Image Data
                 if let Some(bin) = item.binary.clone() {

@@ -39,17 +39,14 @@ impl Tile {
                 });
 
                 // Icon stuff
-                builder
-                    .icon
-                    .upgrade()
-                    .map(|icon| {
-                        if value.icon.starts_with("/") {
-                            icon.set_from_file(Some(&value.icon));
-                        } else {
-                            icon.set_icon_name(Some(&value.icon));
-                        }
-                        value.icon_class.as_ref().map(|c| icon.add_css_class(c));
-                    });
+                builder.icon.upgrade().map(|icon| {
+                    if value.icon.starts_with("/") {
+                        icon.set_from_file(Some(&value.icon));
+                    } else {
+                        icon.set_icon_name(Some(&value.icon));
+                    }
+                    value.icon_class.as_ref().map(|c| icon.add_css_class(c));
+                });
 
                 builder
                     .title
@@ -79,7 +76,6 @@ impl Tile {
                 if !value.search_string.starts_with(keyword) {
                     edits = levenshtein(&value.search_string, keyword) as f32;
                 }
-
 
                 results.push(ResultItem {
                     priority: if keyword.is_empty() {

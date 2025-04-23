@@ -31,16 +31,13 @@ impl Tile {
                     .title
                     .upgrade()
                     .map(|title| title.set_markup(&value));
-                builder
-                    .icon
-                    .upgrade()
-                    .map(|icon| {
-                        if proc.icon.starts_with("/") {
-                            icon.set_from_file(Some(&proc.icon));
-                        } else {
-                            icon.set_icon_name(Some(&proc.icon));
-                        }
-                    });
+                builder.icon.upgrade().map(|icon| {
+                    if proc.icon.starts_with("/") {
+                        icon.set_from_file(Some(&proc.icon));
+                    } else {
+                        icon.set_icon_name(Some(&proc.icon));
+                    }
+                });
 
                 let ppid = key.0;
                 let cpid = key.1;

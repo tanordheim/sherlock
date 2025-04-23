@@ -413,11 +413,18 @@ fn test_desktop_file_entries() {
     let re = Regex::new(pattern).expect("Failed to construct regex pattern");
 
     // Iterate over the test cases and expected results
-    test_cases.iter().zip(expected_values.iter()).for_each(|(case, res)| {
-        let catch = re.captures(case).expect(&format!("Didn't match the pattern. String: {}", case));
-        let group = catch.get(1).expect("Group 1 is non-existent").as_str().to_string();
-        assert_eq!(group, *res);
-    });
+    test_cases
+        .iter()
+        .zip(expected_values.iter())
+        .for_each(|(case, res)| {
+            let catch = re
+                .captures(case)
+                .expect(&format!("Didn't match the pattern. String: {}", case));
+            let group = catch
+                .get(1)
+                .expect("Group 1 is non-existent")
+                .as_str()
+                .to_string();
+            assert_eq!(group, *res);
+        });
 }
-
-

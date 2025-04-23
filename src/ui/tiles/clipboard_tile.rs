@@ -225,17 +225,14 @@ impl Tile {
                     category.set_text(name);
                 });
 
-                builder
-                    .icon
-                    .upgrade()
-                    .map(|ico| {
-                        if icon.starts_with("/") {
-                            ico.set_from_file(Some(&icon));
-                        } else {
-                            ico.set_icon_name(Some(&icon));
-                        }
-                        ico.set_pixel_size(15);
-                    });
+                builder.icon.upgrade().map(|ico| {
+                    if icon.starts_with("/") {
+                        ico.set_from_file(Some(&icon));
+                    } else {
+                        ico.set_icon_name(Some(&icon));
+                    }
+                    ico.set_pixel_size(15);
+                });
                 builder
                     .title
                     .upgrade()
