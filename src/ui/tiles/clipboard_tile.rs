@@ -225,8 +225,14 @@ impl Tile {
                     category.set_text(name);
                 });
 
-                builder.icon.upgrade().map(|ico| ico.set_icon_name(Some(&icon)));
-                builder.title.upgrade().map(|title| title.set_text(clipboard_content));
+                builder
+                    .icon
+                    .upgrade()
+                    .map(|ico| ico.set_icon_name(Some(&icon)));
+                builder
+                    .title
+                    .upgrade()
+                    .map(|title| title.set_text(clipboard_content));
 
                 // Add action capabilities
                 let attrs = get_attrs_map(vec![
@@ -235,11 +241,13 @@ impl Tile {
                     ("engine", "plain"),
                 ]);
 
-                builder.object.connect("row-should-activate", false, move |row| {
-                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                    execute_from_attrs(&row, &attrs);
-                    None
-                });
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        execute_from_attrs(&row, &attrs);
+                        None
+                    });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,

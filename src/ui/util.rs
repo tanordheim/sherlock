@@ -61,7 +61,10 @@ impl RowOperations for ListBox {
         let row_rect = Rectangle::from(row_allocation);
 
         let row_start = (row_rect.y()) as f64;
-        let vadjustment = result_viewport.upgrade().and_then(|view| Some(view.vadjustment())).unwrap_or_default();
+        let vadjustment = result_viewport
+            .upgrade()
+            .and_then(|view| Some(view.vadjustment()))
+            .unwrap_or_default();
 
         let current_value = vadjustment.value();
         if current_value > row_start {

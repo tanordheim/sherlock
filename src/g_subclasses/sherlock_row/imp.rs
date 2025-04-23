@@ -29,12 +29,13 @@ impl ObjectImpl for SherlockRow {
         // Make Sherlock execute current row on multi click
         let gesture = GestureClick::new();
         gesture.set_button(0);
-    
+
         gesture.connect_pressed({
             let obj = self.obj().downgrade();
             move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
-                    obj.upgrade().map(|obj| obj.emit_by_name::<()>("row-should-activate", &[]));
+                    obj.upgrade()
+                        .map(|obj| obj.emit_by_name::<()>("row-should-activate", &[]));
                 }
             }
         });

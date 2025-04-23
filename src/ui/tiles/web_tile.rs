@@ -19,7 +19,10 @@ impl Tile {
             }
         });
 
-        builder.icon.upgrade().map(|icon| icon.set_icon_name(Some(&web.icon)));
+        builder
+            .icon
+            .upgrade()
+            .map(|icon| icon.set_icon_name(Some(&web.icon)));
 
         let tile_name = if web.display_name.contains("{keyword}") {
             web.display_name.replace("{keyword}", keyword)
@@ -27,7 +30,10 @@ impl Tile {
             web.display_name.clone()
         };
 
-        builder.title.upgrade().map(|title| title.set_text(&tile_name));
+        builder
+            .title
+            .upgrade()
+            .map(|title| title.set_text(&tile_name));
         builder.display_tag_start(&launcher.tag_start, keyword);
         builder.display_tag_end(&launcher.tag_end, keyword);
 
@@ -44,11 +50,13 @@ impl Tile {
 
         builder.object.set_spawn_focus(launcher.spawn_focus);
         builder.object.set_shortcut(launcher.shortcut);
-        builder.object.connect("row-should-activate", false, move |row| {
-            let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-            execute_from_attrs(&row, &attrs);
-            None
-        });
+        builder
+            .object
+            .connect("row-should-activate", false, move |row| {
+                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                execute_from_attrs(&row, &attrs);
+                None
+            });
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

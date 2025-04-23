@@ -1,7 +1,5 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
-    launcher::Launcher,
-    loader::pipe_loader::PipeData,
+    g_subclasses::sherlock_row::SherlockRow, launcher::Launcher, loader::pipe_loader::PipeData,
     CONFIG,
 };
 use gio::glib::WeakRef;
@@ -81,7 +79,8 @@ impl EventTileBuilder {
         let end_time: Label = builder.object("end-time-label").unwrap_or_default();
         let icon: Image = builder.object("icon-name").unwrap_or_default();
         let shortcut_option: Option<Box> = builder.object("shortcut-holder");
-        let shortcut_holder: Option<WeakRef<Box>> = shortcut_option.and_then(|h| Some(h.downgrade()));
+        let shortcut_holder: Option<WeakRef<Box>> =
+            shortcut_option.and_then(|h| Some(h.downgrade()));
 
         EventTileBuilder {
             object,
@@ -89,7 +88,7 @@ impl EventTileBuilder {
             start_time: start_time.downgrade(),
             end_time: end_time.downgrade(),
             icon: icon.downgrade(),
-            shortcut_holder
+            shortcut_holder,
         }
     }
 }
@@ -138,7 +137,8 @@ impl TileBuilder {
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
         let shortcut_option: Option<Box> = builder.object("shortcut_holder");
-        let shortcut_holder: Option<WeakRef<Box>> = shortcut_option.and_then(|s| Some(s.downgrade()));
+        let shortcut_holder: Option<WeakRef<Box>> =
+            shortcut_option.and_then(|s| Some(s.downgrade()));
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {

@@ -32,13 +32,16 @@ impl Tile {
             location: builder.location,
             spinner: builder.spinner,
         });
-        return Some((AsyncLauncherTile {
-            launcher,
-            row: result_item.row_item.downgrade(),
-            text_tile: None,
-            image_replacement: None,
-            weather_tile,
-            attrs,
-        }, result_item));
+        return Some((
+            AsyncLauncherTile {
+                launcher,
+                row: result_item.row_item.downgrade(),
+                text_tile: None,
+                image_replacement: None,
+                weather_tile,
+                attrs,
+            },
+            result_item,
+        ));
     }
 }

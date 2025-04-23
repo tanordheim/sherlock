@@ -16,13 +16,19 @@ impl Tile {
         mpris: &MusicPlayerLauncher,
     ) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
-            builder.object.add_css_class("mpris-tile");
-            builder.object.set_spawn_focus(launcher.spawn_focus);
-            builder.object.set_shortcut(launcher.shortcut);
-            builder.object.set_overflow(gtk4::Overflow::Hidden);
+        builder.object.add_css_class("mpris-tile");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.set_overflow(gtk4::Overflow::Hidden);
 
-        builder.category.upgrade().map(|category| category.set_text(&mpris.mpris.metadata.artists.join(", ")));
-        builder.title.upgrade().map(|title| title.set_text(&mpris.mpris.metadata.title));
+        builder
+            .category
+            .upgrade()
+            .map(|category| category.set_text(&mpris.mpris.metadata.artists.join(", ")));
+        builder
+            .title
+            .upgrade()
+            .map(|title| title.set_text(&mpris.mpris.metadata.title));
 
         let overlay = Overlay::new();
         let mut options = ImageReplacementElements::new();
@@ -75,13 +81,16 @@ impl Tile {
 
         options.icon_holder_overlay = Some(overlay.downgrade());
 
-        return Some((AsyncLauncherTile {
-            launcher,
-            row: result_item.row_item.downgrade(),
-            text_tile: None,
-            image_replacement: Some(options),
-            weather_tile: None,
-            attrs,
-        }, result_item));
+        return Some((
+            AsyncLauncherTile {
+                launcher,
+                row: result_item.row_item.downgrade(),
+                text_tile: None,
+                image_replacement: Some(options),
+                weather_tile: None,
+                attrs,
+            },
+            result_item,
+        ));
     }
 }

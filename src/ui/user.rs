@@ -117,7 +117,9 @@ fn change_event(
             results_ev_changed.remove(&row);
         }
         let tiles = Tile::pipe_data(&pipe_content_clone, &method, &current_text);
-        tiles.into_iter().for_each(|tile| results_ev_changed.append(&tile));
+        tiles
+            .into_iter()
+            .for_each(|tile| results_ev_changed.append(&tile));
 
         results_ev_changed.focus_first();
     });

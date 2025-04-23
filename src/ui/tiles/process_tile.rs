@@ -27,8 +27,14 @@ impl Tile {
                         category.set_visible(false);
                     }
                 });
-                builder.title.upgrade().map(|title| title.set_markup(&value));
-                builder.icon.upgrade().map(|icon| icon.set_icon_name(Some(&proc.icon)));
+                builder
+                    .title
+                    .upgrade()
+                    .map(|title| title.set_markup(&value));
+                builder
+                    .icon
+                    .upgrade()
+                    .map(|icon| icon.set_icon_name(Some(&proc.icon)));
 
                 let ppid = key.0;
                 let cpid = key.1;
@@ -46,11 +52,13 @@ impl Tile {
 
                 builder.object.set_spawn_focus(launcher.spawn_focus);
                 builder.object.set_shortcut(launcher.shortcut);
-                builder.object.connect("row-should-activate", false, move |row| {
-                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                    execute_from_attrs(&row, &attrs);
-                    None
-                });
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        execute_from_attrs(&row, &attrs);
+                        None
+                    });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,

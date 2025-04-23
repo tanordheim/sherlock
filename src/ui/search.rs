@@ -531,12 +531,16 @@ pub fn async_calc(
                                 if let Some((image, was_cached)) = widget.launcher.get_image().await
                                 {
                                     if !was_cached {
-                                        overlay.upgrade().map(|overlay|overlay.add_css_class("image-replace-overlay"));
+                                        overlay.upgrade().map(|overlay| {
+                                            overlay.add_css_class("image-replace-overlay")
+                                        });
                                     }
                                     let gtk_image = Image::from_pixbuf(Some(&image));
                                     gtk_image.set_widget_name("album-cover");
                                     gtk_image.set_pixel_size(50);
-                                    overlay.upgrade().map(|overlay| overlay.add_overlay(&gtk_image));
+                                    overlay
+                                        .upgrade()
+                                        .map(|overlay| overlay.add_overlay(&gtk_image));
                                 }
                             }
                         }

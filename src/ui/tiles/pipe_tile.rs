@@ -44,7 +44,10 @@ impl Tile {
                     let cursor = Cursor::new(bin);
                     if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
                         let image = Image::from_pixbuf(Some(&pixbuf));
-                        builder.icon_holder.upgrade().map(|holder| holder.append(&image));
+                        builder
+                            .icon_holder
+                            .upgrade()
+                            .map(|holder| holder.append(&image));
                         if let Some(size) = &item.icon_size {
                             image.set_pixel_size(*size);
                         }
@@ -70,11 +73,13 @@ impl Tile {
                 let attrs = get_attrs_map(constructor);
 
                 builder.object.set_spawn_focus(true);
-                builder.object.connect("row-should-activate", false, move |row| {
-                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                    execute_from_attrs(&row, &attrs);
-                    None
-                });
+                builder
+                    .object
+                    .connect("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        execute_from_attrs(&row, &attrs);
+                        None
+                    });
                 results.push(builder.object);
             }
         }
