@@ -59,22 +59,20 @@ impl Tile {
 
         if let Some(r) = result {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
-            builder.object.add_css_class("calc-tile");
-            builder.object.set_spawn_focus(launcher.spawn_focus);
-            builder.object.set_shortcut(launcher.shortcut);
 
-            builder.equation_holder.set_text(&keyword);
-            builder.result_holder.set_text(&r);
+            builder.equation_holder.upgrade().map(|eq| eq.set_text(&keyword));
+            builder.result_holder.upgrade().map(|result| result.set_text(&r));
 
             // Add action capabilities
             let attrs = get_attrs_map(vec![("method", &launcher.method), ("result", &r)]);
-            builder
-                .object
-                .connect("row-should-activate", false, move |row| {
-                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                    execute_from_attrs(&row, &attrs);
-                    None
-                });
+            builder.object.add_css_class("calc-tile");
+            builder.object.set_spawn_focus(launcher.spawn_focus);
+            builder.object.set_shortcut(launcher.shortcut);
+            builder.object.connect("row-should-activate", false, move |row| {
+                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                execute_from_attrs(&row, &attrs);
+                None
+            });
 
             let shortcut_holder = match launcher.shortcut {
                 true => builder.shortcut_holder,

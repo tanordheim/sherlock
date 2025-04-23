@@ -30,9 +30,7 @@ pub fn display_pipe(
     let keyword = search_bar.text();
 
     let tiles = Tile::pipe_data(&pipe_content, &method, &keyword);
-    for item in tiles {
-        results.append(&item);
-    }
+    tiles.into_iter().for_each(|tile| results.append(&tile));
 
     result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     results.focus_first();
@@ -118,9 +116,7 @@ fn change_event(
             results_ev_changed.remove(&row);
         }
         let tiles = Tile::pipe_data(&pipe_content_clone, &method, &current_text);
-        for item in tiles {
-            results_ev_changed.append(&item);
-        }
+        tiles.into_iter().for_each(|tile| results_ev_changed.append(&tile));
 
         results_ev_changed.focus_first();
     });

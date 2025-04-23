@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use gio::glib::WeakRef;
 use gtk4::Box;
 
 pub mod app_launcher;
@@ -69,7 +70,7 @@ pub struct Launcher {
 pub struct ResultItem {
     pub priority: f32,
     pub row_item: SherlockRow,
-    pub shortcut_holder: Option<Box>,
+    pub shortcut_holder: Option<WeakRef<Box>>,
 }
 
 impl Launcher {

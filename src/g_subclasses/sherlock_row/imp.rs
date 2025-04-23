@@ -26,19 +26,19 @@ impl ObjectSubclass for SherlockRow {
 impl ObjectImpl for SherlockRow {
     fn constructed(&self) {
         self.parent_constructed();
-        let obj = self.obj();
         // Make Sherlock execute current row on multi click
         let gesture = GestureClick::new();
         gesture.set_button(0);
+    
         gesture.connect_pressed({
-            let obj_clone = obj.clone();
+            let obj = self.obj().downgrade();
             move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
-                    obj_clone.emit_by_name::<()>("row-should-activate", &[]);
+                    obj.upgrade().map(|obj| obj.emit_by_name::<()>("row-should-activate", &[]));
                 }
             }
         });
-        obj.add_controller(gesture);
+        self.obj().add_controller(gesture);
     }
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();

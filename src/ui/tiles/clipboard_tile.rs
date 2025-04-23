@@ -184,8 +184,10 @@ impl Tile {
 
                     if let Some(rgb) = rgb {
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+
                         builder.object.set_spawn_focus(launcher.spawn_focus);
                         builder.object.set_shortcut(launcher.shortcut);
+
                         let pix_buf = rgb.to_vec();
                         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
                             &Bytes::from_owned(pix_buf),
@@ -200,13 +202,15 @@ impl Tile {
                             image_buf.scale_simple(30, 30, gdk::gdk_pixbuf::InterpType::Nearest)
                         {
                             let image = Image::from_pixbuf(Some(&image_buf));
-                            builder.icon_holder.append(&image);
                             image.set_widget_name("icon");
-                            builder.icon_holder.set_overflow(gtk4::Overflow::Hidden);
-                            builder.icon_holder.set_widget_name("color-icon-holder");
                             image.set_pixel_size(22);
-                            builder.icon.set_visible(false);
 
+                            builder.icon_holder.upgrade().map(|holder| {
+                                holder.append(&image);
+                                holder.set_overflow(gtk4::Overflow::Hidden);
+                                holder.set_widget_name("color-icon-holder");
+                            });
+                            builder.icon.upgrade().map(|icon| icon.set_visible(false));
                             is_valid = true;
                         };
                     }
@@ -216,14 +220,13 @@ impl Tile {
                 // calc capabilities will be checked inside of calc tile
                 results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
             } else {
-                if name.is_empty() {
-                    builder.category.set_visible(false);
-                } else {
-                    builder.category.set_text(name);
-                }
+                builder.category.upgrade().map(|category| {
+                    category.set_visible(!name.is_empty());
+                    category.set_text(name);
+                });
 
-                builder.title.set_text(clipboard_content);
-                builder.icon.set_icon_name(Some(&icon));
+                builder.icon.upgrade().map(|ico| ico.set_icon_name(Some(&icon)));
+                builder.title.upgrade().map(|title| title.set_text(clipboard_content));
 
                 // Add action capabilities
                 let attrs = get_attrs_map(vec![
@@ -232,13 +235,12 @@ impl Tile {
                     ("engine", "plain"),
                 ]);
 
-                builder
-                    .object
-                    .connect("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
+                builder.object.connect("row-should-activate", false, move |row| {
+                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    execute_from_attrs(&row, &attrs);
+                    None
+                });
+
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
                     _ => None,

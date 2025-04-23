@@ -4,6 +4,7 @@ use crate::{
     loader::pipe_loader::PipeData,
     CONFIG,
 };
+use gio::glib::WeakRef;
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
@@ -19,8 +20,8 @@ pub struct AsyncLauncherTile {
 
 #[derive(Debug)]
 pub struct TextTileElements {
-    pub title: Label,
-    pub body: Label,
+    pub title: WeakRef<Label>,
+    pub body: WeakRef<Label>,
 }
 #[derive(Debug)]
 pub struct ImageReplacementElements {
@@ -37,10 +38,10 @@ impl ImageReplacementElements {
 }
 #[derive(Debug)]
 pub struct WeatherTileElements {
-    pub temperature: Label,
-    pub location: Label,
-    pub icon: Image,
-    pub spinner: Spinner,
+    pub temperature: WeakRef<Label>,
+    pub location: WeakRef<Label>,
+    pub icon: WeakRef<Image>,
+    pub spinner: WeakRef<Spinner>,
 }
 
 #[derive(Default)]
@@ -61,11 +62,11 @@ impl TextViewTileBuilder {
 #[derive(Default)]
 pub struct EventTileBuilder {
     pub object: SherlockRow,
-    pub title: Label,
-    pub icon: Image,
-    pub start_time: Label,
-    pub end_time: Label,
-    pub shortcut_holder: Option<Box>,
+    pub title: WeakRef<Label>,
+    pub icon: WeakRef<Image>,
+    pub start_time: WeakRef<Label>,
+    pub end_time: WeakRef<Label>,
+    pub shortcut_holder: Option<WeakRef<Box>>,
 }
 impl EventTileBuilder {
     pub fn new(resource: &str) -> Self {
@@ -77,13 +78,20 @@ impl EventTileBuilder {
         object.set_child(Some(&holder));
         object.set_css_classes(&vec!["tile"]);
 
+        let title: Label = builder.object("title-label").unwrap_or_default();
+        let start_time: Label = builder.object("time-label").unwrap_or_default();
+        let end_time: Label = builder.object("end-time-label").unwrap_or_default();
+        let icon: Image = builder.object("icon-name").unwrap_or_default();
+        let shortcut_option: Option<Box> = builder.object("shortcut-holder");
+        let shortcut_holder: Option<WeakRef<Box>> = shortcut_option.and_then(|h| Some(h.downgrade()));
+
         EventTileBuilder {
             object,
-            title: builder.object("title-label").unwrap_or_default(),
-            start_time: builder.object("time-label").unwrap_or_default(),
-            end_time: builder.object("end-time-label").unwrap_or_default(),
-            icon: builder.object("icon-name").unwrap_or_default(),
-            shortcut_holder: builder.object("shortcut-holder"),
+            title: title.downgrade(),
+            start_time: start_time.downgrade(),
+            end_time: end_time.downgrade(),
+            icon: icon.downgrade(),
+            shortcut_holder
         }
     }
 }
@@ -91,20 +99,20 @@ impl EventTileBuilder {
 #[derive(Clone, Default)]
 pub struct TileBuilder {
     pub object: SherlockRow,
-    pub icon: Image,
-    pub icon_holder: Box,
-    pub title: Label,
-    pub category: Label,
-    pub tag_start: Label,
-    pub tag_end: Label,
-    pub shortcut_holder: Option<Box>,
+    pub icon: WeakRef<Image>,
+    pub icon_holder: WeakRef<Box>,
+    pub title: WeakRef<Label>,
+    pub category: WeakRef<Label>,
+    pub tag_start: WeakRef<Label>,
+    pub tag_end: WeakRef<Label>,
+    pub shortcut_holder: Option<WeakRef<Box>>,
 
     // Specific to 'bulk_text_tile'
-    pub content_title: Label,
-    pub content_body: Label,
+    pub content_title: WeakRef<Label>,
+    pub content_body: WeakRef<Label>,
     // Specific to 'calc_tile'
-    pub equation_holder: Label,
-    pub result_holder: Label,
+    pub equation_holder: WeakRef<Label>,
+    pub result_holder: WeakRef<Label>,
 }
 
 impl TileBuilder {
@@ -131,26 +139,29 @@ impl TileBuilder {
         let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
+        let shortcut_option: Option<Box> = builder.object("shortcut_holder");
+        let shortcut_holder: Option<WeakRef<Box>> = shortcut_option.and_then(|s| Some(s.downgrade()));
+
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {
             icon.set_pixel_size(c.appearance.icon_size);
         }
-
+        drop(builder);
         TileBuilder {
             object,
-            icon,
-            icon_holder,
-            title,
-            category,
-            tag_start,
-            tag_end,
-            shortcut_holder: builder.object("shortcut-holder"),
+            icon: icon.downgrade(),
+            icon_holder: icon_holder.downgrade(),
+            title: title.downgrade(),
+            category: category.downgrade(),
+            tag_start: tag_start.downgrade(),
+            tag_end: tag_end.downgrade(),
+            shortcut_holder,
 
-            content_body,
-            content_title,
+            content_body: content_body.downgrade(),
+            content_title: content_title.downgrade(),
 
-            equation_holder,
-            result_holder,
+            equation_holder: equation_holder.downgrade(),
+            result_holder: result_holder.downgrade(),
         }
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
@@ -160,8 +171,10 @@ impl TileBuilder {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
             if !text.is_empty() {
-                self.tag_start.set_text(&text);
-                self.tag_start.set_visible(true);
+                self.tag_start.upgrade().map(|t| {
+                    t.set_text(&text);
+                    t.set_visible(true);
+                });
             }
         }
     }
@@ -172,8 +185,10 @@ impl TileBuilder {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
             if !text.is_empty() {
-                self.tag_end.set_text(&text);
-                self.tag_end.set_visible(true);
+                self.tag_end.upgrade().map(|t| {
+                    t.set_text(&text);
+                    t.set_visible(true);
+                });
             }
         }
     }
@@ -182,10 +197,10 @@ impl TileBuilder {
 #[derive(Clone, Default)]
 pub struct WeatherTileBuilder {
     pub object: SherlockRow,
-    pub icon: Image,
-    pub location: Label,
-    pub temperature: Label,
-    pub spinner: Spinner,
+    pub icon: WeakRef<Image>,
+    pub location: WeakRef<Label>,
+    pub temperature: WeakRef<Label>,
+    pub spinner: WeakRef<Spinner>,
 }
 
 impl WeatherTileBuilder {
@@ -219,10 +234,10 @@ impl WeatherTileBuilder {
 
         WeatherTileBuilder {
             object,
-            icon,
-            location,
-            temperature,
-            spinner,
+            icon: icon.downgrade(),
+            location: location.downgrade(),
+            temperature: temperature.downgrade(),
+            spinner: spinner.downgrade(),
         }
     }
 }

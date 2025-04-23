@@ -15,20 +15,18 @@ impl Tile {
         mpris: &MusicPlayerLauncher,
     ) -> Option<AsyncLauncherTile> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
-        builder.object.add_css_class("mpris-tile");
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
+            builder.object.add_css_class("mpris-tile");
+            builder.object.set_spawn_focus(launcher.spawn_focus);
+            builder.object.set_shortcut(launcher.shortcut);
+            builder.object.set_overflow(gtk4::Overflow::Hidden);
 
-        builder
-            .category
-            .set_text(&mpris.mpris.metadata.artists.join(", "));
-        builder.title.set_text(&mpris.mpris.metadata.title);
-        builder.object.set_overflow(gtk4::Overflow::Hidden);
+        builder.category.upgrade().map(|category| category.set_text(&mpris.mpris.metadata.artists.join(", ")));
+        builder.title.upgrade().map(|title| title.set_text(&mpris.mpris.metadata.title));
 
         let overlay = Overlay::new();
         let mut options = ImageReplacementElements::new();
 
-        builder.icon.set_visible(false);
+        builder.icon.upgrade().map(|icon| icon.set_visible(false));
 
         let pix_buf = vec![0, 0, 0];
         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -48,12 +46,13 @@ impl Tile {
             image.set_widget_name("placeholder-icon");
             image.set_pixel_size(50);
         };
-        builder.icon_holder.append(&overlay);
-
-        builder.icon_holder.set_overflow(gtk4::Overflow::Hidden);
-        builder.icon_holder.set_widget_name("mpris-icon-holder");
-        builder.icon_holder.set_margin_top(10);
-        builder.icon_holder.set_margin_bottom(10);
+        builder.icon_holder.upgrade().map(|holder| {
+            holder.append(&overlay);
+            holder.set_overflow(gtk4::Overflow::Hidden);
+            holder.set_widget_name("mpris-icon-holder");
+            holder.set_margin_top(10);
+            holder.set_margin_bottom(10);
+        });
 
         // Add attrs and implement double click capabilities
         let attrs: HashMap<String, String> =

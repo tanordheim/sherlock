@@ -21,10 +21,8 @@ pub fn errors(
     let (_, breaking_error_tiles) = Tile::error_tile(0, errors, "🚨", "ERROR");
     let (_, error_tiles) = Tile::error_tile(0, non_breaking, "⚠️", "WARNING");
 
-    breaking_error_tiles
-        .iter()
-        .for_each(|tile| results.append(tile));
-    error_tiles.iter().for_each(|tile| results.append(tile));
+    breaking_error_tiles.into_iter().for_each(|tile| results.append(&tile));
+    error_tiles.into_iter().for_each(|tile| results.append(&tile));
 
     nav_event(&vbox, results, result_viewport, stack_page);
     return vbox;

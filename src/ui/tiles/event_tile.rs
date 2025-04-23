@@ -27,18 +27,14 @@ impl Tile {
         }
 
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
-        builder.object.add_css_class("event-tile");
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
 
-        builder.title.set_text(&event.title);
-        builder
-            .icon
-            .set_icon_name(Some(event_launcher.icon.as_ref()));
-        builder.start_time.set_text(&event.start_time);
-        builder
-            .end_time
-            .set_text(format!(".. {}", event.end_time).as_str());
+        builder.title.upgrade().map(|title| {
+            title.set_text(&event.title);
+        });
+
+        builder.icon.upgrade().map(|ico| ico.set_icon_name(Some(event_launcher.icon.as_ref())));
+        builder.start_time.upgrade().map(|start_time| start_time.set_text(&event.start_time));
+        builder.end_time.upgrade().map(|end_time| end_time.set_text(format!(".. {}", event.end_time).as_str()));
 
         let mut constructor: Vec<(&str, &str)> = vec![
             ("method", &launcher.method),
@@ -49,13 +45,14 @@ impl Tile {
         }
         let attrs = get_attrs_map(constructor);
 
-        builder
-            .object
-            .connect("row-should-activate", false, move |row| {
-                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                execute_from_attrs(&row, &attrs);
-                None
-            });
+        builder.object.add_css_class("event-tile");
+        builder.object.set_spawn_focus(launcher.spawn_focus);
+        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.connect("row-should-activate", false, move |row| {
+            let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+            execute_from_attrs(&row, &attrs);
+            None
+        });
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

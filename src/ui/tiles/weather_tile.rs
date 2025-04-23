@@ -19,7 +19,7 @@ impl Tile {
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
 
-        builder.icon.set_pixel_size(40);
+        builder.icon.upgrade().map(|icon| icon.set_pixel_size(40));
 
         let result_item = ResultItem {
             priority: launcher.priority as f32,

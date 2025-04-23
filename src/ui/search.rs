@@ -154,7 +154,7 @@ fn construct_window(
     HashMap<String, Option<String>>,
     HVBox,
     SearchUI,
-    Rc<ListBox>,
+    ListBox,
 ) {
     // Collect Modes
     let original_mode = CONFIG
@@ -173,7 +173,7 @@ fn construct_window(
 
     // Get the required object references
     let vbox: HVBox = builder.object("vbox").unwrap();
-    let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
+    let results: ListBox = builder.object("result-frame").unwrap();
 
     let search_icon_holder: HVBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
@@ -448,7 +448,7 @@ pub fn async_calc(
                 return;
             }
             if let Some(row) = async_launchers.get(0) {
-                let _ = row
+                let _  = row
                     .result_item
                     .row_item
                     .activate_action("win.spinner-mode", Some(&true.to_variant()));
@@ -466,8 +466,8 @@ pub fn async_calc(
                             if let Some((title, body, next_content)) =
                                 widget.launcher.get_result(&current_text).await
                             {
-                                opts.title.set_text(&title);
-                                opts.body.set_text(&body);
+                                opts.title.upgrade().map(|t| t.set_text(&title));
+                                opts.body.upgrade().map(|b| b.set_text(&body));
                                 if let Some(next_content) = next_content {
                                     attrs.insert(
                                         String::from("next_content"),
@@ -506,25 +506,26 @@ pub fn async_calc(
                                 };
                                 widget.result_item.row_item.add_css_class(css_class);
                                 widget.result_item.row_item.add_css_class(&data.icon);
-                                wtr.temperature.set_text(&data.temperature);
-                                wtr.spinner.set_spinning(false);
-                                wtr.icon.set_icon_name(Some(&data.icon));
-                                wtr.location.set_text(&data.format_str);
+                                wtr.temperature.upgrade().map(|tmp| tmp.set_text(&data.temperature));
+                                wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
+                                wtr.icon.upgrade().map(|ico| ico.set_icon_name(Some(&data.icon)));
+                                wtr.location.upgrade().map(|loc| loc.set_text(&data.format_str));
                             } else {
                                 widget.result_item.row_item.set_visible(false);
                             }
                         }
 
                         // Connect row-should-activate signal
-                        widget.result_item.row_item.connect(
-                            "row-should-activate",
-                            false,
-                            move |row| {
-                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                execute_from_attrs(&row, &attrs);
-                                None
-                            },
-                        );
+                        widget.result_item.row_item
+                            .connect(
+                                "row-should-activate",
+                                false,
+                                move |row| {
+                                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                    execute_from_attrs(&row, &attrs);
+                                    None
+                                },
+                            );
                     }
                 })
                 .collect();
@@ -568,15 +569,15 @@ pub fn populate(
     if let Some(c) = CONFIG.get() {
         let mut shortcut_index = 1;
         if let Some(frame) = results_frame.upgrade(){
-            for widget in launcher_tiles {
+            launcher_tiles.into_iter().for_each(|widget| {
                 if animate && c.behavior.animate {
                     widget.row_item.add_css_class("animate");
                 }
-                if let Some(shortcut_holder) = widget.shortcut_holder {
-                    shortcut_index += shortcut_holder.apply_shortcut(shortcut_index, mod_str);
+                if let Some(shortcut_holder) = &widget.shortcut_holder {
+                    shortcut_index += shortcut_holder.upgrade().map_or(0, |holder| holder.apply_shortcut(shortcut_index, mod_str));
                 }
                 frame.append(&widget.row_item);
-            }
+            });
         }
     }
     results_frame.upgrade().map(|r| r.focus_first());

@@ -19,16 +19,17 @@ impl Tile {
         for (key, value) in proc.processes.iter() {
             if value.to_lowercase().fuzzy_match(&keyword.to_lowercase()) {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
-                builder.object.set_spawn_focus(launcher.spawn_focus);
-                builder.object.set_shortcut(launcher.shortcut);
 
-                if let Some(name) = &launcher.name {
-                    builder.category.set_text(name);
-                } else {
-                    builder.category.set_visible(false);
-                }
-                builder.title.set_markup(&value);
-                builder.icon.set_icon_name(Some(&proc.icon));
+                builder.category.upgrade().map(|category| {
+                    if let Some(name) = &launcher.name {
+                        category.set_text(name);
+                    } else {
+                        category.set_visible(false);
+                    }
+                });
+                builder.title.upgrade().map(|title| title.set_markup(&value));
+                builder.icon.upgrade().map(|icon| icon.set_icon_name(Some(&proc.icon)));
+
                 let ppid = key.0;
                 let cpid = key.1;
                 let parent = ppid.to_string();
@@ -43,13 +44,13 @@ impl Tile {
                     ("child-pid", &child),
                 ]);
 
-                builder
-                    .object
-                    .connect("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
+                builder.object.set_spawn_focus(launcher.spawn_focus);
+                builder.object.set_shortcut(launcher.shortcut);
+                builder.object.connect("row-should-activate", false, move |row| {
+                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    execute_from_attrs(&row, &attrs);
+                    None
+                });
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,

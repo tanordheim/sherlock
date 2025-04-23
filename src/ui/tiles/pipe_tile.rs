@@ -16,37 +16,41 @@ use super::Tile;
 
 impl Tile {
     pub fn pipe_data(lines: &Vec<PipeData>, method: &str, keyword: &str) -> Vec<SherlockRow> {
-        let mut results: Vec<SherlockRow> = Default::default();
+        let mut results: Vec<SherlockRow> = Vec::with_capacity(lines.len());
 
         for item in lines {
             if item.fuzzy_match(keyword) || item.binary.is_some() {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
-                builder.object.set_spawn_focus(true);
 
                 if let Some(title) = &item.title {
-                    builder.title.set_text(&title);
+                    builder.title.upgrade().map(|t| t.set_text(&title));
                 }
-                if let Some(desc) = &item.description {
-                    builder.category.set_text(&desc);
-                } else {
-                    builder.category.set_visible(false);
-                }
-                if let Some(icon) = &item.icon {
-                    builder.icon.set_icon_name(Some(&icon));
-                } else {
-                    builder.icon.set_visible(false);
-                }
+                builder.category.upgrade().map(|category| {
+                    if let Some(desc) = &item.description {
+                        category.set_text(&desc);
+                    } else {
+                        category.set_visible(false);
+                    }
+                });
+                builder.icon.upgrade().map(|ico| {
+                    if let Some(icon) = &item.icon {
+                        ico.set_icon_name(Some(&icon));
+                    } else {
+                        ico.set_visible(false);
+                    }
+                });
+                // Custom Image Data
                 if let Some(bin) = item.binary.clone() {
                     let cursor = Cursor::new(bin);
                     if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
                         let image = Image::from_pixbuf(Some(&pixbuf));
-                        builder.icon_holder.append(&image);
+                        builder.icon_holder.upgrade().map(|holder| holder.append(&image));
                         if let Some(size) = &item.icon_size {
                             image.set_pixel_size(*size);
                         }
                     }
                 } else {
-                    builder.icon.set_visible(false);
+                    builder.icon.upgrade().map(|icon| icon.set_visible(false));
                 }
 
                 // Create attributes and enable action capability
@@ -65,13 +69,12 @@ impl Tile {
                 }
                 let attrs = get_attrs_map(constructor);
 
-                builder
-                    .object
-                    .connect("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
+                builder.object.set_spawn_focus(true);
+                builder.object.connect("row-should-activate", false, move |row| {
+                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    execute_from_attrs(&row, &attrs);
+                    None
+                });
                 results.push(builder.object);
             }
         }
