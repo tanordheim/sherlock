@@ -73,7 +73,7 @@ impl Tile {
             shortcut_holder,
         };
 
-        options.icon_holder_overlay = Some(overlay);
+        options.icon_holder_overlay = Some(overlay.downgrade());
 
         return Some((AsyncLauncherTile {
             launcher,

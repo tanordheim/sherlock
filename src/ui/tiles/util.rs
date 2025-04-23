@@ -25,13 +25,11 @@ pub struct TextTileElements {
 }
 #[derive(Debug)]
 pub struct ImageReplacementElements {
-    pub _icon: Option<Image>,
-    pub icon_holder_overlay: Option<Overlay>,
+    pub icon_holder_overlay: Option<WeakRef<Overlay>>,
 }
 impl ImageReplacementElements {
     pub fn new() -> Self {
         ImageReplacementElements {
-            _icon: None,
             icon_holder_overlay: None,
         }
     }

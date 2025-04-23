@@ -444,7 +444,7 @@ pub fn async_calc(
     populate(
         &current_text,
         &mode.borrow(),
-        &*results,
+        &results,
         &non_async_launchers,
         Some(async_widgets),
         animate,
@@ -494,12 +494,12 @@ pub fn async_calc(
                                     widget.launcher.get_image().await
                                 {
                                     if !was_cached {
-                                        overlay.add_css_class("image-replace-overlay");
+                                        overlay.upgrade().map(|overlay|overlay.add_css_class("image-replace-overlay"));
                                     }
                                     let gtk_image = Image::from_pixbuf(Some(&image));
                                     gtk_image.set_widget_name("album-cover");
                                     gtk_image.set_pixel_size(50);
-                                    overlay.add_overlay(&gtk_image);
+                                    overlay.upgrade().map(|overlay| overlay.add_overlay(&gtk_image));
                                 }
                             }
                         }
