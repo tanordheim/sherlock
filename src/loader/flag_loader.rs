@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 use super::{util::SherlockFlags, Loader};
-use crate::utils::errors::SherlockError;
+use crate::{loader::util::SherlockConfig, utils::errors::SherlockError};
 
 impl Loader {
     pub fn load_flags() -> Result<SherlockFlags, SherlockError> {
@@ -45,7 +45,7 @@ impl SherlockFlags {
 
         if check_flag_existance("init") {
             let path = extract_path_value("init").unwrap_or(PathBuf::from("~/.config/sherlock/"));
-            let x = Loader::write_defaults_to_file(path);
+            let x = SherlockConfig::to_file(path);
             println!("{:?}", x);
         }
 
