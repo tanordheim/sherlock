@@ -7,7 +7,7 @@ use gtk4::{
     Builder, EventControllerKey, Image, Overlay, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
-use gtk4::{Box as HVBox, Label, ListBox, ScrolledWindow};
+use gtk4::{Box as GtkBox, Label, ListBox, ScrolledWindow};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -22,10 +22,11 @@ use crate::CONFIG;
 #[allow(dead_code)]
 struct SearchUI {
     result_viewport: WeakRef<ScrolledWindow>,
+    results: WeakRef<ListBox>,
     // will be later used for split view to display information about apps/commands
-    preview_box: WeakRef<HVBox>,
+    preview_box: WeakRef<GtkBox>,
     search_bar: WeakRef<Entry>,
-    search_icon_holder: WeakRef<HVBox>,
+    search_icon_holder: WeakRef<GtkBox>,
     mode_title: WeakRef<Label>,
     spinner: WeakRef<Spinner>,
 }
@@ -34,16 +35,14 @@ pub fn search(
     launchers: &Vec<Launcher>,
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
-) -> HVBox {
+) -> GtkBox {
     // Initialize the view to show all apps
-    let (mode, modes, stack_page, ui, results) = construct_window(&launchers);
+    let (mode, modes, stack_page, ui) = construct_window(&launchers);
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
 
     let initial_mode = mode.borrow().clone();
-    let search_bar_clone = ui.search_bar.clone();
-    let search_bar_clone2 = ui.search_bar.clone();
     let modes_clone = modes.clone();
     let mode_clone = Rc::clone(&mode);
 
@@ -55,19 +54,18 @@ pub fn search(
     });
 
     let custom_binds = ConfKeys::new();
-    let results = results.downgrade();
 
     change_event(
         ui.search_bar.clone(),
         modes,
         &mode,
         &launchers,
-        results.clone(),
+        ui.results.clone(),
         &custom_binds,
     );
     nav_event(
         &stack_page,
-        results,
+        ui.results.clone(),
         ui.search_bar.clone(),
         ui.result_viewport.clone(),
         custom_binds,
@@ -75,6 +73,7 @@ pub fn search(
     );
 
     // Improved mode selection
+    let search_bar = ui.search_bar.clone();
     let mode_action = ActionEntry::builder("switch-mode")
         .parameter_type(Some(&String::static_variant_type()))
         .state(initial_mode.to_variant())
@@ -116,10 +115,10 @@ pub fn search(
                                 state = parameter;
                             }
                         }
-                        let search_bar_clone = search_bar_clone.clone();
+                        let search_bar = search_bar.clone();
                         glib::idle_add_local(move || {
                             // to trigger homescreen rebuild
-                            search_bar_clone.upgrade().map(|entry| {
+                            search_bar.upgrade().map(|entry| {
                                 entry.set_text("\n");
                                 entry.set_text("");
                             });
@@ -155,11 +154,12 @@ pub fn search(
         })
         .build();
 
+    let search_bar = ui.search_bar.clone();
     let action_clear_win = ActionEntry::builder("clear-search")
         .activate(move |_: &ApplicationWindow, _, _| {
-            let search_bar_clone = search_bar_clone2.clone();
+            let search_bar = search_bar.clone();
             glib::idle_add_local(move || {
-                search_bar_clone.upgrade().map(|entry| entry.set_text(""));
+                search_bar.upgrade().map(|entry| entry.set_text(""));
                 glib::ControlFlow::Break
             });
         })
@@ -174,9 +174,8 @@ fn construct_window(
 ) -> (
     Rc<RefCell<String>>,
     HashMap<String, Option<String>>,
-    HVBox,
+    GtkBox,
     SearchUI,
-    ListBox,
 ) {
     // Collect Modes
     let original_mode = CONFIG
@@ -194,10 +193,10 @@ fn construct_window(
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
     // Get the required object references
-    let vbox: HVBox = builder.object("vbox").unwrap();
+    let vbox: GtkBox = builder.object("vbox").unwrap();
     let results: ListBox = builder.object("result-frame").unwrap();
 
-    let search_icon_holder: HVBox = builder.object("search-icon-holder").unwrap_or_default();
+    let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
     // Create the search icon
     let search_icon = Image::new();
@@ -217,7 +216,7 @@ fn construct_window(
     // Show notification-bar
     CONFIG.get().map(|c| {
         if !c.appearance.status_bar {
-            let n: Option<HVBox> = builder.object("status-bar");
+            let n: Option<GtkBox> = builder.object("status-bar");
             n.map(|n| n.set_visible(false));
         }
     });
@@ -225,12 +224,13 @@ fn construct_window(
     search_icon_holder.append(&overlay);
 
     let spinner: Spinner = builder.object("status-bar-spinner").unwrap_or_default();
-    let preview_box: HVBox = builder.object("preview_box").unwrap_or_default();
+    let preview_box: GtkBox = builder.object("preview_box").unwrap_or_default();
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
     let mode_title: Label = builder.object("category-type-label").unwrap_or_default();
     let ui = SearchUI {
         result_viewport: result_viewport.downgrade(),
+        results: results.downgrade(),
         preview_box: preview_box.downgrade(),
         search_bar: search_bar.downgrade(),
         search_icon_holder: search_icon_holder.downgrade(),
@@ -248,11 +248,11 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (mode, modes, vbox, ui, results)
+    (mode, modes, vbox, ui)
 }
 
 fn nav_event(
-    stack: &HVBox,
+    stack: &GtkBox,
     results: WeakRef<ListBox>,
     search_bar: WeakRef<Entry>,
     result_viewport: WeakRef<ScrolledWindow>,
@@ -381,7 +381,6 @@ fn change_event(
 
     // Setting home screen
     async_calc(
-        &cancel_flag,
         &current_task,
         &launchers,
         &mode,
@@ -415,7 +414,6 @@ fn change_event(
                 current_text.clear();
             }
             async_calc(
-                &cancel_flag,
                 &current_task,
                 &launchers_clone,
                 &mode_clone,
@@ -430,7 +428,6 @@ fn change_event(
 }
 
 pub fn async_calc(
-    cancel_flag: &Rc<RefCell<bool>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
     launchers: &[Launcher],
     mode: &Rc<RefCell<String>>,
@@ -439,13 +436,11 @@ pub fn async_calc(
     mod_str: &str,
     animate: bool,
 ) {
-    *cancel_flag.borrow_mut() = false;
     // If task is currently running, abort it
     if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
     let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
-    let cancel_flag = Rc::clone(&cancel_flag);
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
         .filter(|launcher| (is_home && launcher.home) || (!is_home && !launcher.only_home))
@@ -494,9 +489,6 @@ pub fn async_calc(
         let current_task_clone = Rc::clone(current_task);
         let results = results.clone();
         async move {
-            if *cancel_flag.borrow() {
-                return;
-            }
             // Set spinner active
             results
                 .upgrade()
@@ -620,6 +612,7 @@ pub fn populate(
     if let Some(c) = CONFIG.get() {
         let mut shortcut_index = 1;
         if let Some(frame) = results_frame.upgrade() {
+            println!("launcher: {:?}", launcher_tiles.len());
             launcher_tiles.into_iter().for_each(|widget| {
                 if animate && c.behavior.animate {
                     widget.row_item.add_css_class("animate");

@@ -16,7 +16,7 @@ impl Tile {
         keyword: &str,
         commands: &HashMap<String, AppData>,
     ) -> Vec<ResultItem> {
-        let mut results: Vec<ResultItem> = Default::default();
+        let mut results: Vec<ResultItem> = Vec::with_capacity(commands.len());
 
         for (key, value) in commands.into_iter() {
             if value

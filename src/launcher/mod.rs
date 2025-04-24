@@ -72,6 +72,11 @@ pub struct ResultItem {
     pub row_item: SherlockRow,
     pub shortcut_holder: Option<WeakRef<Box>>,
 }
+impl Drop for ResultItem {
+    fn drop(&mut self) {
+        println!("dropped result item");
+    }
+}
 
 impl Launcher {
     // TODO: tile method recreates already stored data...

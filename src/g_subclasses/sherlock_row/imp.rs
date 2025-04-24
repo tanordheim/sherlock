@@ -3,6 +3,7 @@ use gio::glib::subclass::Signal;
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
+use once_cell::unsync::OnceCell;
 use std::cell::Cell;
 use std::sync::OnceLock;
 
@@ -12,6 +13,7 @@ use std::sync::OnceLock;
 pub struct SherlockRow {
     pub spawn_focus: Cell<bool>,
     pub shortcut: Cell<bool>,
+    pub gesture: OnceCell<GestureClick>,
 }
 
 // The central trait for subclassing a GObject
@@ -26,20 +28,24 @@ impl ObjectSubclass for SherlockRow {
 impl ObjectImpl for SherlockRow {
     fn constructed(&self) {
         self.parent_constructed();
-        // Make Sherlock execute current row on multi click
-        let gesture = GestureClick::new();
-        gesture.set_button(0);
 
-        gesture.connect_pressed({
+        // Only install gesture once
+        self.gesture.get_or_init(|| {
+            let gesture = GestureClick::new();
+            gesture.set_button(0);
+
             let obj = self.obj().downgrade();
-            move |_, n_clicks, _, _| {
+            gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
-                    obj.upgrade()
-                        .map(|obj| obj.emit_by_name::<()>("row-should-activate", &[]));
+                    if let Some(obj) = obj.upgrade() {
+                        obj.emit_by_name::<()>("row-should-activate", &[]);
+                    }
                 }
-            }
+            });
+
+            self.obj().add_controller(gesture.clone());
+            gesture
         });
-        self.obj().add_controller(gesture);
     }
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
