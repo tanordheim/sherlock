@@ -4,8 +4,7 @@ use gtk4::{
     prelude::*,
     ApplicationWindow, Builder, Entry, EventControllerKey, Justification,
 };
-use gio::glib::{clone::Upgrade, WeakRef};
-use std::rc::Rc;
+use gio::glib::WeakRef;
 
 use super::util::*;
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -30,7 +29,6 @@ pub fn display_pipe(
 
     let keyword = search_bar.text();
 
-    //TODO fix memory here
     let tiles = Tile::pipe_data(&pipe_content, &method, &keyword);
     tiles.into_iter().for_each(|tile| results.append(&tile));
 
