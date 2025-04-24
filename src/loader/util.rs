@@ -6,6 +6,8 @@ use std::io::{self, BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::utils::errors::{SherlockError, SherlockErrorType};
+
 #[derive(Deserialize, Debug)]
 pub struct RawLauncher {
     pub name: Option<String>,
@@ -68,148 +70,6 @@ pub struct SherlockAlias {
     pub icon: Option<String>,
     pub exec: Option<String>,
     pub keywords: Option<String>,
-}
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub enum SherlockErrorType {
-    EnvVarNotFoundError(String),
-    FileExistError(PathBuf),
-    FileWriteError(PathBuf),
-    FileRemoveError(PathBuf),
-    FileReadError(PathBuf),
-    FileParseError(PathBuf),
-    DirReadError(String),
-    DirCreateError(String),
-    DirRemoveError(String),
-    ResourceParseError,
-    ResourceLookupError(String),
-    DisplayError,
-    ConfigError(Option<String>),
-    FlagLoadError,
-    RegexError(String),
-    CommandExecutionError(String),
-    ClipboardError,
-    DBusConnectionError,
-    DBusMessageSendError(String),
-    DBusMessageConstructError(String),
-    HttpRequestError(String),
-    SocketRemoveError(String),
-    SocketConnectError(String),
-    SoecktWriteError(String),
-}
-
-impl SherlockErrorType {
-    pub fn get_message(&self) -> (String, String) {
-        match self {
-            SherlockErrorType::EnvVarNotFoundError(var) => (
-                "EnvVarNotFoundError".to_string(),
-                format!("Failed to unpack environment variable \"{}\"", var),
-            ),
-            SherlockErrorType::SocketRemoveError(socket) => (
-                "SocketRemoveError".to_string(),
-                format!("Failed to close socket at location \"{}\"", socket),
-            ),
-            SherlockErrorType::SocketConnectError(socket) => (
-                "SocketConnectError".to_string(),
-                format!("Failed to connect to socket at location \"{}\"", socket),
-            ),
-            SherlockErrorType::SoecktWriteError(socket) => (
-                "SoecktWriteError".to_string(),
-                format!(
-                    "Failed to send message to socket at location \"{}\"",
-                    socket
-                ),
-            ),
-            SherlockErrorType::FileExistError(file) => (
-                "FileExistError".to_string(),
-                format!("File \"{}\" does not exist", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileWriteError(file) => (
-                "FileWriteError".to_string(),
-                format!("Failed to write file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileRemoveError(file) => (
-                "FileRemoveError".to_string(),
-                format!("Failed to remove file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileReadError(file) => (
-                "FileReadError".to_string(),
-                format!("Failed to read file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileParseError(file) => (
-                "FileParseError".to_string(),
-                format!("Failed to parse file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::DirReadError(file) => (
-                "DirReadError".to_string(),
-                format!("Failed to read/access dir \"{}\"", file),
-            ),
-            SherlockErrorType::DirRemoveError(file) => (
-                "DirRemoveError".to_string(),
-                format!("Failed to remove dir \"{}\"", file),
-            ),
-            SherlockErrorType::DirCreateError(file) => (
-                "DirCreateError".to_string(),
-                format!("Failed to create parent dir \"{}\"", file),
-            ),
-            SherlockErrorType::ResourceParseError => (
-                "ResourceParseError".to_string(),
-                format!("Failed to parse resources"),
-            ),
-            SherlockErrorType::ResourceLookupError(resource) => (
-                "ResourceLookupError".to_string(),
-                format!("Failed to find resource \"{}\"", resource),
-            ),
-            SherlockErrorType::DisplayError => (
-                "DisplayError".to_string(),
-                "Could not connect to a display".to_string(),
-            ),
-            SherlockErrorType::ConfigError(val) => {
-                let message = if let Some(v) = val {
-                    format!("{}", v)
-                } else {
-                    "It should never come to this".to_string()
-                };
-                ("ConfigError".to_string(), message)
-            }
-            SherlockErrorType::FlagLoadError => {
-                (format!("FlagLoadError"), format!("Failed to load flags"))
-            }
-            SherlockErrorType::RegexError(key) => (
-                format!("RegexError"),
-                format!("Failed to compile the regular expression for \"{}\"", key),
-            ),
-            SherlockErrorType::CommandExecutionError(cmd) => (
-                format!("CommandExecutionError"),
-                format!("Failed to execute command \"{}\"", cmd),
-            ),
-            SherlockErrorType::ClipboardError => (
-                format!("ClipboardError"),
-                format!("Failed to get system clipboard"),
-            ),
-            SherlockErrorType::DBusConnectionError => (
-                format!("DBusConnectionError"),
-                format!("Failed to connect to system DBus"),
-            ),
-            SherlockErrorType::DBusMessageConstructError(message) => (
-                format!("DBusMessageConstructError"),
-                format!("Failed to construct Dbus message \"{}\"", message),
-            ),
-            SherlockErrorType::DBusMessageSendError(message) => (
-                format!("DBusConnectionError"),
-                format!("Failed to send Dbus message \"{}\"", message),
-            ),
-            SherlockErrorType::HttpRequestError(cmd) => (
-                format!("HttpRequestError"),
-                format!("Failed to get requested source \"{}\"", cmd),
-            ),
-        }
-    }
-}
-#[derive(Clone, Debug)]
-pub struct SherlockError {
-    pub error: SherlockErrorType,
-    pub traceback: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]

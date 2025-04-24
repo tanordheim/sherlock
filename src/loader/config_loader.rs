@@ -1,10 +1,9 @@
+use std::fs;
 use std::path::PathBuf;
 
-use super::util::{
-    expand_path, home_dir, SherlockConfig, SherlockError, SherlockErrorType, SherlockFlags,
-};
+use super::util::{expand_path, home_dir, SherlockConfig, SherlockFlags};
 use super::Loader;
-use std::fs;
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 impl Loader {
     pub fn load_config(

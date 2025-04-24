@@ -28,10 +28,8 @@ use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
 use super::util::parse_priority;
-use super::{
-    util::{self, SherlockError, SherlockErrorType},
-    Loader,
-};
+use super::{util, Loader};
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::CONFIG;
 use util::{AppData, RawLauncher};
 

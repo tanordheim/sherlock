@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::process::Command;
 
-use crate::loader::application_loader::{get_applications_dir, get_desktop_files};
-use crate::loader::util::{read_lines, SherlockError, SherlockErrorType};
-
 use super::commandlaunch::command_launch;
+use crate::loader::application_loader::{get_applications_dir, get_desktop_files};
+use crate::loader::util::read_lines;
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 pub fn websearch(engine: &str, query: &str) -> Result<(), SherlockError> {
     let engines: HashMap<&str, &str> = HashMap::from([

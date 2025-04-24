@@ -2,10 +2,8 @@ use std::fs;
 
 use cli_clipboard::{ClipboardContext, ClipboardProvider};
 
-use crate::{
-    loader::util::{home_dir, SherlockError, SherlockErrorType},
-    CONFIG,
-};
+use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::{loader::util::home_dir, CONFIG};
 
 pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {
     let mut ctx = ClipboardContext::new().map_err(|e| SherlockError {

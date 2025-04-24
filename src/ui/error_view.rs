@@ -6,7 +6,8 @@ use std::rc::Rc;
 
 use super::util::*;
 
-use crate::{loader::util::SherlockError, ui::tiles::Tile};
+use crate::ui::tiles::Tile;
+use crate::utils::errors::SherlockError;
 
 pub fn errors(
     errors: &Vec<SherlockError>,

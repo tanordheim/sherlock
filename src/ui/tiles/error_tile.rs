@@ -1,7 +1,8 @@
 use gtk4::prelude::*;
 
 use super::{util::TileBuilder, Tile};
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::SherlockError};
+use crate::g_subclasses::sherlock_row::SherlockRow;
+use crate::utils::errors::SherlockError;
 
 impl Tile {
     pub fn error_tile(

@@ -1,10 +1,10 @@
+use gio::glib::WeakRef;
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
     ApplicationWindow, Builder, Entry, EventControllerKey, Justification,
 };
-use gio::glib::WeakRef;
 
 use super::util::*;
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -188,14 +188,12 @@ fn change_event(
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text();
 
-        if let Some(results) = results.upgrade(){
+        if let Some(results) = results.upgrade() {
             while let Some(row) = results.last_child() {
                 results.remove(&row);
             }
             let tiles = Tile::pipe_data(&pipe_content_clone, &method, &current_text);
-            tiles
-                .into_iter()
-                .for_each(|tile| results.append(&tile));
+            tiles.into_iter().for_each(|tile| results.append(&tile));
 
             results.focus_first();
         }

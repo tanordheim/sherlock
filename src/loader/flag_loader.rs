@@ -1,9 +1,7 @@
 use std::{env, path::PathBuf};
 
-use super::{
-    util::{SherlockError, SherlockFlags},
-    Loader,
-};
+use super::{util::SherlockFlags, Loader};
+use crate::utils::errors::SherlockError;
 
 impl Loader {
     pub fn load_flags() -> Result<SherlockFlags, SherlockError> {

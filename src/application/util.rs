@@ -5,8 +5,8 @@ use gio::glib::WeakRef;
 use gtk4::Stack;
 use gtk4::{prelude::*, ApplicationWindow};
 
-use crate::loader::util::SherlockError;
 use crate::loader::Loader;
+use crate::utils::errors::SherlockError;
 use crate::{ui, CONFIG};
 
 pub fn reload_content(

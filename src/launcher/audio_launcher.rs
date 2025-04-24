@@ -5,10 +5,9 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
-
 use zbus::blocking::{Connection, Proxy};
 
-use crate::loader::util::{SherlockError, SherlockErrorType};
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 use super::utils::MprisData;
 

@@ -1,9 +1,7 @@
 use gio::glib;
 
-use super::{
-    util::{SherlockError, SherlockErrorType},
-    Loader,
-};
+use super::Loader;
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 impl Loader {
     pub fn load_resources() -> Result<(), SherlockError> {

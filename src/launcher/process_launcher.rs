@@ -3,7 +3,7 @@ use nix::unistd::Pid;
 use procfs::process::{all_processes, Process};
 use std::collections::HashMap;
 
-use crate::loader::util::{SherlockError, SherlockErrorType};
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 #[derive(Clone, Debug)]
 pub struct ProcessLauncher {

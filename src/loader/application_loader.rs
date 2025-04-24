@@ -8,8 +8,8 @@ use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-use super::util::{SherlockError, SherlockErrorType};
 use super::{util, Loader};
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::CONFIG;
 use util::{parse_priority, read_file, read_lines, AppData, SherlockAlias};
 

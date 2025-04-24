@@ -3,8 +3,6 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
-use loader::pipe_loader::deserialize_pipe;
-use loader::util::SherlockErrorType;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
@@ -17,14 +15,15 @@ mod g_subclasses;
 mod launcher;
 mod loader;
 mod ui;
+mod utils;
 
 // IMPORTS
 use application::lock;
 use daemon::daemon::SherlockDaemon;
-use loader::{
-    util::{SherlockConfig, SherlockError},
-    Loader,
-};
+use loader::pipe_loader::deserialize_pipe;
+use loader::util::SherlockConfig;
+use loader::Loader;
+use utils::errors::{SherlockError, SherlockErrorType};
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
