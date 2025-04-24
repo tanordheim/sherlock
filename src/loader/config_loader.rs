@@ -1,8 +1,11 @@
 use std::fs;
 
-use super::util::{expand_path, home_dir, SherlockConfig, SherlockFlags};
 use super::Loader;
-use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::utils::{
+    config::{SherlockConfig, SherlockFlags},
+    errors::{SherlockError, SherlockErrorType},
+    files::{expand_path, home_dir},
+};
 
 impl Loader {
     pub fn load_config(
@@ -161,5 +164,4 @@ impl Loader {
         }
         config
     }
-
 }

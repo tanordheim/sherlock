@@ -27,7 +27,7 @@ use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
-use super::util::parse_priority;
+use super::application_loader::parse_priority;
 use super::{util, Loader};
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::CONFIG;

@@ -9,9 +9,12 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use super::{util, Loader};
-use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::utils::{
+    errors::{SherlockError, SherlockErrorType},
+    files::{read_file, read_lines},
+};
 use crate::CONFIG;
-use util::{parse_priority, read_file, read_lines, AppData, SherlockAlias};
+use util::{AppData, SherlockAlias};
 
 impl Loader {
     pub fn load_applications_from_disk(
@@ -261,6 +264,9 @@ impl Loader {
 fn should_ignore(ignore_apps: &Vec<Pattern>, app: &str) -> bool {
     let app_name = app.to_lowercase();
     ignore_apps.iter().any(|pattern| pattern.matches(&app_name))
+}
+pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
+    priority + 1.0 - count * 10f32.powi(-decimals)
 }
 
 fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), SherlockError> {

@@ -21,9 +21,11 @@ mod utils;
 use application::lock;
 use daemon::daemon::SherlockDaemon;
 use loader::pipe_loader::deserialize_pipe;
-use loader::util::SherlockConfig;
 use loader::Loader;
-use utils::errors::{SherlockError, SherlockErrorType};
+use utils::{
+    config::SherlockConfig,
+    errors::{SherlockError, SherlockErrorType},
+};
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
@@ -51,7 +53,7 @@ async fn main() {
     let app_config = Loader::load_config(&sherlock_flags).map_or_else(
         |e| {
             startup_errors.push(e);
-            let defaults = loader::util::SherlockConfig::default();
+            let defaults = utils::config::SherlockConfig::default();
             loader::Loader::apply_flags(&sherlock_flags, defaults)
         },
         |(app_config, n)| {
