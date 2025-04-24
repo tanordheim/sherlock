@@ -50,11 +50,11 @@ async fn main() {
         .unwrap_or_default();
 
     // Parse configs from 'config.toml'
-    let app_config = Loader::load_config(&sherlock_flags).map_or_else(
+    let app_config = SherlockConfig::from_flags(&sherlock_flags).map_or_else(
         |e| {
             startup_errors.push(e);
             let defaults = utils::config::SherlockConfig::default();
-            loader::Loader::apply_flags(&sherlock_flags, defaults)
+            SherlockConfig::apply_flags(&sherlock_flags, defaults)
         },
         |(app_config, n)| {
             non_breaking.extend(n);
