@@ -18,6 +18,8 @@ use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
     Launcher, LauncherType,
 };
+use crate::utils::errors::SherlockError;
+use crate::utils::errors::SherlockErrorType;
 
 use app_launcher::App;
 use bulk_text_launcher::BulkText;
@@ -27,13 +29,11 @@ use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
-use super::util::parse_priority;
-use super::{
-    util::{self, SherlockError, SherlockErrorType},
-    Loader,
-};
+use super::application_loader::parse_priority;
+use super::util::AppData;
+use super::util::RawLauncher;
+use super::Loader;
 use crate::CONFIG;
-use util::{AppData, RawLauncher};
 
 impl Loader {
     pub async fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
