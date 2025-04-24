@@ -27,9 +27,11 @@ use simd_json::prelude::ArrayTrait;
 use system_cmd_launcher::SystemCommand;
 use web_launcher::Web;
 
-use super::application_loader::parse_priority;
-use super::{util, Loader};
-use crate::utils::errors::{SherlockError, SherlockErrorType};
+use super::util::parse_priority;
+use super::{
+    util::{self, SherlockError, SherlockErrorType},
+    Loader,
+};
 use crate::CONFIG;
 use util::{AppData, RawLauncher};
 
@@ -309,9 +311,7 @@ impl CounterReader {
     }
     pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
         let mut content = self.read()?;
-        if let Some(value) = content.get_mut(key) {
-            *value += 1.0;
-        };
+        *content.entry(key.to_string()).or_insert(0.0) += 1.0;
         self.write(content)?;
         Ok(())
     }
