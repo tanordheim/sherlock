@@ -1,24 +1,21 @@
-<h1 align="center" style="text-align:center;">
- Sherlock Application Launcher for Linux
-</h1>
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
     <img alt="sherlock logo" height="250" src="images/logo-light.svg">
   </picture>
+
+  [![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
   <picture>
-    <img alt="application screenshot" width="100%" style="border-radius: 10px" src="images/showcase.png">
+    <img alt="application screenshot" width="100%" style="border-radius: 10px;" src="images/showcase.png">
   </picture>
 </div>
 
-<br>
+
 Sherlock is a lightweight and efficient application launcher built with Rust and GTK4. It allows you to quickly launch your favorite applications with a user-friendly interface, providing a fast and highly-configurable way to search, launch, and track application usage..
 <br>
 
 ### Quick Links
-
 - [Documentation](https://github.com/Skxxtz/sherlock/tree/main/docs): Sherlocks documentation
 - [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki): allows you to search Wikipedia from within Sherlock using the `bulk_text` launcher.
 <br><br>
@@ -172,7 +169,7 @@ Make sure you have the following dependencies installed:
     Once the package is built, you can install it using:
 
     ```bash
-    sudo dpkg -i target/debian/sherlock-launcher_0.1.11_amd64.deb
+    sudo dpkg -i target/debian/sherlock-launcher_0.1.10_amd64.deb
     ```
 
     (Make sure to replace the filename if the version number is different.)

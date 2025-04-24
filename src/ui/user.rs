@@ -1,21 +1,21 @@
-use gio::glib::WeakRef;
 use gtk4::{
     self,
-    gdk::{self, Key},
+    gdk::{self, Key, ModifierType},
     prelude::*,
     ApplicationWindow, Builder, Entry, EventControllerKey, Justification,
 };
-
-use gtk4::{Box as HVBox, ListBox, ScrolledWindow};
+use gio::glib::{clone::Upgrade, WeakRef};
 use std::rc::Rc;
 
-use super::tiles::{util::TextViewTileBuilder, Tile};
 use super::util::*;
 use crate::g_subclasses::sherlock_row::SherlockRow;
+use gtk4::{Box as HVBox, ListBox, ScrolledWindow};
+
+use super::tiles::{util::TextViewTileBuilder, Tile};
 use crate::loader::pipe_loader::PipeData;
 
 pub fn display_pipe(
-    window: &ApplicationWindow,
+    _window: &ApplicationWindow,
     pipe_content: Vec<PipeData>,
     method: &str,
 ) -> HVBox {
@@ -23,24 +23,38 @@ pub fn display_pipe(
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
     // Get the requred object references
-    let vbox: HVBox = builder.object("vbox").unwrap();
+    let stack_page: HVBox = builder.object("vbox").unwrap();
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap();
-    let results: Rc<ListBox> = Rc::new(builder.object("result-frame").unwrap());
+    let results: ListBox = builder.object("result-frame").unwrap();
 
     let keyword = search_bar.text();
 
+    //TODO fix memory here
     let tiles = Tile::pipe_data(&pipe_content, &method, &keyword);
     tiles.into_iter().for_each(|tile| results.append(&tile));
 
     result_viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     results.focus_first();
-    search_bar.grab_focus();
 
-    change_event(&search_bar, &results, pipe_content, &method);
+    let search_bar_clone = search_bar.clone();
+    stack_page.connect_realize(move |_| {
+        search_bar_clone.grab_focus();
+    });
 
-    nav_event(window, results, result_viewport.downgrade());
-    return vbox;
+    let custom_binds = ConfKeys::new();
+    let results = results.downgrade();
+
+    change_event(&search_bar, results.clone(), pipe_content, &method);
+
+    nav_event(
+        &stack_page,
+        results.clone(),
+        search_bar.downgrade(),
+        result_viewport.downgrade(),
+        custom_binds,
+    );
+    return stack_page;
 }
 pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
@@ -56,31 +70,77 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
 }
 
 fn nav_event(
-    window: &ApplicationWindow,
-    results_ev_nav: Rc<ListBox>,
+    stack: &HVBox,
+    results: WeakRef<ListBox>,
+    search_bar: WeakRef<Entry>,
     result_viewport: WeakRef<ScrolledWindow>,
+    custom_binds: ConfKeys,
 ) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, modifiers| {
+    event_controller.connect_key_pressed(move |_, key, i, modifiers| {
         match key {
-            gdk::Key::Up => {
-                results_ev_nav.focus_prev(&result_viewport);
-            }
-            gdk::Key::Down => {
-                results_ev_nav.focus_next(&result_viewport);
+            k if Some(k) == custom_binds.prev
+                && custom_binds
+                    .prev_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results
+                    .upgrade()
+                    .map(|results| results.focus_prev(&result_viewport));
                 return true.into();
             }
-            gdk::Key::Return => {
-                if let Some(row) = results_ev_nav
-                    .selected_row()
-                    .and_downcast_ref::<SherlockRow>()
+            k if Some(k) == custom_binds.next
+                && custom_binds
+                    .next_mod
+                    .map_or(true, |m| modifiers.contains(m)) =>
+            {
+                results
+                    .upgrade()
+                    .map(|results| results.focus_next(&result_viewport));
+                return true.into();
+            }
+            gdk::Key::Up => {
+                results
+                    .upgrade()
+                    .map(|results| results.focus_prev(&result_viewport));
+            }
+            gdk::Key::Down => {
+                results
+                    .upgrade()
+                    .map(|results| results.focus_next(&result_viewport));
+                return true.into();
+            }
+            gdk::Key::BackSpace => {
+                let mut ctext = search_bar
+                    .upgrade()
+                    .map_or(String::new(), |entry| entry.text().to_string());
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
                 {
-                    row.emit_by_name::<()>("row-should-activate", &[]);
+                    search_bar.upgrade().map(|entry| entry.set_text(""));
+                    ctext.clear();
+                }
+                if ctext.is_empty() {
+                    let _ = search_bar.upgrade().map(|entry| {
+                        entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
+                    });
+                }
+                results.upgrade().map(|results| results.focus_first());
+            }
+            gdk::Key::Return => {
+                if let Some(upgr) = results.upgrade() {
+                    if let Some(row) = upgr.selected_row().and_downcast_ref::<SherlockRow>() {
+                        row.emit_by_name::<()>("row-should-activate", &[]);
+                    }
                 }
             }
             Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
-                if modifiers.contains(gdk::ModifierType::CONTROL_MASK) {
+                if custom_binds
+                    .shortcut_modifier
+                    .map_or(false, |modifier| modifiers.contains(modifier))
+                {
                     let key_index = match key {
                         Key::_1 => 1,
                         Key::_2 => 2,
@@ -89,38 +149,57 @@ fn nav_event(
                         Key::_5 => 5,
                         _ => return false.into(),
                     };
-                    execute_by_index(&*results_ev_nav, key_index);
+                    results.upgrade().map(|r| execute_by_index(&r, key_index));
+                    return true.into();
+                }
+            }
+            // Pain - solution for shift-tab since gtk handles it as an individual event
+            _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
+                let shift = Some(ModifierType::SHIFT_MASK);
+                let tab = Some(Key::Tab);
+                if custom_binds.prev_mod == shift && custom_binds.prev == tab {
+                    results
+                        .upgrade()
+                        .map(|results| results.focus_prev(&result_viewport));
+                    return true.into();
+                } else if custom_binds.next_mod == shift && custom_binds.next == tab {
+                    results
+                        .upgrade()
+                        .map(|results| results.focus_next(&result_viewport));
+                    return true.into();
                 }
             }
             _ => (),
         }
         false.into()
     });
-    window.add_controller(event_controller);
+
+    stack.add_controller(event_controller);
 }
 
 fn change_event(
     search_bar: &Entry,
-    results: &Rc<ListBox>,
+    results: WeakRef<ListBox>,
     pipe_content: Vec<PipeData>,
     method: &str,
 ) {
     //Cloning:
-    let results_ev_changed = Rc::clone(results);
     let pipe_content_clone = pipe_content.clone();
     let method = method.to_string();
 
     search_bar.connect_changed(move |search_bar| {
         let current_text = search_bar.text();
 
-        while let Some(row) = results_ev_changed.last_child() {
-            results_ev_changed.remove(&row);
-        }
-        let tiles = Tile::pipe_data(&pipe_content_clone, &method, &current_text);
-        tiles
-            .into_iter()
-            .for_each(|tile| results_ev_changed.append(&tile));
+        if let Some(results) = results.upgrade(){
+            while let Some(row) = results.last_child() {
+                results.remove(&row);
+            }
+            let tiles = Tile::pipe_data(&pipe_content_clone, &method, &current_text);
+            tiles
+                .into_iter()
+                .for_each(|tile| results.append(&tile));
 
-        results_ev_changed.focus_first();
+            results.focus_first();
+        }
     });
 }

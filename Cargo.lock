@@ -2540,7 +2540,7 @@ dependencies = [
 
 [[package]]
 name = "sherlock"
-version = "0.1.11"
+version = "0.1.10"
 dependencies = [
  "async-channel 2.3.1",
  "async-std",

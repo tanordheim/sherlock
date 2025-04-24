@@ -75,6 +75,11 @@ in {
             default = [];
             type = nullOr (listOf launcherType);
           };
+          style = mkOption {
+            description = "CSS content for Sherlock UI styling, written to 'main.css'";
+            default = "";
+            type = nullOr lines;
+          };
         };
       };
     };
@@ -98,6 +103,9 @@ in {
       })
       (mkIf (cfg.settings.launchers != null) {
         xdg.configFile."sherlock/fallback.json".text = builtins.toJSON cfg.settings.launchers;
+      })
+      (mkIf (cfg.settings.style != null) {
+        xdg.configFile."sherlock/main.css".text = cfg.settings.style;
       })
     ]))
   ]);

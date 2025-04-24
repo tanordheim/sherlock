@@ -9,6 +9,9 @@ on:
       - "**build.yml"
       - "**.flake"
       - "**.json"
+      - "**.png"
+      - "**.gif"
+      - "**.svg"
       
   pull_request:
     branches: [ "**" ]

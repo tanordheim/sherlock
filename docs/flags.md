@@ -29,6 +29,6 @@
 |--------------|----------------------|------------------------------------------------|
 | --display-raw      | Displays the piped input as a text field. Useful for term graphics. | |
 | --center | Centers the content.  | Only works with `--display-raw`|
-| --method | Specifies the method Sherlock will use to handle return presses. | |
+| --method | Specifies the method Sherlock will use to handle return presses. | Can either be `print` or `copy`|
 | --field | Selects a field as the output data.  | Only works with json formatting. |
 

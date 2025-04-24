@@ -175,7 +175,7 @@ impl ConfKeys {
         }
     }
     fn eval_key<T: AsRef<str>>(key: T) -> Option<Key> {
-        match key.as_ref() {
+        match key.as_ref().to_ascii_lowercase().as_ref() {
             "tab" => Some(Key::Tab),
             "up" => Some(Key::Up),
             "down" => Some(Key::Down),
@@ -185,6 +185,8 @@ impl ConfKeys {
             "pgdown" => Some(Key::Page_Down),
             "end" => Some(Key::End),
             "home" => Some(Key::Home),
+            // Alphabet
+            k if k.len() == 1 && k.chars().all(|c| c.is_ascii_alphabetic()) => Key::from_name(k),
             _ => None,
         }
     }

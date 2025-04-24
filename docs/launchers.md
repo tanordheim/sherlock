@@ -2,7 +2,7 @@
 
 In the Sherlock Application Launcher, each tile is associated with a specific "launcher." You can think of a launcher as a category to which tiles belong. For example, if a launcher is set to invisible, all tiles under that launcher will also be invisible.<br>
 
-Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [resources/fallback.json](https://github.com/Skxxtz/sherlock/blob/unstable/release-v0.1.10/resources/fallback.json).<br>
+Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [resources/fallback.json](https://github.com/Skxxtz/sherlock/blob/main/resources/fallback.json).<br>
 
 > **Example File:** [fallback.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json)
 <br>

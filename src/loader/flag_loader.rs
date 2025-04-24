@@ -125,7 +125,7 @@ pub fn print_help() -> Result<(), SherlockError> {
     }
 
     println!(
-        "\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/main/README.md#Flags\n\n"
+        "\n\nFor more help:\nhttps://github.com/Skxxtz/sherlock/blob/documentation/docs/flags.md\n\n"
     );
 
     Ok(())
