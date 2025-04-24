@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, env, fs, path::PathBuf, process::Command};
+use std::{
+    collections::HashSet,
+    env, fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use super::{
     errors::{SherlockError, SherlockErrorType},
@@ -23,6 +28,16 @@ pub struct SherlockFlags {
     pub time_inspect: bool,
     pub sub_menu: Option<String>,
 }
+/// # SherlockConfig
+/// Holds config section structs:
+/// - default_apps
+/// - units
+/// - debug
+/// - appearance
+/// - behavior
+/// - binds
+/// - files
+/// - pipe (internal)
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct SherlockConfig {
     #[serde(default)]
@@ -59,12 +74,15 @@ impl SherlockConfig {
     /// loc: PathBuf
     /// Pathbuf should be a directory **not** a file
     pub fn to_file(loc: PathBuf) -> Result<(), SherlockError> {
-        let create_dir = |path: PathBuf| {
-            fs::create_dir(&path).map_err(|e| SherlockError {
-                error: SherlockErrorType::DirCreateError(format!("{:?}", path)),
-                traceback: e.to_string(),
-            })
-        };
+        fn ensure_dir(path: &Path, label: &str) {
+            match std::fs::create_dir(path) {
+                Ok(_) => println!("✓ Created '{}' directory", label),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    println!("↷ Skipping '{}' — directory already exists.", label)
+                }
+                Err(e) => eprintln!("✗ Failed to create '{}' directory: {}", label, e),
+            }
+        }
 
         // create config location
         let home = home_dir()?;
@@ -83,9 +101,9 @@ impl SherlockConfig {
             traceback: e.to_string(),
         })?;
         // create subdirs
-        create_dir(path.join("icons/"))?;
-        create_dir(path.join("scripts/"))?;
-        create_dir(path.join("themes/"))?;
+        ensure_dir(&path.join("icons/"), "icons");
+        ensure_dir(&path.join("scripts/"), "scripts");
+        ensure_dir(&path.join("themes/"), "themes");
 
         // write config.toml file
         let config_path = path.join("config.toml");
@@ -94,8 +112,9 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileWriteError(config_path),
                 traceback: e.to_string(),
             })?;
+            println!("✓ Created 'config.toml'")
         } else {
-            println!("Skipping 'config.toml' since file exists already.")
+            println!("↷ Skipping 'config.toml' since file exists already.")
         }
 
         // write sherlockignore file
@@ -105,8 +124,9 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileWriteError(ignore_path),
                 traceback: e.to_string(),
             })?;
+            println!("✓ Created 'sherlockignore'")
         } else {
-            println!("Skipping 'sherlockignore' since file exists already.")
+            println!("↷ Skipping 'sherlockignore' since file exists already.")
         }
 
         // write sherlock_alias file
@@ -116,8 +136,9 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileWriteError(alias_path),
                 traceback: e.to_string(),
             })?;
+            println!("✓ Created 'sherlock_alias.json'")
         } else {
-            println!("Skipping 'sherlock_alias.json' since file exists already.")
+            println!("↷ Skipping 'sherlock_alias.json' since file exists already.")
         }
 
         // write main.css file
@@ -127,11 +148,12 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileWriteError(css_path),
                 traceback: e.to_string(),
             })?;
+            println!("✓ Created 'main.css'")
         } else {
-            println!("Skipping 'main.css' since file exists already.")
+            println!("↷ Skipping 'main.css' since file exists already.")
         }
 
-        // load default fallbacks
+        // write fallback.json file
         let fallback_path = path.join("fallback.json");
         if !fallback_path.exists() {
             // load resources
@@ -153,8 +175,9 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileWriteError(fallback_path),
                 traceback: e.to_string(),
             })?;
+            println!("✓ Created 'fallback.json'")
         } else {
-            println!("Skipping 'fallback.json' since file exists already.")
+            println!("↷ Skipping 'fallback.json' since file exists already.")
         }
 
         std::process::exit(0);
