@@ -15,6 +15,7 @@ The launcher can be of the following types:<br>
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Return, it also copies the result into the clipboard.
 - **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the URL in the default web browser. Also displays hex and rgb colors.
 - **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
+- **[Debug](#debug-launcher):** This launcher allows you to run debug commands from within Sherlock. For example clearing the cache or app count.
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
@@ -234,7 +235,39 @@ Has following fields of its own:
 7. `tag_end` / specifies what will be displayed in the end tag
 
 ---
+```
+{
+    "name": "Debug",
+        "type": "debug",
+        "alias": "debug",
+        "args": {
+            "commands": {
+                "Clear Cache": {
+                    "icon": "sherlock-process",
+                    "exec": "clear_cache",
+                    "search_string": "clear;cache;"
+                },
+                "Reset App Counts": {
+                    "icon": "sherlock-process",
+                    "exec": "reset_counts",
+                    "search_string": "reset;clear;counts;appcounts"
+                }
+            }
+        },
+        "priority": 0
+}
+```
+### Arguments (args):
+**`icon`** (optional):<br>
+Specifies the icon shown for the command.<br>
 
+**`exec`** (required):<br>
+Specifies the command that should be run.<br>
+
+### Available Debug Commands
+- `clear_cache`: Clears the files within the location set as cache.
+- `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
+---
 ## Bulk Text
 ```json
 {
