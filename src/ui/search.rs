@@ -440,7 +440,6 @@ pub fn async_calc(
     if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
-    println!("started");
     let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
