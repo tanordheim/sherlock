@@ -268,11 +268,7 @@ fn should_ignore(ignore_apps: &Vec<Pattern>, app: &str) -> bool {
     ignore_apps.iter().any(|pattern| pattern.matches(&app_name))
 }
 pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
-    if count == 0.0 {
-        priority
-    } else {
-        priority + 1.0 - count * 10f32.powi(-decimals)
-    }
+    priority + 1.0 - count * 10f32.powi(-decimals)
 }
 
 fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), SherlockError> {
