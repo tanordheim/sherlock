@@ -25,20 +25,27 @@ The launcher can be of the following types:<br>
 ## Shared Launcher Attributes
 `[UI]` - used for UI <br>
 `[FC]` - used to specify behaviour <br>
+
+### Required
+
 | Attribute   | Type | Description |
 |-------------|------|-------------|
-| `name`      | `[UI]` (optional) | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
-| `alias`     | `[FC]` (optional) | The command used to search within this category. |
-| `home`      | `[FC]` (optional) | Determines if the elements of this launcher are displayed at startup. |
-| `only_home`      | `[FC]` (optional) | Determines if the launcher should be included in searches or only be shown on startup. |
-| `type`      | `[FC]` (required) | Specifies the tile and functionality to be used for this Launcher. |
-| `args`      | `[FC]` (required) | Arguments specific to the `type`. Can be left empty. |
-| `priority`  | `[FC]` (required) | Defines the display order of launcher elements at startup. **A value of 0 means the launcher will only be shown if the `alias` is active.**|
-| `async`     | `[FC]` (optional) | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
-| `on_return`     | `[FC]` (optional) | Specifies what to do if return is pressed on the tile. |
-| `spawn_focus`     | `[FC]` (optional) | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
-| `shortcut`     | `[FC]` (optional) | Determines whether the tile should have the shortcut indicator on the side. |
+| `type`      | `[FC]` | Specifies the tile and functionality to be used for this Launcher. |
+| `args`      | `[FC]` | Arguments specific to the `type`. Can be left empty. |
+| `priority`  | `[FC]` | Defines the display order of launcher elements at startup. **A value of 0 means the launcher will only be shown if the `alias` is active.**|
 
+### Optional
+
+| Attribute   | Type | Description |
+|-------------|------|-------------|
+| `name`      | `[UI]` | The name of the category the tiles belong to. This name will appear under the app’s name. It is required but can be left empty. |
+| `alias`     | `[FC]` | The command used to search within this category. |
+| `home`      | `[FC]` | Determines if the elements of this launcher are displayed at startup. |
+| `only_home`      | `[FC]` | Determines if the launcher should be included in searches or only be shown on startup. |
+| `async`     | `[FC]` | Indicates whether the launcher should run asynchronously. This is used in `Bulk Text`. |
+| `on_return`     | `[FC]` | Specifies what to do if return is pressed on the tile. |
+| `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
+| `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
 ---
 
 ## Category Launcher
