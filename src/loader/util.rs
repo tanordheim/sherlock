@@ -1,5 +1,9 @@
-use serde::{Deserialize, Serialize};
+use serde::{
+    de::{MapAccess, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
 use std::{
+    collections::HashSet,
     hash::{Hash, Hasher},
     path::PathBuf,
 };
@@ -47,6 +51,12 @@ pub struct AppData {
     #[serde(default)]
     pub priority: f32,
 }
+impl AppData {
+    pub fn with_priority(mut self, priority: f32) -> Self {
+        self.priority = priority;
+        self
+    }
+}
 impl Eq for AppData {}
 impl Hash for AppData {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -54,6 +64,33 @@ impl Hash for AppData {
         self.exec.hash(state);
         self.desktop_file.hash(state);
     }
+}
+
+/// Custom deserializer to deserialize named json struct into a hashset instead of hashmap
+pub fn deserialize_named_appdata<'de, D>(deserializer: D) -> Result<HashSet<AppData>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct AppDataMapVisitor;
+    impl<'de> Visitor<'de> for AppDataMapVisitor {
+        type Value = HashSet<AppData>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a map of AppData keyed by 'name'")
+        }
+        fn visit_map<M>(self, mut map: M) -> Result<HashSet<AppData>, M::Error>
+        where
+            M: MapAccess<'de>,
+        {
+            let mut set = HashSet::new();
+            while let Some((key, mut value)) = map.next_entry::<String, AppData>()? {
+                value.name = key;
+                set.insert(value);
+            }
+            Ok(set)
+        }
+    }
+    deserializer.deserialize_map(AppDataMapVisitor)
 }
 
 #[derive(Deserialize, Clone, Debug)]
