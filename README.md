@@ -1,13 +1,13 @@
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="images/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="images/logo-light.svg">
-    <img alt="sherlock logo" height="250" src="images/logo-light.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg">
+    <img alt="sherlock logo" height="250" src="assets/logo-light.svg">
   </picture>
 
   [![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
   <picture>
-    <img alt="application screenshot" width="100%" style="border-radius: 10px;" src="images/showcase.png">
+    <img alt="application screenshot" width="100%" style="border-radius: 10px;" src="assets/mockup.png">
   </picture>
 </div>
 
