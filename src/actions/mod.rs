@@ -117,17 +117,17 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 match exec {
                     "show_errors" => {
-                        let _ = row.activate_action(
+                        let _result = row.activate_action(
                             "win.switch-page",
                             Some(&String::from("error-page").to_variant()),
                         );
                     }
                     "clear_cache" => {
-                        let _ = clear_cached_files();
+                        let _result = clear_cached_files();
                         eval_close(row);
                     }
                     "reset_counts" => {
-                        let _ = reset_app_counter();
+                        let _result = reset_app_counter();
                         eval_close(row);
                     }
                     _ => {}

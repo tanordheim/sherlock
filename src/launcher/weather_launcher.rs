@@ -1,3 +1,4 @@
+use nix::sys::wait::wait;
 use serde::{Deserialize, Serialize};
 use simd_json::base::{ValueAsArray, ValueAsScalar};
 use std::collections::HashSet;

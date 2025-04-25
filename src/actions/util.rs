@@ -31,6 +31,11 @@ pub fn clear_cached_files() -> Result<(), SherlockError> {
         traceback: String::from("Location: src/actions/util.rs"),
     })?;
     let home = home_dir()?;
+    // Clear sherlocks cache
+    fs::remove_dir_all(home.join(".cache/sherlock")).map_err(|e| SherlockError {
+        error: SherlockErrorType::DirRemoveError(String::from("~/.cache/sherlock")),
+        traceback: e.to_string(),
+    })?;
 
     // Clear app cache
     fs::remove_file(&config.behavior.cache).map_err(|e| SherlockError {
@@ -38,11 +43,6 @@ pub fn clear_cached_files() -> Result<(), SherlockError> {
         traceback: e.to_string(),
     })?;
 
-    // Clear sherlocks cache
-    fs::remove_dir_all(home.join(".cache/sherlock")).map_err(|e| SherlockError {
-        error: SherlockErrorType::DirRemoveError(String::from("~/.cache/sherlock")),
-        traceback: e.to_string(),
-    })?;
 
     Ok(())
 }
