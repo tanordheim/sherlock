@@ -65,25 +65,13 @@ impl SherlockErrorType {
             format!("Failed to {} file \"{}\"", action, path.to_string_lossy())
         }
         fn dir_msg(action: &str, dir: &str) -> String {
-            format!(
-                "Failed to {} dir at location \"{}\"",
-                action,
-                dir
-            )
+            format!("Failed to {} dir at location \"{}\"", action, dir)
         }
         fn resource_msg(action: &str, resource: &str) -> String {
-            format!(
-                "Failed to {} resource \"{}\"",
-                action,
-                resource
-            )
+            format!("Failed to {} resource \"{}\"", action, resource)
         }
         fn socket_msg(action: &str, socket: &str) -> String {
-            format!(
-                "Failed to {} socket at location \"{}\"",
-                action,
-                socket
-            )
+            format!("Failed to {} socket at location \"{}\"", action, socket)
         }
         let message = match self {
             // Environment
@@ -114,7 +102,7 @@ impl SherlockErrorType {
             SherlockErrorType::FlagLoadError => "Failed to load flags".into(),
 
             // Resources
-            SherlockErrorType::ResourceParseError => resource_msg("parse", "")
+            SherlockErrorType::ResourceParseError => "Failed to parse resources".into(),
             SherlockErrorType::ResourceLookupError(resource) => resource_msg("find", resource),
 
             // Display / UI
@@ -132,9 +120,7 @@ impl SherlockErrorType {
             }
 
             // DBus
-            SherlockErrorType::DBusConnectionError => {
-                "Failed to connect to system DBus".into()
-            }
+            SherlockErrorType::DBusConnectionError => "Failed to connect to system DBus".into(),
             SherlockErrorType::DBusMessageConstructError(message) => {
                 format!("Failed to construct Dbus message \"{}\"", message)
             }
@@ -149,8 +135,8 @@ impl SherlockErrorType {
 
             // Sockets
             SherlockErrorType::SocketRemoveError(socket) => socket_msg("close", socket),
-            SherlockErrorType::SocketConnectError(socket) => socket_msg("connect", socket)
-            SherlockErrorType::SocketWriteError(socket) => socket_msg("send message to", socket)
+            SherlockErrorType::SocketConnectError(socket) => socket_msg("connect", socket),
+            SherlockErrorType::SocketWriteError(socket) => socket_msg("send message to", socket),
         };
         (variant_name(self), message)
     }
