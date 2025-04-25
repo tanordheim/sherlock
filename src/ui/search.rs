@@ -612,7 +612,6 @@ pub fn populate(
     if let Some(c) = CONFIG.get() {
         let mut shortcut_index = 1;
         if let Some(frame) = results_frame.upgrade() {
-            println!("launcher: {:?}", launcher_tiles.len());
             launcher_tiles.into_iter().for_each(|widget| {
                 if animate && c.behavior.animate {
                     widget.row_item.add_css_class("animate");

@@ -95,8 +95,7 @@ impl Launcher {
         // NOTE: make a function to check for exec changes in the caching algorithm
         match &self.launcher_type {
             LauncherType::App(app) => {
-                let execs: HashSet<String> =
-                    app.apps.iter().map(|(_, v)| v.exec.to_string()).collect();
+                let execs: HashSet<String> = app.apps.iter().map(|v| v.exec.to_string()).collect();
                 Some(execs)
             }
             LauncherType::Web(web) => {
@@ -105,19 +104,13 @@ impl Launcher {
                 Some(execs)
             }
             LauncherType::SystemCommand(cmd) => {
-                let execs: HashSet<String> = cmd
-                    .commands
-                    .iter()
-                    .map(|(_, v)| v.exec.to_string())
-                    .collect();
+                let execs: HashSet<String> =
+                    cmd.commands.iter().map(|v| v.exec.to_string()).collect();
                 Some(execs)
             }
             LauncherType::CategoryLauncher(ctg) => {
-                let execs: HashSet<String> = ctg
-                    .categories
-                    .iter()
-                    .map(|(_, v)| v.exec.to_string())
-                    .collect();
+                let execs: HashSet<String> =
+                    ctg.categories.iter().map(|v| v.exec.to_string()).collect();
                 Some(execs)
             }
 

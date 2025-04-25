@@ -70,19 +70,24 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
             let launcher_type: LauncherType = match cmd.r#type.as_str() {
                 "categories" => {
                     let prio = cmd.priority;
-                    let mut categories: HashMap<String, AppData> =
+                    let categories: HashMap<String, AppData> =
                         serde_json::from_value(cmd.args["categories"].clone()).unwrap_or_default();
-                    categories.iter_mut().for_each(|(_, v)| {
-                        v.priority = match counts_clone.get(&v.exec) {
-                            Some(c) if c == &0.0 => prio,
-                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
-                            _ => prio,
-                        };
-                    });
+                    let categories: HashSet<AppData> = categories
+                        .into_iter()
+                        .map(|(k, mut v)| {
+                            v.priority = match counts_clone.get(&v.exec) {
+                                Some(c) if c == &0.0 => prio,
+                                Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                                _ => prio,
+                            };
+                            v.name = k;
+                            v
+                        })
+                        .collect();
                     LauncherType::CategoryLauncher(CategoryLauncher { categories })
                 }
                 "app_launcher" => {
-                    let mut apps: HashMap<String, AppData> = HashMap::new();
+                    let mut apps: HashSet<AppData> = HashSet::new();
                     if let Some(c) = CONFIG.get() {
                         apps = match c.behavior.caching {
                             true => Loader::load_applications(
@@ -124,15 +129,20 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                 }
                 "command" => {
                     let prio = cmd.priority;
-                    let mut commands: HashMap<String, AppData> =
+                    let commands: HashMap<String, AppData> =
                         serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();
-                    commands.iter_mut().for_each(|(_, v)| {
-                        v.priority = match counts_clone.get(&v.exec) {
-                            Some(c) if c == &0.0 => prio,
-                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
-                            _ => prio,
-                        };
-                    });
+                    let commands: HashSet<AppData> = commands
+                        .into_iter()
+                        .map(|(k, mut v)| {
+                            v.priority = match counts_clone.get(&v.exec) {
+                                Some(c) if c == &0.0 => prio,
+                                Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                                _ => prio,
+                            };
+                            v.name = k;
+                            v
+                        })
+                        .collect();
                     LauncherType::SystemCommand(SystemCommand { commands })
                 }
                 "bulk_text" => LauncherType::BulkText(BulkText {
@@ -208,15 +218,20 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                 }
                 "debug" => {
                     let prio = cmd.priority;
-                    let mut commands: HashMap<String, AppData> =
+                    let commands: HashMap<String, AppData> =
                         serde_json::from_value(cmd.args["commands"].clone()).unwrap_or_default();
-                    commands.iter_mut().for_each(|(_, v)| {
-                        v.priority = match counts_clone.get(&v.exec) {
-                            Some(c) if c == &0.0 => prio,
-                            Some(c) => parse_priority(prio, *c as f32, max_decimals),
-                            _ => prio,
-                        };
-                    });
+                    let commands: HashSet<AppData> = commands
+                        .into_iter()
+                        .map(|(k, mut v)| {
+                            v.priority = match counts_clone.get(&v.exec) {
+                                Some(c) if c == &0.0 => prio,
+                                Some(c) => parse_priority(prio, *c as f32, max_decimals),
+                                _ => prio,
+                            };
+                            v.name = k;
+                            v
+                        })
+                        .collect();
                     LauncherType::SystemCommand(SystemCommand { commands })
                 }
                 _ => LauncherType::Empty,

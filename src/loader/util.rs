@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{
+    hash::{Hash, Hasher},
+    path::PathBuf,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct RawLauncher {
@@ -32,6 +35,8 @@ fn default_true() -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AppData {
+    #[serde(default)]
+    pub name: String,
     pub icon: String,
     pub icon_class: Option<String>,
     pub exec: String,
@@ -41,6 +46,14 @@ pub struct AppData {
     pub desktop_file: Option<PathBuf>,
     #[serde(default)]
     pub priority: f32,
+}
+impl Eq for AppData {}
+impl Hash for AppData {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // Make more efficient and handle error using f32
+        self.exec.hash(state);
+        self.desktop_file.hash(state);
+    }
 }
 
 #[derive(Deserialize, Clone, Debug)]

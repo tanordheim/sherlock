@@ -1,6 +1,6 @@
 use gtk4::prelude::*;
 use levenshtein::levenshtein;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -14,11 +14,11 @@ impl Tile {
     pub fn app_tile(
         launcher: &Launcher,
         keyword: &str,
-        commands: &HashMap<String, AppData>,
+        commands: &HashSet<AppData>,
     ) -> Vec<ResultItem> {
         let mut results: Vec<ResultItem> = Vec::with_capacity(commands.len());
 
-        for (key, value) in commands.into_iter() {
+        for value in commands.into_iter() {
             if value
                 .search_string
                 .to_lowercase()
@@ -26,7 +26,7 @@ impl Tile {
             {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
-                let tile_name = key.replace("{keyword}", keyword);
+                let tile_name = value.name.replace("{keyword}", keyword);
                 builder.display_tag_start(&value.tag_start, keyword);
                 builder.display_tag_end(&value.tag_end, keyword);
 

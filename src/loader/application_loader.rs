@@ -22,7 +22,7 @@ impl Loader {
         priority: f32,
         counts: HashMap<String, f32>,
         decimals: i32,
-    ) -> Result<HashMap<String, AppData>, SherlockError> {
+    ) -> Result<HashSet<AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
             error: SherlockErrorType::ConfigError(None),
             traceback: format!(""),
@@ -75,7 +75,7 @@ impl Loader {
         };
 
         // Parellize opening of all .desktop files and parsing them into AppData
-        let apps: HashMap<String, AppData> = desktop_files
+        let apps: HashSet<AppData> = desktop_files
             .into_par_iter()
             .filter_map(|entry| {
                 let r_path = entry.to_str()?;
@@ -136,19 +136,17 @@ impl Loader {
                         let priority = parse_priority(priority, *count, decimals);
 
                         // Return the processed app data
-                        Some((
+                        Some(AppData {
                             name,
-                            AppData {
-                                icon,
-                                icon_class: None,
-                                exec,
-                                search_string,
-                                tag_start: None,
-                                tag_end: None,
-                                desktop_file: desktop_file_path,
-                                priority,
-                            },
-                        ))
+                            icon,
+                            icon_class: None,
+                            exec,
+                            search_string,
+                            tag_start: None,
+                            tag_end: None,
+                            desktop_file: desktop_file_path,
+                            priority,
+                        })
                     }
                     Err(_) => None,
                 }
@@ -158,11 +156,11 @@ impl Loader {
     }
 
     fn get_new_applications(
-        mut apps: HashMap<String, AppData>,
+        mut apps: HashSet<AppData>,
         priority: f32,
         counts: HashMap<String, f32>,
         decimals: i32,
-    ) -> Result<HashMap<String, AppData>, SherlockError> {
+    ) -> Result<HashSet<AppData>, SherlockError> {
         let system_apps = get_applications_dir();
 
         // get all desktop files
@@ -170,7 +168,7 @@ impl Loader {
 
         // remove if cached entry doesnt exist on device anympre
         let mut cached_paths = HashSet::with_capacity(apps.capacity());
-        apps.retain(|_, v| {
+        apps.retain(|v| {
             if let Some(path) = &v.desktop_file {
                 if desktop_files.contains(path) {
                     cached_paths.insert(path.clone());
@@ -193,7 +191,7 @@ impl Loader {
         return Ok(apps);
     }
 
-    fn write_cache<T: AsRef<Path>>(apps: &HashMap<String, AppData>, cache_loc: T) {
+    fn write_cache<T: AsRef<Path>>(apps: &HashSet<AppData>, cache_loc: T) {
         let path = cache_loc.as_ref();
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
@@ -213,7 +211,7 @@ impl Loader {
         priority: f32,
         counts: HashMap<String, f32>,
         decimals: i32,
-    ) -> Result<HashMap<String, AppData>, SherlockError> {
+    ) -> Result<HashSet<AppData>, SherlockError> {
         let config = CONFIG.get().ok_or_else(|| SherlockError {
             error: SherlockErrorType::ConfigError(None),
             traceback: String::new(),
@@ -228,17 +226,21 @@ impl Loader {
             || file_has_changed(&config_path, &cache_path);
 
         if !changed {
-            let cached_apps: Option<HashMap<String, AppData>> = File::open(&config.behavior.cache)
+            let cached_apps: Option<HashSet<AppData>> = File::open(&config.behavior.cache)
                 .ok()
                 .and_then(|f| simd_json::from_reader(f).ok());
 
             if let Some(mut apps) = cached_apps {
                 // apply the current counts
-                for (_, v) in apps.iter_mut() {
-                    let count = counts.get(&v.exec).unwrap_or(&0.0);
-                    let priority = parse_priority(priority, *count, decimals);
-                    v.priority = priority
-                }
+                apps = apps
+                    .drain()
+                    .map(|mut v| {
+                        let count = counts.get(&v.exec).unwrap_or(&0.0);
+                        let new_priority = parse_priority(priority, *count, decimals);
+                        v.priority = new_priority;
+                        v
+                    })
+                    .collect();
 
                 // Refresh cache in the background
                 let old_apps = apps.clone();
@@ -394,9 +396,11 @@ fn test_desktop_file_entries() {
         String::from("\ntest='false'"),
         String::from("\ntest='/opt/example'"),
         String::from("\nTest=example-app"),
-        String::from("[Desktop Entry]
+        String::from(
+            "[Desktop Entry]
                 test=/usr/bin/bssh
-        ")
+        ",
+        ),
     ];
 
     let expected_values: Vec<String> = vec![
