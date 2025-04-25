@@ -440,6 +440,7 @@ pub fn async_calc(
     if let Some(t) = current_task.borrow_mut().take() {
         t.abort();
     };
+    println!("started");
     let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
     let filtered_launchers: Vec<Launcher> = launchers
         .iter()
@@ -600,6 +601,7 @@ pub fn populate(
     if let Some(frame) = results_frame.upgrade() {
         while let Some(row) = frame.last_child() {
             frame.remove(&row);
+            row.unrealize();
         }
     }
     let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
