@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Debug, path::PathBuf};
 
 #[derive(Clone, Debug)]
 pub struct SherlockError {
@@ -55,133 +55,69 @@ pub enum SherlockErrorType {
     SocketConnectError(String),
     SocketWriteError(String),
 }
+fn variant_name<T: Debug>(e: &T) -> String {
+    let full = format!("{:?}", e);
+    full.split('(').next().unwrap_or(&full).to_string()
+}
 impl SherlockErrorType {
     pub fn get_message(&self) -> (String, String) {
-        match self {
+        let message = match self {
             // Environment
-            SherlockErrorType::EnvVarNotFoundError(var) => (
-                "EnvVarNotFoundError".to_string(),
-                format!("Failed to unpack environment variable \"{}\"", var),
-            ),
+            SherlockErrorType::EnvVarNotFoundError(var) => format!("Failed to unpack environment variable \"{}\"", var),
 
             // Filesystem - Files
-            SherlockErrorType::FileExistError(file) => (
-                "FileExistError".to_string(),
-                format!("File \"{}\" does not exist", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileReadError(file) => (
-                "FileReadError".to_string(),
-                format!("Failed to read file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileWriteError(file) => (
-                "FileWriteError".to_string(),
-                format!("Failed to write file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileParseError(file) => (
-                "FileParseError".to_string(),
-                format!("Failed to parse file \"{}\"", file.to_string_lossy()),
-            ),
-            SherlockErrorType::FileRemoveError(file) => (
-                "FileRemoveError".to_string(),
-                format!("Failed to remove file \"{}\"", file.to_string_lossy()),
-            ),
+            SherlockErrorType::FileExistError(file) => format!("File \"{}\" does not exist", file.to_string_lossy()),
+            SherlockErrorType::FileReadError(file) => format!("Failed to read file \"{}\"", file.to_string_lossy()),
+            SherlockErrorType::FileWriteError(file) => format!("Failed to write file \"{}\"", file.to_string_lossy()),
+            SherlockErrorType::FileParseError(file) => format!("Failed to parse file \"{}\"", file.to_string_lossy()),
+            SherlockErrorType::FileRemoveError(file) => format!("Failed to remove file \"{}\"", file.to_string_lossy()),
+            
 
             // Filesystem - Directories
-            SherlockErrorType::DirReadError(dir) => (
-                "DirReadError".to_string(),
-                format!("Failed to read/access dir \"{}\"", dir),
-            ),
-            SherlockErrorType::DirCreateError(dir) => (
-                "DirCreateError".to_string(),
-                format!("Failed to create parent dir \"{}\"", dir),
-            ),
-            SherlockErrorType::DirRemoveError(dir) => (
-                "DirRemoveError".to_string(),
-                format!("Failed to remove dir \"{}\"", dir),
-            ),
+            SherlockErrorType::DirReadError(dir) => format!("Failed to read/access dir \"{}\"", dir),
+            SherlockErrorType::DirCreateError(dir) => format!("Failed to create parent dir \"{}\"", dir),
+            SherlockErrorType::DirRemoveError(dir) => format!("Failed to remove dir \"{}\"", dir),
 
             // Config & Flags
             SherlockErrorType::ConfigError(val) => {
-                let message = if let Some(v) = val {
+                if let Some(v) = val {
                     format!("{}", v)
                 } else {
                     "It should never come to this".to_string()
-                };
-                ("ConfigError".to_string(), message)
+                }
             }
-            SherlockErrorType::FlagLoadError => (
-                "FlagLoadError".to_string(),
-                "Failed to load flags".to_string(),
-            ),
+            SherlockErrorType::FlagLoadError => "Failed to load flags".to_string(),
 
             // Resources
-            SherlockErrorType::ResourceParseError => (
-                "ResourceParseError".to_string(),
-                "Failed to parse resources".to_string(),
-            ),
-            SherlockErrorType::ResourceLookupError(resource) => (
-                "ResourceLookupError".to_string(),
-                format!("Failed to find resource \"{}\"", resource),
-            ),
+            SherlockErrorType::ResourceParseError => "Failed to parse resources".to_string(),
+            SherlockErrorType::ResourceLookupError(resource) => format!("Failed to find resource \"{}\"", resource),
 
             // Display / UI
-            SherlockErrorType::DisplayError => (
-                "DisplayError".to_string(),
-                "Could not connect to a display".to_string(),
-            ),
-            SherlockErrorType::ClipboardError => (
-                "ClipboardError".to_string(),
-                "Failed to get system clipboard".to_string(),
-            ),
+            SherlockErrorType::DisplayError => "Could not connect to a display".to_string(),
+            SherlockErrorType::ClipboardError => "Failed to get system clipboard".to_string(),
 
             // Regex / Parsing
-            SherlockErrorType::RegexError(key) => (
-                "RegexError".to_string(),
-                format!("Failed to compile the regular expression for \"{}\"", key),
-            ),
+            SherlockErrorType::RegexError(key) => format!("Failed to compile the regular expression for \"{}\"", key),
 
             // Commands
-            SherlockErrorType::CommandExecutionError(cmd) => (
-                "CommandExecutionError".to_string(),
-                format!("Failed to execute command \"{}\"", cmd),
-            ),
+            SherlockErrorType::CommandExecutionError(cmd) => format!("Failed to execute command \"{}\"", cmd),
 
             // DBus
-            SherlockErrorType::DBusConnectionError => (
-                "DBusConnectionError".to_string(),
-                "Failed to connect to system DBus".to_string(),
-            ),
-            SherlockErrorType::DBusMessageConstructError(message) => (
-                "DBusMessageConstructError".to_string(),
-                format!("Failed to construct Dbus message \"{}\"", message),
-            ),
-            SherlockErrorType::DBusMessageSendError(message) => (
-                "DBusMessageSendError".to_string(),
-                format!("Failed to send Dbus message \"{}\"", message),
-            ),
+            SherlockErrorType::DBusConnectionError => "Failed to connect to system DBus".to_string(),
+            SherlockErrorType::DBusMessageConstructError(message) => format!("Failed to construct Dbus message \"{}\"", message),
+            SherlockErrorType::DBusMessageSendError(message) => format!("Failed to send Dbus message \"{}\"", message),
 
             // Networking
-            SherlockErrorType::HttpRequestError(resource) => (
-                "HttpRequestError".to_string(),
-                format!("Failed to get requested source \"{}\"", resource),
-            ),
+            SherlockErrorType::HttpRequestError(resource) => format!("Failed to get requested source \"{}\"", resource),
 
             // Sockets
-            SherlockErrorType::SocketRemoveError(socket) => (
-                "SocketRemoveError".to_string(),
-                format!("Failed to close socket at location \"{}\"", socket),
+            SherlockErrorType::SocketRemoveError(socket) => format!("Failed to close socket at location \"{}\"", socket),
+            SherlockErrorType::SocketConnectError(socket) => format!("Failed to connect to socket at location \"{}\"", socket),
+            SherlockErrorType::SocketWriteError(socket) => format!(
+                "Failed to send message to socket at location \"{}\"",
+                socket
             ),
-            SherlockErrorType::SocketConnectError(socket) => (
-                "SocketConnectError".to_string(),
-                format!("Failed to connect to socket at location \"{}\"", socket),
-            ),
-            SherlockErrorType::SocketWriteError(socket) => (
-                "SoecktWriteError".to_string(),
-                format!(
-                    "Failed to send message to socket at location \"{}\"",
-                    socket
-                ),
-            ),
-        }
+        };
+        (variant_name(self), message)
     }
 }
