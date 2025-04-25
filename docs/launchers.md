@@ -259,11 +259,15 @@ Has following fields of its own:
 }
 ```
 ### Arguments (args):
-**`icon`** (optional):<br>
-Specifies the icon shown for the command.<br>
-
-**`exec`** (required):<br>
-Specifies the command that should be run.<br>
+**commands** (required):<br>
+Has following fields of its own:
+1. `name field` / the name of the application (is the field where command name is the value currently)
+2. `icon` / the icon-name for the icon to display 
+3. `icon_class` / Sets the css class for the icon to style it according to your theme
+4. `exec` / the command to execute
+5. `search_string` / the string to match on search
+6. `tag_start` / specifies what will be displayed in the start tag
+7. `tag_end` / specifies what will be displayed in the end tag
 
 ### Available Debug Commands
 - `clear_cache`: Clears the files within the location set as cache.
