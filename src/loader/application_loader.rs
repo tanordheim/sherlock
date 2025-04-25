@@ -398,7 +398,7 @@ fn test_desktop_file_entries() {
         String::from("\nTest=example-app"),
         String::from(
             "[Desktop Entry]
-                test=/usr/bin/bssh
+test=/usr/bin/bssh
         ",
         ),
     ];
@@ -423,8 +423,8 @@ fn test_desktop_file_entries() {
     ];
 
     // Fixed regex pattern: simpler and correctly matching optional quotes
-    let pattern = r#"(?im)^test\s*=\s*[\'\"]?(.*?)[\'\"]?\s*$"#;
-    let re = Regex::new(pattern).expect("Failed to construct regex pattern");
+    let pattern = format!(r#"(?im)^{}\s*=\s*[\'\"]?(.*?)[\'\"]?\s*$"#, "test");
+    let re = Regex::new(&pattern).expect("Failed to construct regex pattern");
 
     // Iterate over the test cases and expected results
     test_cases
