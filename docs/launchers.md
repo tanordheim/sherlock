@@ -235,7 +235,8 @@ Has following fields of its own:
 7. `tag_end` / specifies what will be displayed in the end tag
 
 ---
-```
+## Debug Launcher
+```json
 {
     "name": "Debug",
         "type": "debug",
