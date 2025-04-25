@@ -55,12 +55,18 @@ pub enum SherlockErrorType {
     SocketConnectError(String),
     SocketWriteError(String),
 }
-fn variant_name<T: Debug>(e: &T) -> String {
-    let full = format!("{:?}", e);
-    full.split('(').next().unwrap_or(&full).into()
+impl std::fmt::Display for SherlockError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (title, message) = self.error.get_message();
+        write!(f, "SherlockError: {} - {}", title, message)
+    }
 }
 impl SherlockErrorType {
     pub fn get_message(&self) -> (String, String) {
+        fn variant_name<T: Debug>(e: &T) -> String {
+            let full = format!("{:?}", e);
+            full.split('(').next().unwrap_or(&full).into()
+        }
         fn path_msg(action: &str, path: &std::path::Path) -> String {
             format!("Failed to {} file \"{}\"", action, path.to_string_lossy())
         }
