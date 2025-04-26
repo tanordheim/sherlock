@@ -121,14 +121,17 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                             "win.switch-page",
                             Some(&String::from("error-page").to_variant()),
                         );
+                        increment("debug.show_errors");
                     }
                     "clear_cache" => {
                         let _result = clear_cached_files();
+                        increment("debug.clear_cache");
                         eval_close(row);
                     }
                     "reset_counts" => {
                         let _result = reset_app_counter();
                         eval_close(row);
+                        increment("debug.reset_counts");
                     }
                     _ => {}
                 }

@@ -292,14 +292,14 @@ fn construct_window(
                 }
                 return false;
             } else {
-                if mode.trim() != "all" {
+                if mode != "all" {
                     if only_home || mode != alias {
                         return false;
                     }
                     if current_text.is_empty() {
                         return true;
                     }
-                } else if priority == 0.0{
+                } else if priority <= 1.0{
                     return false
                 }
                 item.search()

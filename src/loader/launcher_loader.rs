@@ -222,7 +222,7 @@ fn wrapped() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
                     commands = commands
                         .into_iter()
                         .map(|c| {
-                            let count = counts_clone.get(&c.exec).copied().unwrap_or(0.0);
+                            let count = counts_clone.get(&format!("debug.{}", c.exec)).copied().unwrap_or(0.0);
                             c.with_priority(parse_priority(prio, count, max_decimals))
                         })
                         .collect();
