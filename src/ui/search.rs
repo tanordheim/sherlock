@@ -348,7 +348,6 @@ fn construct_window(
                     if current_text.is_empty() {
                         return true;
                     }
-                    return false;
                 }
                 item.search()
                     .fuzzy_match(&current_text)
@@ -628,10 +627,7 @@ fn change_event(
                 current_text.clear();
             }
             *search_query_clone.borrow_mut() = current_text.clone();
-            filter.upgrade().map(|filter| {
-                println!("test");
-                filter.changed(gtk4::FilterChange::Different)}
-            );
+            filter.upgrade().map(|filter| filter.changed(gtk4::FilterChange::Different));
         }
     });
     Some(())

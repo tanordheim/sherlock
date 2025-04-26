@@ -54,6 +54,7 @@ impl Tile {
                 ]);
 
                 builder.object.with_launcher(&launcher);
+                builder.object.set_search(value);
                 builder
                     .object
                     .connect("row-should-activate", false, move |row| {
