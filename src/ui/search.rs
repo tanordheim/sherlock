@@ -19,65 +19,6 @@ use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow
 use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
 
-
-        // let search_text = Rc::new(RefCell::new(GString::new()));
-        // let search_mode = Rc::new(RefCell::new(GString::new()));
-
-        // let sorter = CustomSorter::new({
-        //     let search_text = search_text.clone();
-
-        //     move |item_a, item_b| {
-        //         let search_text = search_text.borrow();
-
-        //         let item_a = item_a.downcast_ref::<AppEntryObject>().unwrap();
-        //         let item_b = item_b.downcast_ref::<AppEntryObject>().unwrap();
-
-        //         let mut priority_a = item_a.priority();
-        //         let mut priority_b = item_b.priority();
-
-        //         if !search_text.is_empty() {
-        //             priority_a += levenshtein(&search_text, &item_a.name()) as f32;
-        //             priority_b += levenshtein(&search_text, &item_b.name()) as f32;
-        //         }
-
-        //         priority_a.total_cmp(&priority_b).into()
-        //     }
-        // });
-
-        // let filter = CustomFilter::new({
-        //     let search_text = search_text.clone();
-        //     let search_mode = search_mode.clone();
-
-        //     move |entry| {
-        //         let item = entry.downcast_ref::<AppEntryObject>().unwrap();
-
-        //         /* item.mode() == *search_mode.borrow()
-        //         && */
-        //         item.name()
-        //             .to_ascii_lowercase()
-        //             .fuzzy_match(&*search_text.borrow().to_ascii_lowercase())
-        //     }
-        // });
-
-        // let list_store = ListStore::new::<AppEntryObject>();
-
-        // for launcher in launchers {
-        //     if let Some(apps) = launcher.get_apps() {
-        //         let launcher_name = launcher.name.as_ref().unwrap();
-
-        //         for (name, data) in apps {
-        //             list_store.append(&AppEntryObject::new(name, "", &launcher_name, data.clone()));
-        //         }
-        //     }
-        // }
-
-        // let filter_model = FilterListModel::new(Some(list_store.clone()), Some(filter.clone()));
-        // let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
-
-        // let single_selection = SingleSelection::new(Some(sorted_model));
-        // let factory = SignalListItemFactory::new();
-
-
 #[allow(dead_code)]
 struct SearchUI {
     result_viewport: WeakRef<ScrolledWindow>,
@@ -88,7 +29,8 @@ struct SearchUI {
     search_icon_holder: WeakRef<GtkBox>,
     mode_title: WeakRef<Label>,
     spinner: WeakRef<Spinner>,
-    selection: WeakRef<SingleSelection>
+    selection: WeakRef<SingleSelection>,
+    filter: WeakRef<CustomFilter>,
 }
 //     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>){
@@ -218,6 +160,7 @@ pub fn search(
 
     let custom_binds = ConfKeys::new();
     nav_event(ui.selection, ui.results.clone(), ui.search_bar.clone(), custom_binds, stack_page_ref);
+    change_event(ui.search_bar.clone(), modes, &mode, ui.filter);
 
     // change_event(
     //     ui.search_bar.clone(),
@@ -375,7 +318,6 @@ fn construct_window(
     search_icon_back.set_halign(gtk4::Align::End);
 
     let search_text = Rc::new(RefCell::new(String::from("")));
-    let search_mode = Rc::new(RefCell::new(String::from("kill")));
     let sorter = CustomSorter::new({
         let search_text = search_text.clone();
 
@@ -398,30 +340,31 @@ fn construct_window(
     });
     let filter = CustomFilter::new({
         let search_text = search_text.clone();
-        let search_mode = search_mode.clone();
-        let mode = search_mode.borrow().clone();
-        let current_text = search_text.borrow().clone();
-        let is_home = current_text.is_empty() && mode == String::from("all");
-
+        let search_mode = mode.clone();
         move |entry| {
             let item = entry.downcast_ref::<SherlockRow>().unwrap();
             let (home, only_home) = item.home();
             let alias = item.alias();
             let priority = item.priority();
+
+            let mode = search_mode.borrow().trim().to_string();
+            let current_text = search_text.borrow().clone();
+            let is_home = current_text.is_empty() && mode == "all";
+
             if is_home {
-                if home || only_home {
-                    return true
+                if (home || only_home) && priority > 0.0 {
+                    return true;
                 }
-                return false
+                return false;
             } else {
-                if mode != String::from("all"){
-                    if only_home || mode != alias{
-                        return false
+                if mode.trim() != "all" {
+                    if only_home || mode != alias {
+                        return false;
                     }
                     if current_text.is_empty() {
-                        return true
+                        return true;
                     }
-                    return false
+                    return false;
                 }
                 item.search()
                     .fuzzy_match(&current_text)
@@ -487,6 +430,7 @@ fn construct_window(
         mode_title: mode_title.downgrade(),
         spinner: spinner.downgrade(),
         selection: selection.downgrade(),
+        filter: filter.downgrade(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport.upgrade().map(|viewport| {
@@ -674,68 +618,37 @@ impl SherlockNav for SingleSelection {
     }
 }
 
-// fn change_event(
-//     search_bar: WeakRef<Entry>,
-//     modes: HashMap<String, Option<String>>,
-//     mode: &Rc<RefCell<String>>,
-//     launchers: &Vec<Launcher>,
-//     results: WeakRef<ListBox>,
-//     custom_binds: &ConfKeys,
-// ) -> Option<()> {
-//     // Setting up async capabilities
-//     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
-//     let cancel_flag = Rc::new(RefCell::new(false));
+fn change_event(
+    search_bar: WeakRef<Entry>,
+    modes: HashMap<String, Option<String>>,
+    mode: &Rc<RefCell<String>>,
+    filter: WeakRef<CustomFilter>,
+) -> Option<()> {
+    let search_bar = search_bar.upgrade()?;
+    search_bar.connect_changed({
+        let mode_clone = Rc::clone(mode);
 
-//     // vars
-//     let mod_str = custom_binds.shortcut_modifier_str.clone();
-
-//     // Setting home screen
-//     async_calc(
-//         &current_task,
-//         &launchers,
-//         &mode,
-//         String::new(),
-//         &results,
-//         &mod_str,
-//         true,
-//     );
-
-//     let search_bar = search_bar.upgrade()?;
-//     search_bar.connect_changed({
-//         let launchers_clone = launchers.clone();
-//         let mode_clone = Rc::clone(mode);
-//         let results = results.clone();
-
-//         move |search_bar| {
-//             let mut current_text = search_bar.text().to_string();
-//             if current_text.len() == 1 && current_text != "\n" {
-//                 let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
-//             } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
-//                 let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
-//             }
-//             if let Some(task) = current_task.borrow_mut().take() {
-//                 task.abort();
-//             };
-//             *cancel_flag.borrow_mut() = true;
-//             let trimmed = current_text.trim();
-//             if !trimmed.is_empty() && modes.contains_key(&current_text) {
-//                 // Logic to apply modes
-//                 let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
-//                 current_text.clear();
-//             }
-//             async_calc(
-//                 &current_task,
-//                 &launchers_clone,
-//                 &mode_clone,
-//                 current_text,
-//                 &results,
-//                 &mod_str,
-//                 false,
-//             );
-//         }
-//     });
-//     Some(())
-// }
+        move |search_bar| {
+            let mut current_text = search_bar.text().to_string();
+            if current_text.len() == 1 && current_text != "\n" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
+            } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
+                let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+            }
+            let trimmed = current_text.trim();
+            if !trimmed.is_empty() && modes.contains_key(&current_text) {
+                // Logic to apply modes
+                let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+                current_text.clear();
+            }
+            filter.upgrade().map(|filter| {
+                println!("test");
+                filter.changed(gtk4::FilterChange::Different)}
+            );
+        }
+    });
+    Some(())
+}
 
 // pub fn async_calc(
 //     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
