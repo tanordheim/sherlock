@@ -1,3 +1,4 @@
+use chrono::format::Numeric;
 use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
@@ -355,21 +356,16 @@ fn nav_event(
                     }
                 }
             }
-            Key::_1 | Key::_2 | Key::_3 | Key::_4 | Key::_5 => {
+            _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
                 if custom_binds
                     .shortcut_modifier
                     .map_or(false, |modifier| modifiers.contains(modifier))
                 {
-                    let key_index = match key {
-                        Key::_1 => 1,
-                        Key::_2 => 2,
-                        Key::_3 => 3,
-                        Key::_4 => 4,
-                        Key::_5 => 5,
-                        _ => return false.into(),
-                    };
-                    selection.upgrade().map(|r| r.execute_by_index(key_index as u32));
-                    return true.into();
+                    if let Some(index) = key.name().and_then(|name| name.parse::<u32>().ok()){
+                        println!("{}", index);
+                        selection.upgrade().map(|r| r.execute_by_index(index));
+                        return true.into();
+                    }
                 }
             }
             // Pain - solution for shift-tab since gtk handles it as an individual event
@@ -440,8 +436,8 @@ impl SherlockNav for SingleSelection {
     fn execute_by_index(&self, index: u32) {
         if index < self.n_items(){
             self.set_selected(index);
-            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
-
+            if let Some(row) = self.selected_item().and_downcast::<SherlockRow>(){
+                row.emit_by_name::<()>("row-should-activate", &[]);
             }
         }
     }
