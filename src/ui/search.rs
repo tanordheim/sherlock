@@ -142,7 +142,7 @@ pub fn search(
     stack_page_ref: &Rc<RefCell<String>>,
 ) -> GtkBox {
     // Initialize the view to show all apps
-    let (mode, modes, stack_page, ui) = construct_window(&launchers);
+    let (search_query, mode, modes, stack_page, ui) = construct_window(&launchers);
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
@@ -160,24 +160,7 @@ pub fn search(
 
     let custom_binds = ConfKeys::new();
     nav_event(ui.selection, ui.results.clone(), ui.search_bar.clone(), custom_binds, stack_page_ref);
-    change_event(ui.search_bar.clone(), modes, &mode, ui.filter);
-
-    // change_event(
-    //     ui.search_bar.clone(),
-    //     modes,
-    //     &mode,
-    //     &launchers,
-    //     ui.results.clone(),
-    //     &custom_binds,
-    // );
-    // nav_event(
-    //     &stack_page,
-    //     ui.results.clone(),
-    //     ui.search_bar.clone(),
-    //     ui.result_viewport.clone(),
-    //     custom_binds,
-    //     stack_page_ref,
-    // );
+    change_event(ui.search_bar.clone(), modes, &mode, ui.filter, &search_query);
 
     // Improved mode selection
     let search_bar = ui.search_bar.clone();
@@ -280,6 +263,7 @@ fn construct_window(
     launchers: &Vec<Launcher>,
 ) -> (
     Rc<RefCell<String>>,
+    Rc<RefCell<String>>,
     HashMap<String, Option<String>>,
     GtkBox,
     SearchUI,
@@ -290,6 +274,7 @@ fn construct_window(
         .and_then(|c| c.behavior.sub_menu.as_deref())
         .unwrap_or("all");
     let mode = Rc::new(RefCell::new(original_mode.to_string()));
+    let search_text = Rc::new(RefCell::new(String::from("")));
     let modes: HashMap<String, Option<String>> = launchers
         .iter()
         .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))
@@ -317,7 +302,6 @@ fn construct_window(
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
 
-    let search_text = Rc::new(RefCell::new(String::from("")));
     let sorter = CustomSorter::new({
         let search_text = search_text.clone();
 
@@ -443,7 +427,7 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (mode, modes, vbox, ui)
+    (search_text, mode, modes, vbox, ui)
 }
 
 fn nav_event(
@@ -623,10 +607,12 @@ fn change_event(
     modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     filter: WeakRef<CustomFilter>,
+    search_query: &Rc<RefCell<String>>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
         let mode_clone = Rc::clone(mode);
+        let search_query_clone = Rc::clone(search_query);
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
@@ -641,6 +627,7 @@ fn change_event(
                 let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
                 current_text.clear();
             }
+            *search_query_clone.borrow_mut() = current_text.clone();
             filter.upgrade().map(|filter| {
                 println!("test");
                 filter.changed(gtk4::FilterChange::Different)}
