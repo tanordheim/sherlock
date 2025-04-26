@@ -46,9 +46,8 @@ impl Tile {
 
         let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
         let attrs_clone = attrs.clone();
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
         builder.object.add_css_class("bulk-text");
+        builder.object.with_launcher(&launcher);
         builder
             .object
             .connect("row-should-activate", false, move |row| {

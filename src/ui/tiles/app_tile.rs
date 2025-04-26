@@ -56,8 +56,9 @@ impl Tile {
                 let attrs =
                     get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
 
-                builder.object.set_spawn_focus(launcher.spawn_focus);
-                builder.object.set_shortcut(launcher.shortcut);
+                builder.object.set_search(&value.search_string);
+                builder.object.set_priority(value.priority);
+                builder.object.with_launcher(launcher);
                 builder
                     .object
                     .connect("row-should-activate", false, move |row| {

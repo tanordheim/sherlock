@@ -250,8 +250,8 @@ impl SherlockSearch for String {
         Self: AsRef<str>,
         T: AsRef<str>,
     {
-        let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
-        let concat_str: String = self.chars().filter(|s| char_pattern.contains(s)).collect();
+        let char_pattern: HashSet<char> = substring.as_ref().to_lowercase().chars().collect();
+        let concat_str: String = self.to_lowercase().chars().filter(|s| char_pattern.contains(s)).collect();
         concat_str.contains(substring.as_ref())
     }
 }

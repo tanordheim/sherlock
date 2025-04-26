@@ -4,7 +4,7 @@ use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
 use once_cell::unsync::OnceCell;
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::sync::OnceLock;
 
 // SHERLOCK ROW
@@ -14,6 +14,11 @@ pub struct SherlockRow {
     pub spawn_focus: Cell<bool>,
     pub shortcut: Cell<bool>,
     pub gesture: OnceCell<GestureClick>,
+    pub priority: Cell<f32>,
+    pub search: RefCell<String>,
+    pub alias: RefCell<String>,
+    pub home: Cell<bool>,
+    pub only_home: Cell<bool>,
 }
 
 // The central trait for subclassing a GObject

@@ -51,8 +51,7 @@ impl Tile {
             attrs.insert(String::from("next_content"), next.to_string());
         }
 
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.with_launcher(&launcher);
         builder
             .object
             .connect("row-should-activate", false, move |row| {

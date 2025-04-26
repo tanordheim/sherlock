@@ -2,20 +2,80 @@ use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, EventControllerKey, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, Spinner, StringFilterMatchMode
+    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner, StringFilterMatchMode
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
+use levenshtein::levenshtein;
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::util::AsyncLauncherTile;
+use super::tiles::util::{AsyncLauncherTile, SherlockSearch};
 use super::util::*;
 use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
+
+
+        // let search_text = Rc::new(RefCell::new(GString::new()));
+        // let search_mode = Rc::new(RefCell::new(GString::new()));
+
+        // let sorter = CustomSorter::new({
+        //     let search_text = search_text.clone();
+
+        //     move |item_a, item_b| {
+        //         let search_text = search_text.borrow();
+
+        //         let item_a = item_a.downcast_ref::<AppEntryObject>().unwrap();
+        //         let item_b = item_b.downcast_ref::<AppEntryObject>().unwrap();
+
+        //         let mut priority_a = item_a.priority();
+        //         let mut priority_b = item_b.priority();
+
+        //         if !search_text.is_empty() {
+        //             priority_a += levenshtein(&search_text, &item_a.name()) as f32;
+        //             priority_b += levenshtein(&search_text, &item_b.name()) as f32;
+        //         }
+
+        //         priority_a.total_cmp(&priority_b).into()
+        //     }
+        // });
+
+        // let filter = CustomFilter::new({
+        //     let search_text = search_text.clone();
+        //     let search_mode = search_mode.clone();
+
+        //     move |entry| {
+        //         let item = entry.downcast_ref::<AppEntryObject>().unwrap();
+
+        //         /* item.mode() == *search_mode.borrow()
+        //         && */
+        //         item.name()
+        //             .to_ascii_lowercase()
+        //             .fuzzy_match(&*search_text.borrow().to_ascii_lowercase())
+        //     }
+        // });
+
+        // let list_store = ListStore::new::<AppEntryObject>();
+
+        // for launcher in launchers {
+        //     if let Some(apps) = launcher.get_apps() {
+        //         let launcher_name = launcher.name.as_ref().unwrap();
+
+        //         for (name, data) in apps {
+        //             list_store.append(&AppEntryObject::new(name, "", &launcher_name, data.clone()));
+        //         }
+        //     }
+        // }
+
+        // let filter_model = FilterListModel::new(Some(list_store.clone()), Some(filter.clone()));
+        // let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
+
+        // let single_selection = SingleSelection::new(Some(sorted_model));
+        // let factory = SignalListItemFactory::new();
+
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -313,7 +373,58 @@ fn construct_window(
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
 
+    let search_text = Rc::new(RefCell::new(String::from("")));
+    let search_mode = Rc::new(RefCell::new(String::from("all")));
+    let sorter = CustomSorter::new({
+        let search_text = search_text.clone();
+
+        move |item_a, item_b| {
+            let search_text = search_text.borrow();
+
+            let item_a = item_a.downcast_ref::<SherlockRow>().unwrap();
+            let item_b = item_b.downcast_ref::<SherlockRow>().unwrap();
+
+            let mut priority_a = item_a.priority();
+            let mut priority_b = item_b.priority();
+
+            if !search_text.is_empty() {
+                priority_a += levenshtein(&search_text, &item_a.search()) as f32;
+                priority_b += levenshtein(&search_text, &item_b.search()) as f32;
+            }
+
+            priority_a.total_cmp(&priority_b).into()
+        }
+    });
+    let filter = CustomFilter::new({
+        let search_text = search_text.clone();
+        let search_mode = search_mode.clone();
+        let mode = search_mode.borrow().clone();
+        let current_text = search_text.borrow().clone();
+        let is_home = current_text.is_empty() && mode == String::from("all");
+
+        move |entry| {
+            let item = entry.downcast_ref::<SherlockRow>().unwrap();
+            let (home, only_home) = item.home();
+            let alias = item.alias();
+            let priority = item.priority();
+            if is_home {
+                if home || only_home {
+                    return true
+                }
+                return false
+            } else {
+                if only_home {
+                    return false
+                }
+                item.search()
+                    .fuzzy_match(&current_text)
+            }
+        }
+    });
     let model = ListStore::new::<SherlockRow>();
+    let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
+    let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
+    let selection = SingleSelection::new(Some(sorted_model));
     let factory = SignalListItemFactory::new();
 
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
@@ -332,7 +443,6 @@ fn construct_window(
     for item in patches.iter(){
         model.append(&item.row_item);
     }
-    let selection = SingleSelection::new(Some(model));
     results.set_model(Some(&selection));
 
     factory.connect_bind(|_, item| {

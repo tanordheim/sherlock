@@ -10,8 +10,7 @@ impl Tile {
     pub fn weather_tile_loader(launcher: Launcher) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = WeatherTileBuilder::new("/dev/skxxtz/sherlock/ui/weather_tile.ui");
         builder.object.add_css_class("weather-tile");
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.with_launcher(&launcher);
 
         // Add attrs and implement double click capabilities
         let attrs: HashMap<String, String> = vec![("method", &launcher.method)]

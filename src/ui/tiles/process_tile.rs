@@ -53,8 +53,7 @@ impl Tile {
                     ("child-pid", &child),
                 ]);
 
-                builder.object.set_spawn_focus(launcher.spawn_focus);
-                builder.object.set_shortcut(launcher.shortcut);
+                builder.object.with_launcher(&launcher);
                 builder
                     .object
                     .connect("row-should-activate", false, move |row| {
