@@ -48,7 +48,8 @@ impl Tile {
         if let Some(image_buf) =
             image_buf.scale_simple(30, 30, gdk::gdk_pixbuf::InterpType::Nearest)
         {
-            let image = Image::from_pixbuf(Some(&image_buf));
+            let texture = gtk4::gdk::Texture::for_pixbuf(&image_buf);
+            let image = Image::from_paintable(Some(&texture));
             overlay.set_child(Some(&image));
             image.set_widget_name("placeholder-icon");
             image.set_pixel_size(50);

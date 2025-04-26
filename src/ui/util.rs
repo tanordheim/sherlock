@@ -1,28 +1,7 @@
-use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::glib::WeakRef;
-use gtk4::gdk::{Key, ModifierType, Rectangle};
-use gtk4::{prelude::*, Box as HVBox, Label, ListBox, ListBoxRow, ScrolledWindow};
+use gtk4::gdk::{Key, ModifierType};
+use gtk4::{prelude::*, Box as HVBox, Label};
 
-use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::CONFIG;
-
-pub fn execute_by_index(results: &ListBox, index: i32) {
-    let mut child_counter = 1;
-    for child in &results.observe_children() {
-        if let Some(child) = child.ok() {
-            if let Some(row) = child.downcast_ref::<SherlockRow>() {
-                if row.imp().shortcut.get() {
-                    if child_counter == index {
-                        row.emit_by_name::<()>("row-should-activate", &[]);
-                        return;
-                    } else {
-                        child_counter += 1
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 pub trait ShortCut {

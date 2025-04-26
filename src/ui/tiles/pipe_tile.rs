@@ -49,7 +49,8 @@ impl Tile {
                 if let Some(bin) = item.binary.clone() {
                     let cursor = Cursor::new(bin);
                     if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
-                        let image = Image::from_pixbuf(Some(&pixbuf));
+                        let texture = gtk4::gdk::Texture::for_pixbuf(&pixbuf);
+                        let image = Image::from_paintable(Some(&texture));
                         builder
                             .icon_holder
                             .upgrade()

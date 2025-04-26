@@ -1,4 +1,3 @@
-use chrono::format::Numeric;
 use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
@@ -6,17 +5,16 @@ use gtk4::{
     self, gdk::{self, Key, ModifierType}, prelude::*, Builder, EventControllerKey, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, Spinner
 };
 use gtk4::{glib, ApplicationWindow, Entry};
-use gtk4::{Box as GtkBox, Label, ListBox, ScrolledWindow};
+use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::util::{AsyncLauncherTile, SherlockSearch};
+use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
-use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::{construct_tiles, Launcher, ResultItem};
+use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
 
 #[allow(dead_code)]
@@ -215,9 +213,18 @@ fn construct_window(
     let model = ListStore::new::<SherlockRow>();
     let factory = SignalListItemFactory::new();
 
-    let patches: Vec<ResultItem> = launchers.iter().map(|launcher| launcher.get_patch("")).flatten().collect();
+    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
+        .clone()
+        .into_iter()
+        .partition(|launcher| launcher.r#async);
+    let mut patches: Vec<ResultItem> = non_async_launchers.into_iter().map(|launcher| launcher.get_patch("")).flatten().collect();
+    let mut tile_updates: Vec<AsyncLauncherTile> = async_launchers.into_iter().filter_map(|launcher| launcher.get_loader_widget("")).map(|(update, tile)| {
+        patches.push(tile);
+        update
+    }).collect();
+    patches.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
 
-    for item in patches.iter().take(20){
+    for item in patches.iter(){
         model.append(&item.row_item);
     }
     let selection = SingleSelection::new(Some(model));
@@ -608,7 +615,8 @@ impl SherlockNav for SingleSelection {
 //                                             overlay.add_css_class("image-replace-overlay")
 //                                         });
 //                                     }
-//                                     let gtk_image = Image::from_pixbuf(Some(&image));
+//                                     let texture = gkt4::gdk::Texture::for_pixbuf(&image);
+//                                     let gtk_image = Image::for_paintable(Some(&texture));
 //                                     gtk_image.set_widget_name("album-cover");
 //                                     gtk_image.set_pixel_size(50);
 //                                     overlay
