@@ -6,12 +6,13 @@ use gtk4::glib;
 
 glib::wrapper! {
     pub struct SherlockRow(ObjectSubclass<imp::SherlockRow>)
-        @extends gtk4::ListBoxRow, gtk4::Widget;
+        @extends gtk4::Box, gtk4::Widget;
 }
 
 impl SherlockRow {
     pub fn new() -> Self {
         Object::builder().build()
+
     }
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);

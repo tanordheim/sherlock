@@ -71,7 +71,7 @@ impl EventTileBuilder {
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
-        object.set_child(Some(&holder));
+        object.append(&holder);
         object.set_css_classes(&vec!["tile"]);
 
         let title: Label = builder.object("title-label").unwrap_or_default();
@@ -125,7 +125,7 @@ impl TileBuilder {
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
-        object.set_child(Some(&holder));
+        object.append(&holder);
         object.set_css_classes(&vec!["tile"]);
 
         // Specific to 'bulk_text_tile' and 'error_tile'
@@ -223,7 +223,7 @@ impl WeatherTileBuilder {
         spinner.set_valign(gtk4::Align::Center);
         overlay.add_overlay(&spinner);
 
-        object.set_child(Some(&overlay));
+        object.append(&overlay);
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {

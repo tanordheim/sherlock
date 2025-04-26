@@ -63,6 +63,7 @@ overshoot:backdrop {
 #overlay spinner{
     color: hsl(var(--text));
 }
+row:selected,
 #overlay * {
     background: transparent;
 }
@@ -72,6 +73,7 @@ overshoot:backdrop {
 
 scrolledwindow>viewport,
 scrolledwindow>viewport>*,
+listview,
 window {
     background: hsl(var(--background));
 }
@@ -236,7 +238,7 @@ image {
     padding: 0px;
 }
 
-.tile:selected {
+row:selected .tile{
     transition: 0.1s ease;
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);

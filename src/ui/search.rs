@@ -1,10 +1,8 @@
 use futures::future::join_all;
-use gio::{glib::WeakRef, ActionEntry};
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
+use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
 use gtk4::{
-    self,
-    gdk::{self, Key, ModifierType},
-    prelude::*,
-    Builder, EventControllerKey, Image, Overlay, Spinner,
+    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, EventControllerKey, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, Spinner
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ListBox, ScrolledWindow};
@@ -12,7 +10,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::util::AsyncLauncherTile;
+use super::tiles::util::{AsyncLauncherTile, SherlockSearch};
 use super::util::*;
 use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -22,13 +20,14 @@ use crate::CONFIG;
 #[allow(dead_code)]
 struct SearchUI {
     result_viewport: WeakRef<ScrolledWindow>,
-    results: WeakRef<ListBox>,
+    results: WeakRef<ListView>,
     // will be later used for split view to display information about apps/commands
     preview_box: WeakRef<GtkBox>,
     search_bar: WeakRef<Entry>,
     search_icon_holder: WeakRef<GtkBox>,
     mode_title: WeakRef<Label>,
     spinner: WeakRef<Spinner>,
+    selection: WeakRef<SingleSelection>
 }
 
 pub fn search(
@@ -54,23 +53,24 @@ pub fn search(
     });
 
     let custom_binds = ConfKeys::new();
+    nav_event(ui.selection, ui.results.clone(), ui.search_bar.clone(), custom_binds, stack_page_ref);
 
-    change_event(
-        ui.search_bar.clone(),
-        modes,
-        &mode,
-        &launchers,
-        ui.results.clone(),
-        &custom_binds,
-    );
-    nav_event(
-        &stack_page,
-        ui.results.clone(),
-        ui.search_bar.clone(),
-        ui.result_viewport.clone(),
-        custom_binds,
-        stack_page_ref,
-    );
+    // change_event(
+    //     ui.search_bar.clone(),
+    //     modes,
+    //     &mode,
+    //     &launchers,
+    //     ui.results.clone(),
+    //     &custom_binds,
+    // );
+    // nav_event(
+    //     &stack_page,
+    //     ui.results.clone(),
+    //     ui.search_bar.clone(),
+    //     ui.result_viewport.clone(),
+    //     custom_binds,
+    //     stack_page_ref,
+    // );
 
     // Improved mode selection
     let search_bar = ui.search_bar.clone();
@@ -194,7 +194,8 @@ fn construct_window(
 
     // Get the required object references
     let vbox: GtkBox = builder.object("vbox").unwrap();
-    let results: ListBox = builder.object("result-frame").unwrap();
+    let results: ListView = builder.object("result-frame").unwrap();
+    results.set_focusable(false);
 
     let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
@@ -208,6 +209,26 @@ fn construct_window(
     search_icon_back.set_icon_name(Some("go-previous-symbolic"));
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
+
+    let model = ListStore::new::<SherlockRow>();
+    let factory = SignalListItemFactory::new();
+
+    for _ in 0..20 {
+        let row = SherlockRow::new();
+        model.append(&row);
+    }
+    let selection = SingleSelection::new(Some(model));
+    results.set_model(Some(&selection));
+
+    factory.connect_bind(|_, item| {
+        let item = item.downcast_ref::<gtk4::ListItem>().expect("Item mut be a ListItem");
+        let label = Label::new(Some("test"));
+        let container = SherlockRow::new();
+        container.append(&label);
+        container.add_css_class("tile");
+        item.set_child(Some(&container));
+    });
+    results.set_factory(Some(&factory));
 
     let overlay = Overlay::new();
     overlay.set_child(Some(&search_icon));
@@ -236,6 +257,7 @@ fn construct_window(
         search_icon_holder: search_icon_holder.downgrade(),
         mode_title: mode_title.downgrade(),
         spinner: spinner.downgrade(),
+        selection: selection.downgrade(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport.upgrade().map(|viewport| {
@@ -252,17 +274,18 @@ fn construct_window(
 }
 
 fn nav_event(
-    stack: &GtkBox,
-    results: WeakRef<ListBox>,
+    selection: WeakRef<SingleSelection>,
+    results: WeakRef<ListView>,
     search_bar: WeakRef<Entry>,
-    result_viewport: WeakRef<ScrolledWindow>,
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, i, modifiers| {
+    event_controller.connect_key_pressed({
+        let search_bar = search_bar.clone();
+        move |_, key, i, modifiers| {
         if stack_page.borrow().as_str() != "search-page" {
             return false.into();
         };
@@ -272,30 +295,39 @@ fn nav_event(
                     .prev_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results
+                let new_index = selection
                     .upgrade()
-                    .map(|results| results.focus_prev(&result_viewport));
-                return true.into();
+                    .map_or(0, |results| results.focus_prev());
+                results.upgrade()
+                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                return true.into()
             }
             k if Some(k) == custom_binds.next
                 && custom_binds
                     .next_mod
                     .map_or(true, |m| modifiers.contains(m)) =>
             {
-                results
+                let new_index = selection
                     .upgrade()
-                    .map(|results| results.focus_next(&result_viewport));
-                return true.into();
+                    .map_or(0, |results| results.focus_next());
+                results.upgrade()
+                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                return true.into()
             }
             gdk::Key::Up => {
-                results
+                let new_index = selection
                     .upgrade()
-                    .map(|results| results.focus_prev(&result_viewport));
+                    .map_or(0, |results| results.focus_prev());
+                results.upgrade()
+                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                return true.into()
             }
             gdk::Key::Down => {
-                results
+                let new_index = selection
                     .upgrade()
-                    .map(|results| results.focus_next(&result_viewport));
+                    .map_or(0, |results| results.focus_next());
+                results.upgrade()
+                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
                 return true.into();
             }
             gdk::Key::BackSpace => {
@@ -314,11 +346,11 @@ fn nav_event(
                         entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
                     });
                 }
-                results.upgrade().map(|results| results.focus_first());
+                selection.upgrade().map(|results| results.focus_first());
             }
             gdk::Key::Return => {
-                if let Some(upgr) = results.upgrade() {
-                    if let Some(row) = upgr.selected_row().and_downcast_ref::<SherlockRow>() {
+                if let Some(upgr) = selection.upgrade() {
+                    if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>(){
                         row.emit_by_name::<()>("row-should-activate", &[]);
                     }
                 }
@@ -336,7 +368,7 @@ fn nav_event(
                         Key::_5 => 5,
                         _ => return false.into(),
                     };
-                    results.upgrade().map(|r| execute_by_index(&r, key_index));
+                    selection.upgrade().map(|r| r.execute_by_index(key_index as u32));
                     return true.into();
                 }
             }
@@ -345,286 +377,337 @@ fn nav_event(
                 let shift = Some(ModifierType::SHIFT_MASK);
                 let tab = Some(Key::Tab);
                 if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                    results
+                    let new_index = selection
                         .upgrade()
-                        .map(|results| results.focus_prev(&result_viewport));
+                        .map_or(0, |results| results.focus_prev());
+                    results.upgrade()
+                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    
                     return true.into();
                 } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                    results
+                    let new_index = selection
                         .upgrade()
-                        .map(|results| results.focus_next(&result_viewport));
+                        .map_or(0, |results| results.focus_next());
+                    results.upgrade()
+                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
                     return true.into();
                 }
             }
             _ => (),
         }
         false.into()
-    });
+    }});
 
-    stack.add_controller(event_controller);
+    search_bar.upgrade().map(|entry| entry.add_controller(event_controller));
 }
-
-fn change_event(
-    search_bar: WeakRef<Entry>,
-    modes: HashMap<String, Option<String>>,
-    mode: &Rc<RefCell<String>>,
-    launchers: &Vec<Launcher>,
-    results: WeakRef<ListBox>,
-    custom_binds: &ConfKeys,
-) -> Option<()> {
-    // Setting up async capabilities
-    let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
-    let cancel_flag = Rc::new(RefCell::new(false));
-
-    // vars
-    let mod_str = custom_binds.shortcut_modifier_str.clone();
-
-    // Setting home screen
-    async_calc(
-        &current_task,
-        &launchers,
-        &mode,
-        String::new(),
-        &results,
-        &mod_str,
-        true,
-    );
-
-    let search_bar = search_bar.upgrade()?;
-    search_bar.connect_changed({
-        let launchers_clone = launchers.clone();
-        let mode_clone = Rc::clone(mode);
-        let results = results.clone();
-
-        move |search_bar| {
-            let mut current_text = search_bar.text().to_string();
-            if current_text.len() == 1 && current_text != "\n" {
-                let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
-            } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
-                let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
-            }
-            if let Some(task) = current_task.borrow_mut().take() {
-                task.abort();
-            };
-            *cancel_flag.borrow_mut() = true;
-            let trimmed = current_text.trim();
-            if !trimmed.is_empty() && modes.contains_key(&current_text) {
-                // Logic to apply modes
-                let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
-                current_text.clear();
-            }
-            async_calc(
-                &current_task,
-                &launchers_clone,
-                &mode_clone,
-                current_text,
-                &results,
-                &mod_str,
-                false,
-            );
-        }
-    });
-    Some(())
+pub trait SherlockNav {
+    fn focus_next(&self)->u32 {0}
+    fn focus_prev(&self)->u32 {0}
+    fn focus_first(&self)->u32 {0}
+    fn execute_by_index(&self, index: u32) {}
 }
-
-pub fn async_calc(
-    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-    launchers: &[Launcher],
-    mode: &Rc<RefCell<String>>,
-    current_text: String,
-    results: &WeakRef<ListBox>,
-    mod_str: &str,
-    animate: bool,
-) {
-    // If task is currently running, abort it
-    if let Some(t) = current_task.borrow_mut().take() {
-        t.abort();
-    };
-    let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
-    let filtered_launchers: Vec<Launcher> = launchers
-        .iter()
-        .filter(|launcher| (is_home && launcher.home) || (!is_home && !launcher.only_home))
-        .cloned()
-        .collect();
-    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers
-        .into_iter()
-        .partition(|launcher| launcher.r#async);
-
-    // Create loader widgets
-    // TODO
-    let current_mode_ref = mode.borrow();
-    let current_mode = current_mode_ref.trim();
-
-    // extract result items to reduce cloning
-    let mut async_widgets: Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
-    let async_launchers: Vec<AsyncLauncherTile> = async_launchers
-        .into_iter()
-        .filter_map(|launcher| {
-            if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
-                || (current_mode == "all" && launcher.priority > 0)
-            {
-                launcher
-                    .get_loader_widget(&current_text)
-                    .map(|(tile, result_item)| {
-                        async_widgets.push(result_item);
-                        tile
-                    })
-            } else {
-                None
-            }
-        })
-        .collect();
-    populate(
-        &current_text,
-        &mode.borrow(),
-        &results,
-        &non_async_launchers,
-        Some(async_widgets),
-        animate,
-        mod_str,
-    );
-
-    // Gather results for asynchronous widgets
-    let task = glib::MainContext::default().spawn_local({
-        let current_task_clone = Rc::clone(current_task);
-        let results = results.clone();
-        async move {
-            // Set spinner active
-            results
-                .upgrade()
-                .map(|r| r.activate_action("win.spinner-mode", Some(&true.to_variant())));
-            // Make async tiles update concurrently
-            let futures: Vec<_> = async_launchers
-                .into_iter()
-                .map(|widget| {
-                    let current_text = current_text.clone();
-                    async move {
-                        let mut attrs = widget.attrs.clone();
-
-                        // Process text tile
-                        if let Some(opts) = &widget.text_tile {
-                            if let Some((title, body, next_content)) =
-                                widget.launcher.get_result(&current_text).await
-                            {
-                                opts.title.upgrade().map(|t| t.set_text(&title));
-                                opts.body.upgrade().map(|b| b.set_text(&body));
-                                if let Some(next_content) = next_content {
-                                    attrs.insert(
-                                        String::from("next_content"),
-                                        next_content.to_string(),
-                                    );
-                                }
-                            }
-                        }
-
-                        // Process image replacement
-                        if let Some(opts) = &widget.image_replacement {
-                            if let Some(overlay) = &opts.icon_holder_overlay {
-                                if let Some((image, was_cached)) = widget.launcher.get_image().await
-                                {
-                                    if !was_cached {
-                                        overlay.upgrade().map(|overlay| {
-                                            overlay.add_css_class("image-replace-overlay")
-                                        });
-                                    }
-                                    let gtk_image = Image::from_pixbuf(Some(&image));
-                                    gtk_image.set_widget_name("album-cover");
-                                    gtk_image.set_pixel_size(50);
-                                    overlay
-                                        .upgrade()
-                                        .map(|overlay| overlay.add_overlay(&gtk_image));
-                                }
-                            }
-                        }
-
-                        // Process weather tile
-                        if let Some(wtr) = &widget.weather_tile {
-                            if let Some((data, was_changed)) = widget.launcher.get_weather().await {
-                                let css_class = if was_changed {
-                                    "weather-animate"
-                                } else {
-                                    "weather-no-animate"
-                                };
-                                widget.row.upgrade().map(|row| {
-                                    row.add_css_class(css_class);
-                                    row.add_css_class(&data.icon);
-                                });
-                                wtr.temperature
-                                    .upgrade()
-                                    .map(|tmp| tmp.set_text(&data.temperature));
-                                wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
-                                wtr.icon
-                                    .upgrade()
-                                    .map(|ico| ico.set_icon_name(Some(&data.icon)));
-                                wtr.location
-                                    .upgrade()
-                                    .map(|loc| loc.set_text(&data.format_str));
-                            } else {
-                                widget.row.upgrade().map(|row| row.set_visible(false));
-                            }
-                        }
-
-                        // Connect row-should-activate signal
-                        widget.row.upgrade().map(|row| {
-                            row.connect("row-should-activate", false, move |row| {
-                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                execute_from_attrs(&row, &attrs);
-                                None
-                            });
-                        })
-                    }
-                })
-                .collect();
-
-            let _ = join_all(futures).await;
-            // Set spinner inactive
-            results
-                .upgrade()
-                .map(|r| r.activate_action("win.spinner-mode", Some(&false.to_variant())));
-            *current_task_clone.borrow_mut() = None;
+impl SherlockNav for SingleSelection {
+    fn focus_next(&self)->u32 {
+        let index = self.selected();
+        let new_index = index + 1;
+        if new_index < self.n_items() {
+            self.set_selected(new_index);
+            return new_index
         }
-    });
-    *current_task.borrow_mut() = Some(task);
-}
-
-pub fn populate(
-    keyword: &str,
-    mode: &str,
-    results_frame: &WeakRef<ListBox>,
-    launchers: &Vec<Launcher>,
-    async_widgets: Option<Vec<ResultItem>>,
-    animate: bool,
-    mod_str: &str,
-) {
-    // Remove all elements inside to avoid duplicates
-    if let Some(frame) = results_frame.upgrade() {
-        while let Some(row) = frame.last_child() {
-            frame.remove(&row);
-            row.unrealize();
-        }
+        index
     }
-    let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
-    if let Some(widgets) = async_widgets {
-        launcher_tiles.extend(widgets);
+    fn focus_prev(&self)->u32 {
+        let index = self.selected();
+        if index > 0{
+            self.set_selected(index - 1);
+            return index - 1
+        }
+        index
     }
+    fn focus_first(&self)->u32 {
+        let i = 0;
+        while i < self.n_items() {
+            self.set_selected(i);
+            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
+                if item.imp().spawn_focus.get(){
+            
 
-    launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-
-    if let Some(c) = CONFIG.get() {
-        let mut shortcut_index = 1;
-        if let Some(frame) = results_frame.upgrade() {
-            launcher_tiles.into_iter().for_each(|widget| {
-                if animate && c.behavior.animate {
-                    widget.row_item.add_css_class("animate");
                 }
-                if let Some(shortcut_holder) = &widget.shortcut_holder {
-                    shortcut_index += shortcut_holder
-                        .upgrade()
-                        .map_or(0, |holder| holder.apply_shortcut(shortcut_index, mod_str));
-                }
-                frame.append(&widget.row_item);
-            });
+            }
+        }
+        0
+    }
+    fn execute_by_index(&self, index: u32) {
+        if index < self.n_items(){
+            self.set_selected(index);
+            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
+
+            }
         }
     }
-    results_frame.upgrade().map(|r| r.focus_first());
 }
+
+// fn change_event(
+//     search_bar: WeakRef<Entry>,
+//     modes: HashMap<String, Option<String>>,
+//     mode: &Rc<RefCell<String>>,
+//     launchers: &Vec<Launcher>,
+//     results: WeakRef<ListBox>,
+//     custom_binds: &ConfKeys,
+// ) -> Option<()> {
+//     // Setting up async capabilities
+//     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
+//     let cancel_flag = Rc::new(RefCell::new(false));
+
+//     // vars
+//     let mod_str = custom_binds.shortcut_modifier_str.clone();
+
+//     // Setting home screen
+//     async_calc(
+//         &current_task,
+//         &launchers,
+//         &mode,
+//         String::new(),
+//         &results,
+//         &mod_str,
+//         true,
+//     );
+
+//     let search_bar = search_bar.upgrade()?;
+//     search_bar.connect_changed({
+//         let launchers_clone = launchers.clone();
+//         let mode_clone = Rc::clone(mode);
+//         let results = results.clone();
+
+//         move |search_bar| {
+//             let mut current_text = search_bar.text().to_string();
+//             if current_text.len() == 1 && current_text != "\n" {
+//                 let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
+//             } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
+//                 let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
+//             }
+//             if let Some(task) = current_task.borrow_mut().take() {
+//                 task.abort();
+//             };
+//             *cancel_flag.borrow_mut() = true;
+//             let trimmed = current_text.trim();
+//             if !trimmed.is_empty() && modes.contains_key(&current_text) {
+//                 // Logic to apply modes
+//                 let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+//                 current_text.clear();
+//             }
+//             async_calc(
+//                 &current_task,
+//                 &launchers_clone,
+//                 &mode_clone,
+//                 current_text,
+//                 &results,
+//                 &mod_str,
+//                 false,
+//             );
+//         }
+//     });
+//     Some(())
+// }
+
+// pub fn async_calc(
+//     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+//     launchers: &[Launcher],
+//     mode: &Rc<RefCell<String>>,
+//     current_text: String,
+//     results: &WeakRef<ListBox>,
+//     mod_str: &str,
+//     animate: bool,
+// ) {
+//     // If task is currently running, abort it
+//     if let Some(t) = current_task.borrow_mut().take() {
+//         t.abort();
+//     };
+//     let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
+//     let filtered_launchers: Vec<Launcher> = launchers
+//         .iter()
+//         .filter(|launcher| (is_home && launcher.home) || (!is_home && !launcher.only_home))
+//         .cloned()
+//         .collect();
+//     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers
+//         .into_iter()
+//         .partition(|launcher| launcher.r#async);
+
+//     // Create loader widgets
+//     // TODO
+//     let current_mode_ref = mode.borrow();
+//     let current_mode = current_mode_ref.trim();
+
+//     // extract result items to reduce cloning
+//     let mut async_widgets: Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
+//     let async_launchers: Vec<AsyncLauncherTile> = async_launchers
+//         .into_iter()
+//         .filter_map(|launcher| {
+//             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
+//                 || (current_mode == "all" && launcher.priority > 0)
+//             {
+//                 launcher
+//                     .get_loader_widget(&current_text)
+//                     .map(|(tile, result_item)| {
+//                         async_widgets.push(result_item);
+//                         tile
+//                     })
+//             } else {
+//                 None
+//             }
+//         })
+//         .collect();
+//     populate(
+//         &current_text,
+//         &mode.borrow(),
+//         &results,
+//         &non_async_launchers,
+//         Some(async_widgets),
+//         animate,
+//         mod_str,
+//     );
+
+//     // Gather results for asynchronous widgets
+//     let task = glib::MainContext::default().spawn_local({
+//         let current_task_clone = Rc::clone(current_task);
+//         let results = results.clone();
+//         async move {
+//             // Set spinner active
+//             results
+//                 .upgrade()
+//                 .map(|r| r.activate_action("win.spinner-mode", Some(&true.to_variant())));
+//             // Make async tiles update concurrently
+//             let futures: Vec<_> = async_launchers
+//                 .into_iter()
+//                 .map(|widget| {
+//                     let current_text = current_text.clone();
+//                     async move {
+//                         let mut attrs = widget.attrs.clone();
+
+//                         // Process text tile
+//                         if let Some(opts) = &widget.text_tile {
+//                             if let Some((title, body, next_content)) =
+//                                 widget.launcher.get_result(&current_text).await
+//                             {
+//                                 opts.title.upgrade().map(|t| t.set_text(&title));
+//                                 opts.body.upgrade().map(|b| b.set_text(&body));
+//                                 if let Some(next_content) = next_content {
+//                                     attrs.insert(
+//                                         String::from("next_content"),
+//                                         next_content.to_string(),
+//                                     );
+//                                 }
+//                             }
+//                         }
+
+//                         // Process image replacement
+//                         if let Some(opts) = &widget.image_replacement {
+//                             if let Some(overlay) = &opts.icon_holder_overlay {
+//                                 if let Some((image, was_cached)) = widget.launcher.get_image().await
+//                                 {
+//                                     if !was_cached {
+//                                         overlay.upgrade().map(|overlay| {
+//                                             overlay.add_css_class("image-replace-overlay")
+//                                         });
+//                                     }
+//                                     let gtk_image = Image::from_pixbuf(Some(&image));
+//                                     gtk_image.set_widget_name("album-cover");
+//                                     gtk_image.set_pixel_size(50);
+//                                     overlay
+//                                         .upgrade()
+//                                         .map(|overlay| overlay.add_overlay(&gtk_image));
+//                                 }
+//                             }
+//                         }
+
+//                         // Process weather tile
+//                         if let Some(wtr) = &widget.weather_tile {
+//                             if let Some((data, was_changed)) = widget.launcher.get_weather().await {
+//                                 let css_class = if was_changed {
+//                                     "weather-animate"
+//                                 } else {
+//                                     "weather-no-animate"
+//                                 };
+//                                 widget.row.upgrade().map(|row| {
+//                                     row.add_css_class(css_class);
+//                                     row.add_css_class(&data.icon);
+//                                 });
+//                                 wtr.temperature
+//                                     .upgrade()
+//                                     .map(|tmp| tmp.set_text(&data.temperature));
+//                                 wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
+//                                 wtr.icon
+//                                     .upgrade()
+//                                     .map(|ico| ico.set_icon_name(Some(&data.icon)));
+//                                 wtr.location
+//                                     .upgrade()
+//                                     .map(|loc| loc.set_text(&data.format_str));
+//                             } else {
+//                                 widget.row.upgrade().map(|row| row.set_visible(false));
+//                             }
+//                         }
+
+//                         // Connect row-should-activate signal
+//                         widget.row.upgrade().map(|row| {
+//                             row.connect("row-should-activate", false, move |row| {
+//                                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+//                                 execute_from_attrs(&row, &attrs);
+//                                 None
+//                             });
+//                         })
+//                     }
+//                 })
+//                 .collect();
+
+//             let _ = join_all(futures).await;
+//             // Set spinner inactive
+//             results
+//                 .upgrade()
+//                 .map(|r| r.activate_action("win.spinner-mode", Some(&false.to_variant())));
+//             *current_task_clone.borrow_mut() = None;
+//         }
+//     });
+//     *current_task.borrow_mut() = Some(task);
+// }
+
+// pub fn populate(
+//     keyword: &str,
+//     mode: &str,
+//     results_frame: &WeakRef<ListBox>,
+//     launchers: &Vec<Launcher>,
+//     async_widgets: Option<Vec<ResultItem>>,
+//     animate: bool,
+//     mod_str: &str,
+// ) {
+//     // Remove all elements inside to avoid duplicates
+//     if let Some(frame) = results_frame.upgrade() {
+//         while let Some(row) = frame.last_child() {
+//             frame.remove(&row);
+//             row.unrealize();
+//         }
+//     }
+//     let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
+//     if let Some(widgets) = async_widgets {
+//         launcher_tiles.extend(widgets);
+//     }
+
+//     launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
+
+//     if let Some(c) = CONFIG.get() {
+//         let mut shortcut_index = 1;
+//         if let Some(frame) = results_frame.upgrade() {
+//             launcher_tiles.into_iter().for_each(|widget| {
+//                 if animate && c.behavior.animate {
+//                     widget.row_item.add_css_class("animate");
+//                 }
+//                 if let Some(shortcut_holder) = &widget.shortcut_holder {
+//                     shortcut_index += shortcut_holder
+//                         .upgrade()
+//                         .map_or(0, |holder| holder.apply_shortcut(shortcut_index, mod_str));
+//                 }
+//                 frame.append(&widget.row_item);
+//             });
+//         }
+//     }
+//     results_frame.upgrade().map(|r| r.focus_first());
+// }

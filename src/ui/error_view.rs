@@ -30,44 +30,44 @@ pub fn errors(
         .into_iter()
         .for_each(|tile| results.append(&tile));
 
-    nav_event(&vbox, results, result_viewport.downgrade(), stack_page);
+    // nav_event(&vbox, results, result_viewport.downgrade(), stack_page);
     return vbox;
 }
-fn nav_event(
-    stack: &HVBox,
-    result_holder: ListBox,
-    result_viewport: WeakRef<ScrolledWindow>,
-    stack_page: &Rc<RefCell<String>>,
-) {
-    // Wrap the event controller in an Rc<RefCell> for shared mutability
-    let event_controller = EventControllerKey::new();
-    let stack_page = Rc::clone(&stack_page);
+// fn nav_event(
+//     stack: &HVBox,
+//     result_holder: ListBox,
+//     result_viewport: WeakRef<ScrolledWindow>,
+//     stack_page: &Rc<RefCell<String>>,
+// ) {
+//     // Wrap the event controller in an Rc<RefCell> for shared mutability
+//     let event_controller = EventControllerKey::new();
+//     let stack_page = Rc::clone(&stack_page);
 
-    event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, _| {
-        if stack_page.borrow().as_str() != "error-page" {
-            return false.into();
-        }
-        match key {
-            Key::Up => {
-                result_holder.focus_prev(&result_viewport);
-                true.into()
-            }
-            Key::Down => {
-                result_holder.focus_next(&result_viewport);
-                true.into()
-            }
-            Key::Return => {
-                let _ = result_holder.activate_action(
-                    "win.switch-page",
-                    Some(&String::from("search-page").to_variant()),
-                );
-                true.into()
-            }
-            _ => false.into(),
-        }
-    });
-    stack.set_can_focus(true);
-    stack.grab_focus();
-    stack.add_controller(event_controller);
-}
+//     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
+//     event_controller.connect_key_pressed(move |_, key, _, _| {
+//         if stack_page.borrow().as_str() != "error-page" {
+//             return false.into();
+//         }
+//         match key {
+//             Key::Up => {
+//                 result_holder.focus_prev(&result_viewport);
+//                 true.into()
+//             }
+//             Key::Down => {
+//                 result_holder.focus_next(&result_viewport);
+//                 true.into()
+//             }
+//             Key::Return => {
+//                 let _ = result_holder.activate_action(
+//                     "win.switch-page",
+//                     Some(&String::from("search-page").to_variant()),
+//                 );
+//                 true.into()
+//             }
+//             _ => false.into(),
+//         }
+//     });
+//     stack.set_can_focus(true);
+//     stack.grab_focus();
+//     stack.add_controller(event_controller);
+// }

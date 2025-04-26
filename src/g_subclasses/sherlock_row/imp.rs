@@ -21,7 +21,7 @@ pub struct SherlockRow {
 impl ObjectSubclass for SherlockRow {
     const NAME: &'static str = "CustomSherlockRow";
     type Type = super::SherlockRow;
-    type ParentType = gtk4::ListBoxRow;
+    type ParentType = gtk4::Box;
 }
 
 // Trait shared by all GObjects
@@ -39,6 +39,7 @@ impl ObjectImpl for SherlockRow {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
                         obj.emit_by_name::<()>("row-should-activate", &[]);
+                        println!("double click");
                     }
                 }
             });
@@ -55,4 +56,4 @@ impl ObjectImpl for SherlockRow {
 
 // Make SherlockRow function with `IsA widget and ListBoxRow`
 impl WidgetImpl for SherlockRow {}
-impl ListBoxRowImpl for SherlockRow {}
+impl BoxImpl for SherlockRow {}
