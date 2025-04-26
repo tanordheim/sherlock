@@ -239,7 +239,6 @@ image {
 }
 
 row:selected .tile{
-    transition: 0.1s ease;
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);
     outline: none;

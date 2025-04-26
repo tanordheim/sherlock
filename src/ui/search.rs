@@ -1,8 +1,8 @@
 use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
+use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner, StringFilterMatchMode
+    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -52,66 +52,17 @@ fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option
 
                         // Process text tile
                         if let Some(opts) = &widget.text_tile {
-                            if let Some((title, body, next_content)) =
-                                widget.launcher.get_result(&current_text).await
-                            {
-                                opts.title.upgrade().map(|t| t.set_text(&title));
-                                opts.body.upgrade().map(|b| b.set_text(&body));
-                                if let Some(next_content) = next_content {
-                                    attrs.insert(
-                                        String::from("next_content"),
-                                        next_content.to_string(),
-                                    );
-                                }
-                            }
+                            attrs = opts.update(&widget, &current_text, attrs).await;
                         }
 
                         // Process image replacement
                         if let Some(opts) = &widget.image_replacement {
-                            if let Some(overlay) = &opts.icon_holder_overlay {
-                                if let Some((image, was_cached)) = widget.launcher.get_image().await
-                                {
-                                    if !was_cached {
-                                        overlay.upgrade().map(|overlay| {
-                                            overlay.add_css_class("image-replace-overlay")
-                                        });
-                                    }
-                                    let texture = gtk4::gdk::Texture::for_pixbuf(&image);
-                                    let gtk_image = Image::from_paintable(Some(&texture));
-                                    gtk_image.set_widget_name("album-cover");
-                                    gtk_image.set_pixel_size(50);
-                                    overlay
-                                        .upgrade()
-                                        .map(|overlay| overlay.add_overlay(&gtk_image));
-                                    }
-                            }
+                            opts.update(&widget).await;
                         }
 
                         // Process weather tile
                         if let Some(wtr) = &widget.weather_tile {
-                            if let Some((data, was_changed)) = widget.launcher.get_weather().await {
-                                let css_class = if was_changed {
-                                    "weather-animate"
-                                } else {
-                                    "weather-no-animate"
-                                };
-                                widget.row.upgrade().map(|row| {
-                                    row.add_css_class(css_class);
-                                    row.add_css_class(&data.icon);
-                                });
-                                wtr.temperature
-                                    .upgrade()
-                                    .map(|tmp| tmp.set_text(&data.temperature));
-                                wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
-                                wtr.icon
-                                    .upgrade()
-                                    .map(|ico| ico.set_icon_name(Some(&data.icon)));
-                                wtr.location
-                                    .upgrade()
-                                    .map(|loc| loc.set_text(&data.format_str));
-                                } else {
-                                    widget.row.upgrade().map(|row| row.set_visible(false));
-                                }
+                            wtr.update(&widget).await
                         }
 
                         // Connect row-should-activate signal
@@ -121,7 +72,7 @@ fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option
                                 execute_from_attrs(&row, &attrs);
                                 None
                             });
-                        })
+                        });
                     }
                 })
             .collect();
@@ -336,7 +287,7 @@ fn construct_window(
             let is_home = current_text.is_empty() && mode == "all";
 
             if is_home {
-                if (home || only_home) && priority > 0.0 {
+                if home || only_home {
                     return true;
                 }
                 return false;
@@ -348,6 +299,8 @@ fn construct_window(
                     if current_text.is_empty() {
                         return true;
                     }
+                } else if priority == 0.0{
+                    return false
                 }
                 item.search()
                     .fuzzy_match(&current_text)

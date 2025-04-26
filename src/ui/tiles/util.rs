@@ -1,5 +1,5 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, launcher::Launcher, loader::pipe_loader::PipeData,
+    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, loader::pipe_loader::PipeData,
     CONFIG,
 };
 use gio::glib::WeakRef;
@@ -21,6 +21,23 @@ pub struct TextTileElements {
     pub title: WeakRef<Label>,
     pub body: WeakRef<Label>,
 }
+impl TextTileElements {
+    pub async fn update(&self, widget: &AsyncLauncherTile, current_text: &str, mut attrs: HashMap<String, String>)->HashMap<String, String>{
+        if let Some((title, body, next_content)) =
+            widget.launcher.get_result(&current_text).await
+        {
+            self.title.upgrade().map(|t| t.set_text(&title));
+            self.body.upgrade().map(|b| b.set_text(&body));
+            if let Some(next_content) = next_content {
+                attrs.insert(
+                    String::from("next_content"),
+                    next_content.to_string(),
+                );
+            }
+        }
+        attrs
+    }
+}
 #[derive(Debug)]
 pub struct ImageReplacementElements {
     pub icon_holder_overlay: Option<WeakRef<Overlay>>,
@@ -31,6 +48,25 @@ impl ImageReplacementElements {
             icon_holder_overlay: None,
         }
     }
+    pub async fn update(&self, widget: &AsyncLauncherTile){
+        if let Some(overlay) = &self.icon_holder_overlay {
+            if let Some((image, was_cached)) = widget.launcher.get_image().await
+            {
+                if !was_cached {
+                    overlay.upgrade().map(|overlay| {
+                        overlay.add_css_class("image-replace-overlay")
+                    });
+                }
+                let texture = gtk4::gdk::Texture::for_pixbuf(&image);
+                let gtk_image = Image::from_paintable(Some(&texture));
+                gtk_image.set_widget_name("album-cover");
+                gtk_image.set_pixel_size(50);
+                overlay
+                    .upgrade()
+                    .map(|overlay| overlay.add_overlay(&gtk_image));
+                }
+        }
+    }
 }
 #[derive(Debug)]
 pub struct WeatherTileElements {
@@ -38,6 +74,33 @@ pub struct WeatherTileElements {
     pub location: WeakRef<Label>,
     pub icon: WeakRef<Image>,
     pub spinner: WeakRef<Spinner>,
+}
+impl WeatherTileElements {
+    pub async fn update(&self, widget: &AsyncLauncherTile){
+        if let Some((data, was_changed)) = widget.launcher.get_weather().await {
+            let css_class = if was_changed {
+                "weather-animate"
+            } else {
+                "weather-no-animate"
+            };
+            widget.row.upgrade().map(|row| {
+                row.add_css_class(css_class);
+                row.add_css_class(&data.icon);
+            });
+            self.temperature
+                .upgrade()
+                .map(|tmp| tmp.set_text(&data.temperature));
+            self.spinner.upgrade().map(|spn| spn.set_spinning(false));
+            self.icon
+                .upgrade()
+                .map(|ico| ico.set_icon_name(Some(&data.icon)));
+            self.location
+                .upgrade()
+                .map(|loc| loc.set_text(&data.format_str));
+            } else {
+                widget.row.upgrade().map(|row| row.set_visible(false));
+            }
+    }
 }
 
 #[derive(Default)]
