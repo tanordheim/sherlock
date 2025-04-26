@@ -2,7 +2,7 @@ use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::{bitflags::Flags, WeakRef}, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, EventControllerKey, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, Spinner
+    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, EventControllerKey, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, Spinner, StringFilterMatchMode
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 use super::tiles::util::AsyncLauncherTile;
 use super::util::*;
-use crate::g_subclasses::sherlock_row::SherlockRow;
+use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
 
@@ -29,7 +29,110 @@ struct SearchUI {
     spinner: WeakRef<Spinner>,
     selection: WeakRef<SingleSelection>
 }
+//     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>){
+    let current_task_clone = Rc::clone(current_task);
+    let task = glib::MainContext::default().spawn_local({
+        async move {
+            // Set spinner active
+            let spinner_row = update_tiles.get(0).map(|t| t.row.clone());
+            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
+                let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
+            }
+            // Make async tiles update concurrently
+            let futures: Vec<_> = update_tiles
+                .into_iter()
+                .map(|widget| {
+                    let current_text = String::new();
+                    async move {
+                        let mut attrs = widget.attrs.clone();
 
+                        // Process text tile
+                        if let Some(opts) = &widget.text_tile {
+                            if let Some((title, body, next_content)) =
+                                widget.launcher.get_result(&current_text).await
+                            {
+                                opts.title.upgrade().map(|t| t.set_text(&title));
+                                opts.body.upgrade().map(|b| b.set_text(&body));
+                                if let Some(next_content) = next_content {
+                                    attrs.insert(
+                                        String::from("next_content"),
+                                        next_content.to_string(),
+                                    );
+                                }
+                            }
+                        }
+
+                        // Process image replacement
+                        if let Some(opts) = &widget.image_replacement {
+                            if let Some(overlay) = &opts.icon_holder_overlay {
+                                if let Some((image, was_cached)) = widget.launcher.get_image().await
+                                {
+                                    if !was_cached {
+                                        overlay.upgrade().map(|overlay| {
+                                            overlay.add_css_class("image-replace-overlay")
+                                        });
+                                    }
+                                    let texture = gtk4::gdk::Texture::for_pixbuf(&image);
+                                    let gtk_image = Image::from_paintable(Some(&texture));
+                                    gtk_image.set_widget_name("album-cover");
+                                    gtk_image.set_pixel_size(50);
+                                    overlay
+                                        .upgrade()
+                                        .map(|overlay| overlay.add_overlay(&gtk_image));
+                                    }
+                            }
+                        }
+
+                        // Process weather tile
+                        if let Some(wtr) = &widget.weather_tile {
+                            if let Some((data, was_changed)) = widget.launcher.get_weather().await {
+                                let css_class = if was_changed {
+                                    "weather-animate"
+                                } else {
+                                    "weather-no-animate"
+                                };
+                                widget.row.upgrade().map(|row| {
+                                    row.add_css_class(css_class);
+                                    row.add_css_class(&data.icon);
+                                });
+                                wtr.temperature
+                                    .upgrade()
+                                    .map(|tmp| tmp.set_text(&data.temperature));
+                                wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
+                                wtr.icon
+                                    .upgrade()
+                                    .map(|ico| ico.set_icon_name(Some(&data.icon)));
+                                wtr.location
+                                    .upgrade()
+                                    .map(|loc| loc.set_text(&data.format_str));
+                                } else {
+                                    widget.row.upgrade().map(|row| row.set_visible(false));
+                                }
+                        }
+
+                        // Connect row-should-activate signal
+                        widget.row.upgrade().map(|row| {
+                            row.connect("row-should-activate", false, move |row| {
+                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                execute_from_attrs(&row, &attrs);
+                                None
+                            });
+                        })
+                    }
+                })
+            .collect();
+
+            let _ = join_all(futures).await;
+            // Set spinner inactive
+            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
+                let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
+            }
+            *current_task_clone.borrow_mut() = None;
+        }
+    });
+    *current_task.borrow_mut() = Some(task);
+}
 pub fn search(
     launchers: &Vec<Launcher>,
     window: &ApplicationWindow,
@@ -218,11 +321,13 @@ fn construct_window(
         .into_iter()
         .partition(|launcher| launcher.r#async);
     let mut patches: Vec<ResultItem> = non_async_launchers.into_iter().map(|launcher| launcher.get_patch("")).flatten().collect();
-    let mut tile_updates: Vec<AsyncLauncherTile> = async_launchers.into_iter().filter_map(|launcher| launcher.get_loader_widget("")).map(|(update, tile)| {
+    let tile_updates: Vec<AsyncLauncherTile> = async_launchers.into_iter().filter_map(|launcher| launcher.get_loader_widget("")).map(|(update, tile)| {
         patches.push(tile);
         update
     }).collect();
     patches.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
+    let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
+    update(tile_updates, &current_task);
 
     for item in patches.iter(){
         model.append(&item.row_item);
