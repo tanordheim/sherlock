@@ -7,6 +7,7 @@ use gtk4::{
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
+use nix::NixPath;
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -374,7 +375,7 @@ fn construct_window(
     search_icon_back.set_halign(gtk4::Align::End);
 
     let search_text = Rc::new(RefCell::new(String::from("")));
-    let search_mode = Rc::new(RefCell::new(String::from("all")));
+    let search_mode = Rc::new(RefCell::new(String::from("kill")));
     let sorter = CustomSorter::new({
         let search_text = search_text.clone();
 
@@ -413,7 +414,13 @@ fn construct_window(
                 }
                 return false
             } else {
-                if only_home {
+                if mode != String::from("all"){
+                    if only_home || mode != alias{
+                        return false
+                    }
+                    if current_text.is_empty() {
+                        return true
+                    }
                     return false
                 }
                 item.search()

@@ -28,7 +28,7 @@ impl SherlockRow {
         self.imp().priority.set(prio);
     }
     pub fn set_alias(&self, mode: &str) {
-        *self.imp().search.borrow_mut() = mode.to_string();
+        *self.imp().alias.borrow_mut() = mode.to_string();
     }
     pub fn set_home(&self, home: bool) {
         self.imp().home.set(home);
@@ -56,7 +56,9 @@ impl SherlockRow {
         self.set_home(launcher.home);
         self.set_shortcut(launcher.shortcut);
         self.set_spawn_focus(launcher.spawn_focus);
-        launcher.alias.as_deref().map(|alias| self.set_alias(alias));
+        if let Some(alias) = &launcher.alias {
+            self.set_alias(alias);
+        }
     }
 }
 
