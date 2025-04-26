@@ -7,6 +7,7 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ListBox, ScrolledWindow};
+use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -214,20 +215,18 @@ fn construct_window(
     let model = ListStore::new::<SherlockRow>();
     let factory = SignalListItemFactory::new();
 
-    for _ in 0..20 {
-        let row = SherlockRow::default();
-        model.append(&row);
+    let patches: Vec<ResultItem> = launchers.iter().map(|launcher| launcher.get_patch("")).flatten().collect();
+
+    for item in patches.iter().take(20){
+        model.append(&item.row_item);
     }
     let selection = SingleSelection::new(Some(model));
     results.set_model(Some(&selection));
 
     factory.connect_bind(|_, item| {
         let item = item.downcast_ref::<gtk4::ListItem>().expect("Item mut be a ListItem");
-        let label = Label::new(Some("test"));
-        let container = SherlockRow::new();
-        container.append(&label);
-        container.add_css_class("tile");
-        item.set_child(Some(&container));
+        let row = item.item().clone().and_downcast::<SherlockRow>().expect("Row should be SherlockRow");
+        item.set_child(Some(&row));
     });
     results.set_factory(Some(&factory));
 
