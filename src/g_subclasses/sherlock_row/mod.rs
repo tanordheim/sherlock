@@ -2,7 +2,7 @@ mod imp;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use glib::Object;
-use gtk4::glib;
+use gtk4::{glib, prelude::WidgetExt};
 
 glib::wrapper! {
     pub struct SherlockRow(ObjectSubclass<imp::SherlockRow>)
@@ -11,8 +11,7 @@ glib::wrapper! {
 
 impl SherlockRow {
     pub fn new() -> Self {
-        Object::builder().build()
-
+         Object::builder().build()
     }
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);
@@ -24,6 +23,9 @@ impl SherlockRow {
 
 impl Default for SherlockRow {
     fn default() -> Self {
-        Self::new()
+        let row = Self::new();
+        row.set_spawn_focus(true);
+        row.set_css_classes(&["tile"]);
+        row
     }
 }

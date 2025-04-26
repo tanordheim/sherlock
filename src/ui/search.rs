@@ -215,7 +215,7 @@ fn construct_window(
     let factory = SignalListItemFactory::new();
 
     for _ in 0..20 {
-        let row = SherlockRow::new();
+        let row = SherlockRow::default();
         model.append(&row);
     }
     let selection = SingleSelection::new(Some(model));
@@ -421,17 +421,20 @@ impl SherlockNav for SingleSelection {
         index
     }
     fn focus_first(&self)->u32 {
-        let i = 0;
+        let mut i = 0;
+        let current_index = self.selected();
         while i < self.n_items() {
             self.set_selected(i);
             if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
                 if item.imp().spawn_focus.get(){
-            
-
+                    return i
+                } else {
+                    i += 1;
                 }
             }
         }
-        0
+        self.set_selected(current_index);
+        current_index
     }
     fn execute_by_index(&self, index: u32) {
         if index < self.n_items(){
