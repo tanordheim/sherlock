@@ -3,7 +3,11 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 use std::{
-    collections::{HashMap, HashSet}, env, fs::{self, File}, hash::{Hash, Hasher}, path::PathBuf
+    collections::{HashMap, HashSet},
+    env,
+    fs::{self, File},
+    hash::{Hash, Hasher},
+    path::PathBuf,
 };
 
 use crate::utils::errors::{SherlockError, SherlockErrorType};

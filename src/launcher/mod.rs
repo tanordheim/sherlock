@@ -17,7 +17,9 @@ pub mod weather_launcher;
 pub mod web_launcher;
 
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, loader::util::RawLauncher, ui::tiles::{util::AsyncLauncherTile, Tile}
+    g_subclasses::sherlock_row::SherlockRow,
+    loader::util::RawLauncher,
+    ui::tiles::{util::AsyncLauncherTile, Tile},
 };
 
 use app_launcher::AppLauncher;
@@ -65,7 +67,7 @@ pub struct Launcher {
     pub only_home: bool,
 }
 impl Launcher {
-    pub fn from_raw(raw: RawLauncher, method: String, launcher_type: LauncherType)->Self{
+    pub fn from_raw(raw: RawLauncher, method: String, launcher_type: LauncherType) -> Self {
         Self {
             name: raw.name,
             alias: raw.alias,

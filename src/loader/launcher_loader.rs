@@ -60,132 +60,18 @@ impl Loader {
             .into_iter()
             .map(|raw| {
                 let launcher_type: LauncherType = match raw.r#type.as_str() {
-                    "categories" => {
-                        let prio = raw.priority;
-                        let value = &raw.args["categories"];
-                        let categories = parse_appdata(value, prio, &counts, max_decimals);
-                        LauncherType::Category(CategoryLauncher { categories })
-                    }
-                    "app_launcher" => {
-                        let apps: HashSet<AppData> = CONFIG.get().map_or_else(
-                            || HashSet::new(),
-                            |config| {
-                                let prio = raw.priority as f32;
-                                match config.behavior.caching {
-                                    true => Loader::load_applications(prio, &counts, max_decimals).unwrap_or_default(),
-                                    false => Loader::load_applications_from_disk(None, prio, &counts, max_decimals).unwrap_or_default(),
-                                }
-                            }
-                        );
-                        LauncherType::App(AppLauncher { apps })
-                    }
-                    "web_launcher" => LauncherType::Web(WebLauncher {
-                        display_name: raw.display_name.clone().unwrap_or("".to_string()),
-                        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
-                        engine: raw.args["search_engine"]
-                            .as_str()
-                            .unwrap_or_default()
-                            .to_string(),
-                    }),
-                    "calculation" => {
-                        let capabilities: Option<HashSet<String>> =
-                            match raw.args.get("capabilities") {
-                                Some(Value::Array(arr)) => {
-                                    let strings: HashSet<String> = arr
-                                        .iter()
-                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                                        .collect();
-                                    Some(strings)
-                                }
-                                _ => None,
-                            };
-                        LauncherType::Calc(Calculator { capabilities })
-                    }
-                    "command" => {
-                        let prio = raw.priority;
-                        let value = &raw.args["commands"];
-                        let commands = parse_appdata(value, prio, &counts, max_decimals);
-                        LauncherType::Command(CommandLauncher { commands })
-                    }
-                    "bulk_text" => LauncherType::BulkText(BulkTextLauncher {
-                        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
-                        exec: raw.args["exec"].as_str().unwrap_or_default().to_string(),
-                        args: raw.args["exec-args"]
-                            .as_str()
-                            .unwrap_or_default()
-                            .to_string(),
-                    }),
-                    "clipboard-execution" => {
-                        let clipboard_content: String = read_from_clipboard()?;
-                        let capabilities: Option<HashSet<String>> =
-                            match raw.args.get("capabilities") {
-                                Some(Value::Array(arr)) => {
-                                    let strings: HashSet<String> = arr
-                                        .iter()
-                                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                                        .collect();
-                                    Some(strings)
-                                }
-                                _ => None,
-                            };
-                        if clipboard_content.is_empty() {
-                            LauncherType::Empty
-                        } else {
-                            LauncherType::Clipboard((
-                                ClipboardLauncher {
-                                    clipboard_content,
-                                    capabilities: capabilities.clone(),
-                                },
-                                Calculator { capabilities },
-                            ))
-                        }
-                    }
-                    "teams_event" => {
-                        let icon = raw.args["icon"].as_str().unwrap_or("teams").to_string();
-                        let date = raw.args["event_date"].as_str().unwrap_or("now");
-                        let event_start = raw.args["event_start"].as_str().unwrap_or("-5 minutes");
-                        let event_end = raw.args["event_end"].as_str().unwrap_or("+15 minutes");
-
-                        let event = EventLauncher::get_event(date, event_start, event_end);
-
-                        LauncherType::Event(EventLauncher { event, icon })
-                    }
-                    "audio_sink" => AudioLauncherFunctions::new()
-                        .and_then(|launcher| {
-                            launcher.get_current_player().and_then(|player| {
-                                launcher.get_metadata(&player).and_then(|launcher| {
-                                    Some(LauncherType::MusicPlayer(launcher))
-                                })
-                            })
-                        })
-                        .unwrap_or(LauncherType::Empty),
-                    "process" => {
-                        let icon = raw.args["icon"].as_str().unwrap_or("sherlock-process");
-                        let launcher = ProcessLauncher::new(icon);
-                        if let Some(launcher) = launcher {
-                            LauncherType::Process(launcher)
-                        } else {
-                            LauncherType::Empty
-                        }
-                    }
-                    "weather" => {
-                        if let Some(location) = raw.args["location"].as_str() {
-                            let update_interval =
-                                raw.args["update_interval"].as_u64().unwrap_or(60);
-                            LauncherType::Weather(WeatherLauncher {
-                                location: location.to_string(),
-                                update_interval,
-                            })
-                        } else {
-                            LauncherType::Empty
-                        }
-                    }
-                    "debug" => {
-                        let prio = raw.priority;
-                        let value = &raw.args["commands"];
-                        let commands = parse_appdata(value, prio, &counts, max_decimals);
-                        LauncherType::Command(CommandLauncher { commands })
-                    }
+                    "categories" => parse_category_launcher(&raw, &counts, max_decimals),
+                    "app_launcher" => parse_app_launcher(&raw, &counts, max_decimals),
+                    "web_launcher" => parse_web_launcher(&raw),
+                    "calculation" => parse_calculator(&raw),
+                    "command" => parse_command_launcher(&raw, &counts, max_decimals),
+                    "bulk_text" => parse_bulk_text_launcher(&raw),
+                    "clipboard-execution" => parse_clipboard_launcher(&raw)?,
+                    "teams_event" => parse_event_launcher(&raw),
+                    "audio_sink" => parse_audio_sink_launcher(),
+                    "process" => parse_process_launcher(&raw),
+                    "weather" => parse_weather_launcher(&raw),
+                    "debug" => parse_debug_launcher(&raw, &counts, max_decimals),
                     _ => LauncherType::Empty,
                 };
                 let method: String = if let Some(value) = &raw.on_return {
@@ -233,7 +119,150 @@ fn parse_appdata(
         })
         .collect::<HashSet<AppData>>()
 }
-
+fn parse_category_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let prio = raw.priority;
+    let value = &raw.args["categories"];
+    let categories = parse_appdata(value, prio, counts, max_decimals);
+    LauncherType::Category(CategoryLauncher { categories })
+}
+fn parse_app_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let apps: HashSet<AppData> = CONFIG.get().map_or_else(
+        || HashSet::new(),
+        |config| {
+            let prio = raw.priority as f32;
+            match config.behavior.caching {
+                true => Loader::load_applications(prio, counts, max_decimals).unwrap_or_default(),
+                false => Loader::load_applications_from_disk(None, prio, counts, max_decimals)
+                    .unwrap_or_default(),
+            }
+        },
+    );
+    LauncherType::App(AppLauncher { apps })
+}
+fn parse_web_launcher(raw: &RawLauncher) -> LauncherType {
+    LauncherType::Web(WebLauncher {
+        display_name: raw.display_name.clone().unwrap_or("".to_string()),
+        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
+        engine: raw.args["search_engine"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string(),
+    })
+}
+fn parse_calculator(raw: &RawLauncher) -> LauncherType {
+    let capabilities: Option<HashSet<String>> = match raw.args.get("capabilities") {
+        Some(Value::Array(arr)) => {
+            let strings: HashSet<String> = arr
+                .iter()
+                .filter_map(|v| v.as_str().map(str::to_string))
+                .collect();
+            Some(strings)
+        }
+        _ => None,
+    };
+    LauncherType::Calc(Calculator { capabilities })
+}
+fn parse_command_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let prio = raw.priority;
+    let value = &raw.args["commands"];
+    let commands = parse_appdata(value, prio, counts, max_decimals);
+    LauncherType::Command(CommandLauncher { commands })
+}
+fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
+    let icon = raw.args["icon"].as_str().unwrap_or("teams").to_string();
+    let date = raw.args["event_date"].as_str().unwrap_or("now");
+    let event_start = raw.args["event_start"].as_str().unwrap_or("-5 minutes");
+    let event_end = raw.args["event_end"].as_str().unwrap_or("+15 minutes");
+    let event = EventLauncher::get_event(date, event_start, event_end);
+    LauncherType::Event(EventLauncher { event, icon })
+}
+fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
+    LauncherType::BulkText(BulkTextLauncher {
+        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
+        exec: raw.args["exec"].as_str().unwrap_or_default().to_string(),
+        args: raw.args["exec-args"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string(),
+    })
+}
+fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockError> {
+    let clipboard_content: String = read_from_clipboard()?;
+    let capabilities: Option<HashSet<String>> = match raw.args.get("capabilities") {
+        Some(Value::Array(arr)) => {
+            let strings: HashSet<String> = arr
+                .iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect();
+            Some(strings)
+        }
+        _ => None,
+    };
+    if clipboard_content.is_empty() {
+        Ok(LauncherType::Empty)
+    } else {
+        Ok(LauncherType::Clipboard((
+            ClipboardLauncher {
+                clipboard_content,
+                capabilities: capabilities.clone(),
+            },
+            Calculator { capabilities },
+        )))
+    }
+}
+fn parse_audio_sink_launcher() -> LauncherType {
+    AudioLauncherFunctions::new()
+        .and_then(|launcher| {
+            launcher.get_current_player().and_then(|player| {
+                launcher
+                    .get_metadata(&player)
+                    .and_then(|launcher| Some(LauncherType::MusicPlayer(launcher)))
+            })
+        })
+        .unwrap_or(LauncherType::Empty)
+}
+fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
+    let icon = raw.args["icon"].as_str().unwrap_or("sherlock-process");
+    let launcher = ProcessLauncher::new(icon);
+    if let Some(launcher) = launcher {
+        LauncherType::Process(launcher)
+    } else {
+        LauncherType::Empty
+    }
+}
+fn parse_weather_launcher(raw: &RawLauncher) -> LauncherType {
+    if let Some(location) = raw.args["location"].as_str() {
+        let update_interval = raw.args["update_interval"].as_u64().unwrap_or(60);
+        LauncherType::Weather(WeatherLauncher {
+            location: location.to_string(),
+            update_interval,
+        })
+    } else {
+        LauncherType::Empty
+    }
+}
+fn parse_debug_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let prio = raw.priority;
+    let value = &raw.args["commands"];
+    let commands = parse_appdata(value, prio, counts, max_decimals);
+    LauncherType::Command(CommandLauncher { commands })
+}
 
 fn parse_launcher_configs(
     fallback_path: &PathBuf,
