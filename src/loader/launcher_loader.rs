@@ -150,9 +150,16 @@ fn parse_app_launcher(
 fn parse_web_launcher(raw: &RawLauncher) -> LauncherType {
     LauncherType::Web(WebLauncher {
         display_name: raw.display_name.clone().unwrap_or("".to_string()),
-        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
-        engine: raw.args["search_engine"]
-            .as_str()
+        icon: raw
+            .args
+            .get("icon")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        engine: raw
+            .args
+            .get("search_engine")
+            .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string(),
     })
@@ -181,19 +188,48 @@ fn parse_command_launcher(
     LauncherType::Command(CommandLauncher { commands })
 }
 fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
-    let icon = raw.args["icon"].as_str().unwrap_or("teams").to_string();
-    let date = raw.args["event_date"].as_str().unwrap_or("now");
-    let event_start = raw.args["event_start"].as_str().unwrap_or("-5 minutes");
-    let event_end = raw.args["event_end"].as_str().unwrap_or("+15 minutes");
+    let icon = raw
+        .args
+        .get("icon")
+        .and_then(Value::as_str)
+        .unwrap_or("teams")
+        .to_string();
+    let date = raw
+        .args
+        .get("event_date")
+        .and_then(Value::as_str)
+        .unwrap_or("now");
+    let event_start = raw
+        .args
+        .get("event_start")
+        .and_then(Value::as_str)
+        .unwrap_or("-5 minutes");
+    let event_end = raw
+        .args
+        .get("event_end")
+        .and_then(Value::as_str)
+        .unwrap_or("+15 minutes");
     let event = EventLauncher::get_event(date, event_start, event_end);
     LauncherType::Event(EventLauncher { event, icon })
 }
 fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
     LauncherType::BulkText(BulkTextLauncher {
-        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
-        exec: raw.args["exec"].as_str().unwrap_or_default().to_string(),
-        args: raw.args["exec-args"]
-            .as_str()
+        icon: raw
+            .args
+            .get("icon")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        exec: raw
+            .args
+            .get("exec")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        args: raw
+            .args
+            .get("exec-args")
+            .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string(),
     })
@@ -234,7 +270,11 @@ fn parse_audio_sink_launcher() -> LauncherType {
         .unwrap_or(LauncherType::Empty)
 }
 fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
-    let icon = raw.args["icon"].as_str().unwrap_or("sherlock-process");
+    let icon = raw
+        .args
+        .get("icon")
+        .and_then(Value::as_str)
+        .unwrap_or("sherlock-process");
     let launcher = ProcessLauncher::new(icon);
     if let Some(launcher) = launcher {
         LauncherType::Process(launcher)
@@ -243,8 +283,12 @@ fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
     }
 }
 fn parse_weather_launcher(raw: &RawLauncher) -> LauncherType {
-    if let Some(location) = raw.args["location"].as_str() {
-        let update_interval = raw.args["update_interval"].as_u64().unwrap_or(60);
+    if let Some(location) = raw.args.get("location").and_then(Value::as_str) {
+        let update_interval = raw
+            .args
+            .get("update_interval")
+            .and_then(Value::as_u64)
+            .unwrap_or(60);
         LauncherType::Weather(WeatherLauncher {
             location: location.to_string(),
             update_interval,
