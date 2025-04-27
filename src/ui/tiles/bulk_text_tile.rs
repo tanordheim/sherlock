@@ -4,7 +4,7 @@ use std::vec;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::bulk_text_launcher::BulkText;
+use crate::launcher::bulk_text_launcher::BulkTextLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
 use super::util::{AsyncLauncherTile, TextTileElements, TileBuilder};
@@ -14,7 +14,7 @@ impl Tile {
     pub fn bulk_text_tile_loader(
         launcher: Launcher,
         keyword: &str,
-        bulk_text: &BulkText,
+        bulk_text: &BulkTextLauncher,
     ) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 

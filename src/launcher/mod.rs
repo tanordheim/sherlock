@@ -20,31 +20,31 @@ use crate::{
     g_subclasses::sherlock_row::SherlockRow, loader::util::RawLauncher, ui::tiles::{util::AsyncLauncherTile, Tile}
 };
 
-use app_launcher::App;
+use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
-use bulk_text_launcher::BulkText;
+use bulk_text_launcher::BulkTextLauncher;
 use calc_launcher::Calculator;
 use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
-use system_cmd_launcher::SystemCommand;
+use system_cmd_launcher::CommandLauncher;
 use weather_launcher::{WeatherData, WeatherLauncher};
-use web_launcher::Web;
+use web_launcher::WebLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
-    CategoryLauncher(CategoryLauncher),
-    App(App),
-    Web(Web),
+    Category(CategoryLauncher),
+    App(AppLauncher),
+    Web(WebLauncher),
     Calc(Calculator),
-    BulkText(BulkText),
-    SystemCommand(SystemCommand),
+    BulkText(BulkTextLauncher),
+    Command(CommandLauncher),
     Clipboard((ClipboardLauncher, Calculator)),
-    EventLauncher(EventLauncher),
-    MusicPlayerLauncher(MusicPlayerLauncher),
-    ProcessLauncher(ProcessLauncher),
-    WeatherLauncher(WeatherLauncher),
+    Event(EventLauncher),
+    MusicPlayer(MusicPlayerLauncher),
+    Process(ProcessLauncher),
+    Weather(WeatherLauncher),
     Empty,
 }
 
@@ -97,13 +97,13 @@ impl Launcher {
         match &self.launcher_type {
             LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
-            LauncherType::CategoryLauncher(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
+            LauncherType::Category(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
             LauncherType::Clipboard((clp, calc)) => {
                 Tile::clipboard_tile(self, &clp, &calc, keyword)
             }
-            LauncherType::EventLauncher(evl) => Tile::event_tile(self, keyword, evl),
-            LauncherType::ProcessLauncher(proc) => Tile::process_tile(self, keyword, &proc),
-            LauncherType::SystemCommand(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
+            LauncherType::Event(evl) => Tile::event_tile(self, keyword, evl),
+            LauncherType::Process(proc) => Tile::process_tile(self, keyword, &proc),
+            LauncherType::Command(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
 
             _ => Vec::new(),
@@ -121,12 +121,12 @@ impl Launcher {
                 let execs: HashSet<String> = HashSet::from([(exec)]);
                 Some(execs)
             }
-            LauncherType::SystemCommand(cmd) => {
+            LauncherType::Command(cmd) => {
                 let execs: HashSet<String> =
                     cmd.commands.iter().map(|v| v.exec.to_string()).collect();
                 Some(execs)
             }
-            LauncherType::CategoryLauncher(ctg) => {
+            LauncherType::Category(ctg) => {
                 let execs: HashSet<String> =
                     ctg.categories.iter().map(|v| v.exec.to_string()).collect();
                 Some(execs)
@@ -136,7 +136,7 @@ impl Launcher {
             LauncherType::Calc(_) => None,
             LauncherType::BulkText(_) => None,
             LauncherType::Clipboard(_) => None,
-            LauncherType::EventLauncher(_) => None,
+            LauncherType::Event(_) => None,
             _ => None,
         }
     }
@@ -145,8 +145,8 @@ impl Launcher {
             LauncherType::BulkText(bulk_text) => {
                 Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
             }
-            LauncherType::MusicPlayerLauncher(mpris) => Tile::mpris_tile(self, &mpris),
-            LauncherType::WeatherLauncher(_) => Tile::weather_tile_loader(self),
+            LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(self, &mpris),
+            LauncherType::Weather(_) => Tile::weather_tile_loader(self),
             _ => None,
         }
     }
@@ -158,13 +158,13 @@ impl Launcher {
     }
     pub async fn get_image(&self) -> Option<(gdk_pixbuf::Pixbuf, bool)> {
         match &self.launcher_type {
-            LauncherType::MusicPlayerLauncher(mpis) => mpis.get_image().await,
+            LauncherType::MusicPlayer(mpis) => mpis.get_image().await,
             _ => None,
         }
     }
     pub async fn get_weather(&self) -> Option<(WeatherData, bool)> {
         match &self.launcher_type {
-            LauncherType::WeatherLauncher(wtr) => wtr.get_result().await,
+            LauncherType::Weather(wtr) => wtr.get_result().await,
             _ => None,
         }
     }

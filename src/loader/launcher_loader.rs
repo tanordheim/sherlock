@@ -20,13 +20,13 @@ use crate::loader::util::CounterReader;
 use crate::utils::errors::SherlockError;
 use crate::utils::errors::SherlockErrorType;
 
-use app_launcher::App;
-use bulk_text_launcher::BulkText;
+use app_launcher::AppLauncher;
+use bulk_text_launcher::BulkTextLauncher;
 use clipboard_launcher::ClipboardLauncher;
 use simd_json;
 use simd_json::prelude::ArrayTrait;
-use system_cmd_launcher::SystemCommand;
-use web_launcher::Web;
+use system_cmd_launcher::CommandLauncher;
+use web_launcher::WebLauncher;
 
 use super::application_loader::parse_priority;
 use super::util::deserialize_named_appdata;
@@ -62,9 +62,9 @@ impl Loader {
                 let launcher_type: LauncherType = match raw.r#type.as_str() {
                     "categories" => {
                         let prio = raw.priority;
-                        let category_value = &raw.args["categories"];
-                        let categories = parse_appdata(category_value, prio, &counts, max_decimals);
-                        LauncherType::CategoryLauncher(CategoryLauncher { categories })
+                        let value = &raw.args["categories"];
+                        let categories = parse_appdata(value, prio, &counts, max_decimals);
+                        LauncherType::Category(CategoryLauncher { categories })
                     }
                     "app_launcher" => {
                         let mut apps: HashSet<AppData> = HashSet::new();
@@ -84,9 +84,9 @@ impl Loader {
                             };
                         }
 
-                        LauncherType::App(App { apps })
+                        LauncherType::App(AppLauncher { apps })
                     }
-                    "web_launcher" => LauncherType::Web(Web {
+                    "web_launcher" => LauncherType::Web(WebLauncher {
                         display_name: raw.display_name.clone().unwrap_or("".to_string()),
                         icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
                         engine: raw.args["search_engine"]
@@ -112,9 +112,9 @@ impl Loader {
                         let prio = raw.priority;
                         let value = &raw.args["commands"];
                         let commands = parse_appdata(value, prio, &counts, max_decimals);
-                        LauncherType::SystemCommand(SystemCommand { commands })
+                        LauncherType::Command(CommandLauncher { commands })
                     }
-                    "bulk_text" => LauncherType::BulkText(BulkText {
+                    "bulk_text" => LauncherType::BulkText(BulkTextLauncher {
                         icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
                         exec: raw.args["exec"].as_str().unwrap_or_default().to_string(),
                         args: raw.args["exec-args"]
@@ -155,13 +155,13 @@ impl Loader {
 
                         let event = EventLauncher::get_event(date, event_start, event_end);
 
-                        LauncherType::EventLauncher(EventLauncher { event, icon })
+                        LauncherType::Event(EventLauncher { event, icon })
                     }
                     "audio_sink" => AudioLauncherFunctions::new()
                         .and_then(|launcher| {
                             launcher.get_current_player().and_then(|player| {
                                 launcher.get_metadata(&player).and_then(|launcher| {
-                                    Some(LauncherType::MusicPlayerLauncher(launcher))
+                                    Some(LauncherType::MusicPlayer(launcher))
                                 })
                             })
                         })
@@ -170,7 +170,7 @@ impl Loader {
                         let icon = raw.args["icon"].as_str().unwrap_or("sherlock-process");
                         let launcher = ProcessLauncher::new(icon);
                         if let Some(launcher) = launcher {
-                            LauncherType::ProcessLauncher(launcher)
+                            LauncherType::Process(launcher)
                         } else {
                             LauncherType::Empty
                         }
@@ -179,7 +179,7 @@ impl Loader {
                         if let Some(location) = raw.args["location"].as_str() {
                             let update_interval =
                                 raw.args["update_interval"].as_u64().unwrap_or(60);
-                            LauncherType::WeatherLauncher(WeatherLauncher {
+                            LauncherType::Weather(WeatherLauncher {
                                 location: location.to_string(),
                                 update_interval,
                             })
@@ -191,7 +191,7 @@ impl Loader {
                         let prio = raw.priority;
                         let value = &raw.args["commands"];
                         let commands = parse_appdata(value, prio, &counts, max_decimals);
-                        LauncherType::SystemCommand(SystemCommand { commands })
+                        LauncherType::Command(CommandLauncher { commands })
                     }
                     _ => LauncherType::Empty,
                 };

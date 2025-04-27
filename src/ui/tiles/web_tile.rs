@@ -5,11 +5,11 @@ use super::util::TileBuilder;
 use super::Tile;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::web_launcher::Web;
+use crate::launcher::web_launcher::WebLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &Web) -> Vec<ResultItem> {
+    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &WebLauncher) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
         builder.category.upgrade().map(|category| {
             if let Some(name) = &launcher.name {
