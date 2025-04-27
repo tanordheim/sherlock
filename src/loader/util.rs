@@ -3,10 +3,10 @@ use serde::{
     Deserialize, Deserializer, Serialize,
 };
 use std::{
-    collections::HashSet,
-    hash::{Hash, Hasher},
-    path::PathBuf,
+    collections::{HashMap, HashSet}, env, fs::{self, File}, hash::{Hash, Hasher}, path::PathBuf
 };
+
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 #[derive(Deserialize, Debug)]
 pub struct RawLauncher {
@@ -99,4 +99,59 @@ pub struct SherlockAlias {
     pub icon: Option<String>,
     pub exec: Option<String>,
     pub keywords: Option<String>,
+}
+
+pub struct CounterReader {
+    path: PathBuf,
+}
+impl CounterReader {
+    pub fn new() -> Result<Self, SherlockError> {
+        let home = env::var("HOME").map_err(|e| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+            traceback: e.to_string(),
+        })?;
+        let home_dir = PathBuf::from(home);
+        let path = home_dir.join(".sherlock/counts.json");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| SherlockError {
+                error: SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                traceback: e.to_string(),
+            })?;
+        }
+        Ok(CounterReader { path })
+    }
+    pub fn write(&self, counts: HashMap<String, f32>) -> Result<(), SherlockError> {
+        let tmp_path = self.path.with_extension(".tmp");
+        if let Ok(f) = File::create(&tmp_path) {
+            if let Ok(_) = simd_json::to_writer(f, &counts) {
+                let _ = fs::rename(&tmp_path, &self.path);
+            } else {
+                let _ = fs::remove_file(&tmp_path);
+            }
+        }
+        Ok(())
+    }
+    pub fn read(&self) -> Result<HashMap<String, f32>, SherlockError> {
+        let file = if self.path.exists() {
+            File::open(&self.path)
+        } else {
+            File::create(&self.path)
+        }
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::FileExistError(self.path.clone()),
+            traceback: e.to_string(),
+        })?;
+        let counts = match simd_json::from_reader(file).ok() {
+            Some(c) => c,
+            _ => HashMap::new(),
+        };
+
+        Ok(counts)
+    }
+    pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
+        let mut content = self.read()?;
+        *content.entry(key.to_string()).or_insert(0.0) += 1.0;
+        self.write(content)?;
+        Ok(())
+    }
 }

@@ -8,7 +8,7 @@ use util::{clear_cached_files, reset_app_counter};
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
     launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
-    loader::launcher_loader::CounterReader,
+    loader::util::CounterReader,
     ui::user::display_raw,
 };
 
