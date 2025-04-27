@@ -44,7 +44,7 @@ impl Loader {
         })?;
 
         // Read fallback data here:
-        let (launcher_config, n) = parse_launcher_configs(&config.files.fallback)?;
+        let (raw_launchers, n) = parse_launcher_configs(&config.files.fallback)?;
 
         // Read cached counter file
         let counter_reader = CounterReader::new()?;
@@ -56,23 +56,14 @@ impl Loader {
             .unwrap_or(0) as i32;
 
         // Parse the launchers
-        let deserialized_launchers: Vec<Result<Launcher, SherlockError>> = launcher_config
+        let deserialized_launchers: Vec<Result<Launcher, SherlockError>> = raw_launchers
             .into_iter()
-            .map(|cmd| {
-                let launcher_type: LauncherType = match cmd.r#type.as_str() {
+            .map(|raw| {
+                let launcher_type: LauncherType = match raw.r#type.as_str() {
                     "categories" => {
-                        let prio = cmd.priority;
-                        let category_value = &cmd.args["categories"];
-                        let mut categories: HashSet<AppData> =
-                            deserialize_named_appdata(category_value.clone().into_deserializer())
-                                .unwrap_or_default();
-                        categories = categories
-                            .into_iter()
-                            .map(|c| {
-                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
-                                c.with_priority(parse_priority(prio, count, max_decimals))
-                            })
-                            .collect();
+                        let prio = raw.priority;
+                        let category_value = &raw.args["categories"];
+                        let categories = parse_appdata(category_value, prio, &counts, max_decimals);
                         LauncherType::CategoryLauncher(CategoryLauncher { categories })
                     }
                     "app_launcher" => {
@@ -80,13 +71,13 @@ impl Loader {
                         if let Some(c) = CONFIG.get() {
                             apps = match c.behavior.caching {
                                 true => Loader::load_applications(
-                                    cmd.priority as f32,
+                                    raw.priority as f32,
                                     &counts,
                                     max_decimals,
                                 )?,
                                 false => Loader::load_applications_from_disk(
                                     None,
-                                    cmd.priority as f32,
+                                    raw.priority as f32,
                                     &counts,
                                     max_decimals,
                                 )?,
@@ -96,16 +87,16 @@ impl Loader {
                         LauncherType::App(App { apps })
                     }
                     "web_launcher" => LauncherType::Web(Web {
-                        display_name: cmd.display_name.clone().unwrap_or("".to_string()),
-                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        engine: cmd.args["search_engine"]
+                        display_name: raw.display_name.clone().unwrap_or("".to_string()),
+                        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
+                        engine: raw.args["search_engine"]
                             .as_str()
                             .unwrap_or_default()
                             .to_string(),
                     }),
                     "calculation" => {
                         let capabilities: Option<HashSet<String>> =
-                            match cmd.args.get("capabilities") {
+                            match raw.args.get("capabilities") {
                                 Some(Value::Array(arr)) => {
                                     let strings: HashSet<String> = arr
                                         .iter()
@@ -118,25 +109,15 @@ impl Loader {
                         LauncherType::Calc(Calculator { capabilities })
                     }
                     "command" => {
-                        let prio = cmd.priority;
-                        let commands_value = &cmd.args["commands"];
-                        let mut commands: HashSet<AppData> =
-                            deserialize_named_appdata(commands_value.clone().into_deserializer())
-                                .unwrap_or_default();
-                        commands = commands
-                            .into_iter()
-                            .map(|c| {
-                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
-                                c.with_priority(parse_priority(prio, count, max_decimals))
-                            })
-                            .collect();
-
+                        let prio = raw.priority;
+                        let value = &raw.args["commands"];
+                        let commands = parse_appdata(value, prio, &counts, max_decimals);
                         LauncherType::SystemCommand(SystemCommand { commands })
                     }
                     "bulk_text" => LauncherType::BulkText(BulkText {
-                        icon: cmd.args["icon"].as_str().unwrap_or_default().to_string(),
-                        exec: cmd.args["exec"].as_str().unwrap_or_default().to_string(),
-                        args: cmd.args["exec-args"]
+                        icon: raw.args["icon"].as_str().unwrap_or_default().to_string(),
+                        exec: raw.args["exec"].as_str().unwrap_or_default().to_string(),
+                        args: raw.args["exec-args"]
                             .as_str()
                             .unwrap_or_default()
                             .to_string(),
@@ -144,7 +125,7 @@ impl Loader {
                     "clipboard-execution" => {
                         let clipboard_content: String = read_from_clipboard()?;
                         let capabilities: Option<HashSet<String>> =
-                            match cmd.args.get("capabilities") {
+                            match raw.args.get("capabilities") {
                                 Some(Value::Array(arr)) => {
                                     let strings: HashSet<String> = arr
                                         .iter()
@@ -167,10 +148,10 @@ impl Loader {
                         }
                     }
                     "teams_event" => {
-                        let icon = cmd.args["icon"].as_str().unwrap_or("teams").to_string();
-                        let date = cmd.args["event_date"].as_str().unwrap_or("now");
-                        let event_start = cmd.args["event_start"].as_str().unwrap_or("-5 minutes");
-                        let event_end = cmd.args["event_end"].as_str().unwrap_or("+15 minutes");
+                        let icon = raw.args["icon"].as_str().unwrap_or("teams").to_string();
+                        let date = raw.args["event_date"].as_str().unwrap_or("now");
+                        let event_start = raw.args["event_start"].as_str().unwrap_or("-5 minutes");
+                        let event_end = raw.args["event_end"].as_str().unwrap_or("+15 minutes");
 
                         let event = EventLauncher::get_event(date, event_start, event_end);
 
@@ -186,7 +167,7 @@ impl Loader {
                         })
                         .unwrap_or(LauncherType::Empty),
                     "process" => {
-                        let icon = cmd.args["icon"].as_str().unwrap_or("sherlock-process");
+                        let icon = raw.args["icon"].as_str().unwrap_or("sherlock-process");
                         let launcher = ProcessLauncher::new(icon);
                         if let Some(launcher) = launcher {
                             LauncherType::ProcessLauncher(launcher)
@@ -195,9 +176,9 @@ impl Loader {
                         }
                     }
                     "weather" => {
-                        if let Some(location) = cmd.args["location"].as_str() {
+                        if let Some(location) = raw.args["location"].as_str() {
                             let update_interval =
-                                cmd.args["update_interval"].as_u64().unwrap_or(60);
+                                raw.args["update_interval"].as_u64().unwrap_or(60);
                             LauncherType::WeatherLauncher(WeatherLauncher {
                                 location: location.to_string(),
                                 update_interval,
@@ -207,48 +188,25 @@ impl Loader {
                         }
                     }
                     "debug" => {
-                        let prio = cmd.priority;
-                        let commands_value = &cmd.args["commands"];
-                        let mut commands: HashSet<AppData> =
-                            deserialize_named_appdata(commands_value.clone().into_deserializer())
-                                .unwrap_or_default();
-                        commands = commands
-                            .into_iter()
-                            .map(|c| {
-                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
-                                c.with_priority(parse_priority(prio, count, max_decimals))
-                            })
-                            .collect();
-
+                        let prio = raw.priority;
+                        let value = &raw.args["commands"];
+                        let commands = parse_appdata(value, prio, &counts, max_decimals);
                         LauncherType::SystemCommand(SystemCommand { commands })
                     }
                     _ => LauncherType::Empty,
                 };
-                let method: String = if let Some(value) = &cmd.on_return {
+                let method: String = if let Some(value) = &raw.on_return {
                     value.to_string()
                 } else {
-                    cmd.r#type.clone()
+                    raw.r#type.clone()
                 };
-                Ok(Launcher {
-                    name: cmd.name,
-                    alias: cmd.alias,
-                    tag_start: cmd.tag_start,
-                    tag_end: cmd.tag_end,
-                    method,
-                    next_content: cmd.next_content,
-                    priority: cmd.priority as u32,
-                    r#async: cmd.r#async,
-                    home: cmd.home,
-                    only_home: cmd.only_home,
-                    launcher_type,
-                    shortcut: cmd.shortcut,
-                    spawn_focus: cmd.spawn_focus,
-                })
+                Ok(Launcher::from_raw(raw, method, launcher_type))
             })
             .collect();
 
         // Get errors and launchers
-        let (oks, errs): (Vec<_>, Vec<_>) =
+        type LauncherResult = Vec<Result<Launcher, SherlockError>>;
+        let (oks, errs): (LauncherResult, LauncherResult) =
             deserialized_launchers.into_iter().partition(Result::is_ok);
         let launchers: Vec<Launcher> = oks.into_iter().filter_map(Result::ok).collect();
         let mut non_breaking: Vec<SherlockError> =
@@ -266,6 +224,21 @@ impl Loader {
         non_breaking.extend(n);
         Ok((launchers, non_breaking))
     }
+}
+fn parse_appdata(
+    value: &Value,
+    prio: f32,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> HashSet<AppData> {
+    let data: HashSet<AppData> =
+        deserialize_named_appdata(value.clone().into_deserializer()).unwrap_or_default();
+    data.into_iter()
+        .map(|c| {
+            let count = counts.get(&c.exec).copied().unwrap_or(0.0);
+            c.with_priority(parse_priority(prio, count, max_decimals))
+        })
+        .collect::<HashSet<AppData>>()
 }
 
 pub struct CounterReader {
