@@ -3,6 +3,7 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
+use std::sync::atomic::AtomicBool;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};

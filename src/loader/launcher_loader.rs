@@ -38,6 +38,7 @@ use super::Loader;
 use crate::CONFIG;
 
 impl Loader {
+    #[sherlock_macro::timing("Loading launchers")]
     pub async fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
         wrapped()
     }

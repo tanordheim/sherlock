@@ -4,6 +4,7 @@ use super::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 impl Loader {
+    #[sherlock_macro::timing("Loading resources")]
     pub fn load_resources() -> Result<(), SherlockError> {
         let res_bytes = include_bytes!("../../resources.gresources");
         let resource =
