@@ -25,7 +25,6 @@ pub struct SherlockFlags {
     pub daemonize: bool,
     pub method: Option<String>,
     pub field: Option<String>,
-    pub time_inspect: bool,
     pub sub_menu: Option<String>,
 }
 /// # SherlockConfig
