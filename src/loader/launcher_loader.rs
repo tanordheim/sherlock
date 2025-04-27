@@ -67,23 +67,16 @@ impl Loader {
                         LauncherType::Category(CategoryLauncher { categories })
                     }
                     "app_launcher" => {
-                        let mut apps: HashSet<AppData> = HashSet::new();
-                        if let Some(c) = CONFIG.get() {
-                            apps = match c.behavior.caching {
-                                true => Loader::load_applications(
-                                    raw.priority as f32,
-                                    &counts,
-                                    max_decimals,
-                                )?,
-                                false => Loader::load_applications_from_disk(
-                                    None,
-                                    raw.priority as f32,
-                                    &counts,
-                                    max_decimals,
-                                )?,
-                            };
-                        }
-
+                        let apps: HashSet<AppData> = CONFIG.get().map_or_else(
+                            || HashSet::new(),
+                            |config| {
+                                let prio = raw.priority as f32;
+                                match config.behavior.caching {
+                                    true => Loader::load_applications(prio, &counts, max_decimals).unwrap_or_default(),
+                                    false => Loader::load_applications_from_disk(None, prio, &counts, max_decimals).unwrap_or_default(),
+                                }
+                            }
+                        );
                         LauncherType::App(AppLauncher { apps })
                     }
                     "web_launcher" => LauncherType::Web(WebLauncher {
