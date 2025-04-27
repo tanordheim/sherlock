@@ -3,7 +3,6 @@ use nix::unistd::Pid;
 use procfs::process::{all_processes, Process};
 use rayon::iter::{IntoParallelRefIterator, ParallelBridge, ParallelIterator};
 use std::collections::HashMap;
-use std::time::Instant;
 
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
@@ -43,11 +42,9 @@ impl ProcessLauncher {
     }
 }
 
-    #[sherlock_macro::timing()]
 fn get_all_processes() -> Option<HashMap<(i32, i32), String>> {
     match all_processes() {
         Ok(procs) => {
-            let t0 = Instant::now();
             let user_processes: Vec<Process> = procs
                 .flatten()
                 .par_bridge()
@@ -56,7 +53,6 @@ fn get_all_processes() -> Option<HashMap<(i32, i32), String>> {
                     _ => None,
                 })
                 .collect();
-            println!("took: {:?}", t0.elapsed());
             let mut process_names: HashMap<i32, String> = user_processes
                 .par_iter()
                 .filter_map(|p| {
