@@ -36,7 +36,7 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 #[tokio::main]
 async fn main() {
     let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config) =
-        startup_loading().await;
+        startup_loading();
     application.connect_activate(move |app| {
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
@@ -146,7 +146,8 @@ async fn main() {
     application.run();
 }
 
-async fn startup_loading() -> (
+#[sherlock_macro::timing("----------\nContent loading")]
+fn startup_loading() -> (
     Application,
     Vec<SherlockError>,
     Vec<SherlockError>,
