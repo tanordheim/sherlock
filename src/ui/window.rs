@@ -50,7 +50,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
             if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
                     true => {
-                        window.hide();
+                        window.set_visible(false);
                         let _ = gtk4::prelude::WidgetExt::activate_action(
                             window,
                             "win.clear-search",

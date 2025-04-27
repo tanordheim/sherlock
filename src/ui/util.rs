@@ -1,11 +1,14 @@
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType};
-use gtk4::{prelude::*, Box as HVBox, Label};
+use gtk4::{prelude::*, Box as HVBox, Label, SingleSelection};
 
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::CONFIG;
 
 
 pub trait ShortCut {
     fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32;
+    fn remove_shortcut(&self);
 }
 impl ShortCut for HVBox {
     fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32 {
@@ -25,6 +28,12 @@ impl ShortCut for HVBox {
             }
         }
         return 0;
+    }
+    fn remove_shortcut(&self) {
+        if let Some(label) = self.first_child().and_downcast_ref::<Label>(){
+            self.set_visible(false);
+            label.set_text("");
+        }
     }
 }
 
@@ -119,5 +128,55 @@ impl ConfKeys {
             _ => "⌘",
         };
         k.to_string()
+    }
+}
+
+pub trait SherlockNav {
+    fn focus_next(&self)->u32;
+    fn focus_prev(&self)->u32;
+    fn focus_first(&self)->u32;
+    fn execute_by_index(&self, index: u32);
+}
+impl SherlockNav for SingleSelection {
+    fn focus_next(&self)->u32 {
+        let index = self.selected();
+        let new_index = index + 1;
+        if new_index < self.n_items() {
+            self.set_selected(new_index);
+            return new_index
+        }
+        index
+    }
+    fn focus_prev(&self)->u32 {
+        let index = self.selected();
+        if index > 0{
+            self.set_selected(index - 1);
+            return index - 1
+        }
+        index
+    }
+    fn focus_first(&self)->u32 {
+        let mut i = 0;
+        let current_index = self.selected();
+        while i < self.n_items() {
+            self.set_selected(i);
+            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
+                if item.imp().spawn_focus.get(){
+                    return i
+                } else {
+                    i += 1;
+                }
+            }
+        }
+        self.set_selected(current_index);
+        current_index
+    }
+    fn execute_by_index(&self, index: u32) {
+        if index < self.n_items(){
+            self.set_selected(index);
+            if let Some(row) = self.selected_item().and_downcast::<SherlockRow>(){
+                row.emit_by_name::<()>("row-should-activate", &[]);
+            }
+        }
     }
 }

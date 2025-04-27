@@ -1,5 +1,4 @@
 use futures::future::join_all;
-use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
     self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner
@@ -7,7 +6,6 @@ use gtk4::{
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
-use nix::NixPath;
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -31,6 +29,7 @@ struct SearchUI {
     spinner: WeakRef<Spinner>,
     selection: WeakRef<SingleSelection>,
     filter: WeakRef<CustomFilter>,
+    sorter: WeakRef<CustomSorter>,
 }
 //     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>){
@@ -111,7 +110,7 @@ pub fn search(
 
     let custom_binds = ConfKeys::new();
     nav_event(ui.selection, ui.results.clone(), ui.search_bar.clone(), custom_binds, stack_page_ref);
-    change_event(ui.search_bar.clone(), modes, &mode, ui.filter, &search_query);
+    change_event(ui.search_bar.clone(), modes, &mode, ui.filter, ui.sorter, &search_query);
 
     // Improved mode selection
     let search_bar = ui.search_bar.clone();
@@ -256,6 +255,12 @@ fn construct_window(
     let sorter = CustomSorter::new({
         let search_text = search_text.clone();
 
+        fn make_prio(prio: f32, edits: usize) -> f32 {
+            let normalized = (1000.0 / edits as f32).round() / 1000.0;
+            let counters = prio.fract() / 1000.0;
+            prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
+
+        }
         move |item_a, item_b| {
             let search_text = search_text.borrow();
 
@@ -266,8 +271,8 @@ fn construct_window(
             let mut priority_b = item_b.priority();
 
             if !search_text.is_empty() {
-                priority_a += levenshtein(&search_text, &item_a.search()) as f32;
-                priority_b += levenshtein(&search_text, &item_b.search()) as f32;
+                priority_a = make_prio(item_a.priority(), levenshtein(&search_text, &item_a.search()));
+                priority_b = make_prio(item_b.priority(), levenshtein(&search_text, &item_b.search()));
             }
 
             priority_a.total_cmp(&priority_b).into()
@@ -367,6 +372,7 @@ fn construct_window(
         spinner: spinner.downgrade(),
         selection: selection.downgrade(),
         filter: filter.downgrade(),
+        sorter: sorter.downgrade(),
     };
     CONFIG.get().map(|c| {
         ui.result_viewport.upgrade().map(|viewport| {
@@ -504,61 +510,13 @@ fn nav_event(
 
     search_bar.upgrade().map(|entry| entry.add_controller(event_controller));
 }
-pub trait SherlockNav {
-    fn focus_next(&self)->u32 {0}
-    fn focus_prev(&self)->u32 {0}
-    fn focus_first(&self)->u32 {0}
-    fn execute_by_index(&self, index: u32) {}
-}
-impl SherlockNav for SingleSelection {
-    fn focus_next(&self)->u32 {
-        let index = self.selected();
-        let new_index = index + 1;
-        if new_index < self.n_items() {
-            self.set_selected(new_index);
-            return new_index
-        }
-        index
-    }
-    fn focus_prev(&self)->u32 {
-        let index = self.selected();
-        if index > 0{
-            self.set_selected(index - 1);
-            return index - 1
-        }
-        index
-    }
-    fn focus_first(&self)->u32 {
-        let mut i = 0;
-        let current_index = self.selected();
-        while i < self.n_items() {
-            self.set_selected(i);
-            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>(){
-                if item.imp().spawn_focus.get(){
-                    return i
-                } else {
-                    i += 1;
-                }
-            }
-        }
-        self.set_selected(current_index);
-        current_index
-    }
-    fn execute_by_index(&self, index: u32) {
-        if index < self.n_items(){
-            self.set_selected(index);
-            if let Some(row) = self.selected_item().and_downcast::<SherlockRow>(){
-                row.emit_by_name::<()>("row-should-activate", &[]);
-            }
-        }
-    }
-}
 
 fn change_event(
     search_bar: WeakRef<Entry>,
     modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     filter: WeakRef<CustomFilter>,
+    sorter: WeakRef<CustomSorter>,
     search_query: &Rc<RefCell<String>>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
@@ -581,171 +539,11 @@ fn change_event(
             }
             *search_query_clone.borrow_mut() = current_text.clone();
             filter.upgrade().map(|filter| filter.changed(gtk4::FilterChange::Different));
+            sorter.upgrade().map(|sorter| sorter.changed(gtk4::SorterChange::Different));
         }
     });
     Some(())
 }
-
-// pub fn async_calc(
-//     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-//     launchers: &[Launcher],
-//     mode: &Rc<RefCell<String>>,
-//     current_text: String,
-//     results: &WeakRef<ListBox>,
-//     mod_str: &str,
-//     animate: bool,
-// ) {
-//     // If task is currently running, abort it
-//     if let Some(t) = current_task.borrow_mut().take() {
-//         t.abort();
-//     };
-//     let is_home = current_text.is_empty() && mode.borrow().as_str().trim() == "all";
-//     let filtered_launchers: Vec<Launcher> = launchers
-//         .iter()
-//         .filter(|launcher| (is_home && launcher.home) || (!is_home && !launcher.only_home))
-//         .cloned()
-//         .collect();
-//     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = filtered_launchers
-//         .into_iter()
-//         .partition(|launcher| launcher.r#async);
-
-//     // Create loader widgets
-//     // TODO
-//     let current_mode_ref = mode.borrow();
-//     let current_mode = current_mode_ref.trim();
-
-//     // extract result items to reduce cloning
-//     let mut async_widgets: Vec<ResultItem> = Vec::with_capacity(async_launchers.capacity());
-//     let async_launchers: Vec<AsyncLauncherTile> = async_launchers
-//         .into_iter()
-//         .filter_map(|launcher| {
-//             if (launcher.priority == 0 && current_mode == launcher.alias.as_deref().unwrap_or(""))
-//                 || (current_mode == "all" && launcher.priority > 0)
-//             {
-//                 launcher
-//                     .get_loader_widget(&current_text)
-//                     .map(|(tile, result_item)| {
-//                         async_widgets.push(result_item);
-//                         tile
-//                     })
-//             } else {
-//                 None
-//             }
-//         })
-//         .collect();
-//     populate(
-//         &current_text,
-//         &mode.borrow(),
-//         &results,
-//         &non_async_launchers,
-//         Some(async_widgets),
-//         animate,
-//         mod_str,
-//     );
-
-//     // Gather results for asynchronous widgets
-//     let task = glib::MainContext::default().spawn_local({
-//         let current_task_clone = Rc::clone(current_task);
-//         let results = results.clone();
-//         async move {
-//             // Set spinner active
-//             results
-//                 .upgrade()
-//                 .map(|r| r.activate_action("win.spinner-mode", Some(&true.to_variant())));
-//             // Make async tiles update concurrently
-//             let futures: Vec<_> = async_launchers
-//                 .into_iter()
-//                 .map(|widget| {
-//                     let current_text = current_text.clone();
-//                     async move {
-//                         let mut attrs = widget.attrs.clone();
-
-//                         // Process text tile
-//                         if let Some(opts) = &widget.text_tile {
-//                             if let Some((title, body, next_content)) =
-//                                 widget.launcher.get_result(&current_text).await
-//                             {
-//                                 opts.title.upgrade().map(|t| t.set_text(&title));
-//                                 opts.body.upgrade().map(|b| b.set_text(&body));
-//                                 if let Some(next_content) = next_content {
-//                                     attrs.insert(
-//                                         String::from("next_content"),
-//                                         next_content.to_string(),
-//                                     );
-//                                 }
-//                             }
-//                         }
-
-//                         // Process image replacement
-//                         if let Some(opts) = &widget.image_replacement {
-//                             if let Some(overlay) = &opts.icon_holder_overlay {
-//                                 if let Some((image, was_cached)) = widget.launcher.get_image().await
-//                                 {
-//                                     if !was_cached {
-//                                         overlay.upgrade().map(|overlay| {
-//                                             overlay.add_css_class("image-replace-overlay")
-//                                         });
-//                                     }
-//                                     let texture = gkt4::gdk::Texture::for_pixbuf(&image);
-//                                     let gtk_image = Image::for_paintable(Some(&texture));
-//                                     gtk_image.set_widget_name("album-cover");
-//                                     gtk_image.set_pixel_size(50);
-//                                     overlay
-//                                         .upgrade()
-//                                         .map(|overlay| overlay.add_overlay(&gtk_image));
-//                                 }
-//                             }
-//                         }
-
-//                         // Process weather tile
-//                         if let Some(wtr) = &widget.weather_tile {
-//                             if let Some((data, was_changed)) = widget.launcher.get_weather().await {
-//                                 let css_class = if was_changed {
-//                                     "weather-animate"
-//                                 } else {
-//                                     "weather-no-animate"
-//                                 };
-//                                 widget.row.upgrade().map(|row| {
-//                                     row.add_css_class(css_class);
-//                                     row.add_css_class(&data.icon);
-//                                 });
-//                                 wtr.temperature
-//                                     .upgrade()
-//                                     .map(|tmp| tmp.set_text(&data.temperature));
-//                                 wtr.spinner.upgrade().map(|spn| spn.set_spinning(false));
-//                                 wtr.icon
-//                                     .upgrade()
-//                                     .map(|ico| ico.set_icon_name(Some(&data.icon)));
-//                                 wtr.location
-//                                     .upgrade()
-//                                     .map(|loc| loc.set_text(&data.format_str));
-//                             } else {
-//                                 widget.row.upgrade().map(|row| row.set_visible(false));
-//                             }
-//                         }
-
-//                         // Connect row-should-activate signal
-//                         widget.row.upgrade().map(|row| {
-//                             row.connect("row-should-activate", false, move |row| {
-//                                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-//                                 execute_from_attrs(&row, &attrs);
-//                                 None
-//                             });
-//                         })
-//                     }
-//                 })
-//                 .collect();
-
-//             let _ = join_all(futures).await;
-//             // Set spinner inactive
-//             results
-//                 .upgrade()
-//                 .map(|r| r.activate_action("win.spinner-mode", Some(&false.to_variant())));
-//             *current_task_clone.borrow_mut() = None;
-//         }
-//     });
-//     *current_task.borrow_mut() = Some(task);
-// }
 
 // pub fn populate(
 //     keyword: &str,
