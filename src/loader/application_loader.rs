@@ -20,7 +20,7 @@ impl Loader {
     pub fn load_applications_from_disk(
         applications: Option<HashSet<PathBuf>>,
         priority: f32,
-        counts: HashMap<String, f32>,
+        counts: &HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashSet<AppData>, SherlockError> {
         let config = CONFIG.get().ok_or(SherlockError {
@@ -158,7 +158,7 @@ impl Loader {
     fn get_new_applications(
         mut apps: HashSet<AppData>,
         priority: f32,
-        counts: HashMap<String, f32>,
+        counts: &HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashSet<AppData>, SherlockError> {
         let system_apps = get_applications_dir();
@@ -209,7 +209,7 @@ impl Loader {
 
     pub fn load_applications(
         priority: f32,
-        counts: HashMap<String, f32>,
+        counts: &HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashSet<AppData>, SherlockError> {
         let config = CONFIG.get().ok_or_else(|| SherlockError {
@@ -244,11 +244,17 @@ impl Loader {
 
                 // Refresh cache in the background
                 let old_apps = apps.clone();
-                rayon::spawn_fifo(move || {
-                    if let Ok(new_apps) =
-                        Loader::get_new_applications(old_apps, priority, counts, decimals)
-                    {
-                        Loader::write_cache(&new_apps, &config.behavior.cache);
+                rayon::spawn_fifo({
+                    let counts_clone = counts.clone();
+                    move || {
+                        if let Ok(new_apps) = Loader::get_new_applications(
+                            old_apps,
+                            priority,
+                            &counts_clone,
+                            decimals,
+                        ) {
+                            Loader::write_cache(&new_apps, &config.behavior.cache);
+                        }
                     }
                 });
                 return Ok(apps);

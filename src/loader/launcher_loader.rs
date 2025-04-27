@@ -59,7 +59,6 @@ impl Loader {
         let deserialized_launchers: Vec<Result<Launcher, SherlockError>> = launcher_config
             .into_iter()
             .map(|cmd| {
-                let counts_clone = counts.clone();
                 let launcher_type: LauncherType = match cmd.r#type.as_str() {
                     "categories" => {
                         let prio = cmd.priority;
@@ -70,7 +69,7 @@ impl Loader {
                         categories = categories
                             .into_iter()
                             .map(|c| {
-                                let count = counts_clone.get(&c.exec).copied().unwrap_or(0.0);
+                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
                                 c.with_priority(parse_priority(prio, count, max_decimals))
                             })
                             .collect();
@@ -82,13 +81,13 @@ impl Loader {
                             apps = match c.behavior.caching {
                                 true => Loader::load_applications(
                                     cmd.priority as f32,
-                                    counts_clone,
+                                    &counts,
                                     max_decimals,
                                 )?,
                                 false => Loader::load_applications_from_disk(
                                     None,
                                     cmd.priority as f32,
-                                    counts_clone,
+                                    &counts,
                                     max_decimals,
                                 )?,
                             };
@@ -127,7 +126,7 @@ impl Loader {
                         commands = commands
                             .into_iter()
                             .map(|c| {
-                                let count = counts_clone.get(&c.exec).copied().unwrap_or(0.0);
+                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
                                 c.with_priority(parse_priority(prio, count, max_decimals))
                             })
                             .collect();
@@ -216,7 +215,7 @@ impl Loader {
                         commands = commands
                             .into_iter()
                             .map(|c| {
-                                let count = counts_clone.get(&c.exec).copied().unwrap_or(0.0);
+                                let count = counts.get(&c.exec).copied().unwrap_or(0.0);
                                 c.with_priority(parse_priority(prio, count, max_decimals))
                             })
                             .collect();
