@@ -137,8 +137,7 @@ impl TileBuilder {
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
         let shortcut_option: Option<Box> = builder.object("shortcut-holder");
-        let shortcut_holder: Option<WeakRef<Box>> =
-            shortcut_option.map(|s| s.downgrade());
+        let shortcut_holder: Option<WeakRef<Box>> = shortcut_option.map(|s| s.downgrade());
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {
