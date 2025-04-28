@@ -21,7 +21,7 @@
 | Flag         | Description | Note |
 |--------------|----------------------|----------------------------------|
 | --daemonize      | Overrides the daemonizing value in `config.toml` | |
-| --time-inspect      | Prints startup time from 0 to content. Also prints the time it took to load the launchers.| |
+| --time-inspect      | Prints startup time from 0 to content. Also prints the time it took to load the launchers.| (Removed) use `TIMING=true sherlock` instead.|
 | --sub-menu      | Launch Sherlock with a custom alias from the beginning. For example `sherlock --sub-menu pm`, where `pm` is an alias you defined in your fallbacks.| |
 
 ## Pipe Mode Flags
@@ -32,3 +32,7 @@
 | --method | Specifies the method Sherlock will use to handle return presses. | Can either be `print` or `copy`|
 | --field | Selects a field as the output data.  | Only works with json formatting. |
 
+## Environment Variables
+| Flag         | Description | Note |
+|--------------|----------------------|------------------------------------------------|
+| `TIMING=true` |Prints timing information for several functions. | |

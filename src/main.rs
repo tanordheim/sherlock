@@ -5,6 +5,7 @@ use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
 use launcher::Launcher;
 use std::sync::OnceLock;
+use std::time::Instant;
 use std::{env, process, thread};
 use utils::config::SherlockFlags;
 
@@ -37,7 +38,14 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 async fn main() {
     let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config) =
         startup_loading();
+    let t0 = Instant::now();
     application.connect_activate(move |app| {
+        let t1 = Instant::now();
+        if let Ok(timing_enabled) = std::env::var("TIMING") {
+            if timing_enabled == "true" {
+                println!("Activation took {:?}", t0.elapsed());
+            }
+        }
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
 
@@ -142,11 +150,16 @@ async fn main() {
                 });
             }
         }
+        if let Ok(timing_enabled) = std::env::var("TIMING") {
+            if timing_enabled == "true" {
+                println!("Window creation took {:?}", t1.elapsed());
+            }
+        }
     });
     application.run();
 }
 
-#[sherlock_macro::timing("----------\nContent loading")]
+#[sherlock_macro::timing("\nContent loading")]
 fn startup_loading() -> (
     Application,
     Vec<SherlockError>,
