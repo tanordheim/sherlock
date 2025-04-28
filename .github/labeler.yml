@@ -1,0 +1,6 @@
+bug:
+  - "(crash|bug|error|coredump|freeze|segfault|issue|problem)"
+
+feature-request:
+  - "(feature|enhancement|improvement|request|suggestion)"
+
