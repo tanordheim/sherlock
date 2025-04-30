@@ -106,7 +106,7 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
                 let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
                 builder.content.set_wrap_mode(gtk4::WrapMode::Word);
                 let buf = builder.content.buffer();
-                buf.set_text(parameter.as_ref());
+                buf.set_text(&parameter);
                 stack_clone.add_named(&builder.object, Some("next-page"));
                 stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
                 stack_clone.set_visible_child_name("next-page");

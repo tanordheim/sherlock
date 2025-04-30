@@ -91,7 +91,8 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
             "next" => {
                 let next_content = attrs
                     .get("next_content")
-                    .map_or("No next_content provided...", |s| s);
+                    .map_or("No next_content provided...", |s| s.trim());
+
                 let _ = row
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
