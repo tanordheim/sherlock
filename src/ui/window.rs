@@ -104,10 +104,14 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         .activate(move |_: &ApplicationWindow, _, parameter| {
             if let Some(parameter) = parameter.and_then(|p| p.get::<String>()) {
                 let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
-                builder.content.set_wrap_mode(gtk4::WrapMode::Word);
-                let buf = builder.content.buffer();
-                buf.set_text(parameter.as_ref());
-                stack_clone.add_named(&builder.object, Some("next-page"));
+                builder.content.upgrade().map(|content| {
+                    content.set_wrap_mode(gtk4::WrapMode::Word);
+                    let buf = content.buffer();
+                    buf.set_text(parameter.as_ref());
+                });
+                builder.object.upgrade().map(|obj| {
+                    stack_clone.add_named(&obj, Some("next-page"));
+                });
                 stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
                 stack_clone.set_visible_child_name("next-page");
             }

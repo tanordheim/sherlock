@@ -4,7 +4,7 @@ use crate::{
     loader::pipe_loader::PipeData,
     CONFIG,
 };
-use gio::glib::{SignalHandlerId, WeakRef};
+use gio::glib::{object, SignalHandlerId, WeakRef};
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
@@ -107,15 +107,17 @@ impl WeatherTileElements {
 
 #[derive(Default)]
 pub struct TextViewTileBuilder {
-    pub object: Box,
-    pub content: TextView,
+    pub object: WeakRef<Box>,
+    pub content: WeakRef<TextView>,
 }
 impl TextViewTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
+        let object: Box = builder.object("next_tile").unwrap_or_default();
+        let content: TextView = builder.object("content").unwrap_or_default();
         TextViewTileBuilder {
-            object: builder.object("next_tile").unwrap_or_default(),
-            content: builder.object("content").unwrap_or_default(),
+            object: object.downgrade(),
+            content: content.downgrade(),
         }
     }
 }

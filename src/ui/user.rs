@@ -56,15 +56,17 @@ pub fn display_pipe(
 }
 pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
-    let buffer = builder.content.buffer();
-    builder.content.add_css_class("raw_text");
-    builder.content.set_monospace(true);
-    let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
-    buffer.set_text(&sanitized);
-    if center {
-        builder.content.set_justification(Justification::Center);
-    }
-    return builder.object;
+    builder.content.upgrade().map(|ctx| {
+        let buffer = ctx.buffer();
+        ctx.add_css_class("raw_text");
+        ctx.set_monospace(true);
+        let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
+        buffer.set_text(&sanitized);
+        if center {
+            ctx.set_justification(Justification::Center);
+        }
+    });
+    builder.object.upgrade().unwrap_or_default()
 }
 
 //fn nav_event(
