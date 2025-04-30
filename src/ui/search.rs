@@ -91,7 +91,7 @@ fn update(
             let _ = join_all(futures).await;
             // Set spinner inactive
             if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
-                let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
+                let _ = row.activate_action("win.spinner-mode", Some(&false.to_variant()));
             }
             *current_task_clone.borrow_mut() = None;
         }
