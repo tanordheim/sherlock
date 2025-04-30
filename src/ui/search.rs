@@ -278,15 +278,25 @@ fn construct_window(
     search_icon_back.set_icon_name(Some("go-previous-symbolic"));
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
+    // Set search icons
+    let overlay = Overlay::new();
+    overlay.set_child(Some(&search_icon));
+    overlay.add_overlay(&search_icon_back);
 
-    let sorter = make_sorter(&search_text);
+    // Setup model and factory
     let model = ListStore::new::<SherlockRow>();
+    let factory = make_factory();
+    results.set_factory(Some(&factory));
+
+    // Setup selection
+    let sorter = make_sorter(&search_text);
     let filter = make_filter(&search_text, &mode);
     let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
     let selection = SingleSelection::new(Some(sorted_model));
-    let factory = SignalListItemFactory::new();
+    results.set_model(Some(&selection));
 
+    // Launcher setup
     let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
         .clone()
         .into_iter()
@@ -312,29 +322,11 @@ fn construct_window(
     for item in patches.iter() {
         model.append(&item.row_item);
     }
-    results.set_model(Some(&selection));
-
-    factory.connect_bind(|_, item| {
-        let item = item
-            .downcast_ref::<gtk4::ListItem>()
-            .expect("Item mut be a ListItem");
-        let row = item
-            .item()
-            .clone()
-            .and_downcast::<SherlockRow>()
-            .expect("Row should be SherlockRow");
-        item.set_child(Some(&row));
-    });
-    results.set_factory(Some(&factory));
 
     let (_, n_items) = selection.focus_first();
     if n_items > 0 {
         results.scroll_to(0, ListScrollFlags::NONE, None);
     }
-
-    let overlay = Overlay::new();
-    overlay.set_child(Some(&search_icon));
-    overlay.add_overlay(&search_icon_back);
 
     // Show notification-bar
     CONFIG.get().map(|c| {
@@ -375,6 +367,21 @@ fn construct_window(
     });
 
     (search_text, mode, modes, vbox, ui)
+}
+fn make_factory()->SignalListItemFactory{
+    let factory = SignalListItemFactory::new();
+    factory.connect_bind(|_, item| {
+        let item = item
+            .downcast_ref::<gtk4::ListItem>()
+            .expect("Item mut be a ListItem");
+        let row = item
+            .item()
+            .clone()
+            .and_downcast::<SherlockRow>()
+            .expect("Row should be SherlockRow");
+        item.set_child(Some(&row));
+    });
+    factory
 }
 fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) -> CustomFilter {
     CustomFilter::new({
