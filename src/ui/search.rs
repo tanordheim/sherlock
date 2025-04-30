@@ -122,7 +122,7 @@ pub fn search(
 
     let custom_binds = ConfKeys::new();
     nav_event(
-        ui.selection,
+        ui.selection.clone(),
         ui.results.clone(),
         ui.search_bar.clone(),
         custom_binds,
@@ -130,10 +130,12 @@ pub fn search(
     );
     change_event(
         ui.search_bar.clone(),
+        ui.results,
         modes,
         &mode,
         ui.filter,
         ui.sorter,
+        ui.selection,
         &search_query,
     );
 
@@ -325,6 +327,11 @@ fn construct_window(
     });
     results.set_factory(Some(&factory));
 
+    let (_, n_items) = selection.focus_first();
+    if n_items > 0 {
+        results.scroll_to(0, ListScrollFlags::NONE, None);
+    }
+
     let overlay = Overlay::new();
     overlay.set_child(Some(&search_icon));
     overlay.add_overlay(&search_icon_back);
@@ -369,7 +376,7 @@ fn construct_window(
 
     (search_text, mode, modes, vbox, ui)
 }
-fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>)->CustomFilter{
+fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) -> CustomFilter {
     CustomFilter::new({
         let search_text = Rc::clone(search_text);
         let search_mode = Rc::clone(mode);
@@ -404,7 +411,7 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>)->C
         }
     })
 }
-fn make_sorter(search_text: &Rc<RefCell<String>>)->CustomSorter{
+fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
     CustomSorter::new({
         let search_text = Rc::clone(search_text);
 
@@ -450,6 +457,26 @@ fn nav_event(
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
+        fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
+            let (new_index, n_items) = selection
+                .upgrade()
+                .map_or((0, 0), |results| results.focus_prev());
+            results.upgrade().map(|results| {
+                if n_items > 0 {
+                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                }
+            });
+        }
+        fn move_next(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
+            let (new_index, n_items) = selection
+                .upgrade()
+                .map_or((0, 0), |results| results.focus_next());
+            results.upgrade().map(|results| {
+                if new_index < n_items {
+                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                }
+            });
+        }
         move |_, key, i, modifiers| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
@@ -460,12 +487,7 @@ fn nav_event(
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    let new_index = selection
-                        .upgrade()
-                        .map_or(0, |results| results.focus_prev());
-                    results
-                        .upgrade()
-                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    move_prev(&selection, &results);
                     return true.into();
                 }
                 k if Some(k) == custom_binds.next
@@ -473,30 +495,15 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    let new_index = selection
-                        .upgrade()
-                        .map_or(0, |results| results.focus_next());
-                    results
-                        .upgrade()
-                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    move_next(&selection, &results);
                     return true.into();
                 }
                 gdk::Key::Up => {
-                    let new_index = selection
-                        .upgrade()
-                        .map_or(0, |results| results.focus_prev());
-                    results
-                        .upgrade()
-                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    move_prev(&selection, &results);
                     return true.into();
                 }
                 gdk::Key::Down => {
-                    let new_index = selection
-                        .upgrade()
-                        .map_or(0, |results| results.focus_next());
-                    results
-                        .upgrade()
-                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    move_next(&selection, &results);
                     return true.into();
                 }
                 gdk::Key::BackSpace => {
@@ -541,21 +548,10 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        let new_index = selection
-                            .upgrade()
-                            .map_or(0, |results| results.focus_prev());
-                        results.upgrade().map(|results| {
-                            results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                        });
-
+                        move_prev(&selection, &results);
                         return true.into();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        let new_index = selection
-                            .upgrade()
-                            .map_or(0, |results| results.focus_next());
-                        results.upgrade().map(|results| {
-                            results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                        });
+                        move_next(&selection, &results);
                         return true.into();
                     }
                 }
@@ -572,10 +568,12 @@ fn nav_event(
 
 fn change_event(
     search_bar: WeakRef<Entry>,
+    results: WeakRef<ListView>,
     modes: HashMap<String, Option<String>>,
     mode: &Rc<RefCell<String>>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
+    selection: WeakRef<SingleSelection>,
     search_query: &Rc<RefCell<String>>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
@@ -603,49 +601,14 @@ fn change_event(
             sorter
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+            if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()) {
+                results.upgrade().map(|results| {
+                    if n_items > 0 {
+                        results.scroll_to(0, ListScrollFlags::NONE, None);
+                    }
+                });
+            }
         }
     });
     Some(())
 }
-
-// pub fn populate(
-//     keyword: &str,
-//     mode: &str,
-//     results_frame: &WeakRef<ListBox>,
-//     launchers: &Vec<Launcher>,
-//     async_widgets: Option<Vec<ResultItem>>,
-//     animate: bool,
-//     mod_str: &str,
-// ) {
-//     // Remove all elements inside to avoid duplicates
-//     if let Some(frame) = results_frame.upgrade() {
-//         while let Some(row) = frame.last_child() {
-//             frame.remove(&row);
-//             row.unrealize();
-//         }
-//     }
-//     let mut launcher_tiles = construct_tiles(&keyword.to_string(), &launchers, &mode.to_string());
-//     if let Some(widgets) = async_widgets {
-//         launcher_tiles.extend(widgets);
-//     }
-
-//     launcher_tiles.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
-
-//     if let Some(c) = CONFIG.get() {
-//         let mut shortcut_index = 1;
-//         if let Some(frame) = results_frame.upgrade() {
-//             launcher_tiles.into_iter().for_each(|widget| {
-//                 if animate && c.behavior.animate {
-//                     widget.row_item.add_css_class("animate");
-//                 }
-//                 if let Some(shortcut_holder) = &widget.shortcut_holder {
-//                     shortcut_index += shortcut_holder
-//                         .upgrade()
-//                         .map_or(0, |holder| holder.apply_shortcut(shortcut_index, mod_str));
-//                 }
-//                 frame.append(&widget.row_item);
-//             });
-//         }
-//     }
-//     results_frame.upgrade().map(|r| r.focus_first());
-// }

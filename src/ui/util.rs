@@ -1,3 +1,5 @@
+use std::u32;
+
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::gdk::{Key, ModifierType};
 use gtk4::{prelude::*, Box as HVBox, Label, SingleSelection};
@@ -131,44 +133,50 @@ impl ConfKeys {
 }
 
 pub trait SherlockNav {
-    fn focus_next(&self) -> u32;
-    fn focus_prev(&self) -> u32;
-    fn focus_first(&self) -> u32;
+    fn focus_next(&self) -> (u32, u32);
+    fn focus_prev(&self) -> (u32, u32);
+    fn focus_first(&self) -> (u32, u32);
     fn execute_by_index(&self, index: u32);
 }
 impl SherlockNav for SingleSelection {
-    fn focus_next(&self) -> u32 {
+    fn focus_next(&self) -> (u32, u32) {
         let index = self.selected();
-        let new_index = index + 1;
-        if new_index < self.n_items() {
-            self.set_selected(new_index);
-            return new_index;
+        if index == u32::MAX {
+            return (index, 0);
         }
-        index
+        let new_index = index + 1;
+        let n_items = self.n_items();
+        if new_index < n_items {
+            self.set_selected(new_index);
+            return (new_index, n_items);
+        }
+        (index, n_items)
     }
-    fn focus_prev(&self) -> u32 {
+    fn focus_prev(&self) -> (u32, u32) {
         let index = self.selected();
+        let n_items = self.n_items();
         if index > 0 {
             self.set_selected(index - 1);
-            return index - 1;
+            return (index - 1, n_items);
         }
-        index
+        (index, n_items)
     }
-    fn focus_first(&self) -> u32 {
+    fn focus_first(&self) -> (u32, u32) {
         let mut i = 0;
         let current_index = self.selected();
-        while i < self.n_items() {
+        let n_items = self.n_items();
+        while i < n_items {
             self.set_selected(i);
             if let Some(item) = self.selected_item().and_downcast::<SherlockRow>() {
                 if item.imp().spawn_focus.get() {
-                    return i;
+                    return (i, n_items);
                 } else {
                     i += 1;
                 }
             }
         }
         self.set_selected(current_index);
-        current_index
+        (current_index, n_items)
     }
     fn execute_by_index(&self, index: u32) {
         if index < self.n_items() {
