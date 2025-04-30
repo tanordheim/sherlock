@@ -302,7 +302,8 @@ fn construct_window(
             update
         })
         .collect();
-    patches.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
+
+    // Start first update cycle to update async tiles
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     update(tile_updates, &current_task);
 
