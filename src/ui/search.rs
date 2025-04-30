@@ -250,6 +250,7 @@ fn construct_window(
         .get()
         .and_then(|c| c.behavior.sub_menu.as_deref())
         .unwrap_or("all");
+    let conf_keys = ConfKeys::new();
     let mode = Rc::new(RefCell::new(original_mode.to_string()));
     let search_text = Rc::new(RefCell::new(String::from("")));
     let modes: HashMap<String, Option<String>> = launchers
@@ -284,6 +285,34 @@ fn construct_window(
     let filter = make_filter(&search_text, &mode);
     let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
+
+    sorted_model.connect_items_changed(move |myself, position, removed, added| {
+        if (added != 0 || removed != 0) && position < 5 {
+            for i in 0..5 {
+                if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                    if let Some(shortcut_holder) = item.shortcut_holder() {
+                        shortcut_holder
+                            .apply_shortcut(i as i32 + 1, &conf_keys.shortcut_modifier_str);
+
+                        item.set_shortcut(true);
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            for i in 5..myself.n_items() {
+                if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                    if let Some(shortcut_holder) = item.shortcut_holder() {
+                        shortcut_holder.remove_shortcut();
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    });
+
     let selection = SingleSelection::new(Some(sorted_model));
     let factory = SignalListItemFactory::new();
 
@@ -310,7 +339,11 @@ fn construct_window(
     update(tile_updates, &current_task);
 
     for item in patches.iter() {
-        model.append(&item.row_item);
+        let row_item = &item.row_item;
+
+        row_item.set_shortcut_holder(item.shortcut_holder.clone());
+
+        model.append(row_item);
     }
     results.set_model(Some(&selection));
 
@@ -323,6 +356,7 @@ fn construct_window(
             .clone()
             .and_downcast::<SherlockRow>()
             .expect("Row should be SherlockRow");
+
         item.set_child(Some(&row));
     });
     results.set_factory(Some(&factory));
@@ -523,7 +557,9 @@ fn nav_event(
                         });
                     }
                     // Focus first item and check for overflow
-                    if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()){
+                    if let Some((_, n_items)) =
+                        selection.upgrade().map(|results| results.focus_first())
+                    {
                         if n_items > 0 {
                             results
                                 .upgrade()
@@ -543,7 +579,10 @@ fn nav_event(
                         .shortcut_modifier
                         .map_or(false, |modifier| modifiers.contains(modifier))
                     {
-                        if let Some(index) = key.name().and_then(|name| name.parse::<u32>().ok()) {
+                        if let Some(index) = key
+                            .name()
+                            .and_then(|name| name.parse::<u32>().ok().map(|v| v - 1))
+                        {
                             println!("{}", index);
                             selection.upgrade().map(|r| r.execute_by_index(index));
                             return true.into();

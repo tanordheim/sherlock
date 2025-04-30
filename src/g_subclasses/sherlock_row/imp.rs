@@ -1,5 +1,6 @@
 use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
+use gio::glib::WeakRef;
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
@@ -14,6 +15,7 @@ pub struct SherlockRow {
     pub spawn_focus: Cell<bool>,
     pub shortcut: Cell<bool>,
     pub gesture: OnceCell<GestureClick>,
+    pub shortcut_holder: OnceCell<Option<WeakRef<gtk4::Box>>>,
     pub priority: Cell<f32>,
     pub search: RefCell<String>,
     pub alias: RefCell<String>,

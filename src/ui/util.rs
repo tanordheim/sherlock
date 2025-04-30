@@ -31,10 +31,7 @@ impl ShortCut for HVBox {
         return 0;
     }
     fn remove_shortcut(&self) {
-        if let Some(label) = self.first_child().and_downcast_ref::<Label>() {
-            self.set_visible(false);
-            label.set_text("");
-        }
+        self.set_visible(false);
     }
 }
 
