@@ -522,7 +522,14 @@ fn nav_event(
                             entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
                         });
                     }
-                    selection.upgrade().map(|results| results.focus_first());
+                    // Focus first item and check for overflow
+                    if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()){
+                        if n_items > 0 {
+                            results
+                                .upgrade()
+                                .map(|results| results.scroll_to(0, ListScrollFlags::NONE, None));
+                        }
+                    }
                 }
                 gdk::Key::Return => {
                     if let Some(upgr) = selection.upgrade() {
