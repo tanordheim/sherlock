@@ -2,7 +2,7 @@ use crate::{
     g_subclasses::sherlock_row::SherlockRow, launcher::Launcher, loader::pipe_loader::PipeData,
     CONFIG,
 };
-use gio::glib::WeakRef;
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
@@ -14,6 +14,7 @@ pub struct AsyncLauncherTile {
     pub image_replacement: Option<ImageReplacementElements>,
     pub weather_tile: Option<WeatherTileElements>,
     pub attrs: HashMap<String, String>,
+    pub signal_id: Option<SignalHandlerId>,
 }
 
 #[derive(Debug)]

@@ -40,6 +40,7 @@ impl Tile {
                 image_replacement: None,
                 weather_tile,
                 attrs,
+                signal_id: None,
             },
             result_item,
         ));

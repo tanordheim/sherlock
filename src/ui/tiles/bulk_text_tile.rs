@@ -45,9 +45,17 @@ impl Tile {
             .map(|body| body.set_text("Loading..."));
 
         let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
+        let attrs_clone = attrs.clone();
         builder.object.set_spawn_focus(launcher.spawn_focus);
         builder.object.set_shortcut(launcher.shortcut);
         builder.object.add_css_class("bulk-text");
+        let signal_id = builder
+            .object
+            .connect("row-should-activate", false, move |row| {
+                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                execute_from_attrs(&row, &attrs_clone);
+                None
+            });
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
@@ -70,6 +78,7 @@ impl Tile {
                 image_replacement: None,
                 weather_tile: None,
                 attrs,
+                signal_id: Some(signal_id),
             },
             result_item,
         ));

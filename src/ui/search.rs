@@ -496,7 +496,7 @@ pub fn async_calc(
             // Make async tiles update concurrently
             let futures: Vec<_> = async_launchers
                 .into_iter()
-                .map(|widget| {
+                .map(|mut widget| {
                     let current_text = current_text.clone();
                     async move {
                         let mut attrs = widget.attrs.clone();
@@ -564,13 +564,18 @@ pub fn async_calc(
                             }
                         }
 
-                        // Connect row-should-activate signal
+                        // Disconnect and Connect row-should-activate signal
                         widget.row.upgrade().map(|row| {
-                            row.connect("row-should-activate", false, move |row| {
+                            if let Some(signal) = widget.signal_id {
+                                row.disconnect(signal);
+                                widget.signal_id = None;
+                            }
+                            let id = row.connect("row-should-activate", false, move |row| {
                                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                                 execute_from_attrs(&row, &attrs);
                                 None
                             });
+                            widget.signal_id = Some(id);
                         })
                     }
                 })
