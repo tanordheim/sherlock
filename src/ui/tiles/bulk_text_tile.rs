@@ -48,7 +48,7 @@ impl Tile {
         let attrs_clone = attrs.clone();
         builder.object.add_css_class("bulk-text");
         builder.object.with_launcher(&launcher);
-        builder
+        let signal_id = builder
             .object
             .connect("row-should-activate", false, move |row| {
                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
@@ -77,6 +77,7 @@ impl Tile {
                 image_replacement: None,
                 weather_tile: None,
                 attrs,
+                signal_id: Some(signal_id),
             },
             result_item,
         ));

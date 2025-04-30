@@ -1,8 +1,10 @@
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow, launcher::{Launcher, ResultItem}, loader::pipe_loader::PipeData,
+    g_subclasses::sherlock_row::SherlockRow,
+    launcher::{Launcher, ResultItem},
+    loader::pipe_loader::PipeData,
     CONFIG,
 };
-use gio::glib::WeakRef;
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
@@ -14,6 +16,7 @@ pub struct AsyncLauncherTile {
     pub image_replacement: Option<ImageReplacementElements>,
     pub weather_tile: Option<WeatherTileElements>,
     pub attrs: HashMap<String, String>,
+    pub signal_id: Option<SignalHandlerId>,
 }
 
 #[derive(Debug)]
@@ -22,17 +25,17 @@ pub struct TextTileElements {
     pub body: WeakRef<Label>,
 }
 impl TextTileElements {
-    pub async fn update(&self, widget: &AsyncLauncherTile, current_text: &str, mut attrs: HashMap<String, String>)->HashMap<String, String>{
-        if let Some((title, body, next_content)) =
-            widget.launcher.get_result(&current_text).await
-        {
+    pub async fn update(
+        &self,
+        widget: &AsyncLauncherTile,
+        current_text: &str,
+        mut attrs: HashMap<String, String>,
+    ) -> HashMap<String, String> {
+        if let Some((title, body, next_content)) = widget.launcher.get_result(&current_text).await {
             self.title.upgrade().map(|t| t.set_text(&title));
             self.body.upgrade().map(|b| b.set_text(&body));
             if let Some(next_content) = next_content {
-                attrs.insert(
-                    String::from("next_content"),
-                    next_content.to_string(),
-                );
+                attrs.insert(String::from("next_content"), next_content.to_string());
             }
         }
         attrs
@@ -48,14 +51,13 @@ impl ImageReplacementElements {
             icon_holder_overlay: None,
         }
     }
-    pub async fn update(&self, widget: &AsyncLauncherTile){
+    pub async fn update(&self, widget: &AsyncLauncherTile) {
         if let Some(overlay) = &self.icon_holder_overlay {
-            if let Some((image, was_cached)) = widget.launcher.get_image().await
-            {
+            if let Some((image, was_cached)) = widget.launcher.get_image().await {
                 if !was_cached {
-                    overlay.upgrade().map(|overlay| {
-                        overlay.add_css_class("image-replace-overlay")
-                    });
+                    overlay
+                        .upgrade()
+                        .map(|overlay| overlay.add_css_class("image-replace-overlay"));
                 }
                 let texture = gtk4::gdk::Texture::for_pixbuf(&image);
                 let gtk_image = Image::from_paintable(Some(&texture));
@@ -64,7 +66,7 @@ impl ImageReplacementElements {
                 overlay
                     .upgrade()
                     .map(|overlay| overlay.add_overlay(&gtk_image));
-                }
+            }
         }
     }
 }
@@ -76,7 +78,7 @@ pub struct WeatherTileElements {
     pub spinner: WeakRef<Spinner>,
 }
 impl WeatherTileElements {
-    pub async fn update(&self, widget: &AsyncLauncherTile){
+    pub async fn update(&self, widget: &AsyncLauncherTile) {
         if let Some((data, was_changed)) = widget.launcher.get_weather().await {
             let css_class = if was_changed {
                 "weather-animate"
@@ -97,9 +99,9 @@ impl WeatherTileElements {
             self.location
                 .upgrade()
                 .map(|loc| loc.set_text(&data.format_str));
-            } else {
-                widget.row.upgrade().map(|row| row.set_visible(false));
-            }
+        } else {
+            widget.row.upgrade().map(|row| row.set_visible(false));
+        }
     }
 }
 
@@ -314,7 +316,11 @@ impl SherlockSearch for String {
         T: AsRef<str>,
     {
         let char_pattern: HashSet<char> = substring.as_ref().to_lowercase().chars().collect();
-        let concat_str: String = self.to_lowercase().chars().filter(|s| char_pattern.contains(s)).collect();
+        let concat_str: String = self
+            .to_lowercase()
+            .chars()
+            .filter(|s| char_pattern.contains(s))
+            .collect();
         concat_str.contains(substring.as_ref())
     }
 }

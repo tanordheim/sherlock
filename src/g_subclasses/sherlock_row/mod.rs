@@ -13,7 +13,7 @@ glib::wrapper! {
 
 impl SherlockRow {
     pub fn new() -> Self {
-         Object::builder().build()
+        Object::builder().build()
     }
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);
@@ -21,7 +21,7 @@ impl SherlockRow {
     pub fn set_shortcut(&self, shortcut: bool) {
         self.imp().shortcut.set(shortcut);
     }
-    pub fn set_search(&self, search: &str){
+    pub fn set_search(&self, search: &str) {
         *self.imp().search.borrow_mut() = search.to_string();
     }
     pub fn set_priority(&self, prio: f32) {
@@ -37,21 +37,21 @@ impl SherlockRow {
         self.imp().only_home.set(home);
     }
 
-    pub fn alias(&self)->String {
+    pub fn alias(&self) -> String {
         self.imp().alias.borrow().clone()
     }
-    pub fn search(&self)->String{
+    pub fn search(&self) -> String {
         self.imp().search.borrow().clone()
     }
     pub fn priority(&self) -> f32 {
         self.imp().priority.get()
     }
-    pub fn home(&self)->(bool, bool){
+    pub fn home(&self) -> (bool, bool) {
         let only_home = self.imp().only_home.get();
         let home = self.imp().home.get();
         (home, only_home)
     }
-    pub fn with_launcher(&self, launcher: &Launcher){
+    pub fn with_launcher(&self, launcher: &Launcher) {
         self.set_only_home(launcher.only_home);
         self.set_home(launcher.home);
         self.set_shortcut(launcher.shortcut);

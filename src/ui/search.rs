@@ -1,7 +1,12 @@
 use futures::future::join_all;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner
+    self,
+    gdk::{self, Key, ModifierType},
+    prelude::*,
+    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
+    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
+    Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -13,9 +18,9 @@ use std::rc::Rc;
 
 use super::tiles::util::{AsyncLauncherTile, SherlockSearch};
 use super::util::*;
-use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
+use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -32,7 +37,10 @@ struct SearchUI {
     sorter: WeakRef<CustomSorter>,
 }
 //     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>){
+fn update(
+    update_tiles: Vec<AsyncLauncherTile>,
+    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+) {
     let current_task_clone = Rc::clone(current_task);
     let task = glib::MainContext::default().spawn_local({
         async move {
@@ -44,7 +52,7 @@ fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option
             // Make async tiles update concurrently
             let futures: Vec<_> = update_tiles
                 .into_iter()
-                .map(|widget| {
+                .map(|mut widget| {
                     let current_text = String::new();
                     async move {
                         let mut attrs = widget.attrs.clone();
@@ -66,15 +74,19 @@ fn update(update_tiles: Vec<AsyncLauncherTile>, current_task: &Rc<RefCell<Option
 
                         // Connect row-should-activate signal
                         widget.row.upgrade().map(|row| {
-                            row.connect("row-should-activate", false, move |row| {
+                            if let Some(signal) = widget.signal_id {
+                                row.disconnect(signal);
+                            }
+                            let signal_id = row.connect("row-should-activate", false, move |row| {
                                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                                 execute_from_attrs(&row, &attrs);
                                 None
                             });
+                            widget.signal_id = Some(signal_id);
                         });
                     }
                 })
-            .collect();
+                .collect();
 
             let _ = join_all(futures).await;
             // Set spinner inactive
@@ -109,8 +121,21 @@ pub fn search(
     });
 
     let custom_binds = ConfKeys::new();
-    nav_event(ui.selection, ui.results.clone(), ui.search_bar.clone(), custom_binds, stack_page_ref);
-    change_event(ui.search_bar.clone(), modes, &mode, ui.filter, ui.sorter, &search_query);
+    nav_event(
+        ui.selection,
+        ui.results.clone(),
+        ui.search_bar.clone(),
+        custom_binds,
+        stack_page_ref,
+    );
+    change_event(
+        ui.search_bar.clone(),
+        modes,
+        &mode,
+        ui.filter,
+        ui.sorter,
+        &search_query,
+    );
 
     // Improved mode selection
     let search_bar = ui.search_bar.clone();
@@ -259,7 +284,6 @@ fn construct_window(
             let normalized = (1000.0 / edits as f32).round() / 1000.0;
             let counters = prio.fract() / 1000.0;
             prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
-
         }
         move |item_a, item_b| {
             let search_text = search_text.borrow();
@@ -271,8 +295,14 @@ fn construct_window(
             let mut priority_b = item_b.priority();
 
             if !search_text.is_empty() {
-                priority_a = make_prio(item_a.priority(), levenshtein(&search_text, &item_a.search()));
-                priority_b = make_prio(item_b.priority(), levenshtein(&search_text, &item_b.search()));
+                priority_a = make_prio(
+                    item_a.priority(),
+                    levenshtein(&search_text, &item_a.search()),
+                );
+                priority_b = make_prio(
+                    item_b.priority(),
+                    levenshtein(&search_text, &item_b.search()),
+                );
             }
 
             priority_a.total_cmp(&priority_b).into()
@@ -304,11 +334,10 @@ fn construct_window(
                     if current_text.is_empty() {
                         return true;
                     }
-                } else if priority <= 1.0{
-                    return false
+                } else if priority <= 1.0 {
+                    return false;
                 }
-                item.search()
-                    .fuzzy_match(&current_text)
+                item.search().fuzzy_match(&current_text)
             }
         }
     });
@@ -322,23 +351,37 @@ fn construct_window(
         .clone()
         .into_iter()
         .partition(|launcher| launcher.r#async);
-    let mut patches: Vec<ResultItem> = non_async_launchers.into_iter().map(|launcher| launcher.get_patch("")).flatten().collect();
-    let tile_updates: Vec<AsyncLauncherTile> = async_launchers.into_iter().filter_map(|launcher| launcher.get_loader_widget("")).map(|(update, tile)| {
-        patches.push(tile);
-        update
-    }).collect();
+    let mut patches: Vec<ResultItem> = non_async_launchers
+        .into_iter()
+        .map(|launcher| launcher.get_patch(""))
+        .flatten()
+        .collect();
+    let tile_updates: Vec<AsyncLauncherTile> = async_launchers
+        .into_iter()
+        .filter_map(|launcher| launcher.get_loader_widget(""))
+        .map(|(update, tile)| {
+            patches.push(tile);
+            update
+        })
+        .collect();
     patches.sort_by(|a, b| a.priority.partial_cmp(&b.priority).unwrap());
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
     update(tile_updates, &current_task);
 
-    for item in patches.iter(){
+    for item in patches.iter() {
         model.append(&item.row_item);
     }
     results.set_model(Some(&selection));
 
     factory.connect_bind(|_, item| {
-        let item = item.downcast_ref::<gtk4::ListItem>().expect("Item mut be a ListItem");
-        let row = item.item().clone().and_downcast::<SherlockRow>().expect("Row should be SherlockRow");
+        let item = item
+            .downcast_ref::<gtk4::ListItem>()
+            .expect("Item mut be a ListItem");
+        let row = item
+            .item()
+            .clone()
+            .and_downcast::<SherlockRow>()
+            .expect("Row should be SherlockRow");
         item.set_child(Some(&row));
     });
     results.set_factory(Some(&factory));
@@ -401,114 +444,123 @@ fn nav_event(
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
         move |_, key, i, modifiers| {
-        if stack_page.borrow().as_str() != "search-page" {
-            return false.into();
-        };
-        match key {
-            k if Some(k) == custom_binds.prev
-                && custom_binds
-                    .prev_mod
-                    .map_or(true, |m| modifiers.contains(m)) =>
-            {
-                let new_index = selection
-                    .upgrade()
-                    .map_or(0, |results| results.focus_prev());
-                results.upgrade()
-                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
-                return true.into()
-            }
-            k if Some(k) == custom_binds.next
-                && custom_binds
-                    .next_mod
-                    .map_or(true, |m| modifiers.contains(m)) =>
-            {
-                let new_index = selection
-                    .upgrade()
-                    .map_or(0, |results| results.focus_next());
-                results.upgrade()
-                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
-                return true.into()
-            }
-            gdk::Key::Up => {
-                let new_index = selection
-                    .upgrade()
-                    .map_or(0, |results| results.focus_prev());
-                results.upgrade()
-                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
-                return true.into()
-            }
-            gdk::Key::Down => {
-                let new_index = selection
-                    .upgrade()
-                    .map_or(0, |results| results.focus_next());
-                results.upgrade()
-                    .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
-                return true.into();
-            }
-            gdk::Key::BackSpace => {
-                let mut ctext = search_bar
-                    .upgrade()
-                    .map_or(String::new(), |entry| entry.text().to_string());
-                if custom_binds
-                    .shortcut_modifier
-                    .map_or(false, |modifier| modifiers.contains(modifier))
+            if stack_page.borrow().as_str() != "search-page" {
+                return false.into();
+            };
+            match key {
+                k if Some(k) == custom_binds.prev
+                    && custom_binds
+                        .prev_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    search_bar.upgrade().map(|entry| entry.set_text(""));
-                    ctext.clear();
-                }
-                if ctext.is_empty() {
-                    let _ = search_bar.upgrade().map(|entry| {
-                        entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
-                    });
-                }
-                selection.upgrade().map(|results| results.focus_first());
-            }
-            gdk::Key::Return => {
-                if let Some(upgr) = selection.upgrade() {
-                    if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>(){
-                        row.emit_by_name::<()>("row-should-activate", &[]);
-                    }
-                }
-            }
-            _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
-                if custom_binds
-                    .shortcut_modifier
-                    .map_or(false, |modifier| modifiers.contains(modifier))
-                {
-                    if let Some(index) = key.name().and_then(|name| name.parse::<u32>().ok()){
-                        println!("{}", index);
-                        selection.upgrade().map(|r| r.execute_by_index(index));
-                        return true.into();
-                    }
-                }
-            }
-            // Pain - solution for shift-tab since gtk handles it as an individual event
-            _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
-                let shift = Some(ModifierType::SHIFT_MASK);
-                let tab = Some(Key::Tab);
-                if custom_binds.prev_mod == shift && custom_binds.prev == tab {
                     let new_index = selection
                         .upgrade()
                         .map_or(0, |results| results.focus_prev());
-                    results.upgrade()
-                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
-                    
-                    return true.into();
-                } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                    let new_index = selection
+                    results
                         .upgrade()
-                        .map_or(0, |results| results.focus_next());
-                    results.upgrade()
                         .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
                     return true.into();
                 }
-            }
-            _ => (),
-        }
-        false.into()
-    }});
+                k if Some(k) == custom_binds.next
+                    && custom_binds
+                        .next_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
+                {
+                    let new_index = selection
+                        .upgrade()
+                        .map_or(0, |results| results.focus_next());
+                    results
+                        .upgrade()
+                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    return true.into();
+                }
+                gdk::Key::Up => {
+                    let new_index = selection
+                        .upgrade()
+                        .map_or(0, |results| results.focus_prev());
+                    results
+                        .upgrade()
+                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    return true.into();
+                }
+                gdk::Key::Down => {
+                    let new_index = selection
+                        .upgrade()
+                        .map_or(0, |results| results.focus_next());
+                    results
+                        .upgrade()
+                        .map(|results| results.scroll_to(new_index, ListScrollFlags::NONE, None));
+                    return true.into();
+                }
+                gdk::Key::BackSpace => {
+                    let mut ctext = search_bar
+                        .upgrade()
+                        .map_or(String::new(), |entry| entry.text().to_string());
+                    if custom_binds
+                        .shortcut_modifier
+                        .map_or(false, |modifier| modifiers.contains(modifier))
+                    {
+                        search_bar.upgrade().map(|entry| entry.set_text(""));
+                        ctext.clear();
+                    }
+                    if ctext.is_empty() {
+                        let _ = search_bar.upgrade().map(|entry| {
+                            entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
+                        });
+                    }
+                    selection.upgrade().map(|results| results.focus_first());
+                }
+                gdk::Key::Return => {
+                    if let Some(upgr) = selection.upgrade() {
+                        if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
+                            row.emit_by_name::<()>("row-should-activate", &[]);
+                        }
+                    }
+                }
+                _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
+                    if custom_binds
+                        .shortcut_modifier
+                        .map_or(false, |modifier| modifiers.contains(modifier))
+                    {
+                        if let Some(index) = key.name().and_then(|name| name.parse::<u32>().ok()) {
+                            println!("{}", index);
+                            selection.upgrade().map(|r| r.execute_by_index(index));
+                            return true.into();
+                        }
+                    }
+                }
+                // Pain - solution for shift-tab since gtk handles it as an individual event
+                _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
+                    let shift = Some(ModifierType::SHIFT_MASK);
+                    let tab = Some(Key::Tab);
+                    if custom_binds.prev_mod == shift && custom_binds.prev == tab {
+                        let new_index = selection
+                            .upgrade()
+                            .map_or(0, |results| results.focus_prev());
+                        results.upgrade().map(|results| {
+                            results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                        });
 
-    search_bar.upgrade().map(|entry| entry.add_controller(event_controller));
+                        return true.into();
+                    } else if custom_binds.next_mod == shift && custom_binds.next == tab {
+                        let new_index = selection
+                            .upgrade()
+                            .map_or(0, |results| results.focus_next());
+                        results.upgrade().map(|results| {
+                            results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                        });
+                        return true.into();
+                    }
+                }
+                _ => (),
+            }
+            false.into()
+        }
+    });
+
+    search_bar
+        .upgrade()
+        .map(|entry| entry.add_controller(event_controller));
 }
 
 fn change_event(
@@ -538,8 +590,12 @@ fn change_event(
                 current_text.clear();
             }
             *search_query_clone.borrow_mut() = current_text.clone();
-            filter.upgrade().map(|filter| filter.changed(gtk4::FilterChange::Different));
-            sorter.upgrade().map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+            filter
+                .upgrade()
+                .map(|filter| filter.changed(gtk4::FilterChange::Different));
+            sorter
+                .upgrade()
+                .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
         }
     });
     Some(())
