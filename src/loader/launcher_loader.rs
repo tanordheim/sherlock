@@ -270,7 +270,11 @@ fn parse_audio_sink_launcher() -> LauncherType {
         .unwrap_or(LauncherType::Empty)
 }
 fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
-    let icon = raw.args.get("icon").and_then(Value::as_str).unwrap_or("sherlock-process");
+    let icon = raw
+        .args
+        .get("icon")
+        .and_then(Value::as_str)
+        .unwrap_or("sherlock-process");
     let launcher = ProcessLauncher::new(icon);
     if let Some(launcher) = launcher {
         LauncherType::Process(launcher)
@@ -280,7 +284,11 @@ fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
 }
 fn parse_weather_launcher(raw: &RawLauncher) -> LauncherType {
     if let Some(location) = raw.args.get("location").and_then(Value::as_str) {
-        let update_interval = raw.args.get("update_interval").and_then(Value::as_u64).unwrap_or(60);
+        let update_interval = raw
+            .args
+            .get("update_interval")
+            .and_then(Value::as_u64)
+            .unwrap_or(60);
         LauncherType::Weather(WeatherLauncher {
             location: location.to_string(),
             update_interval,
