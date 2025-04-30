@@ -1,10 +1,10 @@
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
-    launcher::{Launcher, ResultItem},
+    launcher::Launcher,
     loader::pipe_loader::PipeData,
     CONFIG,
 };
-use gio::glib::{object, SignalHandlerId, WeakRef};
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 

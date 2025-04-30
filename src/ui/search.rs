@@ -277,71 +277,9 @@ fn construct_window(
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
 
-    let sorter = CustomSorter::new({
-        let search_text = search_text.clone();
-
-        fn make_prio(prio: f32, edits: usize) -> f32 {
-            let normalized = (1000.0 / edits as f32).round() / 1000.0;
-            let counters = prio.fract() / 1000.0;
-            prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
-        }
-        move |item_a, item_b| {
-            let search_text = search_text.borrow();
-
-            let item_a = item_a.downcast_ref::<SherlockRow>().unwrap();
-            let item_b = item_b.downcast_ref::<SherlockRow>().unwrap();
-
-            let mut priority_a = item_a.priority();
-            let mut priority_b = item_b.priority();
-
-            if !search_text.is_empty() {
-                priority_a = make_prio(
-                    item_a.priority(),
-                    levenshtein(&search_text, &item_a.search()),
-                );
-                priority_b = make_prio(
-                    item_b.priority(),
-                    levenshtein(&search_text, &item_b.search()),
-                );
-            }
-
-            priority_a.total_cmp(&priority_b).into()
-        }
-    });
-    let filter = CustomFilter::new({
-        let search_text = search_text.clone();
-        let search_mode = mode.clone();
-        move |entry| {
-            let item = entry.downcast_ref::<SherlockRow>().unwrap();
-            let (home, only_home) = item.home();
-            let alias = item.alias();
-            let priority = item.priority();
-
-            let mode = search_mode.borrow().trim().to_string();
-            let current_text = search_text.borrow().clone();
-            let is_home = current_text.is_empty() && mode == "all";
-
-            if is_home {
-                if home || only_home {
-                    return true;
-                }
-                return false;
-            } else {
-                if mode != "all" {
-                    if only_home || mode != alias {
-                        return false;
-                    }
-                    if current_text.is_empty() {
-                        return true;
-                    }
-                } else if priority <= 1.0 {
-                    return false;
-                }
-                item.search().fuzzy_match(&current_text)
-            }
-        }
-    });
+    let sorter = make_sorter(&search_text);
     let model = ListStore::new::<SherlockRow>();
+    let filter = make_filter(&search_text, &mode);
     let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
     let selection = SingleSelection::new(Some(sorted_model));
@@ -429,6 +367,74 @@ fn construct_window(
     });
 
     (search_text, mode, modes, vbox, ui)
+}
+fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>)->CustomFilter{
+    CustomFilter::new({
+        let search_text = Rc::clone(search_text);
+        let search_mode = Rc::clone(mode);
+        move |entry| {
+            let item = entry.downcast_ref::<SherlockRow>().unwrap();
+            let (home, only_home) = item.home();
+            let alias = item.alias();
+            let priority = item.priority();
+
+            let mode = search_mode.borrow().trim().to_string();
+            let current_text = search_text.borrow().clone();
+            let is_home = current_text.is_empty() && mode == "all";
+
+            if is_home {
+                if home || only_home {
+                    return true;
+                }
+                return false;
+            } else {
+                if mode != "all" {
+                    if only_home || mode != alias {
+                        return false;
+                    }
+                    if current_text.is_empty() {
+                        return true;
+                    }
+                } else if priority <= 1.0 {
+                    return false;
+                }
+                item.search().fuzzy_match(&current_text)
+            }
+        }
+    })
+}
+fn make_sorter(search_text: &Rc<RefCell<String>>)->CustomSorter{
+    CustomSorter::new({
+        let search_text = Rc::clone(search_text);
+
+        fn make_prio(prio: f32, edits: usize) -> f32 {
+            let normalized = (1000.0 / edits as f32).round() / 1000.0;
+            let counters = prio.fract() / 1000.0;
+            prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
+        }
+        move |item_a, item_b| {
+            let search_text = search_text.borrow();
+
+            let item_a = item_a.downcast_ref::<SherlockRow>().unwrap();
+            let item_b = item_b.downcast_ref::<SherlockRow>().unwrap();
+
+            let mut priority_a = item_a.priority();
+            let mut priority_b = item_b.priority();
+
+            if !search_text.is_empty() {
+                priority_a = make_prio(
+                    item_a.priority(),
+                    levenshtein(&search_text, &item_a.search()),
+                );
+                priority_b = make_prio(
+                    item_b.priority(),
+                    levenshtein(&search_text, &item_b.search()),
+                );
+            }
+
+            priority_a.total_cmp(&priority_b).into()
+        }
+    })
 }
 
 fn nav_event(
