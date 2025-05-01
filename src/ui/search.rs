@@ -2,7 +2,12 @@ use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SelectionModel, SignalListItemFactory, SingleSelection, SortListModel, Spinner
+    self,
+    gdk::{self, Key, ModifierType},
+    prelude::*,
+    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
+    ListScrollFlags, ListView, Overlay, SelectionModel, SignalListItemFactory, SingleSelection,
+    SortListModel, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -293,38 +298,37 @@ fn construct_window(
     sorted_model.connect_items_changed({
         let mod_str = custom_binds.shortcut_modifier_str.clone();
         move |myself, _, removed, added| {
-        if added != 0 || removed != 0{
-            let mut index = 0;
-            for i in 0..myself.n_items() {
-                if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
-                    if item.imp().shortcut.get() {
-                        if let Some(shortcut_holder) = item.shortcut_holder() {
-                            index += shortcut_holder.remove_shortcut();
+            if added != 0 || removed != 0 {
+                let mut index = 0;
+                for i in 0..myself.n_items() {
+                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                        if item.imp().shortcut.get() {
+                            if let Some(shortcut_holder) = item.shortcut_holder() {
+                                index += shortcut_holder.remove_shortcut();
+                            }
                         }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
+                }
+                let mut index = 0;
+                for i in 0..myself.n_items() {
+                    if index == 5 {
+                        break;
+                    }
+                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                        if item.imp().shortcut.get() {
+                            if let Some(shortcut_holder) = item.shortcut_holder() {
+                                index += shortcut_holder.apply_shortcut(index + 1, &mod_str);
+                            }
+                        }
+                    } else {
+                        break;
+                    }
                 }
             }
-            let mut index = 0;
-            for i in 0..myself.n_items() {
-                if index == 5 {
-                    break;
-                }
-                if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
-                    if item.imp().shortcut.get() {
-                        if let Some(shortcut_holder) = item.shortcut_holder() {
-                            index += shortcut_holder
-                                .apply_shortcut(index + 1, &mod_str);
-                        }
-                    }
-                } else {
-                    break;
-                }
-            }
-
         }
-    }});
+    });
 
     let selection = SingleSelection::new(Some(sorted_model));
     results.set_model(Some(&selection));
@@ -406,7 +410,7 @@ fn construct_window(
 
     (search_text, mode, modes, vbox, ui)
 }
-fn make_factory()->SignalListItemFactory{
+fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
     factory.connect_bind(|_, item| {
         let item = item
