@@ -1,6 +1,7 @@
 mod imp;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
+use gio::glib::WeakRef;
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
@@ -36,7 +37,16 @@ impl SherlockRow {
     pub fn set_only_home(&self, home: bool) {
         self.imp().only_home.set(home);
     }
+    pub fn set_shortcut_holder(&self, holder: Option<WeakRef<gtk4::Box>>) {
+        let _ = self.imp().shortcut_holder.set(holder);
+    }
 
+    pub fn shortcut_holder(&self) -> Option<gtk4::Box> {
+        self.imp()
+            .shortcut_holder
+            .get()
+            .and_then(|inner| inner.as_ref().and_then(|inner2| inner2.upgrade()))
+    }
     pub fn alias(&self) -> String {
         self.imp().alias.borrow().clone()
     }

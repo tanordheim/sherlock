@@ -201,7 +201,7 @@ impl TileBuilder {
         let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
         let result_holder: Label = builder.object("result-holder").unwrap_or_default();
 
-        let shortcut_option: Option<Box> = builder.object("shortcut_holder");
+        let shortcut_option: Option<Box> = builder.object("shortcut-holder");
         let shortcut_holder: Option<WeakRef<Box>> =
             shortcut_option.and_then(|s| Some(s.downgrade()));
 

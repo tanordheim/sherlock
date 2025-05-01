@@ -1,12 +1,13 @@
 use futures::future::join_all;
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
-    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
-    Spinner,
+    ListScrollFlags, ListView, Overlay, SelectionModel, SignalListItemFactory, SingleSelection,
+    SortListModel, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -35,6 +36,7 @@ struct SearchUI {
     selection: WeakRef<SingleSelection>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
+    binds: ConfKeys,
 }
 //     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 fn update(
@@ -120,12 +122,11 @@ pub fn search(
             .map(|search_bar| search_bar.grab_focus());
     });
 
-    let custom_binds = ConfKeys::new();
     nav_event(
         ui.selection.clone(),
         ui.results.clone(),
         ui.search_bar.clone(),
-        custom_binds,
+        ui.binds,
         stack_page_ref,
     );
     change_event(
@@ -246,6 +247,7 @@ fn construct_window(
     SearchUI,
 ) {
     // Collect Modes
+    let custom_binds = ConfKeys::new();
     let original_mode = CONFIG
         .get()
         .and_then(|c| c.behavior.sub_menu.as_deref())
@@ -293,6 +295,42 @@ fn construct_window(
     let filter = make_filter(&search_text, &mode);
     let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
+
+    sorted_model.connect_items_changed({
+        let mod_str = custom_binds.shortcut_modifier_str.clone();
+        move |myself, _, removed, added| {
+            if added != 0 || removed != 0 {
+                let mut index = 0;
+                for i in 0..myself.n_items() {
+                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                        if item.imp().shortcut.get() {
+                            if let Some(shortcut_holder) = item.shortcut_holder() {
+                                index += shortcut_holder.remove_shortcut();
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                let mut index = 0;
+                for i in 0..myself.n_items() {
+                    if index == 5 {
+                        break;
+                    }
+                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                        if item.imp().shortcut.get() {
+                            if let Some(shortcut_holder) = item.shortcut_holder() {
+                                index += shortcut_holder.apply_shortcut(index + 1, &mod_str);
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    });
+
     let selection = SingleSelection::new(Some(sorted_model));
     results.set_model(Some(&selection));
 
@@ -320,8 +358,12 @@ fn construct_window(
     update(tile_updates, &current_task);
 
     for item in patches.iter() {
-        model.append(&item.row_item);
+        let row_item = &item.row_item;
+        row_item.set_shortcut_holder(item.shortcut_holder.clone());
+        model.append(row_item);
     }
+    results.set_model(Some(&selection));
+    results.set_factory(Some(&factory));
 
     let (_, n_items) = selection.focus_first();
     if n_items > 0 {
@@ -354,6 +396,7 @@ fn construct_window(
         selection: selection.downgrade(),
         filter: filter.downgrade(),
         sorter: sorter.downgrade(),
+        binds: custom_binds,
     };
     CONFIG.get().map(|c| {
         ui.result_viewport.upgrade().map(|viewport| {
@@ -530,7 +573,9 @@ fn nav_event(
                         });
                     }
                     // Focus first item and check for overflow
-                    if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()){
+                    if let Some((_, n_items)) =
+                        selection.upgrade().map(|results| results.focus_first())
+                    {
                         if n_items > 0 {
                             results
                                 .upgrade()
@@ -550,8 +595,10 @@ fn nav_event(
                         .shortcut_modifier
                         .map_or(false, |modifier| modifiers.contains(modifier))
                     {
-                        if let Some(index) = key.name().and_then(|name| name.parse::<u32>().ok()) {
-                            println!("{}", index);
+                        if let Some(index) = key
+                            .name()
+                            .and_then(|name| name.parse::<u32>().ok().map(|v| v - 1))
+                        {
                             selection.upgrade().map(|r| r.execute_by_index(index));
                             return true.into();
                         }
@@ -609,12 +656,14 @@ fn change_event(
                 current_text.clear();
             }
             *search_query_clone.borrow_mut() = current_text.clone();
+            // clear_shortcuts(&results);
             filter
                 .upgrade()
                 .map(|filter| filter.changed(gtk4::FilterChange::Different));
             sorter
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+            // update_shortcuts(&results, &mod_str);
             if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()) {
                 results.upgrade().map(|results| {
                     if n_items > 0 {

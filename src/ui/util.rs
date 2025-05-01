@@ -9,7 +9,7 @@ use crate::CONFIG;
 
 pub trait ShortCut {
     fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32;
-    fn remove_shortcut(&self);
+    fn remove_shortcut(&self) -> i32;
 }
 impl ShortCut for HVBox {
     fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32 {
@@ -30,11 +30,10 @@ impl ShortCut for HVBox {
         }
         return 0;
     }
-    fn remove_shortcut(&self) {
-        if let Some(label) = self.first_child().and_downcast_ref::<Label>() {
-            self.set_visible(false);
-            label.set_text("");
-        }
+    fn remove_shortcut(&self) -> i32 {
+        let r = if self.is_visible() { 1 } else { 0 };
+        self.set_visible(false);
+        r
     }
 }
 
@@ -179,10 +178,12 @@ impl SherlockNav for SingleSelection {
         (current_index, n_items)
     }
     fn execute_by_index(&self, index: u32) {
-        if index < self.n_items() {
-            self.set_selected(index);
-            if let Some(row) = self.selected_item().and_downcast::<SherlockRow>() {
-                row.emit_by_name::<()>("row-should-activate", &[]);
+        for item in index..self.n_items() {
+            if let Some(row) = self.item(item).and_downcast::<SherlockRow>() {
+                if row.imp().shortcut.get() {
+                    row.emit_by_name::<()>("row-should-activate", &[]);
+                    break;
+                }
             }
         }
     }
