@@ -6,14 +6,37 @@ use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 use std::collections::{HashMap, HashSet};
 
+/// A tile that represents an asynchronous launcher, with various configurable fields.
+///
+/// ## Fields:
+/// * **launcher**: The launcher object related to this tile.
+/// * **row**: A reference to the associated `SherlockRow` for this tile.
+/// * **text_tile**: Elements used to update fields in a `bulk_text_tile`.
+/// * **image_replacement**: Elements used to update fields in an `mpris_tile`.
+/// * **weather_tile**: Elements used to update fields in a `weather_tile`.
+/// * **attrs**: A `HashMap` containing information used for actions on the `row-should-active` event.
+/// * **signal_id**: An optional state field used to replace signal handlers.
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
+    /// The launcher object related to this tile.
     pub launcher: Launcher,
+
+    /// A reference to the associated `SherlockRow` for this tile.
     pub row: WeakRef<SherlockRow>,
+
+    /// Elements used to update fields in a `bulk_text_tile`.
     pub text_tile: Option<TextTileElements>,
+
+    /// Elements used to update fields in an `mpris_tile`.
     pub image_replacement: Option<ImageReplacementElements>,
+
+    /// Elements used to update fields in a `weather_tile`.
     pub weather_tile: Option<WeatherTileElements>,
+
+    /// A `HashMap` containing information used for actions on the `row-should-active` event.
     pub attrs: HashMap<String, String>,
+
+    /// An optional state field used to replace signal handlers.
     pub signal_id: Option<SignalHandlerId>,
 }
 
