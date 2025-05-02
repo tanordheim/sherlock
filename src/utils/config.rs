@@ -482,6 +482,8 @@ pub struct ConfigFiles {
     pub alias: PathBuf,
     #[serde(default = "default_ignore")]
     pub ignore: PathBuf,
+    #[serde(default = "default_actions")]
+    pub actions: PathBuf,
 }
 impl Default for ConfigFiles {
     fn default() -> Self {
@@ -491,6 +493,7 @@ impl Default for ConfigFiles {
             fallback: default_fallback(),
             alias: default_alias(),
             ignore: default_ignore(),
+            actions: default_actions(),
         }
     }
 }
@@ -556,6 +559,9 @@ pub fn default_alias() -> PathBuf {
 }
 pub fn default_ignore() -> PathBuf {
     PathBuf::from("~/.config/sherlock/sherlockignore")
+}
+pub fn default_actions() -> PathBuf {
+    PathBuf::from("~/.config/sherlock/sherlock_actions.json")
 }
 
 pub fn default_true() -> bool {

@@ -16,7 +16,7 @@ use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
     Launcher, LauncherType,
 };
-use crate::loader::util::{JsonCache, CounterReader};
+use crate::loader::util::{CounterReader, JsonCache};
 use crate::utils::errors::SherlockError;
 use crate::utils::errors::SherlockErrorType;
 
@@ -48,7 +48,7 @@ impl Loader {
 
         // Read cached counter file
         let counter_reader = CounterReader::new()?;
-        let counts: HashMap<String, f32> = counter_reader.read()?;
+        let counts: HashMap<String, f32> = JsonCache::read(&counter_reader.path)?;
         let max_decimals = counts
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
@@ -96,7 +96,7 @@ impl Loader {
                 .filter_map(|launcher| launcher.get_execs())
                 .flat_map(|exec_set| exec_set.into_iter().map(|exec| (exec, 0.0)))
                 .collect();
-            if let Err(e) = counter_reader.write(&counts) {
+            if let Err(e) = JsonCache::write(&counter_reader.path, &counts) {
                 non_breaking.push(e)
             };
         }
