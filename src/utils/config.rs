@@ -192,7 +192,7 @@ impl SherlockConfig {
         if let Some(loc) = loc.to_str() {
             if loc != "~/.config/sherlock/" {
                 let loc = loc.trim_end_matches("/");
-                println!("\nUse \x1b[32msherlock --config {}/config.toml\x1b[0m to run sherlock with the custom configuration path.", loc);
+                println!("\nUse \x1b[32msherlock --config {}/config.toml\x1b[0m to run sherlock with the custom configuration.", loc);
             }
         }
 
