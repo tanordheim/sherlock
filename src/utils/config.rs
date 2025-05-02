@@ -189,6 +189,13 @@ impl SherlockConfig {
             skipped_message("fallback.json");
         }
 
+        if let Some(loc) = loc.to_str() {
+            if loc != "~/.config/sherlock/" {
+                let loc = loc.trim_end_matches("/");
+                println!("\nUse \x1b[32msherlock --config {}/config.toml\x1b[0m to run sherlock with the custom configuration path.", loc);
+            }
+        }
+
         std::process::exit(0);
     }
     #[sherlock_macro::timing("Loading config")]
