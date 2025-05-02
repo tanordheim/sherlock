@@ -48,7 +48,25 @@ pub enum LauncherType {
     WeatherLauncher(WeatherLauncher),
     Empty,
 }
-
+/// # Launcher
+/// ### Fields:
+/// - **name:** Specifies the name of the launcher – such as a category e.g. `App Launcher`
+/// - **alias:** Also referred to as `mode` – specifies the mode in which the launcher children should
+/// be active in
+/// - **tag_start:** Specifies the text displayed in a custom UI Label
+/// - **tag_end:** Specifies the text displayed in a custom UI Label
+/// - **method:** Specifies the action that should be executed on `row-should-activate` action
+/// - **next_content:** Specifies the content to be displayed whenever method is `next`
+/// - **priority:** Base priority all children inherit from. Children priority will be a combination
+/// of this together with their execution counts and levenshtein similarity
+/// - **r#async:** Specifies whether the tile should be loaded/executed asynchronously 
+/// - **home:** Specifies whether the children should show on the `home` mode (empty
+/// search entry & mode == `all`)
+/// - **launcher_type:** Used to specify the kind of launcher and subsequently its children
+/// - **shortcut:** Specifies whether the child tile should show `modekey + number` shortcuts
+/// - **spawn_focus:** Specifies whether the tile should have focus whenever Sherlock launches
+/// - **only_home:** Specifies whether the children should **only** show on the `home` mode (empty
+/// search entry & mode == `all`)
 #[derive(Clone, Debug)]
 pub struct Launcher {
     pub name: Option<String>,
@@ -150,22 +168,4 @@ impl Launcher {
             _ => None,
         }
     }
-}
-
-pub fn construct_tiles(keyword: &str, launchers: &[Launcher], mode: &str) -> Vec<ResultItem> {
-    let mut results = Vec::new();
-    let sel_mode = mode.trim();
-    for launcher in launchers.iter() {
-        let alias = launcher.alias.as_deref().unwrap_or("all");
-
-        if launcher.priority == 0 && alias != sel_mode {
-            continue;
-        }
-
-        if alias == sel_mode || sel_mode == "all" {
-            let result = launcher.get_patch(keyword);
-            results.extend(result);
-        }
-    }
-    results
 }
