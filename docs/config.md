@@ -106,4 +106,5 @@ This section holds the location for the config files.
 | `css` | `~/.config/sherlock/main.css`     | Sets the location for the `main.css` file | 
 | `alias` | `~/.config/sherlock/sherlock_alias.json`     | Sets the location for the `sherlock_alias.json` file | 
 | `ignore` | `~/.config/sherlock/sherlockignore`     | Sets the location for the `sherlockignore` file | 
+| `actions` | `~/.config/sherlock/sherlock_actions.json`     | Sets the location for the `sherlock_actions` file | 
 ---
