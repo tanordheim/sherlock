@@ -1,11 +1,19 @@
 use serde::{
-    de::{MapAccess, Visitor},
+    de::{DeserializeOwned, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize,
 };
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
+    env,
+    fmt::Debug,
+    fs::{self, File},
     hash::{Hash, Hasher},
     path::PathBuf,
+};
+
+use crate::utils::{
+    errors::{SherlockError, SherlockErrorType},
+    files::{expand_path, home_dir},
 };
 
 #[derive(Deserialize, Debug)]
@@ -99,4 +107,69 @@ pub struct SherlockAlias {
     pub icon: Option<String>,
     pub exec: Option<String>,
     pub keywords: Option<String>,
+}
+
+pub struct CounterReader {
+    pub path: PathBuf,
+}
+impl CounterReader {
+    pub fn new() -> Result<Self, SherlockError> {
+        let home = env::var("HOME").map_err(|e| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+            traceback: e.to_string(),
+        })?;
+        let home_dir = PathBuf::from(home);
+        let path = home_dir.join(".sherlock/counts.json");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| SherlockError {
+                error: SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                traceback: e.to_string(),
+            })?;
+        }
+        Ok(CounterReader { path })
+    }
+    pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
+        let mut content: HashMap<String, f32> = JsonCache::read(&self.path)?;
+        *content.entry(key.to_string()).or_insert(0.0) += 1.0;
+        JsonCache::write(&self.path, &content)?;
+        Ok(())
+    }
+}
+
+pub struct JsonCache;
+impl JsonCache {
+    pub fn write<T>(path: &PathBuf, to: &T) -> Result<(), SherlockError>
+    where
+        T: serde::Serialize + ?Sized,
+    {
+        let tmp_path = path.with_extension(".tmp");
+        if let Ok(f) = File::create(&tmp_path) {
+            if let Ok(_) = simd_json::to_writer(f, to) {
+                let _ = fs::rename(&tmp_path, &path);
+            } else {
+                let _ = fs::remove_file(&tmp_path);
+            }
+        }
+        Ok(())
+    }
+    pub fn read<T>(path: &PathBuf) -> Result<T, SherlockError>
+    where
+        T: DeserializeOwned + Default + Debug,
+    {
+        let home = home_dir()?;
+        let path = expand_path(path, &home);
+
+        let file = if path.exists() {
+            File::open(&path)
+        } else {
+            println!("{:?}", path);
+            File::create(&path)
+        }
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::FileExistError(path.clone()),
+            traceback: e.to_string(),
+        })?;
+        let res: Result<T, simd_json::Error> = simd_json::from_reader(file);
+        Ok(res.unwrap_or_default())
+    }
 }

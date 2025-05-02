@@ -21,14 +21,14 @@ impl Tile {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
             _ => HashSet::from(["calc.math", "calc.units"]),
         };
-        let mut result: Option<String> = None;
+        let mut result: Option<(String, String)> = None;
 
         if capabilities.contains("calc.math") {
             let trimmed_keyword = keyword.trim();
             if let Ok(r) = eval_str(trimmed_keyword) {
                 let r = r.to_string();
                 if &r != trimmed_keyword {
-                    result = Some(format!("= {}", r));
+                    result = Some((r.clone(), format!("= {}", r)));
                 }
             }
         }
@@ -57,7 +57,7 @@ impl Tile {
             result = calc_launcher.temperature(&keyword)
         }
 
-        if let Some(r) = result {
+        if let Some((num, text)) = result {
             let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/calc_tile.ui");
 
             builder
@@ -67,10 +67,10 @@ impl Tile {
             builder
                 .result_holder
                 .upgrade()
-                .map(|result| result.set_text(&r));
+                .map(|result| result.set_text(&text));
 
             // Add action capabilities
-            let attrs = get_attrs_map(vec![("method", &launcher.method), ("result", &r)]);
+            let attrs = get_attrs_map(vec![("method", &launcher.method), ("result", &num)]);
             builder.object.add_css_class("calc-tile");
             builder.object.set_spawn_focus(launcher.spawn_focus);
             builder.object.set_shortcut(launcher.shortcut);

@@ -299,7 +299,7 @@ impl WeatherTileBuilder {
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
-        object.set_css_classes(&vec!["tile"]);
+        object.set_css_classes(&["tile"]);
 
         let overlay = Overlay::new();
         overlay.set_child(Some(&body));

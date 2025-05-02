@@ -8,6 +8,7 @@ readme = "README.md"
 build = "build.rs"
 
 [dependencies]
+sherlock_macro = {path = "./sherlock_macro"}
 gio = "0.20.7"
 glob = "0.3.2"
 gtk4 = {version = "^0.9.5", features = ["v4_6", "v4_12"]}
@@ -19,7 +20,7 @@ rayon = "1.10.0"
 regex = "1.11.1"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1.44.2", features = ["full"] }
 toml = "0.8.19"
 wayland-protocols = "0.32.5"
 simd-json = "0.15"

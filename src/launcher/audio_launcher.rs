@@ -173,7 +173,6 @@ impl AudioLauncherFunctions {
             .call_method("GetAll", &("org.mpris.MediaPlayer2.Player"))
             .ok()?;
         let body = message.body();
-        // let body: HashMap<String, Value> = body.deserialize().unwrap();
         let mpris_data: MprisData = body.deserialize().ok()?;
 
         Some(MusicPlayerLauncher {

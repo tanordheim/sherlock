@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 
-use gio::glib::variant::ToVariant;
-use gtk4::prelude::WidgetExt;
+use gio::glib::{object::IsA, variant::ToVariant};
+use gtk4::{prelude::WidgetExt, Widget};
 use teamslaunch::teamslaunch;
 use util::{clear_cached_files, reset_app_counter};
 
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
     launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
-    loader::launcher_loader::CounterReader,
+    loader::util::CounterReader,
     ui::user::display_raw,
 };
 
@@ -18,7 +17,7 @@ pub mod teamslaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
+pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, String>) {
     //construct HashMap
     let attrs: HashMap<String, String> = attrs
         .into_iter()
@@ -91,7 +90,8 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
             "next" => {
                 let next_content = attrs
                     .get("next_content")
-                    .map_or("No next_content provided...", |s| s);
+                    .map_or("No next_content provided...", |s| s.trim());
+
                 let _ = row
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
@@ -136,6 +136,9 @@ pub fn execute_from_attrs(row: &SherlockRow, attrs: &HashMap<String, String>) {
                     _ => {}
                 }
             }
+            "clear_cache" => {
+                let _result = clear_cached_files();
+            }
             _ => {
                 if let Some(out) = attrs.get("result") {
                     print!("{}", out);
@@ -158,6 +161,6 @@ fn increment(key: &str) {
         let _ = count_reader.increment(key);
     };
 }
-fn eval_close(row: &SherlockRow) {
+fn eval_close<T: IsA<Widget>>(row: &T) {
     let _ = row.activate_action("win.close", None);
 }

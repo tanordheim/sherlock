@@ -98,7 +98,8 @@ The `[binds]` section allows you to configure additional keybindings for navigat
 
 ---
 ## Files Section `[files]`
-This section holds the location for the config files.
+This section holds the location for the config files.<br>
+> **💡 Note:** With Sherlock (> 0.1.11), you can use the `Sherlock init` subcommand to create the default versions for all of these files. To specify a custom location for your config files, you can then use the optional `location` suffix. E.g. `Sherlock init ~/sherlock-configs`
 
 | **Keyword**           | **Default** | **Explanation**|
 |-----------------------|-------------|-----------------------------------|
@@ -106,4 +107,5 @@ This section holds the location for the config files.
 | `css` | `~/.config/sherlock/main.css`     | Sets the location for the `main.css` file | 
 | `alias` | `~/.config/sherlock/sherlock_alias.json`     | Sets the location for the `sherlock_alias.json` file | 
 | `ignore` | `~/.config/sherlock/sherlockignore`     | Sets the location for the `sherlockignore` file | 
+| `actions` | `~/.config/sherlock/sherlock_actions.json`     | Sets the location for the `sherlock_actions` file | 
 ---

@@ -3,9 +3,11 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
+use launcher::Launcher;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
+use utils::config::SherlockFlags;
 
 // MODS
 mod actions;
@@ -34,78 +36,16 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
+    let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config) =
+        startup_loading();
     let t0 = Instant::now();
-    let mut non_breaking: Vec<SherlockError> = Vec::new();
-    let mut startup_errors: Vec<SherlockError> = Vec::new();
-
-    // Check for '.lock'-file to only start a single instance
-    let _lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
-        eprintln!("{}", e);
-        process::exit(1);
-    });
-
-    // Setup flags
-    let sherlock_flags = Loader::load_flags()
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
-
-    // Parse configs from 'config.toml'
-    let app_config = SherlockConfig::from_flags(&sherlock_flags).map_or_else(
-        |e| {
-            startup_errors.push(e);
-            let defaults = utils::config::SherlockConfig::default();
-            SherlockConfig::apply_flags(&sherlock_flags, defaults)
-        },
-        |(app_config, n)| {
-            non_breaking.extend(n);
-            app_config
-        },
-    );
-
-    CONFIG
-        .set(app_config.clone())
-        .map_err(|_| {
-            startup_errors.push(SherlockError {
-                error: SherlockErrorType::ConfigError(None),
-                traceback: format!(""),
-            });
-        })
-        .ok();
-
-    Loader::load_resources()
-        .map_err(|e| startup_errors.push(e))
-        .ok();
-
-    // Initialize launchers from 'fallback.json'
-    let launcher_get = Loader::load_launchers();
-
-    // Initialize application
-    let application = Application::new(
-        Some("dev.skxxtz.sherlock"),
-        gio::ApplicationFlags::HANDLES_COMMAND_LINE,
-    );
-
-    if let Some(config) = CONFIG.get() {
-        env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
-    }
-
-    // Needed in order start Sherlock without glib flag handling
-    application.connect_command_line(|app, _| {
-        app.activate();
-        0
-    });
-
-    // Await getters here
-    let (launchers, n) = launcher_get
-        .await
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
-    non_breaking.extend(n);
-
-    if sherlock_flags.time_inspect {
-        println!("Loading content took: {:?}", t0.elapsed());
-    }
     application.connect_activate(move |app| {
+        let t1 = Instant::now();
+        if let Ok(timing_enabled) = std::env::var("TIMING") {
+            if timing_enabled == "true" {
+                println!("Activation took {:?}", t0.elapsed());
+            }
+        }
         let mut error_list = startup_errors.clone();
         let mut non_breaking = non_breaking.clone();
 
@@ -120,7 +60,7 @@ async fn main() {
         non_breaking.extend(n);
 
         // Main logic for the Search-View
-        let (window, stack, current_stack_page) = ui::window::window(&app);
+        let (window, stack, current_stack_page) = ui::window::window(app);
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
@@ -152,7 +92,7 @@ async fn main() {
         if let Some(c) = CONFIG.get() {
             let opacity = c.appearance.opacity;
 
-            if opacity > 1.0 || opacity < 0.1 {
+            if !(0.1..=1.0).contains(&opacity) {
                 non_breaking.push(SherlockError {
                     error: SherlockErrorType::ConfigError(Some(format!(
                         "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
@@ -187,34 +127,117 @@ async fn main() {
 
         // Logic for handling the daemonization
         if let Some(c) = CONFIG.get() {
-            match c.behavior.daemonize {
-                true => {
-                    // Used to cache render
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+            if c.behavior.daemonize {
+                // Used to cache render
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
 
-                    // Create async pipeline
-                    let (sender, receiver) = async_channel::bounded(1);
-                    thread::spawn(move || {
-                        async_std::task::block_on(async {
-                            let _daemon = SherlockDaemon::new(sender).await;
-                        });
+                // Create async pipeline
+                let (sender, receiver) = async_channel::bounded(1);
+                thread::spawn(move || {
+                    async_std::task::block_on(async {
+                        let _daemon = SherlockDaemon::new(sender).await;
                     });
-                    // Handle receiving using pipline
-                    MainContext::default().spawn_local(async move {
-                        while let Ok(_msg) = receiver.recv().await {
-                            let _ = gtk4::prelude::WidgetExt::activate_action(
-                                &window, "win.open", None,
-                            );
-                        }
-                    });
-                }
-                false => {}
+                });
+
+                // Handle receiving using pipline
+                MainContext::default().spawn_local(async move {
+                    while let Ok(_msg) = receiver.recv().await {
+                        let _ = gtk4::prelude::WidgetExt::activate_action(
+                            &window, "win.open", None,
+                        );
+                    }
+                });
             }
         }
-        if sherlock_flags.time_inspect {
-            println!("Startup time 0 → full content: {:?}", t0.elapsed());
+        if let Ok(timing_enabled) = std::env::var("TIMING") {
+            if timing_enabled == "true" {
+                println!("Window creation took {:?}", t1.elapsed());
+            }
         }
     });
     application.run();
+}
+
+#[sherlock_macro::timing("\nContent loading")]
+fn startup_loading() -> (
+    Application,
+    Vec<SherlockError>,
+    Vec<SherlockError>,
+    Vec<Launcher>,
+    SherlockFlags,
+    SherlockConfig,
+) {
+    let mut non_breaking: Vec<SherlockError> = Vec::new();
+    let mut startup_errors: Vec<SherlockError> = Vec::new();
+
+    // Check for '.lock'-file to only start a single instance
+    let _lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
+        eprintln!("{}", e);
+        process::exit(1);
+    });
+
+    // Setup flags
+    let sherlock_flags = Loader::load_flags()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+
+    // Parse configs from 'config.toml'
+    let app_config = SherlockConfig::from_flags(&sherlock_flags).map_or_else(
+        |e| {
+            startup_errors.push(e);
+            let defaults = utils::config::SherlockConfig::default();
+            SherlockConfig::apply_flags(&sherlock_flags, defaults)
+        },
+        |(app_config, n)| {
+            non_breaking.extend(n);
+            app_config
+        },
+    );
+
+    CONFIG
+        .set(app_config.clone())
+        .map_err(|_| {
+            startup_errors.push(SherlockError {
+                error: SherlockErrorType::ConfigError(None),
+                traceback: String::new(),
+            });
+        })
+        .ok();
+
+    // Initialize launchers from 'fallback.json'
+    let (launchers, n) = Loader::load_launchers()
+        .map_err(|e| startup_errors.push(e))
+        .unwrap_or_default();
+    non_breaking.extend(n);
+
+    // Load resources
+    Loader::load_resources()
+        .map_err(|e| startup_errors.push(e))
+        .ok();
+
+    // Initialize application
+    let application = Application::new(
+        Some("dev.skxxtz.sherlock"),
+        gio::ApplicationFlags::HANDLES_COMMAND_LINE,
+    );
+
+    if let Some(config) = CONFIG.get() {
+        env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
+    }
+
+    // Needed in order start Sherlock without glib flag handling
+    application.connect_command_line(|app, _| {
+        app.activate();
+        0
+    });
+
+    (
+        application,
+        startup_errors,
+        non_breaking,
+        launchers,
+        sherlock_flags,
+        app_config,
+    )
 }

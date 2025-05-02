@@ -19,7 +19,7 @@ pub fn reload_content(
     let app_config = CONFIG.get()?;
     let stack = stack.upgrade()?;
 
-    let (launchers, n) = Loader::load_launchers_sync()
+    let (launchers, n) = Loader::load_launchers()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
     non_breaking.extend(n);

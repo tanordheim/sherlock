@@ -1,12 +1,23 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::io::{BufWriter, Read, Write};
+use std::path::PathBuf;
 use std::rc::Rc;
+use std::{
+    env,
+    fs::{self, File},
+};
 
 use gio::ActionEntry;
 use gtk4::{prelude::*, Application, ApplicationWindow};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
+use serde::Deserialize;
 
+use crate::actions::execute_from_attrs;
 use crate::application::util::reload_content;
+use crate::loader::util::JsonCache;
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
@@ -67,7 +78,24 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
     let stack_clone = stack.downgrade().clone();
     let action_open = ActionEntry::builder("open")
         .activate(move |window: &ApplicationWindow, _, _| {
+            // Increment Sherlock Execution counter
+            let start_count = SherlockCounter::new()
+                .and_then(|counter| counter.increment())
+                .unwrap_or(0);
+
             if let Some(c) = CONFIG.get() {
+                // parse sherlock actions
+                let actions: Vec<SherlockAction> =
+                    JsonCache::read(&c.files.actions).unwrap_or_default();
+                // activate sherlock actions
+                actions
+                    .into_iter()
+                    .filter(|action| start_count % action.on == 0)
+                    .for_each(|action| {
+                        let attrs: HashMap<String, String> =
+                            HashMap::from([(String::from("method"), action.action)]);
+                        execute_from_attrs(window, &attrs);
+                    });
                 match c.behavior.daemonize {
                     true => {
                         reload_content(window, &stack_clone, &page_clone);
@@ -127,4 +155,72 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
 
     window.set_child(Some(&stack));
     return (window, stack, current_stack_page);
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SherlockAction {
+    pub on: u32,
+    pub action: String,
+}
+pub struct SherlockCounter {
+    path: PathBuf,
+}
+impl SherlockCounter {
+    fn new() -> Result<Self, SherlockError> {
+        let home = env::var("HOME").map_err(|e| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+            traceback: e.to_string(),
+        })?;
+        let home_dir = PathBuf::from(home);
+        let path = home_dir.join(".sherlock/sherlock_count");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| SherlockError {
+                error: SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                traceback: e.to_string(),
+            })?;
+        }
+        Ok(Self { path })
+    }
+    fn increment(&self) -> Result<u32, SherlockError> {
+        let content = self.read()?.saturating_add(1);
+        self.write(content)?;
+        Ok(content)
+    }
+    fn read(&self) -> Result<u32, SherlockError> {
+        let mut file = match File::open(&self.path) {
+            Ok(file) => file,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(0);
+            }
+            Err(e) => {
+                return Err(SherlockError {
+                    error: SherlockErrorType::FileReadError(self.path.clone()),
+                    traceback: e.to_string(),
+                });
+            }
+        };
+        let mut buf = [0u8; 4];
+
+        file.read_exact(&mut buf).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileReadError(self.path.clone()),
+            traceback: e.to_string(),
+        })?;
+        Ok(u32::from_le_bytes(buf))
+    }
+    fn write(&self, count: u32) -> Result<(), SherlockError> {
+        let file = File::create(self.path.clone()).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileWriteError(self.path.clone()),
+            traceback: e.to_string(),
+        })?;
+
+        let mut writer = BufWriter::new(file);
+        writer
+            .write_all(&count.to_le_bytes())
+            .map_err(|e| SherlockError {
+                error: SherlockErrorType::FileWriteError(self.path.clone()),
+                traceback: e.to_string(),
+            })?;
+
+        Ok(())
+    }
 }
