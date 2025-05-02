@@ -299,22 +299,23 @@ fn construct_window(
     sorted_model.connect_items_changed({
         let mod_str = custom_binds.shortcut_modifier_str.clone();
         move |myself, _, removed, added| {
-            if added != 0 || removed != 0 {
-                // remove all shortcuts
-                let mut added_index = 0;
-                for i in 0..myself.n_items() {
-                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
-                        if item.imp().shortcut.get() {
-                            if let Some(shortcut_holder) = item.shortcut_holder() {
-                                if added_index < 5 {
-                                    added_index += shortcut_holder.apply_shortcut(added_index + 1, &mod_str);
-                                } else {
-                                    shortcut_holder.remove_shortcut();
-                                }
+            // Early exit if nothing changed
+            if added == 0 && removed == 0 {
+                return;
+            }
+            let mut added_index = 0;
+            for i in 0..myself.n_items() {
+                if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                    if item.imp().shortcut.get() {
+                        if let Some(shortcut_holder) = item.shortcut_holder() {
+                            if added_index < 5 {
+                                added_index += shortcut_holder.apply_shortcut(added_index + 1, &mod_str);
+                            } else {
+                                shortcut_holder.remove_shortcut();
                             }
                         }
-                    } 
-                }
+                    }
+                } 
             }
         }
     });
