@@ -69,10 +69,26 @@ impl SherlockConfig {
             pipe: ConfigPipe { method: None },
         }
     }
+    pub fn with_root(root: &PathBuf) -> Self {
+        SherlockConfig {
+            default_apps: ConfigDefaultApps::default(),
+            units: ConfigUnits::default(),
+            debug: ConfigDebug::default(),
+            appearance: ConfigAppearance::default(),
+            behavior: ConfigBehavior::default(),
+            binds: ConfigBinds::default(),
+            files: ConfigFiles::with_root(root),
+            pipe: ConfigPipe { method: None },
+        }
+    }
     /// # Arguments
     /// loc: PathBuf
     /// Pathbuf should be a directory **not** a file
     pub fn to_file(loc: PathBuf) -> Result<(), SherlockError> {
+        // create config location
+        let home = home_dir()?;
+        let path = expand_path(&loc, &home);
+
         fn ensure_dir(path: &Path, label: &str) {
             match std::fs::create_dir(path) {
                 Ok(_) => println!("✓ Created '{}' directory", label),
@@ -82,13 +98,37 @@ impl SherlockConfig {
                 Err(e) => eprintln!("✗ Failed to create '{}' directory: {}", label, e),
             }
         }
-
-        // create config location
-        let home = home_dir()?;
-        let path = expand_path(&loc, &home);
+        fn created_message(name: &str) {
+            println!("✓ Created '{}'", name);
+        }
+        fn skipped_message(name: &str) {
+            println!("↷ Skipping '{}' since file exists already.", name);
+        }
+        fn error_message(name: &str, reason: SherlockError) {
+            eprintln!(
+                "✗ Failed to create '{}'. Reason: {}",
+                name,
+                reason.error.get_message().0
+            );
+        }
+        let write_file = |name: &str, content: &str| {
+            let alias_path = path.join(name);
+            if !alias_path.exists() {
+                if let Err(error) = fs::write(&alias_path, content).map_err(|e| SherlockError {
+                    error: SherlockErrorType::FileWriteError(alias_path),
+                    traceback: e.to_string(),
+                }) {
+                    error_message(name, error);
+                } else {
+                    created_message(name);
+                }
+            } else {
+                skipped_message(name);
+            }
+        };
 
         // build default config
-        let config = SherlockConfig::default();
+        let config = SherlockConfig::with_root(&loc);
         let toml_str = toml::to_string(&config).map_err(|e| SherlockError {
             error: SherlockErrorType::FileWriteError(path.clone()),
             traceback: e.to_string(),
@@ -105,52 +145,19 @@ impl SherlockConfig {
         ensure_dir(&path.join("themes/"), "themes");
 
         // write config.toml file
-        let config_path = path.join("config.toml");
-        if !config_path.exists() {
-            fs::write(&config_path, toml_str).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(config_path),
-                traceback: e.to_string(),
-            })?;
-            println!("✓ Created 'config.toml'")
-        } else {
-            println!("↷ Skipping 'config.toml' since file exists already.")
-        }
+        write_file("config.toml", &toml_str);
 
         // write sherlockignore file
-        let ignore_path = path.join("sherlockignore");
-        if !ignore_path.exists() {
-            fs::write(&ignore_path, "").map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(ignore_path),
-                traceback: e.to_string(),
-            })?;
-            println!("✓ Created 'sherlockignore'")
-        } else {
-            println!("↷ Skipping 'sherlockignore' since file exists already.")
-        }
+        write_file("sherlockignore", "");
+
+        // write sherlock_actions file
+        write_file("sherlock_actions.json", "[]");
 
         // write sherlock_alias file
-        let alias_path = path.join("sherlock_alias.json");
-        if !alias_path.exists() {
-            fs::write(&alias_path, "{}").map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(alias_path),
-                traceback: e.to_string(),
-            })?;
-            println!("✓ Created 'sherlock_alias.json'")
-        } else {
-            println!("↷ Skipping 'sherlock_alias.json' since file exists already.")
-        }
+        write_file("sherlock_alias.json", "{}");
 
         // write main.css file
-        let css_path = path.join("main.css");
-        if !css_path.exists() {
-            fs::write(&css_path, "").map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(css_path),
-                traceback: e.to_string(),
-            })?;
-            println!("✓ Created 'main.css'")
-        } else {
-            println!("↷ Skipping 'main.css' since file exists already.")
-        }
+        write_file("main.css", "");
 
         // write fallback.json file
         let fallback_path = path.join("fallback.json");
@@ -170,13 +177,16 @@ impl SherlockConfig {
                 error: SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
                 traceback: e.to_string(),
             })?;
-            fs::write(&fallback_path, json_str).map_err(|e| SherlockError {
+            if let Err(error) = fs::write(&fallback_path, json_str).map_err(|e| SherlockError {
                 error: SherlockErrorType::FileWriteError(fallback_path),
                 traceback: e.to_string(),
-            })?;
-            println!("✓ Created 'fallback.json'")
+            }) {
+                error_message("fallback.json", error);
+            } else {
+                created_message("fallback.json");
+            };
         } else {
-            println!("↷ Skipping 'fallback.json' since file exists already.")
+            skipped_message("fallback.json");
         }
 
         std::process::exit(0);
@@ -484,6 +494,30 @@ pub struct ConfigFiles {
     pub ignore: PathBuf,
     #[serde(default = "default_actions")]
     pub actions: PathBuf,
+}
+impl ConfigFiles {
+    pub fn with_root(root: &PathBuf) -> Self {
+        let mut root = root.clone();
+        if root.ends_with("/") {
+            root.pop();
+        }
+        fn use_root(root: &PathBuf, path: PathBuf) -> PathBuf {
+            if let Ok(stripped) = path.strip_prefix("~/.config/sherlock") {
+                root.join(stripped)
+            } else {
+                path
+            }
+        }
+
+        Self {
+            config: use_root(&root, default_config()),
+            css: use_root(&root, default_css()),
+            fallback: use_root(&root, default_fallback()),
+            alias: use_root(&root, default_alias()),
+            ignore: use_root(&root, default_ignore()),
+            actions: use_root(&root, default_actions()),
+        }
+    }
 }
 impl Default for ConfigFiles {
     fn default() -> Self {
