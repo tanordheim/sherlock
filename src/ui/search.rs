@@ -38,7 +38,6 @@ struct SearchUI {
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
 }
-//     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 fn update(
     update_tiles: Vec<AsyncLauncherTile>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
@@ -296,36 +295,25 @@ fn construct_window(
     let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
 
+    // Set and update `modkey + num` shortcut ui
     sorted_model.connect_items_changed({
         let mod_str = custom_binds.shortcut_modifier_str.clone();
         move |myself, _, removed, added| {
             if added != 0 || removed != 0 {
-                let mut index = 0;
+                // remove all shortcuts
+                let mut added_index = 0;
                 for i in 0..myself.n_items() {
                     if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
                         if item.imp().shortcut.get() {
                             if let Some(shortcut_holder) = item.shortcut_holder() {
-                                index += shortcut_holder.remove_shortcut();
+                                if added_index < 5 {
+                                    added_index += shortcut_holder.apply_shortcut(added_index + 1, &mod_str);
+                                } else {
+                                    shortcut_holder.remove_shortcut();
+                                }
                             }
                         }
-                    } else {
-                        break;
-                    }
-                }
-                let mut index = 0;
-                for i in 0..myself.n_items() {
-                    if index == 5 {
-                        break;
-                    }
-                    if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
-                        if item.imp().shortcut.get() {
-                            if let Some(shortcut_holder) = item.shortcut_holder() {
-                                index += shortcut_holder.apply_shortcut(index + 1, &mod_str);
-                            }
-                        }
-                    } else {
-                        break;
-                    }
+                    } 
                 }
             }
         }
