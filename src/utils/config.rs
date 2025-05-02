@@ -28,32 +28,47 @@ pub struct SherlockFlags {
     pub time_inspect: bool,
     pub sub_menu: Option<String>,
 }
-/// # SherlockConfig
-/// Holds config section structs:
-/// - default_apps
-/// - units
-/// - debug
-/// - appearance
-/// - behavior
-/// - binds
-/// - files
-/// - pipe (internal)
+/// Configuration sections:
+///
+/// - **default_apps**: User-defined default applications (e.g., terminal, calendar).
+/// - **units**: Preferred measurement units (e.g., length, temperature).
+/// - **debug**: Debugging preferences (e.g., whether to display errors).
+/// - **appearance**: UI preferences (e.g., show/hide status bar).
+/// - **behavior**: Runtime behavior settings (e.g., daemon mode, caching).
+/// - **binds**: Custom key or action bindings (supplementing defaults).
+/// - **files**: User-specified overrides for default config file paths.
+/// - **pipe** *(internal)*: Internal settings for JSON piping (e.g., default return action).
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct SherlockConfig {
+    /// User-defined default applications (e.g., terminal, calendar)
     #[serde(default)]
     pub default_apps: ConfigDefaultApps,
+
+    /// Preferred measurement units (e.g., length, temperature)
     #[serde(default)]
     pub units: ConfigUnits,
+
+    /// Debugging preferences (e.g., whether to display errors)
     #[serde(default)]
     pub debug: ConfigDebug,
+
+    /// UI preferences (e.g., show/hide status bar)
     #[serde(default)]
     pub appearance: ConfigAppearance,
+
+    /// Runtime behavior settings (e.g., daemon mode, caching)
     #[serde(default)]
     pub behavior: ConfigBehavior,
+    
+    /// Custom key or action bindings (supplementing defaults)
     #[serde(default)]
     pub binds: ConfigBinds,
+
+    /// User-specified overrides for default config file paths
     #[serde(default)]
     pub files: ConfigFiles,
+
+    /// Internal settings for JSON piping (e.g., default return action)
     #[serde(default)]
     pub pipe: ConfigPipe,
 }
