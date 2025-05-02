@@ -103,6 +103,7 @@ After the installation is completed, you can set up your configuration files. Th
 3. [**sherlock_alias.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json): This file specifies aliases for applications. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/aliases.md).
 4. [**sherlockignore**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlockignore): This file specifies which applications to exclude from your search. Documentation [here](https://github.com/Skxxtz/sherlock/blob/main/docs/sherlockignore.md).
 5. [**main.css**](https://github.com/Skxxtz/sherlock/blob/main/resources/main.css)
+6. [**sherlock_actions.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_actions.json): Define actions to be executed on every `nth` run. For example clearing the cache
 
 As of `version 0.1.11`, Sherlock comes with the `init` subcommand to automatically create your config. It will create versions of the files above, populated with the default values. Additionally, it will create the `icons/`, `scripts/`, and `themes/` subdirectories. All you have to do is run the following command:
 
