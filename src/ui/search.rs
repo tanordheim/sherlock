@@ -6,7 +6,7 @@ use gtk4::{
     gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
-    ListScrollFlags, ListView, Overlay, SelectionModel, SignalListItemFactory, SingleSelection,
+    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection,
     SortListModel, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
@@ -359,7 +359,7 @@ fn construct_window(
         results.scroll_to(0, ListScrollFlags::NONE, None);
     }
 
-    // Show notification-bar
+    // Disable status-bar
     CONFIG.get().map(|c| {
         if !c.appearance.status_bar {
             let n: Option<GtkBox> = builder.object("status-bar");
