@@ -1,7 +1,7 @@
 bug:
   - "(crash|bug|error|coredump|freeze|segfault|issue|problem|not working|isn't working|doesn't work|fails|failing)"
 
-feature-request:
+feature request:
   - "(feature|enhancement|improvement|request|suggestion|new feature)"
 
 documentation:
