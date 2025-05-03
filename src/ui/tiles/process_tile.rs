@@ -20,24 +20,34 @@ impl Tile {
             if value.to_lowercase().fuzzy_match(&keyword.to_lowercase()) {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
-                builder.category.upgrade().map(|category| {
-                    if let Some(name) = &launcher.name {
-                        category.set_text(name);
-                    } else {
-                        category.set_visible(false);
-                    }
-                });
+                builder
+                    .category
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|category| {
+                        if let Some(name) = &launcher.name {
+                            category.set_text(name);
+                        } else {
+                            category.set_visible(false);
+                        }
+                    });
                 builder
                     .title
-                    .upgrade()
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
                     .map(|title| title.set_markup(&value));
-                builder.icon.upgrade().map(|icon| {
-                    if proc.icon.starts_with("/") {
-                        icon.set_from_file(Some(&proc.icon));
-                    } else {
-                        icon.set_icon_name(Some(&proc.icon));
-                    }
-                });
+
+                builder
+                    .icon
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|icon| {
+                        if proc.icon.starts_with("/") {
+                            icon.set_from_file(Some(&proc.icon));
+                        } else {
+                            icon.set_icon_name(Some(&proc.icon));
+                        }
+                    });
 
                 let ppid = key.0;
                 let cpid = key.1;

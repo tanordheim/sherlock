@@ -71,11 +71,13 @@ impl Tile {
             if let Some((num, result_text)) = result {
                 builder
                     .equation_holder
-                    .upgrade()
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
                     .map(|eq| eq.set_text(&search_query));
                 builder
                     .result_holder
-                    .upgrade()
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
                     .map(|result| result.set_text(&result_text));
                 let attrs = get_attrs_map(vec![("method", &method_clone), ("result", &num)]);
 

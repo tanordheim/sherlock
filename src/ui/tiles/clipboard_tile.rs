@@ -206,12 +206,20 @@ impl Tile {
                             image.set_widget_name("icon");
                             image.set_pixel_size(22);
 
-                            builder.icon_holder.upgrade().map(|holder| {
-                                holder.append(&image);
-                                holder.set_overflow(gtk4::Overflow::Hidden);
-                                holder.set_widget_name("color-icon-holder");
-                            });
-                            builder.icon.upgrade().map(|icon| icon.set_visible(false));
+                            builder
+                                .icon_holder
+                                .as_ref()
+                                .and_then(|tmp| tmp.upgrade())
+                                .map(|holder| {
+                                    holder.append(&image);
+                                    holder.set_overflow(gtk4::Overflow::Hidden);
+                                    holder.set_widget_name("color-icon-holder");
+                                });
+                            builder
+                                .icon
+                                .as_ref()
+                                .and_then(|tmp| tmp.upgrade())
+                                .map(|icon| icon.set_visible(false));
                             is_valid = true;
                         };
                     }
@@ -221,22 +229,31 @@ impl Tile {
                 // calc capabilities will be checked inside of calc tile
                 results.extend(Tile::calc_tile(launcher, calc));
             } else {
-                builder.category.upgrade().map(|category| {
-                    category.set_visible(!name.is_empty());
-                    category.set_text(name);
-                });
+                builder
+                    .category
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|category| {
+                        category.set_visible(!name.is_empty());
+                        category.set_text(name);
+                    });
 
-                builder.icon.upgrade().map(|ico| {
-                    if icon.starts_with("/") {
-                        ico.set_from_file(Some(&icon));
-                    } else {
-                        ico.set_icon_name(Some(&icon));
-                    }
-                    ico.set_pixel_size(15);
-                });
+                builder
+                    .icon
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|ico| {
+                        if icon.starts_with("/") {
+                            ico.set_from_file(Some(&icon));
+                        } else {
+                            ico.set_icon_name(Some(&icon));
+                        }
+                        ico.set_pixel_size(15);
+                    });
                 builder
                     .title
-                    .upgrade()
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
                     .map(|title| title.set_text(clipboard_content));
 
                 // Add action capabilities
@@ -257,7 +274,7 @@ impl Tile {
                 let update_closure = |_: &str| -> bool { true };
                 builder.object.set_update(update_closure);
 
-                if launcher.shortcut{
+                if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }
                 results.push(builder.object);

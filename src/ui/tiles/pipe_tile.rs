@@ -27,27 +27,39 @@ impl Tile {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 if let Some(title) = &item.title {
-                    builder.title.upgrade().map(|t| t.set_text(&title));
+                    builder
+                        .title
+                        .as_ref()
+                        .and_then(|tmp| tmp.upgrade())
+                        .map(|t| t.set_text(&title));
                 }
-                builder.category.upgrade().map(|category| {
-                    if let Some(desc) = &item.description {
-                        category.set_text(&desc);
-                    } else {
-                        category.set_visible(false);
-                    }
-                });
-
-                builder.icon.upgrade().map(|ico| {
-                    if let Some(icon) = &item.icon {
-                        if icon.starts_with("/") {
-                            ico.set_from_file(Some(&icon));
+                builder
+                    .category
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|category| {
+                        if let Some(desc) = &item.description {
+                            category.set_text(&desc);
                         } else {
-                            ico.set_icon_name(Some(&icon));
+                            category.set_visible(false);
                         }
-                    } else {
-                        ico.set_visible(false);
-                    }
-                });
+                    });
+
+                builder
+                    .icon
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|ico| {
+                        if let Some(icon) = &item.icon {
+                            if icon.starts_with("/") {
+                                ico.set_from_file(Some(&icon));
+                            } else {
+                                ico.set_icon_name(Some(&icon));
+                            }
+                        } else {
+                            ico.set_visible(false);
+                        }
+                    });
 
                 // Custom Image Data
                 if let Some(bin) = item.binary.clone() {
@@ -57,14 +69,19 @@ impl Tile {
                         let image = Image::from_paintable(Some(&texture));
                         builder
                             .icon_holder
-                            .upgrade()
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
                             .map(|holder| holder.append(&image));
                         if let Some(size) = &item.icon_size {
                             image.set_pixel_size(*size);
                         }
                     }
                 } else {
-                    builder.icon.upgrade().map(|icon| icon.set_visible(false));
+                    builder
+                        .icon
+                        .as_ref()
+                        .and_then(|tmp| tmp.upgrade())
+                        .map(|icon| icon.set_visible(false));
                 }
 
                 // Create attributes and enable action capability

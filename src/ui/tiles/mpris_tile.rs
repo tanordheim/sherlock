@@ -22,16 +22,22 @@ impl Tile {
 
         builder
             .category
-            .upgrade()
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
             .map(|category| category.set_text(&mpris.mpris.metadata.artists.join(", ")));
         builder
             .title
-            .upgrade()
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
             .map(|title| title.set_text(&mpris.mpris.metadata.title));
 
         let overlay = Overlay::new();
 
-        builder.icon.upgrade().map(|icon| icon.set_visible(false));
+        builder
+            .icon
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|icon| icon.set_visible(false));
 
         let pix_buf = vec![0, 0, 0];
         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -52,13 +58,17 @@ impl Tile {
             image.set_widget_name("placeholder-icon");
             image.set_pixel_size(50);
         };
-        builder.icon_holder.upgrade().map(|holder| {
-            holder.append(&overlay);
-            holder.set_overflow(gtk4::Overflow::Hidden);
-            holder.set_widget_name("mpris-icon-holder");
-            holder.set_margin_top(10);
-            holder.set_margin_bottom(10);
-        });
+        builder
+            .icon_holder
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|holder| {
+                holder.append(&overlay);
+                holder.set_overflow(gtk4::Overflow::Hidden);
+                holder.set_widget_name("mpris-icon-holder");
+                holder.set_margin_top(10);
+                holder.set_margin_bottom(10);
+            });
 
         // Add attrs and implement double click capabilities
         let attrs: HashMap<String, String> =

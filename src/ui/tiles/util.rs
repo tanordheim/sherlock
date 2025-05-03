@@ -61,32 +61,40 @@ impl EventTileBuilder {
 #[derive(Clone, Default)]
 pub struct TileBuilder {
     pub object: SherlockRow,
-    pub icon: WeakRef<Image>,
-    pub icon_holder: WeakRef<Box>,
-    pub title: WeakRef<Label>,
-    pub category: WeakRef<Label>,
-    pub tag_start: WeakRef<Label>,
-    pub tag_end: WeakRef<Label>,
+    pub icon: Option<WeakRef<Image>>,
+    pub icon_holder: Option<WeakRef<Box>>,
+    pub title: Option<WeakRef<Label>>,
+    pub category: Option<WeakRef<Label>>,
+    pub tag_start: Option<WeakRef<Label>>,
+    pub tag_end: Option<WeakRef<Label>>,
     pub shortcut_holder: Option<WeakRef<Box>>,
 
     // Specific to 'bulk_text_tile'
-    pub content_title: WeakRef<Label>,
-    pub content_body: WeakRef<Label>,
+    pub content_title: Option<WeakRef<Label>>,
+    pub content_body: Option<WeakRef<Label>>,
     // Specific to 'calc_tile'
-    pub equation_holder: WeakRef<Label>,
-    pub result_holder: WeakRef<Label>,
+    pub equation_holder: Option<WeakRef<Label>>,
+    pub result_holder: Option<WeakRef<Label>>,
 }
 
 impl TileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
         let holder: Box = builder.object("holder").unwrap_or_default();
-        let icon: Image = builder.object("icon-name").unwrap_or_default();
-        let title: Label = builder.object("app-name").unwrap_or_default();
-        let category: Label = builder.object("launcher-type").unwrap_or_default();
-        let icon_holder: Box = builder.object("app-icon-holder").unwrap_or_default();
-        let tag_start: Label = builder.object("app-name-tag-start").unwrap_or_default();
-        let tag_end: Label = builder.object("app-name-tag-end").unwrap_or_default();
+        let icon = builder.object::<Image>("icon-name").map(|w| w.downgrade());
+        let title = builder.object::<Label>("app-name").map(|w| w.downgrade());
+        let category = builder
+            .object::<Label>("launcher-type")
+            .map(|w| w.downgrade());
+        let icon_holder = builder
+            .object::<Box>("app-icon-holder")
+            .map(|w| w.downgrade());
+        let tag_start = builder
+            .object::<Label>("app-name-tag-start")
+            .map(|w| w.downgrade());
+        let tag_end = builder
+            .object::<Label>("app-name-tag-end")
+            .map(|w| w.downgrade());
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
@@ -94,37 +102,47 @@ impl TileBuilder {
         object.set_css_classes(&vec!["tile"]);
 
         // Specific to 'bulk_text_tile' and 'error_tile'
-        let content_title: Label = builder.object("content-title").unwrap_or_default();
-        let content_body: Label = builder.object("content-body").unwrap_or_default();
+        let content_title = builder
+            .object::<Label>("content-title")
+            .map(|w| w.downgrade());
+        let content_body = builder
+            .object::<Label>("content-body")
+            .map(|w| w.downgrade());
 
         // Specific to 'calc_tile'
-        let equation_holder: Label = builder.object("equation-holder").unwrap_or_default();
-        let result_holder: Label = builder.object("result-holder").unwrap_or_default();
+        let equation_holder = builder
+            .object::<Label>("equation-holder")
+            .map(|w| w.downgrade());
+        let result_holder = builder
+            .object::<Label>("result-holder")
+            .map(|w| w.downgrade());
 
-        let shortcut_option: Option<Box> = builder.object("shortcut-holder");
-        let shortcut_holder: Option<WeakRef<Box>> =
-            shortcut_option.and_then(|s| Some(s.downgrade()));
+        let shortcut_holder = builder
+            .object::<Box>("shortcut-holder")
+            .map(|w| w.downgrade());
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {
-            icon.set_pixel_size(c.appearance.icon_size);
+            icon.as_ref()
+                .and_then(|icon| icon.upgrade())
+                .map(|icon| icon.set_pixel_size(c.appearance.icon_size));
         }
         drop(builder);
         TileBuilder {
             object,
-            icon: icon.downgrade(),
-            icon_holder: icon_holder.downgrade(),
-            title: title.downgrade(),
-            category: category.downgrade(),
-            tag_start: tag_start.downgrade(),
-            tag_end: tag_end.downgrade(),
+            icon,
+            icon_holder,
+            title,
+            category,
+            tag_start,
+            tag_end,
             shortcut_holder,
 
-            content_body: content_body.downgrade(),
-            content_title: content_title.downgrade(),
+            content_body,
+            content_title,
 
-            equation_holder: equation_holder.downgrade(),
-            result_holder: result_holder.downgrade(),
+            equation_holder,
+            result_holder,
         }
     }
     pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
@@ -134,10 +152,13 @@ impl TileBuilder {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
             if !text.is_empty() {
-                self.tag_start.upgrade().map(|t| {
-                    t.set_text(&text);
-                    t.set_visible(true);
-                });
+                self.tag_start
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|t| {
+                        t.set_text(&text);
+                        t.set_visible(true);
+                    });
             }
         }
     }
@@ -148,10 +169,13 @@ impl TileBuilder {
         if let Some(start_tag) = content {
             let text = start_tag.replace("{keyword}", keyword.as_ref());
             if !text.is_empty() {
-                self.tag_end.upgrade().map(|t| {
-                    t.set_text(&text);
-                    t.set_visible(true);
-                });
+                self.tag_end
+                    .as_ref()
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|t| {
+                        t.set_text(&text);
+                        t.set_visible(true);
+                    });
             }
         }
     }

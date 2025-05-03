@@ -14,21 +14,29 @@ use crate::launcher::Launcher;
 impl Tile {
     pub fn web_tile(launcher: &Launcher, keyword: &str, web: &WebLauncher) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
-        builder.category.upgrade().map(|category| {
-            if let Some(name) = &launcher.name {
-                category.set_text(name);
-            } else {
-                category.set_visible(false);
-            }
-        });
+        builder
+            .category
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|category| {
+                if let Some(name) = &launcher.name {
+                    category.set_text(name);
+                } else {
+                    category.set_visible(false);
+                }
+            });
 
-        builder.icon.upgrade().map(|icon| {
-            if web.icon.starts_with("/") {
-                icon.set_from_file(Some(&web.icon));
-            } else {
-                icon.set_icon_name(Some(&web.icon));
-            }
-        });
+        builder
+            .icon
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|icon| {
+                if web.icon.starts_with("/") {
+                    icon.set_from_file(Some(&web.icon));
+                } else {
+                    icon.set_icon_name(Some(&web.icon));
+                }
+            });
 
         let tile_name = if web.display_name.contains("{keyword}") {
             web.display_name.replace("{keyword}", keyword)
@@ -61,15 +69,19 @@ impl Tile {
                 let attrs_clone = Rc::clone(&attrs_rc);
 
                 // Update title
-                if let Some(title) = title.upgrade() {
+                if let Some(title) = title.as_ref().and_then(|tmp| tmp.upgrade()) {
                     title.set_text(&tile_name.replace("{keyword}", keyword));
                 }
 
                 // update first tag
-                update_tag(&tag_start, &tag_start_content, keyword);
+                if let Some(tag_start) = &tag_start {
+                    update_tag(&tag_start, &tag_start_content, keyword);
+                }
 
                 // update second tag
-                update_tag(&tag_end, &tag_end_content, keyword);
+                if let Some(tag_end) = &tag_end {
+                    update_tag(&tag_end, &tag_end_content, keyword);
+                }
 
                 // update attributes to activate correct action
                 let keyword_clone = keyword.to_string();

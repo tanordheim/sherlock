@@ -29,7 +29,7 @@ impl Tile {
                 builder.display_tag_start(&value.tag_start, keyword);
                 builder.display_tag_end(&value.tag_end, keyword);
 
-                builder.category.upgrade().map(|cat| {
+                builder.category.and_then(|tmp| tmp.upgrade()).map(|cat| {
                     if let Some(name) = &launcher.name {
                         cat.set_text(name);
                     } else {
@@ -38,7 +38,7 @@ impl Tile {
                 });
 
                 // Icon stuff
-                builder.icon.upgrade().map(|icon| {
+                builder.icon.and_then(|tmp| tmp.upgrade()).map(|icon| {
                     if value.icon.starts_with("/") {
                         icon.set_from_file(Some(&value.icon));
                     } else {
@@ -49,15 +49,15 @@ impl Tile {
 
                 builder
                     .title
-                    .upgrade()
+                    .and_then(|tmp| tmp.upgrade())
                     .map(|title| title.set_markup(&tile_name));
 
                 let attrs =
                     get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
 
                 builder.object.set_search(&value.search_string);
-                builder.object.set_priority(value.priority);
                 builder.object.with_launcher(launcher);
+                builder.object.set_priority(value.priority);
                 builder
                     .object
                     .connect_local("row-should-activate", false, move |row| {
@@ -68,9 +68,6 @@ impl Tile {
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }
-
-                let priority = value.priority;
-                builder.object.set_priority(priority);
 
                 results.push(builder.object);
             }

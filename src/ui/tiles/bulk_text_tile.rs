@@ -20,23 +20,31 @@ impl Tile {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 
         // Set category name
-        builder.category.upgrade().map(|cat| {
-            if let Some(name) = &launcher.name {
-                cat.set_text(name);
-            } else {
-                cat.set_visible(false);
-            }
-        });
+        builder
+            .category
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|cat| {
+                if let Some(name) = &launcher.name {
+                    cat.set_text(name);
+                } else {
+                    cat.set_visible(false);
+                }
+            });
 
         // Set icons
-        builder.icon.upgrade().map(|icon| {
-            if bulk_text.icon.starts_with("/") {
-                icon.set_from_file(Some(&bulk_text.icon));
-            } else {
-                icon.set_icon_name(Some(&bulk_text.icon));
-            }
-            icon.set_pixel_size(15);
-        });
+        builder
+            .icon
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|icon| {
+                if bulk_text.icon.starts_with("/") {
+                    icon.set_from_file(Some(&bulk_text.icon));
+                } else {
+                    icon.set_icon_name(Some(&bulk_text.icon));
+                }
+                icon.set_pixel_size(15);
+            });
 
         let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
         builder.object.add_css_class("bulk-text");
@@ -55,11 +63,23 @@ impl Tile {
                 let keyword = keyword.to_string();
 
                 Box::pin(async move {
-                    content_title.upgrade().map(|t| t.set_text(&keyword));
+                    content_title
+                        .as_ref()
+                        .and_then(|tmp| tmp.upgrade())
+                        .map(|t| t.set_text(&keyword));
+
                     if let Some((title, body, next_content)) = &launcher.get_result(&keyword).await
                     {
-                        content_title.upgrade().map(|t| t.set_text(&title));
-                        content_body.upgrade().map(|b| b.set_text(&body));
+                        content_title
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
+                            .map(|t| t.set_text(&title));
+
+                        content_body
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
+                            .map(|b| b.set_text(&body));
+
                         if let Some(next_content) = next_content {
                             attrs.insert(String::from("next_content"), next_content.to_string());
                             row.upgrade().map(|row| {
