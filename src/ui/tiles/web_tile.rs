@@ -87,6 +87,8 @@ impl Tile {
                     });
                     row.set_signal_id(signal_id);
                 });
+                
+                // Set to false to not always show this tile
                 false
             }
         };
