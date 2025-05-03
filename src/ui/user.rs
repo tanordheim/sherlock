@@ -76,18 +76,28 @@ pub fn display_raw<T: AsRef<str>>(
     error_model: WeakRef<ListStore>,
 ) -> (HVBox, SearchHandler) {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
-    builder.content.upgrade().map(|ctx| {
-        let buffer = ctx.buffer();
-        ctx.add_css_class("raw_text");
-        ctx.set_monospace(true);
-        let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
-        buffer.set_text(&sanitized);
-        if center {
-            ctx.set_justification(Justification::Center);
-        }
-    });
+    builder
+        .content
+        .as_ref()
+        .and_then(|tmp| tmp.upgrade())
+        .map(|ctx| {
+            let buffer = ctx.buffer();
+            ctx.add_css_class("raw_text");
+            ctx.set_monospace(true);
+            let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
+            buffer.set_text(&sanitized);
+            if center {
+                ctx.set_justification(Justification::Center);
+            }
+        });
     let handler = SearchHandler::empty(error_model);
-    (builder.object.upgrade().unwrap_or_default(), handler)
+    let row = builder
+        .object
+        .as_ref()
+        .and_then(|tmp| tmp.upgrade())
+        .unwrap_or_default();
+
+    (row, handler)
 }
 fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>, GtkBox, PipeUI) {
     // Collect Modes

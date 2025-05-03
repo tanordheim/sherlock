@@ -30,7 +30,11 @@ impl Tile {
             });
         builder.object.set_signal_id(signal_id);
 
-        builder.icon.upgrade().map(|icon| icon.set_pixel_size(40));
+        builder
+            .icon
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|icon| icon.set_pixel_size(40));
 
         let launcher_clone = launcher.clone();
         let row_weak = builder.object.downgrade();
@@ -54,12 +58,17 @@ impl Tile {
                             row.add_css_class(&data.icon);
                         });
                         temperature
-                            .upgrade()
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
                             .map(|tmp| tmp.set_text(&data.temperature));
                         spinner.upgrade().map(|spn| spn.set_spinning(false));
-                        icon.upgrade()
+                        icon.as_ref()
+                            .and_then(|tmp| tmp.upgrade())
                             .map(|ico| ico.set_icon_name(Some(&data.icon)));
-                        location.upgrade().map(|loc| loc.set_text(&data.format_str));
+                        location
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
+                            .map(|loc| loc.set_text(&data.format_str));
                     } else {
                         row.upgrade().map(|row| row.set_visible(false));
                     }

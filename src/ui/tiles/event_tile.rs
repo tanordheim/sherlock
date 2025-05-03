@@ -28,21 +28,28 @@ impl Tile {
 
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
 
-        builder.title.upgrade().map(|title| {
-            title.set_text(&event.title);
-        });
+        builder
+            .title
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|title| {
+                title.set_text(&event.title);
+            });
 
         builder
             .icon
-            .upgrade()
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
             .map(|ico| ico.set_icon_name(Some(event_launcher.icon.as_ref())));
         builder
             .start_time
-            .upgrade()
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
             .map(|start_time| start_time.set_text(&event.start_time));
         builder
             .end_time
-            .upgrade()
+            .as_ref()
+            .and_then(|tmp| tmp.upgrade())
             .map(|end_time| end_time.set_text(format!(".. {}", event.end_time).as_str()));
 
         let mut constructor: Vec<(&str, &str)> = vec![

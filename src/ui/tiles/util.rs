@@ -5,28 +5,25 @@ use std::collections::HashSet;
 
 #[derive(Default)]
 pub struct TextViewTileBuilder {
-    pub object: WeakRef<Box>,
-    pub content: WeakRef<TextView>,
+    pub object: Option<WeakRef<Box>>,
+    pub content: Option<WeakRef<TextView>>,
 }
 impl TextViewTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let object: Box = builder.object("next_tile").unwrap_or_default();
-        let content: TextView = builder.object("content").unwrap_or_default();
-        TextViewTileBuilder {
-            object: object.downgrade(),
-            content: content.downgrade(),
-        }
+        let object = builder.object::<Box>("next_tile").map(|w| w.downgrade());
+        let content = builder.object::<TextView>("content").map(|w| w.downgrade());
+        TextViewTileBuilder { object, content }
     }
 }
 
 #[derive(Default)]
 pub struct EventTileBuilder {
     pub object: SherlockRow,
-    pub title: WeakRef<Label>,
-    pub icon: WeakRef<Image>,
-    pub start_time: WeakRef<Label>,
-    pub end_time: WeakRef<Label>,
+    pub title: Option<WeakRef<Label>>,
+    pub icon: Option<WeakRef<Image>>,
+    pub start_time: Option<WeakRef<Label>>,
+    pub end_time: Option<WeakRef<Label>>,
     pub shortcut_holder: Option<WeakRef<Box>>,
 }
 impl EventTileBuilder {
@@ -39,20 +36,24 @@ impl EventTileBuilder {
         object.append(&holder);
         object.set_css_classes(&vec!["tile"]);
 
-        let title: Label = builder.object("title-label").unwrap_or_default();
-        let start_time: Label = builder.object("time-label").unwrap_or_default();
-        let end_time: Label = builder.object("end-time-label").unwrap_or_default();
-        let icon: Image = builder.object("icon-name").unwrap_or_default();
-        let shortcut_option: Option<Box> = builder.object("shortcut-holder");
-        let shortcut_holder: Option<WeakRef<Box>> =
-            shortcut_option.and_then(|h| Some(h.downgrade()));
+        let title = builder
+            .object::<Label>("title-label")
+            .map(|w| w.downgrade());
+        let start_time = builder.object::<Label>("time-label").map(|w| w.downgrade());
+        let end_time = builder
+            .object::<Label>("end-time-label")
+            .map(|w| w.downgrade());
+        let icon = builder.object::<Image>("icon-name").map(|w| w.downgrade());
+        let shortcut_holder = builder
+            .object::<Box>("shortcut_holder")
+            .map(|w| w.downgrade());
 
         EventTileBuilder {
             object,
-            title: title.downgrade(),
-            start_time: start_time.downgrade(),
-            end_time: end_time.downgrade(),
-            icon: icon.downgrade(),
+            title,
+            start_time,
+            end_time,
+            icon,
             shortcut_holder,
         }
     }
@@ -184,19 +185,21 @@ impl TileBuilder {
 #[derive(Clone, Default)]
 pub struct WeatherTileBuilder {
     pub object: SherlockRow,
-    pub icon: WeakRef<Image>,
-    pub location: WeakRef<Label>,
-    pub temperature: WeakRef<Label>,
+    pub icon: Option<WeakRef<Image>>,
+    pub location: Option<WeakRef<Label>>,
+    pub temperature: Option<WeakRef<Label>>,
     pub spinner: WeakRef<Spinner>,
 }
 
 impl WeatherTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let body: Box = builder.object("holder").unwrap_or_default();
-        let icon: Image = builder.object("icon-name").unwrap_or_default();
-        let location: Label = builder.object("location").unwrap_or_default();
-        let temperature: Label = builder.object("temperature").unwrap_or_default();
+        let body = builder.object::<Box>("holder").unwrap_or_default();
+        let icon = builder.object::<Image>("icon-name").map(|w| w.downgrade());
+        let location = builder.object::<Label>("location").map(|w| w.downgrade());
+        let temperature = builder
+            .object::<Label>("temperature")
+            .map(|w| w.downgrade());
 
         // Append content to the sherlock row
         let object = SherlockRow::new();
@@ -216,14 +219,16 @@ impl WeatherTileBuilder {
 
         // Set the icon size to the user-specified one
         if let Some(c) = CONFIG.get() {
-            icon.set_pixel_size(c.appearance.icon_size);
+            icon.as_ref()
+                .and_then(|tmp| tmp.upgrade())
+                .map(|icon| icon.set_pixel_size(c.appearance.icon_size));
         }
 
         WeatherTileBuilder {
             object,
-            icon: icon.downgrade(),
-            location: location.downgrade(),
-            temperature: temperature.downgrade(),
+            icon,
+            location,
+            temperature,
             spinner: spinner.downgrade(),
         }
     }
