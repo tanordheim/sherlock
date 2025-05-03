@@ -12,7 +12,7 @@ use gtk4::{
 };
 use levenshtein::levenshtein;
 
-use super::{tiles::util::SherlockSearch, util::*};
+use super::{search::SearchHandler, tiles::util::SherlockSearch, util::*};
 use crate::{g_subclasses::sherlock_row::SherlockRow, CONFIG};
 use gtk4::{Box as HVBox, ScrolledWindow};
 
@@ -34,7 +34,8 @@ pub fn display_pipe(
     _window: &ApplicationWindow,
     pipe_content: Vec<PipeData>,
     method: &str,
-) -> HVBox {
+    error_model: WeakRef<ListStore>,
+) -> (HVBox, SearchHandler) {
     let (search_text, stack_page, ui) = construct(pipe_content, method);
 
     if let Some(viewport) = ui.result_viewport.upgrade() {
@@ -66,9 +67,14 @@ pub fn display_pipe(
         ui.binds,
     );
 
-    return stack_page;
+    let handler = SearchHandler::empty(error_model);
+    return (stack_page, handler);
 }
-pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
+pub fn display_raw<T: AsRef<str>>(
+    content: T,
+    center: bool,
+    error_model: WeakRef<ListStore>,
+) -> (HVBox, SearchHandler) {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
     builder.content.upgrade().map(|ctx| {
         let buffer = ctx.buffer();
@@ -80,7 +86,8 @@ pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> HVBox {
             ctx.set_justification(Justification::Center);
         }
     });
-    builder.object.upgrade().unwrap_or_default()
+    let handler = SearchHandler::empty(error_model);
+    (builder.object.upgrade().unwrap_or_default(), handler)
 }
 fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>, GtkBox, PipeUI) {
     // Collect Modes

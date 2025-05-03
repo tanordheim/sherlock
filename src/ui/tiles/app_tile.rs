@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 use crate::loader::util::AppData;
 
 use super::util::{SherlockSearch, TileBuilder};
@@ -14,8 +14,8 @@ impl Tile {
         launcher: &Launcher,
         keyword: &str,
         commands: &HashSet<AppData>,
-    ) -> Vec<ResultItem> {
-        let mut results: Vec<ResultItem> = Vec::with_capacity(commands.len());
+    ) -> Vec<SherlockRow> {
+        let mut results: Vec<SherlockRow> = Vec::with_capacity(commands.len());
 
         for value in commands.into_iter() {
             if value
@@ -65,18 +65,14 @@ impl Tile {
                         execute_from_attrs(&row, &attrs);
                         None
                     });
-                let shortcut_holder = match launcher.shortcut {
-                    true => builder.shortcut_holder,
-                    _ => None,
-                };
+                if launcher.shortcut {
+                    builder.object.set_shortcut_holder(builder.shortcut_holder);
+                }
 
                 let priority = value.priority;
                 builder.object.set_priority(priority);
 
-                results.push(ResultItem {
-                    row_item: builder.object,
-                    shortcut_holder,
-                });
+                results.push(builder.object);
             }
         }
         return results;

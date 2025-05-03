@@ -1,8 +1,5 @@
 use std::collections::HashSet;
 
-use gio::glib::WeakRef;
-use gtk4::Box;
-
 pub mod app_launcher;
 pub mod audio_launcher;
 pub mod bulk_text_launcher;
@@ -100,15 +97,9 @@ impl Launcher {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct ResultItem {
-    pub row_item: SherlockRow,
-    pub shortcut_holder: Option<WeakRef<Box>>,
-}
-
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
+    pub fn get_patch(&self, keyword: &str) -> Vec<SherlockRow> {
         match &self.launcher_type {
             LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc),

@@ -10,12 +10,12 @@ use crate::{
     g_subclasses::sherlock_row::SherlockRow,
     launcher::{
         calc_launcher::{Calculator, CalculatorLauncher},
-        Launcher, ResultItem,
+        Launcher,
     },
 };
 
 impl Tile {
-    pub fn calc_tile(launcher: &Launcher, calc_launcher: &CalculatorLauncher) -> Vec<ResultItem> {
+    pub fn calc_tile(launcher: &Launcher, calc_launcher: &CalculatorLauncher) -> Vec<SherlockRow> {
         let capabilities: HashSet<String> = match &calc_launcher.capabilities {
             Some(c) => c.iter().map(|s| s.to_string()).collect(),
             _ => HashSet::from([String::from("calc.math"), String::from("calc.units")]),
@@ -93,16 +93,9 @@ impl Tile {
             false
         };
         builder.object.set_update(update_closure);
-
-        let shortcut_holder = match launcher.shortcut {
-            true => builder.shortcut_holder,
-            _ => None,
-        };
-
-        let res = ResultItem {
-            row_item: builder.object,
-            shortcut_holder,
-        };
-        vec![res]
+        if launcher.shortcut {
+            builder.object.set_shortcut_holder(builder.shortcut_holder);
+        }
+        vec![builder.object]
     }
 }

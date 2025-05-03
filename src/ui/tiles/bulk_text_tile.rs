@@ -6,7 +6,7 @@ use std::vec;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::bulk_text_launcher::BulkTextLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -16,7 +16,7 @@ impl Tile {
         launcher: &Launcher,
         keyword: &str,
         bulk_text: &BulkTextLauncher,
-    ) -> Vec<ResultItem> {
+    ) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 
         // Set category name
@@ -77,15 +77,9 @@ impl Tile {
                 })
             });
         builder.object.set_async_update(async_update_closure);
-
-        let shortcut_holder = match launcher.shortcut {
-            true => builder.shortcut_holder,
-            _ => None,
-        };
-        let result_item = ResultItem {
-            row_item: builder.object,
-            shortcut_holder,
-        };
-        return vec![result_item];
+        if launcher.shortcut {
+            builder.object.set_shortcut_holder(builder.shortcut_holder);
+        }
+        return vec![builder.object];
     }
 }

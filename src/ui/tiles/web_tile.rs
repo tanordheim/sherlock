@@ -9,10 +9,10 @@ use super::Tile;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::web_launcher::WebLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 impl Tile {
-    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &WebLauncher) -> Vec<ResultItem> {
+    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &WebLauncher) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
         builder.category.upgrade().map(|category| {
             if let Some(name) = &launcher.name {
@@ -91,15 +91,9 @@ impl Tile {
         };
         builder.object.set_update(update_closure);
 
-        let shortcut_holder = match launcher.shortcut {
-            true => builder.shortcut_holder,
-            _ => None,
-        };
-        let res = ResultItem {
-            row_item: builder.object,
-            shortcut_holder,
-        };
-
-        return vec![res];
+        if launcher.shortcut {
+            builder.object.set_shortcut_holder(builder.shortcut_holder);
+        }
+        return vec![builder.object];
     }
 }

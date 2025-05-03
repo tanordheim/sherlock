@@ -12,7 +12,6 @@ use gtk4::{
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
-use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -22,50 +21,75 @@ use super::util::*;
 use crate::CONFIG;
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::Loader};
 
+#[derive(Clone, Debug)]
 pub struct SearchHandler {
-    pub model: WeakRef<ListStore>,
+    pub model: Option<WeakRef<ListStore>>,
     pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
     pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    pub error_model: WeakRef<ListStore>,
 }
 impl SearchHandler {
-    pub fn new(model: WeakRef<ListStore>) -> Self {
+    pub fn new(model: WeakRef<ListStore>, error_model: WeakRef<ListStore>) -> Self {
         Self {
-            model,
+            model: Some(model),
             modes: Rc::new(RefCell::new(HashMap::new())),
             task: Rc::new(RefCell::new(None)),
+            error_model,
+        }
+    }
+    pub fn empty(error_model: WeakRef<ListStore>) -> Self {
+        Self {
+            model: None,
+            modes: Rc::new(RefCell::new(HashMap::new())),
+            task: Rc::new(RefCell::new(None)),
+            error_model,
         }
     }
     pub fn clear(&self) {
-        if let Some(model) = self.model.upgrade() {
+        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
             model.remove_all();
         }
     }
-    pub fn populate(&self) -> Result<Vec<SherlockRow>, SherlockRow> {
-        // load launchers
-        let (launchers, n) = Loader::load_launchers().map_err(|e| e.tile("ERROR"))?;
-        let non_breaking: Vec<SherlockRow> = n.iter().map(|n| n.tile("WARNING")).collect();
+    pub fn populate(&self) {
+        // clear potentially stuck rows
+        self.clear();
 
-        if let Some(model) = self.model.upgrade() {
+        // load launchers
+        let (launchers, n) = match Loader::load_launchers().map_err(|e| e.tile("ERROR")) {
+            Ok(r) => r,
+            Err(e) => {
+                if let Some(model) = self.error_model.upgrade() {
+                    model.append(&e);
+                }
+                return;
+            }
+        };
+        if let Some(model) = self.error_model.upgrade() {
+            n.into_iter()
+                .map(|n| n.tile("WARNING"))
+                .for_each(|row| model.append(&row));
+        }
+
+        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
             let mut holder: HashMap<String, Option<String>> = HashMap::new();
             let rows: Vec<WeakRef<SherlockRow>> = launchers
                 .into_iter()
                 .map(|launcher| {
+                    let patch = launcher.get_patch("");
                     if let Some(alias) = &launcher.alias {
-                        holder.insert(format!("{} ", alias), launcher.name.clone());
+                        holder.insert(format!("{} ", alias), launcher.name);
                     }
-                    launcher.get_patch("")
+                    patch
                 })
                 .flatten()
                 .map(|row| {
-                    row.row_item.set_shortcut_holder(row.shortcut_holder);
-                    model.append(&row.row_item);
-                    row.row_item.downgrade()
+                    model.append(&row);
+                    row.downgrade()
                 })
                 .collect();
             update(rows, &self.task, String::new());
             *self.modes.borrow_mut() = holder;
         }
-        Ok(non_breaking)
     }
 }
 
@@ -128,7 +152,7 @@ pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
     error_model: WeakRef<ListStore>,
-) -> GtkBox {
+) -> (GtkBox, SearchHandler) {
     // Initialize the view to show all apps
     let (search_query, mode, stack_page, ui, handler) = construct_window(error_model);
     ui.result_viewport
@@ -261,7 +285,7 @@ pub fn search(
         .build();
     window.add_action_entries([mode_action, action_clear_win, action_spinner]);
 
-    return stack_page;
+    return (stack_page, handler);
 }
 
 fn construct_window(
@@ -347,17 +371,9 @@ fn construct_window(
     let selection = SingleSelection::new(Some(sorted_model));
     results.set_model(Some(&selection));
 
-    let handler = SearchHandler::new(model.downgrade());
-    match handler.populate() {
-        Ok(non_breaking) => {
-            if let Some(model) = error_model.upgrade() {
-                non_breaking.into_iter().for_each(|row| model.append(&row));
-            }
-        }
-        Err(error) => {
-            error_model.upgrade().map(|model| model.append(&error));
-        }
-    }
+    // Add tiles to the view and create modes
+    let handler = SearchHandler::new(model.downgrade(), error_model);
+    handler.populate();
 
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));

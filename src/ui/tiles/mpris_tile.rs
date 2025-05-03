@@ -11,10 +11,10 @@ use super::Tile;
 use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 impl Tile {
-    pub fn mpris_tile(launcher: &Launcher, mpris: &MusicPlayerLauncher) -> Vec<ResultItem> {
+    pub fn mpris_tile(launcher: &Launcher, mpris: &MusicPlayerLauncher) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
         builder.object.set_overflow(gtk4::Overflow::Hidden);
@@ -68,10 +68,9 @@ impl Tile {
                 .collect();
 
         // Make shortcut holder
-        let shortcut_holder = match launcher.shortcut {
-            true => builder.shortcut_holder,
-            _ => None,
-        };
+        if launcher.shortcut {
+            builder.object.set_shortcut_holder(builder.shortcut_holder);
+        }
         let overlay = overlay.downgrade();
         let overlay_clone = overlay.clone();
         let launcher = launcher.clone();
@@ -110,9 +109,6 @@ impl Tile {
         builder.object.set_signal_id(signal_id);
 
         // return
-        vec![ResultItem {
-            row_item: builder.object,
-            shortcut_holder,
-        }]
+        vec![builder.object]
     }
 }

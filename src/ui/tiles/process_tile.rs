@@ -3,7 +3,7 @@ use gtk4::prelude::*;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::process_launcher::ProcessLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 use super::util::{SherlockSearch, TileBuilder};
 use super::Tile;
@@ -13,8 +13,8 @@ impl Tile {
         launcher: &Launcher,
         keyword: &str,
         proc: &ProcessLauncher,
-    ) -> Vec<ResultItem> {
-        let mut results: Vec<ResultItem> = Default::default();
+    ) -> Vec<SherlockRow> {
+        let mut results: Vec<SherlockRow> = Default::default();
 
         for (key, value) in proc.processes.iter() {
             if value.to_lowercase().fuzzy_match(&keyword.to_lowercase()) {
@@ -63,14 +63,10 @@ impl Tile {
                         None
                     });
 
-                let shortcut_holder = match launcher.shortcut {
-                    true => builder.shortcut_holder,
-                    _ => None,
-                };
-                results.push(ResultItem {
-                    row_item: builder.object,
-                    shortcut_holder,
-                });
+                if launcher.shortcut {
+                    builder.object.set_shortcut_holder(builder.shortcut_holder);
+                }
+                results.push(builder.object)
             }
         }
         return results;

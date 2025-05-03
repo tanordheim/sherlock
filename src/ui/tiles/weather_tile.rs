@@ -4,13 +4,13 @@ use std::pin::Pin;
 
 use crate::actions::execute_from_attrs;
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 use super::util::WeatherTileBuilder;
 use super::Tile;
 
 impl Tile {
-    pub fn weather_tile_loader(launcher: &Launcher) -> Vec<ResultItem> {
+    pub fn weather_tile_loader(launcher: &Launcher) -> Vec<SherlockRow> {
         let builder = WeatherTileBuilder::new("/dev/skxxtz/sherlock/ui/weather_tile.ui");
         builder.object.add_css_class("weather-tile");
         builder.object.with_launcher(&launcher);
@@ -66,10 +66,6 @@ impl Tile {
                 })
             });
         builder.object.set_async_update(async_update_closure);
-        let result_item = ResultItem {
-            row_item: builder.object,
-            shortcut_holder: None,
-        };
-        return vec![result_item];
+        return vec![builder.object];
     }
 }

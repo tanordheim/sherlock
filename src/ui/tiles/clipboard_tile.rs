@@ -7,7 +7,7 @@ use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::clipboard_launcher::ClipboardLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 use super::util::TileBuilder;
 use super::Tile;
@@ -93,8 +93,8 @@ impl Tile {
         clp: &ClipboardLauncher,
         calc: &CalculatorLauncher,
         keyword: &str,
-    ) -> Vec<ResultItem> {
-        let mut results: Vec<ResultItem> = Vec::with_capacity(1);
+    ) -> Vec<SherlockRow> {
+        let mut results: Vec<SherlockRow> = Vec::with_capacity(1);
         let mut is_valid = false;
         let clipboard_content = &clp.clipboard_content;
         let capabilities: HashSet<&str> = match &clp.capabilities {
@@ -257,14 +257,10 @@ impl Tile {
                 let update_closure = |_: &str| -> bool { true };
                 builder.object.set_update(update_closure);
 
-                let shortcut_holder = match launcher.shortcut {
-                    true => builder.shortcut_holder,
-                    _ => None,
-                };
-                results.push(ResultItem {
-                    row_item: builder.object,
-                    shortcut_holder,
-                });
+                if launcher.shortcut{
+                    builder.object.set_shortcut_holder(builder.shortcut_holder);
+                }
+                results.push(builder.object);
             }
         }
 

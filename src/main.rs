@@ -1,7 +1,7 @@
 // CRATES
 use gio::glib::MainContext;
 use gio::prelude::*;
-use gtk4::prelude::GtkApplicationExt;
+use gtk4::prelude::{GtkApplicationExt, WidgetExt};
 use gtk4::Application;
 use std::sync::OnceLock;
 use std::time::Instant;
@@ -70,17 +70,17 @@ async fn main() {
         // Either show user-specified content or show normal search
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
-        let search_stack = if pipe.is_empty() {
+        let (search_stack, handler) = if pipe.is_empty() {
             ui::search::search(&window, &current_stack_page, error_model)
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);
-                ui::user::display_raw(pipe, sherlock_flags.center_raw)
+                ui::user::display_raw(pipe, sherlock_flags.center_raw, error_model)
             } else {
                 let parsed = deserialize_pipe(pipe);
                 if let Some(c) = CONFIG.get() {
                     let method: &str = c.pipe.method.as_deref().unwrap_or("print");
-                    ui::user::display_pipe(&window, parsed, method)
+                    ui::user::display_pipe(&window, parsed, method, error_model)
                 } else {
                     return;
                 }
@@ -131,6 +131,10 @@ async fn main() {
                 let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
                 let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
 
+                window.connect_show({
+                    move |_window|{
+                    handler.populate();
+                }});
                 // Create async pipeline
                 let (sender, receiver) = async_channel::bounded(1);
                 thread::spawn(move || {

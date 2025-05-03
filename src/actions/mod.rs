@@ -8,7 +8,6 @@ use util::{clear_cached_files, reset_app_counter};
 use crate::{
     launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
     loader::util::CounterReader,
-    ui::user::display_raw,
 };
 
 pub mod applaunch;
@@ -94,11 +93,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
 
                 let _ = row
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
-            }
-            "display_raw" => {
-                attrs
-                    .get("next_content")
-                    .map(|content| display_raw(content, false));
             }
             "play-pause" | "audio_sink" => {
                 attrs

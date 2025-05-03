@@ -8,14 +8,14 @@ use super::Tile;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::event_launcher::EventLauncher;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::Launcher;
 
 impl Tile {
     pub fn event_tile(
         launcher: &Launcher,
         keyword: &str,
         event_launcher: &EventLauncher,
-    ) -> Vec<ResultItem> {
+    ) -> Vec<SherlockRow> {
         let event = match &event_launcher.event {
             Some(event) => event,
             None => return vec![],
@@ -65,14 +65,9 @@ impl Tile {
                 None
             });
 
-        let shortcut_holder = match launcher.shortcut {
-            true => builder.shortcut_holder,
-            _ => None,
-        };
-        let res = ResultItem {
-            row_item: builder.object,
-            shortcut_holder,
-        };
-        return vec![res];
+        if launcher.shortcut {
+            builder.object.set_shortcut_holder(builder.shortcut_holder);
+        }
+        return vec![builder.object];
     }
 }
