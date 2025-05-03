@@ -2,7 +2,7 @@
 name: Feature Request
 about: Suggest an idea or improvement for Sherlock
 title: ''
-labels: enhancement
+labels: feature request
 assignees: ''
 
 ---
