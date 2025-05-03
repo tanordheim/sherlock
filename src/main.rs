@@ -20,7 +20,7 @@ mod ui;
 mod utils;
 
 // IMPORTS
-use application::lock;
+use application::lock::{self, LockFile};
 use daemon::daemon::SherlockDaemon;
 use loader::pipe_loader::deserialize_pipe;
 use loader::Loader;
@@ -36,7 +36,7 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
-    let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config) =
+    let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config, lock) =
         startup_loading();
     let t0 = Instant::now();
     application.connect_activate(move |app| {
@@ -157,6 +157,7 @@ async fn main() {
         }
     });
     application.run();
+    drop(lock);
 }
 
 #[sherlock_macro::timing("\nContent loading")]
@@ -167,12 +168,13 @@ fn startup_loading() -> (
     Vec<Launcher>,
     SherlockFlags,
     SherlockConfig,
+    LockFile
 ) {
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let _lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
+    let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
         eprintln!("{}", e);
         process::exit(1);
     });
@@ -239,5 +241,6 @@ fn startup_loading() -> (
         launchers,
         sherlock_flags,
         app_config,
+        lock,
     )
 }
