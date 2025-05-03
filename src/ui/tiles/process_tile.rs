@@ -68,7 +68,6 @@ impl Tile {
                     _ => None,
                 };
                 results.push(ResultItem {
-                    priority: launcher.priority as f32,
                     row_item: builder.object,
                     shortcut_holder,
                 });

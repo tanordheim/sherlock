@@ -254,9 +254,7 @@ impl Tile {
                         execute_from_attrs(&row, &attrs);
                         None
                     });
-                let update_closure = |_:&str|->bool{
-                    true
-                };
+                let update_closure = |_: &str| -> bool { true };
                 builder.object.set_update(update_closure);
 
                 let shortcut_holder = match launcher.shortcut {
@@ -264,7 +262,6 @@ impl Tile {
                     _ => None,
                 };
                 results.push(ResultItem {
-                    priority: launcher.priority as f32,
                     row_item: builder.object,
                     shortcut_holder,
                 });

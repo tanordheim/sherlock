@@ -15,7 +15,6 @@ use gtk4_layer_shell::{Layer, LayerShell};
 use serde::Deserialize;
 
 use crate::actions::execute_from_attrs;
-use crate::application::util::reload_content;
 use crate::loader::util::JsonCache;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::CONFIG;
@@ -55,7 +54,6 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
     let stack: Stack = builder.object("stack").unwrap();
 
     // Setup action to close the window
-    let page_clone = Rc::clone(&current_stack_page);
     let action_close = ActionEntry::builder("close")
         .activate(move |window: &ApplicationWindow, _, _| {
             if let Some(c) = CONFIG.get() {
@@ -75,7 +73,6 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         .build();
 
     // Setup action to open the window
-    let stack_clone = stack.downgrade().clone();
     let action_open = ActionEntry::builder("open")
         .activate(move |window: &ApplicationWindow, _, _| {
             // Increment Sherlock Execution counter
@@ -98,7 +95,6 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
                     });
                 match c.behavior.daemonize {
                     true => {
-                        reload_content(window, &stack_clone, &page_clone);
                         window.present();
                     }
                     false => window.present(),

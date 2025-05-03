@@ -21,7 +21,6 @@ impl Tile {
         builder.icon.upgrade().map(|icon| icon.set_pixel_size(40));
 
         let result_item = ResultItem {
-            priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder: None,
         };

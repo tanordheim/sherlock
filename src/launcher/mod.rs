@@ -106,7 +106,6 @@ impl Launcher {
 
 #[derive(Clone, Debug)]
 pub struct ResultItem {
-    pub priority: f32,
     pub row_item: SherlockRow,
     pub shortcut_holder: Option<WeakRef<Box>>,
 }

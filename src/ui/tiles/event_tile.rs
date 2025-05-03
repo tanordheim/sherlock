@@ -70,7 +70,6 @@ impl Tile {
             _ => None,
         };
         let res = ResultItem {
-            priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder,
         };

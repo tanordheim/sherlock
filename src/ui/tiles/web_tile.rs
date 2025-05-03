@@ -1,11 +1,8 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use gio::glib::object::ObjectExt;
-use gio::glib::WeakRef;
 use gtk4::prelude::WidgetExt;
-use gtk4::Label;
 
 use super::util::{update_tag, TileBuilder};
 use super::Tile;
@@ -87,7 +84,7 @@ impl Tile {
                     });
                     row.set_signal_id(signal_id);
                 });
-                
+
                 // Set to false to not always show this tile
                 false
             }
@@ -99,7 +96,6 @@ impl Tile {
             _ => None,
         };
         let res = ResultItem {
-            priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder,
         };

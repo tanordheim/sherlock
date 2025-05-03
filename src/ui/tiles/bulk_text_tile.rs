@@ -63,7 +63,6 @@ impl Tile {
             _ => None,
         };
         let result_item = ResultItem {
-            priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder,
         };

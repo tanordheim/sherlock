@@ -1,5 +1,4 @@
 use gtk4::prelude::*;
-use levenshtein::levenshtein;
 use std::collections::HashSet;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
@@ -72,20 +71,9 @@ impl Tile {
                 };
 
                 let priority = value.priority;
-                let mut edits = 0.0;
-
-                if !value.search_string.starts_with(keyword) {
-                    edits = levenshtein(&value.search_string, keyword) as f32;
-                }
+                builder.object.set_priority(priority);
 
                 results.push(ResultItem {
-                    priority: if keyword.is_empty() {
-                        priority
-                    } else {
-                        let normalized = (1000.0 / edits).round() / 1000.0;
-                        let counters = (priority - launcher.priority as f32) / 1000.0;
-                        launcher.priority as f32 + 1.0 + counters - normalized.clamp(0.0, 1.0)
-                    },
                     row_item: builder.object,
                     shortcut_holder,
                 });

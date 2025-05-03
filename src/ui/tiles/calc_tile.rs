@@ -1,4 +1,3 @@
-use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 use meval::eval_str;
@@ -101,7 +100,6 @@ impl Tile {
         };
 
         let res = ResultItem {
-            priority: launcher.priority as f32,
             row_item: builder.object,
             shortcut_holder,
         };
