@@ -19,9 +19,55 @@ use std::rc::Rc;
 
 use super::tiles::util::SherlockSearch;
 use super::util::*;
-use crate::launcher::ResultItem;
 use crate::CONFIG;
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::Loader};
+
+pub struct SearchHandler {
+    pub model: WeakRef<ListStore>,
+    pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
+    pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+}
+impl SearchHandler {
+    pub fn new(model: WeakRef<ListStore>) -> Self {
+        Self {
+            model,
+            modes: Rc::new(RefCell::new(HashMap::new())),
+            task: Rc::new(RefCell::new(None)),
+        }
+    }
+    pub fn clear(&self) {
+        if let Some(model) = self.model.upgrade() {
+            model.remove_all();
+        }
+    }
+    pub fn populate(&self) -> Result<Vec<SherlockRow>, SherlockRow> {
+        // load launchers
+        let (launchers, n) = Loader::load_launchers().map_err(|e| e.tile("ERROR"))?;
+        let non_breaking: Vec<SherlockRow> = n.iter().map(|n| n.tile("WARNING")).collect();
+
+        if let Some(model) = self.model.upgrade() {
+            let mut holder: HashMap<String, Option<String>> = HashMap::new();
+            let rows: Vec<WeakRef<SherlockRow>> = launchers
+                .into_iter()
+                .map(|launcher| {
+                    if let Some(alias) = &launcher.alias {
+                        holder.insert(format!("{} ", alias), launcher.name.clone());
+                    }
+                    launcher.get_patch("")
+                })
+                .flatten()
+                .map(|row| {
+                    row.row_item.set_shortcut_holder(row.shortcut_holder);
+                    model.append(&row.row_item);
+                    row.row_item.downgrade()
+                })
+                .collect();
+            update(rows, &self.task, String::new());
+            *self.modes.borrow_mut() = holder;
+        }
+        Ok(non_breaking)
+    }
+}
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -84,13 +130,13 @@ pub fn search(
     error_model: WeakRef<ListStore>,
 ) -> GtkBox {
     // Initialize the view to show all apps
-    let (search_query, mode, modes, stack_page, ui, taks) = construct_window(error_model);
+    let (search_query, mode, stack_page, ui, handler) = construct_window(error_model);
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
 
     let initial_mode = mode.borrow().clone();
-    let modes_clone = modes.clone();
+    let modes_clone = Rc::clone(&handler.modes);
     let mode_clone = Rc::clone(&mode);
 
     let search_bar = ui.search_bar.clone();
@@ -113,13 +159,13 @@ pub fn search(
     change_event(
         ui.search_bar.clone(),
         ui.results,
-        modes,
+        Rc::clone(&handler.modes),
         &mode,
         ui.filter,
         ui.sorter,
         ui.selection,
         &search_query,
-        &taks,
+        &handler.task,
     );
 
     // Improved mode selection
@@ -143,7 +189,7 @@ pub fn search(
                     }
                     _ => {
                         parameter.push_str(" ");
-                        let mode_name = modes_clone.get(&parameter);
+                        let mode_name = modes_clone.borrow().get(&parameter).cloned();
                         match mode_name {
                             Some(name) => {
                                 ui.search_icon_holder
@@ -223,27 +269,10 @@ fn construct_window(
 ) -> (
     Rc<RefCell<String>>,
     Rc<RefCell<String>>,
-    HashMap<String, Option<String>>,
     GtkBox,
     SearchUI,
-    Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    SearchHandler,
 ) {
-    let insert_error = |row: SherlockRow| {
-        if let Some(stack) = error_model.upgrade() {
-            stack.append(&row);
-        }
-    };
-    // Initialize launchers from 'fallback.json'
-    let (launchers, n) = Loader::load_launchers()
-        .map_err(|e| {
-            let tile = e.tile("ERROR");
-            insert_error(tile)
-        })
-        .unwrap_or_default();
-    n.iter()
-        .map(|n| n.tile("WARNING"))
-        .for_each(|row| insert_error(row));
-
     // Collect Modes
     let custom_binds = ConfKeys::new();
     let original_mode = CONFIG
@@ -252,11 +281,6 @@ fn construct_window(
         .unwrap_or("all");
     let mode = Rc::new(RefCell::new(original_mode.to_string()));
     let search_text = Rc::new(RefCell::new(String::from("")));
-    let modes: HashMap<String, Option<String>> = launchers
-        .iter()
-        .filter_map(|item| item.alias.as_ref().map(|alias| (alias, &item.name)))
-        .map(|(alias, name)| (format!("{} ", alias), name.clone()))
-        .collect();
 
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
@@ -323,26 +347,18 @@ fn construct_window(
     let selection = SingleSelection::new(Some(sorted_model));
     results.set_model(Some(&selection));
 
-    // Launcher setup
-    let patches: Vec<ResultItem> = launchers
-        .into_iter()
-        .map(|launcher| launcher.get_patch(""))
-        .flatten()
-        .collect();
-
-    // Start first update cycle to update async tiles
-    let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
-    let weaks: Vec<WeakRef<SherlockRow>> = patches
-        .iter()
-        .map(|patch| patch.row_item.downgrade())
-        .collect();
-    update(weaks, &current_task, String::new());
-
-    for item in patches.iter() {
-        let row_item = &item.row_item;
-        row_item.set_shortcut_holder(item.shortcut_holder.clone());
-        model.append(row_item);
+    let handler = SearchHandler::new(model.downgrade());
+    match handler.populate() {
+        Ok(non_breaking) => {
+            if let Some(model) = error_model.upgrade() {
+                non_breaking.into_iter().for_each(|row| model.append(&row));
+            }
+        }
+        Err(error) => {
+            error_model.upgrade().map(|model| model.append(&error));
+        }
     }
+
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
@@ -388,7 +404,7 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (search_text, mode, modes, vbox, ui, current_task)
+    (search_text, mode, vbox, ui, handler)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -628,7 +644,7 @@ fn nav_event(
 fn change_event(
     search_bar: WeakRef<Entry>,
     results: WeakRef<ListView>,
-    modes: HashMap<String, Option<String>>,
+    modes: Rc<RefCell<HashMap<String, Option<String>>>>,
     mode: &Rc<RefCell<String>>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
@@ -651,7 +667,7 @@ fn change_event(
                 let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
             }
             let trimmed = current_text.trim();
-            if !trimmed.is_empty() && modes.contains_key(&current_text) {
+            if !trimmed.is_empty() && modes.borrow().contains_key(&current_text) {
                 // Logic to apply modes
                 let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
                 current_text.clear();
