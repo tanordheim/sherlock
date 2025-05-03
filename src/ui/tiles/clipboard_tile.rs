@@ -227,7 +227,15 @@ impl Tile {
             };
             if !is_valid {
                 // calc capabilities will be checked inside of calc tile
-                results.extend(Tile::calc_tile(launcher, calc));
+                let mut calc_tile = Tile::calc_tile(launcher, calc);
+                if calc_tile.len() >= 1 {
+                    let tile = calc_tile.remove(0);
+                    if tile.update(clipboard_content){
+                        tile.set_only_home(true);
+                        results.push(tile)
+                    }
+                }
+
             } else {
                 builder
                     .category

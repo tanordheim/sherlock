@@ -26,8 +26,7 @@ impl Tile {
 
         // Add action capabilities
         builder.object.add_css_class("calc-tile");
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.with_launcher(launcher);
 
         let method_clone = launcher.method.clone();
         let object_weak = builder.object.downgrade();
@@ -91,7 +90,6 @@ impl Tile {
                 });
                 return true;
             }
-
             false
         };
         builder.object.set_update(update_closure);
