@@ -86,7 +86,6 @@ impl ObjectImpl for SherlockRow {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
                         obj.emit_by_name::<()>("row-should-activate", &[]);
-                        println!("double click");
                     }
                 }
             });
