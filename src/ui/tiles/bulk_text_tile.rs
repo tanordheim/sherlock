@@ -48,6 +48,7 @@ impl Tile {
         let attrs_clone = attrs.clone();
         builder.object.add_css_class("bulk-text");
         builder.object.with_launcher(&launcher);
+        builder.object.set_keyword_aware(true);
         let signal_id = builder
             .object
             .connect("row-should-activate", false, move |row| {

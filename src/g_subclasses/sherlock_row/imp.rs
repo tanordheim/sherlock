@@ -19,6 +19,8 @@ use std::sync::OnceLock;
 /// * **home**: Whether the tile should appear on the home screen (i.e., when the search entry is empty and mode is `all`).
 /// * **only_home**: Whether the tile should **only** appear on the home screen (i.e., when the search entry is empty and mode is `all`).
 /// * **disable**: Whether the tile be forced to not show.
+/// * **update**: The function used to update ui elements (i.e. calculator results or bulk text results)
+/// * **keyword_aware**: Whether the tile shuold take the keyword as context
 #[derive(Default)]
 pub struct SherlockRow {
     /// Whether the tile should receive focus when Sherlock starts  
@@ -53,7 +55,12 @@ pub struct SherlockRow {
     ///             (i.e. when the search entry is empty and mode is `all`)
     pub only_home: Cell<bool>,
 
+    // The function used to update ui elements
+    //              (i.e. calculator results or bulk text results)
     pub update: RefCell<Option<Box<dyn Fn(&str) -> bool>>>,
+
+    /// Whether the tile shuold take the keyword as context
+    pub keyword_aware: Cell<bool>,
 }
 
 // The central trait for subclassing a GObject

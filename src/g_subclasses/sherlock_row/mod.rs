@@ -56,6 +56,9 @@ impl SherlockRow {
         // Store the new signal
         *self.imp().signal_id.borrow_mut() = Some(signal);
     }
+    pub fn set_keyword_aware(&self, state: bool) {
+        self.imp().keyword_aware.set(state);
+    }
 
     // getters
     pub fn shortcut_holder(&self) -> Option<gtk4::Box> {
@@ -85,11 +88,15 @@ impl SherlockRow {
             false
         }
     }
+    pub fn is_keyword_aware(&self) -> bool {
+        self.imp().keyword_aware.get()
+    }
     pub fn with_launcher(&self, launcher: &Launcher) {
         self.set_only_home(launcher.only_home);
         self.set_home(launcher.home);
         self.set_shortcut(launcher.shortcut);
         self.set_spawn_focus(launcher.spawn_focus);
+        self.set_priority(launcher.priority as f32);
         if let Some(alias) = &launcher.alias {
             self.set_alias(alias);
         }

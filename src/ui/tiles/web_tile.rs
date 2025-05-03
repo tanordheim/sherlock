@@ -33,13 +33,6 @@ impl Tile {
             web.display_name.clone()
         };
 
-        builder
-            .title
-            .upgrade()
-            .map(|title| title.set_text(&tile_name));
-        builder.display_tag_start(&launcher.tag_start, keyword);
-        builder.display_tag_end(&launcher.tag_end, keyword);
-
         // Construct attrs and enable action capabilities
         let mut attrs = get_attrs_map(vec![
             ("method", &launcher.method),
@@ -52,13 +45,42 @@ impl Tile {
         }
 
         builder.object.with_launcher(&launcher);
-        builder
+        builder.object.set_keyword_aware(true);
+        let signal_id = builder
             .object
             .connect("row-should-activate", false, move |row| {
                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                 execute_from_attrs(&row, &attrs);
                 None
             });
+        builder.object.set_signal_id(signal_id);
+
+        let update_closure = {
+            let tag_start = builder.tag_start.clone();
+            let tag_end = builder.tag_end.clone();
+            let tag_start_content = launcher.tag_start.clone();
+            let tag_end_content = launcher.tag_end.clone();
+            let title = builder.title.clone();
+            move |keyword: &str| -> bool {
+                title.upgrade().map(|title| title.set_text(&tile_name));
+                if let Some(content) = &tag_start_content {
+                    let content = content.replace("{keyword}", keyword);
+                    tag_start.upgrade().map(|label| {
+                        label.set_text(&content);
+                        label.set_visible(true);
+                    });
+                }
+                if let Some(content) = &tag_end_content {
+                    let content = content.replace("{keyword}", keyword);
+                    tag_end.upgrade().map(|label| {
+                        label.set_text(&content);
+                        label.set_visible(true);
+                    });
+                }
+                false
+            }
+        };
+        builder.object.set_update(update_closure);
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,

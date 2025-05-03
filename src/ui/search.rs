@@ -12,7 +12,6 @@ use gtk4::{
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
-use rayon::result;
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -447,6 +446,10 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
                 } else if priority <= 1.0 {
                     return false;
                 }
+                if item.is_keyword_aware() {
+                    return true;
+                }
+
                 item.search().fuzzy_match(&current_text)
             }
         }
