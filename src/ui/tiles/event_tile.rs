@@ -62,8 +62,7 @@ impl Tile {
         let attrs = get_attrs_map(constructor);
 
         builder.object.add_css_class("event-tile");
-        builder.object.set_spawn_focus(launcher.spawn_focus);
-        builder.object.set_shortcut(launcher.shortcut);
+        builder.object.with_launcher(launcher);
         builder
             .object
             .connect_local("row-should-activate", false, move |row| {
