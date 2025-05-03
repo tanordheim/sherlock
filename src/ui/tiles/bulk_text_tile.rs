@@ -18,6 +18,7 @@ impl Tile {
     ) -> Option<(AsyncLauncherTile, ResultItem)> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 
+        // Set category name
         builder.category.upgrade().map(|cat| {
             if let Some(name) = &launcher.name {
                 cat.set_text(name);
@@ -26,6 +27,7 @@ impl Tile {
             }
         });
 
+        // Set icons
         builder.icon.upgrade().map(|icon| {
             if bulk_text.icon.starts_with("/") {
                 icon.set_from_file(Some(&bulk_text.icon));
@@ -35,14 +37,18 @@ impl Tile {
             icon.set_pixel_size(15);
         });
 
-        builder
-            .content_title
-            .upgrade()
-            .map(|title| title.set_text(keyword));
-        builder
-            .content_body
-            .upgrade()
-            .map(|body| body.set_text("Loading..."));
+        let update_closure = {
+            let title = builder.content_title.clone();
+            let body = builder.content_body.clone();
+            move |keyword: &str| -> bool {
+                title.upgrade().map(|title| title.set_text(keyword));
+                if !keyword.is_empty() {
+                    body.upgrade().map(|body| body.set_text("Loading..."));
+                }
+                false
+            }
+        };
+        builder.object.set_update(update_closure);
 
         let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
         let attrs_clone = attrs.clone();

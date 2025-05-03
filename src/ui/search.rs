@@ -124,8 +124,11 @@ pub fn search(
         ui.selection.clone(),
         ui.results.clone(),
         ui.search_bar.clone(),
+        ui.filter.clone(),
+        ui.sorter.clone(),
         ui.binds,
         stack_page_ref,
+        &mode,
     );
     change_event(
         ui.search_bar.clone(),
@@ -185,7 +188,6 @@ pub fn search(
                         glib::idle_add_local(move || {
                             // to trigger homescreen rebuild
                             search_bar.upgrade().map(|entry| {
-                                entry.set_text("\n");
                                 entry.set_text("");
                             });
                             glib::ControlFlow::Break
@@ -495,14 +497,18 @@ fn nav_event(
     selection: WeakRef<SingleSelection>,
     results: WeakRef<ListView>,
     search_bar: WeakRef<Entry>,
+    filter: WeakRef<CustomFilter>,
+    sorter: WeakRef<CustomSorter>,
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
+    current_mode: &Rc<RefCell<String>>,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
+        let current_mode = Rc::clone(current_mode);
         fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
             let (new_index, n_items) = selection
                 .upgrade()
@@ -563,9 +569,17 @@ fn nav_event(
                         search_bar.upgrade().map(|entry| entry.set_text(""));
                         ctext.clear();
                     }
-                    if ctext.is_empty() {
+                    if ctext.is_empty() && current_mode.borrow().as_str() != "all" {
                         let _ = search_bar.upgrade().map(|entry| {
-                            entry.activate_action("win.switch-mode", Some(&"all".to_variant()))
+                            let _ =
+                                entry.activate_action("win.switch-mode", Some(&"all".to_variant()));
+                            // apply filter and sorter
+                            filter
+                                .upgrade()
+                                .map(|filter| filter.changed(gtk4::FilterChange::Different));
+                            sorter
+                                .upgrade()
+                                .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
                         });
                     }
                     // Focus first item and check for overflow
@@ -640,9 +654,10 @@ fn change_event(
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
-            if current_text.len() == 1 && current_text != "\n" {
+            // logic to switch to search mode with respective icons
+            if current_text.len() == 1 {
                 let _ = search_bar.activate_action("win.switch-mode", Some(&"search".to_variant()));
-            } else if current_text.len() == 0 && mode_clone.borrow().as_str() == "all" {
+            } else if current_text.len() == 0 && mode_clone.borrow().as_str().trim() == "all" {
                 let _ = search_bar.activate_action("win.switch-mode", Some(&"all".to_variant()));
             }
             let trimmed = current_text.trim();
@@ -652,14 +667,14 @@ fn change_event(
                 current_text.clear();
             }
             *search_query_clone.borrow_mut() = current_text.clone();
-            // clear_shortcuts(&results);
+            // filter and sort
             filter
                 .upgrade()
                 .map(|filter| filter.changed(gtk4::FilterChange::Different));
             sorter
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
-            // update_shortcuts(&results, &mod_str);
+            // focus first item
             if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()) {
                 results.upgrade().map(|results| {
                     if n_items > 0 {
