@@ -48,7 +48,7 @@ We appreciate your contributions! When submitting a pull request, please follow 
    - Example: `git commit -m "Fix issue with bug description in README"`
 4. **Push** your changes to your forked repository.
    - Example: `git push origin fix/bug-description`
-5. **Open a Pull Request** in the original repository from your fork.
+5. **Open a Pull Request** in the original repository from your fork. Usually, PRs should be targeting the latest `unstable` branch and **not** the main branch. If you're creating a new feature where others should can then also contribute to, feel free to mention @Skxxtz to create a development branch for you.
 
 
 ## General Guidelines
