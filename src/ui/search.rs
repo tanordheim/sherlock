@@ -6,12 +6,13 @@ use gtk4::{
     gdk::{self, Key, ModifierType},
     prelude::*,
     Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
-    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection,
-    SortListModel, Spinner,
+    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
+    Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
+use rayon::result;
 use simd_json::prelude::ArrayTrait;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -53,7 +54,7 @@ fn update(
             // Make async tiles update concurrently
             let futures: Vec<_> = update_tiles
                 .into_iter()
-                .map(|mut widget| {
+                .map(|widget| {
                     let current_text = String::new();
                     async move {
                         let mut attrs = widget.attrs.clone();
@@ -75,15 +76,12 @@ fn update(
 
                         // Connect row-should-activate signal
                         widget.row.upgrade().map(|row| {
-                            if let Some(signal) = widget.signal_id {
-                                row.disconnect(signal);
-                            }
                             let signal_id = row.connect("row-should-activate", false, move |row| {
                                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                                 execute_from_attrs(&row, &attrs);
                                 None
                             });
-                            widget.signal_id = Some(signal_id);
+                            row.set_signal_id(signal_id);
                         });
                     }
                 })
@@ -309,13 +307,14 @@ fn construct_window(
                     if item.imp().shortcut.get() {
                         if let Some(shortcut_holder) = item.shortcut_holder() {
                             if added_index < 5 {
-                                added_index += shortcut_holder.apply_shortcut(added_index + 1, &mod_str);
+                                added_index +=
+                                    shortcut_holder.apply_shortcut(added_index + 1, &mod_str);
                             } else {
                                 shortcut_holder.remove_shortcut();
                             }
                         }
                     }
-                } 
+                }
             }
         }
     });
@@ -400,7 +399,7 @@ fn construct_window(
 
     (search_text, mode, modes, vbox, ui)
 }
-fn make_factory()->SignalListItemFactory{
+fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
     factory.connect_bind(|_, item| {
         let item = item
@@ -435,6 +434,9 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
                 }
                 return false;
             } else {
+                if item.update(&current_text) {
+                    return true;
+                }
                 if mode != "all" {
                     if only_home || mode != alias {
                         return false;

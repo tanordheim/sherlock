@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use crate::actions::util::read_from_clipboard;
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
-use crate::launcher::calc_launcher::Calculator;
+use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
@@ -175,7 +175,7 @@ fn parse_calculator(raw: &RawLauncher) -> LauncherType {
         }
         _ => None,
     };
-    LauncherType::Calc(Calculator { capabilities })
+    LauncherType::Calc(CalculatorLauncher { capabilities })
 }
 fn parse_command_launcher(
     raw: &RawLauncher,
@@ -254,7 +254,7 @@ fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockE
                 clipboard_content,
                 capabilities: capabilities.clone(),
             },
-            Calculator { capabilities },
+            CalculatorLauncher { capabilities },
         )))
     }
 }

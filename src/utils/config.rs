@@ -58,7 +58,7 @@ pub struct SherlockConfig {
     /// Runtime behavior settings (e.g., daemon mode, caching)
     #[serde(default)]
     pub behavior: ConfigBehavior,
-    
+
     /// Custom key or action bindings (supplementing defaults)
     #[serde(default)]
     pub binds: ConfigBinds,

@@ -15,7 +15,6 @@ use std::collections::{HashMap, HashSet};
 /// * **image_replacement**: Elements used to update fields in an `mpris_tile`.
 /// * **weather_tile**: Elements used to update fields in a `weather_tile`.
 /// * **attrs**: A `HashMap` containing information used for actions on the `row-should-active` event.
-/// * **signal_id**: An optional state field used to replace signal handlers.
 #[derive(Debug)]
 pub struct AsyncLauncherTile {
     /// The launcher object related to this tile.
@@ -35,9 +34,6 @@ pub struct AsyncLauncherTile {
 
     /// A `HashMap` containing information used for actions on the `row-should-active` event.
     pub attrs: HashMap<String, String>,
-
-    /// An optional state field used to replace signal handlers.
-    pub signal_id: Option<SignalHandlerId>,
 }
 
 #[derive(Debug)]

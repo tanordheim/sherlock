@@ -25,7 +25,7 @@ use crate::{
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
 use bulk_text_launcher::BulkTextLauncher;
-use calc_launcher::Calculator;
+use calc_launcher::CalculatorLauncher;
 use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
 use event_launcher::EventLauncher;
@@ -39,10 +39,10 @@ pub enum LauncherType {
     Category(CategoryLauncher),
     App(AppLauncher),
     Web(WebLauncher),
-    Calc(Calculator),
+    Calc(CalculatorLauncher),
     BulkText(BulkTextLauncher),
     Command(CommandLauncher),
-    Clipboard((ClipboardLauncher, Calculator)),
+    Clipboard((ClipboardLauncher, CalculatorLauncher)),
     Event(EventLauncher),
     MusicPlayer(MusicPlayerLauncher),
     Process(ProcessLauncher),
@@ -60,7 +60,7 @@ pub enum LauncherType {
 /// - **next_content:** Specifies the content to be displayed whenever method is `next`
 /// - **priority:** Base priority all children inherit from. Children priority will be a combination
 /// of this together with their execution counts and levenshtein similarity
-/// - **r#async:** Specifies whether the tile should be loaded/executed asynchronously 
+/// - **r#async:** Specifies whether the tile should be loaded/executed asynchronously
 /// - **home:** Specifies whether the children should show on the `home` mode (empty
 /// search entry & mode == `all`)
 /// - **launcher_type:** Used to specify the kind of launcher and subsequently its children
@@ -116,7 +116,7 @@ impl Launcher {
     pub fn get_patch(&self, keyword: &str) -> Vec<ResultItem> {
         match &self.launcher_type {
             LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
-            LauncherType::Calc(calc) => Tile::calc_tile(self, &calc, keyword),
+            LauncherType::Calc(calc) => Tile::calc_tile(self, &calc),
             LauncherType::Category(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
             LauncherType::Clipboard((clp, calc)) => {
                 Tile::clipboard_tile(self, &clp, &calc, keyword)

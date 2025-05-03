@@ -1,7 +1,7 @@
 mod imp;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::glib::WeakRef;
+use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
@@ -16,6 +16,7 @@ impl SherlockRow {
     pub fn new() -> Self {
         Object::builder().build()
     }
+    // setters
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);
     }
@@ -40,7 +41,23 @@ impl SherlockRow {
     pub fn set_shortcut_holder(&self, holder: Option<WeakRef<gtk4::Box>>) {
         let _ = self.imp().shortcut_holder.set(holder);
     }
+    pub fn set_update<F>(&self, state: F)
+    where
+        F: Fn(&str) -> bool + 'static,
+    {
+        *self.imp().update.borrow_mut() = Some(Box::new(state));
+    }
+    pub fn set_signal_id(&self, signal: SignalHandlerId) {
+        // Take the previous signal if it exists and disconnect it
+        if let Some(old_id) = self.imp().signal_id.borrow_mut().take() {
+            self.disconnect(old_id);
+        }
 
+        // Store the new signal
+        *self.imp().signal_id.borrow_mut() = Some(signal);
+    }
+
+    // getters
     pub fn shortcut_holder(&self) -> Option<gtk4::Box> {
         self.imp()
             .shortcut_holder
@@ -60,6 +77,13 @@ impl SherlockRow {
         let only_home = self.imp().only_home.get();
         let home = self.imp().home.get();
         (home, only_home)
+    }
+    pub fn update(&self, keyword: &str) -> bool {
+        if let Some(callback) = &*self.imp().update.borrow() {
+            callback(keyword)
+        } else {
+            false
+        }
     }
     pub fn with_launcher(&self, launcher: &Launcher) {
         self.set_only_home(launcher.only_home);

@@ -55,6 +55,7 @@ impl Tile {
                 execute_from_attrs(&row, &attrs_clone);
                 None
             });
+        builder.object.set_signal_id(signal_id);
 
         let shortcut_holder = match launcher.shortcut {
             true => builder.shortcut_holder,
@@ -77,7 +78,6 @@ impl Tile {
                 image_replacement: None,
                 weather_tile: None,
                 attrs,
-                signal_id: Some(signal_id),
             },
             result_item,
         ));

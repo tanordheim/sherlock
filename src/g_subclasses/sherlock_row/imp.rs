@@ -1,6 +1,6 @@
 use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
-use gio::glib::WeakRef;
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
@@ -18,6 +18,7 @@ use std::sync::OnceLock;
 /// * **alias**: The display mode in which this tile should appear.
 /// * **home**: Whether the tile should appear on the home screen (i.e., when the search entry is empty and mode is `all`).
 /// * **only_home**: Whether the tile should **only** appear on the home screen (i.e., when the search entry is empty and mode is `all`).
+/// * **disable**: Whether the tile be forced to not show.
 #[derive(Default)]
 pub struct SherlockRow {
     /// Whether the tile should receive focus when Sherlock starts  
@@ -28,6 +29,9 @@ pub struct SherlockRow {
 
     /// State to hold and replace double-click gestures
     pub gesture: OnceCell<GestureClick>,
+
+    /// State to hold and replace activate signale
+    pub signal_id: RefCell<Option<SignalHandlerId>>,
 
     /// A `GtkBox` widget that holds the `modkey + number` shortcut indicators  
     pub shortcut_holder: OnceCell<Option<WeakRef<gtk4::Box>>>,
@@ -48,6 +52,8 @@ pub struct SherlockRow {
     /// Whether the tile should **only** appear on the home screen  
     ///             (i.e. when the search entry is empty and mode is `all`)
     pub only_home: Cell<bool>,
+
+    pub update: RefCell<Option<Box<dyn Fn(&str) -> bool>>>,
 }
 
 // The central trait for subclassing a GObject

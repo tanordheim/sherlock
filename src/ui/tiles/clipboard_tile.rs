@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::calc_launcher::Calculator;
+use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::clipboard_launcher::ClipboardLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -91,7 +91,7 @@ impl Tile {
     pub fn clipboard_tile(
         launcher: &Launcher,
         clp: &ClipboardLauncher,
-        calc: &Calculator,
+        calc: &CalculatorLauncher,
         keyword: &str,
     ) -> Vec<ResultItem> {
         let mut results: Vec<ResultItem> = Vec::with_capacity(1);
@@ -219,7 +219,7 @@ impl Tile {
             };
             if !is_valid {
                 // calc capabilities will be checked inside of calc tile
-                results.extend(Tile::calc_tile(launcher, calc, clipboard_content));
+                results.extend(Tile::calc_tile(launcher, calc));
             } else {
                 builder.category.upgrade().map(|category| {
                     category.set_visible(!name.is_empty());
