@@ -8,6 +8,8 @@ use gtk4::{gdk, Image, Overlay};
 
 use super::util::TileBuilder;
 use super::Tile;
+use crate::actions::execute_from_attrs;
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
@@ -59,7 +61,6 @@ impl Tile {
         });
 
         // Add attrs and implement double click capabilities
-        // TODO @skxxtz connect signal
         let attrs: HashMap<String, String> =
             vec![("method", &launcher.method), ("player", &mpris.player)]
                 .into_iter()
@@ -97,11 +98,21 @@ impl Tile {
                 })
             });
 
+        // attatch signal
         builder.object.set_async_update(async_update_closure);
-        let result_item = ResultItem {
+        let signal_id = builder
+            .object
+            .connect_local("row-should-activate", false, move |row| {
+                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                execute_from_attrs(&row, &attrs);
+                None
+            });
+        builder.object.set_signal_id(signal_id);
+
+        // return
+        vec![ResultItem {
             row_item: builder.object,
             shortcut_holder,
-        };
-        return vec![result_item];
+        }]
     }
 }

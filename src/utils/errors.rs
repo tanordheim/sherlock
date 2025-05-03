@@ -1,9 +1,39 @@
 use std::{fmt::Debug, path::PathBuf};
 
+use gtk4::prelude::WidgetExt;
+
+use crate::{g_subclasses::sherlock_row::SherlockRow, ui::tiles::util::TileBuilder};
+
 #[derive(Clone, Debug)]
 pub struct SherlockError {
     pub error: SherlockErrorType,
     pub traceback: String,
+}
+impl SherlockError {
+    pub fn tile(&self, tile_type: &str) -> SherlockRow {
+        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
+
+        if let Some((class, icon)) = match tile_type {
+            "ERROR" => Some(("error", "🚨")),
+            "WARNING" => Some(("warning", "⚠️")),
+            _ => None,
+        } {
+            builder.object.set_css_classes(&["error-tile", class]);
+            let (name, message) = self.error.get_message();
+            builder.title.upgrade().map(|title| {
+                title.set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str())
+            });
+            builder
+                .content_title
+                .upgrade()
+                .map(|title| title.set_text(&message));
+            builder
+                .content_body
+                .upgrade()
+                .map(|body| body.set_text(self.traceback.trim()));
+        }
+        builder.object
+    }
 }
 
 #[allow(dead_code)]

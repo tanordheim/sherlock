@@ -3,7 +3,6 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::Application;
-use launcher::Launcher;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
@@ -36,7 +35,7 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
-    let (application, startup_errors, non_breaking, launchers, sherlock_flags, app_config, lock) =
+    let (application, startup_errors, non_breaking, sherlock_flags, app_config, lock) =
         startup_loading();
     let t0 = Instant::now();
     application.connect_activate(move |app| {
@@ -72,7 +71,7 @@ async fn main() {
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
         let search_stack = if pipe.is_empty() {
-            ui::search::search(&launchers, &window, &current_stack_page, error_model)
+            ui::search::search(&window, &current_stack_page, error_model)
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);
@@ -165,10 +164,9 @@ fn startup_loading() -> (
     Application,
     Vec<SherlockError>,
     Vec<SherlockError>,
-    Vec<Launcher>,
     SherlockFlags,
     SherlockConfig,
-    LockFile
+    LockFile,
 ) {
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
@@ -212,12 +210,6 @@ fn startup_loading() -> (
         .map_err(|e| startup_errors.push(e))
         .ok();
 
-    // Initialize launchers from 'fallback.json'
-    let (launchers, n) = Loader::load_launchers()
-        .map_err(|e| startup_errors.push(e))
-        .unwrap_or_default();
-    non_breaking.extend(n);
-
     // Initialize application
     let application = Application::new(
         Some("dev.skxxtz.sherlock"),
@@ -238,7 +230,6 @@ fn startup_loading() -> (
         application,
         startup_errors,
         non_breaking,
-        launchers,
         sherlock_flags,
         app_config,
         lock,

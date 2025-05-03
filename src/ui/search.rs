@@ -19,9 +19,9 @@ use std::rc::Rc;
 
 use super::tiles::util::SherlockSearch;
 use super::util::*;
-use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::launcher::{Launcher, ResultItem};
+use crate::launcher::ResultItem;
 use crate::CONFIG;
+use crate::{g_subclasses::sherlock_row::SherlockRow, loader::Loader};
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -79,13 +79,12 @@ fn update(
     *current_task.borrow_mut() = Some(task);
 }
 pub fn search(
-    launchers: &Vec<Launcher>,
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
-    _error_model: WeakRef<ListStore>,
+    error_model: WeakRef<ListStore>,
 ) -> GtkBox {
     // Initialize the view to show all apps
-    let (search_query, mode, modes, stack_page, ui, taks) = construct_window(&launchers);
+    let (search_query, mode, modes, stack_page, ui, taks) = construct_window(error_model);
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
@@ -220,7 +219,7 @@ pub fn search(
 }
 
 fn construct_window(
-    launchers: &Vec<Launcher>,
+    error_model: WeakRef<ListStore>,
 ) -> (
     Rc<RefCell<String>>,
     Rc<RefCell<String>>,
@@ -229,6 +228,22 @@ fn construct_window(
     SearchUI,
     Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 ) {
+    let insert_error = |row: SherlockRow| {
+        if let Some(stack) = error_model.upgrade() {
+            stack.append(&row);
+        }
+    };
+    // Initialize launchers from 'fallback.json'
+    let (launchers, n) = Loader::load_launchers()
+        .map_err(|e| {
+            let tile = e.tile("ERROR");
+            insert_error(tile)
+        })
+        .unwrap_or_default();
+    n.iter()
+        .map(|n| n.tile("WARNING"))
+        .for_each(|row| insert_error(row));
+
     // Collect Modes
     let custom_binds = ConfKeys::new();
     let original_mode = CONFIG
