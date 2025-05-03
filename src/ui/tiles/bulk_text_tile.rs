@@ -12,7 +12,7 @@ use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
-    pub fn bulk_text_tile_loader(
+    pub fn bulk_text_tile(
         launcher: &Launcher,
         keyword: &str,
         bulk_text: &BulkTextLauncher,

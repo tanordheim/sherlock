@@ -122,9 +122,7 @@ impl Launcher {
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
 
             // Async tiles
-            LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
-            }
+            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(self, keyword, &bulk_text),
             LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(self, &mpris),
             LauncherType::Weather(_) => Tile::weather_tile_loader(self),
             _ => Vec::new(),

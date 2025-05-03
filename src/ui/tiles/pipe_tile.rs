@@ -10,16 +10,20 @@ use gtk4::prelude::BoxExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::Image;
 
-use super::util::SherlockSearch;
 use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
-    pub fn pipe_data(lines: &Vec<PipeData>, method: &str, keyword: &str) -> Vec<SherlockRow> {
+    pub fn pipe_data(lines: &Vec<PipeData>, method: &str) -> Vec<SherlockRow> {
         let mut results: Vec<SherlockRow> = Vec::with_capacity(lines.len());
 
         for item in lines {
-            if item.fuzzy_match(keyword) || item.binary.is_some() {
+            let search = format!(
+                "{};{}",
+                item.title.as_deref().unwrap_or(""),
+                item.description.as_deref().unwrap_or("")
+            );
+            if search.as_str() != ";" || item.binary.is_some() {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 if let Some(title) = &item.title {
@@ -70,7 +74,7 @@ impl Tile {
                     item.hidden.as_ref().map_or_else(Vec::new, |a| {
                         a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()
                     });
-                constructor.extend([("method", method), ("keyword", keyword)]);
+                constructor.extend([("method", method)]);
                 if let Some(result) = result {
                     constructor.push(("result", result))
                 }
@@ -80,6 +84,7 @@ impl Tile {
                 let attrs = get_attrs_map(constructor);
 
                 builder.object.set_spawn_focus(true);
+                builder.object.set_search(&search);
                 builder
                     .object
                     .connect_local("row-should-activate", false, move |row| {
