@@ -11,21 +11,11 @@ use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::Launcher;
 
 impl Tile {
-    pub fn event_tile(
-        launcher: &Launcher,
-        keyword: &str,
-        event_launcher: &EventLauncher,
-    ) -> Vec<SherlockRow> {
+    pub fn event_tile(launcher: &Launcher, event_launcher: &EventLauncher) -> Vec<SherlockRow> {
         let event = match &event_launcher.event {
             Some(event) => event,
             None => return vec![],
         };
-
-        //Handle searching
-        if !event.title.contains(keyword) {
-            return vec![];
-        }
-
         let builder = EventTileBuilder::new("/dev/skxxtz/sherlock/ui/event_tile.ui");
 
         builder

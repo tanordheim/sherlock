@@ -107,8 +107,8 @@ impl Launcher {
             LauncherType::Clipboard((clp, calc)) => {
                 Tile::clipboard_tile(self, &clp, &calc, keyword)
             }
-            LauncherType::Event(evl) => Tile::event_tile(self, keyword, evl),
-            LauncherType::Process(proc) => Tile::process_tile(self, keyword, &proc),
+            LauncherType::Event(evl) => Tile::event_tile(self, evl),
+            LauncherType::Process(proc) => Tile::process_tile(self, &proc),
             LauncherType::Command(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
 

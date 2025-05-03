@@ -6,7 +6,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::Launcher;
 use crate::loader::util::AppData;
 
-use super::util::{SherlockSearch, TileBuilder};
+use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
@@ -15,14 +15,9 @@ impl Tile {
         keyword: &str,
         commands: &HashSet<AppData>,
     ) -> Vec<SherlockRow> {
-        let mut results: Vec<SherlockRow> = Vec::with_capacity(commands.len());
-
-        for value in commands.into_iter() {
-            if value
-                .search_string
-                .to_lowercase()
-                .fuzzy_match(&keyword.to_lowercase())
-            {
+        commands
+            .into_iter()
+            .map(|value| {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 let tile_name = value.name.replace("{keyword}", keyword);
@@ -68,10 +63,8 @@ impl Tile {
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }
-
-                results.push(builder.object);
-            }
-        }
-        return results;
+                builder.object
+            })
+            .collect()
     }
 }
