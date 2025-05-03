@@ -38,15 +38,6 @@ impl Tile {
             icon.set_pixel_size(15);
         });
 
-        builder
-            .content_title
-            .upgrade()
-            .map(|title| title.set_text(keyword));
-        builder
-            .content_body
-            .upgrade()
-            .map(|body| body.set_text("Loading..."));
-
         let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
         builder.object.add_css_class("bulk-text");
         builder.object.with_launcher(&launcher);
@@ -64,6 +55,7 @@ impl Tile {
                 let keyword = keyword.to_string();
 
                 Box::pin(async move {
+                    content_title.upgrade().map(|t| t.set_text(&keyword));
                     if let Some((title, body, next_content)) = &launcher.get_result(&keyword).await
                     {
                         content_title.upgrade().map(|t| t.set_text(&title));
