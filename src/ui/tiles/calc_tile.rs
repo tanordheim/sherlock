@@ -81,7 +81,7 @@ impl Tile {
                 let attrs = get_attrs_map(vec![("method", &method_clone), ("result", &num)]);
 
                 object_weak.upgrade().map(|row| {
-                    let signal_id = row.connect("row-should-activate", false, move |row| {
+                    let signal_id = row.connect_local("row-should-activate", false, move |row| {
                         let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                         execute_from_attrs(&row, &attrs);
                         None

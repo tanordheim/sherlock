@@ -1,3 +1,7 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::WidgetExt;
 
@@ -43,17 +47,9 @@ impl Tile {
         if let Some(next) = launcher.next_content.as_deref() {
             attrs.insert(String::from("next_content"), next.to_string());
         }
-
+        let attrs_rc = Rc::new(RefCell::new(attrs));
         builder.object.with_launcher(&launcher);
         builder.object.set_keyword_aware(true);
-        let signal_id = builder
-            .object
-            .connect("row-should-activate", false, move |row| {
-                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                execute_from_attrs(&row, &attrs);
-                None
-            });
-        builder.object.set_signal_id(signal_id);
 
         let update_closure = {
             let tag_start = builder.tag_start.clone();
@@ -61,7 +57,9 @@ impl Tile {
             let tag_start_content = launcher.tag_start.clone();
             let tag_end_content = launcher.tag_end.clone();
             let title = builder.title.clone();
+            let row_weak = builder.object.downgrade();
             move |keyword: &str| -> bool {
+                let attrs_clone = Rc::clone(&attrs_rc);
                 title.upgrade().map(|title| title.set_text(&tile_name));
                 if let Some(content) = &tag_start_content {
                     let content = content.replace("{keyword}", keyword);
@@ -77,6 +75,19 @@ impl Tile {
                         label.set_visible(true);
                     });
                 }
+
+                let keyword_clone = keyword.to_string();
+                row_weak.upgrade().map(|row| {
+                    let signal_id = row.connect_local("row-should-activate", false, move |row| {
+                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        attrs_clone
+                            .borrow_mut()
+                            .insert("keyword".to_string(), keyword_clone.clone());
+                        execute_from_attrs(&row, &attrs_clone.borrow());
+                        None
+                    });
+                    row.set_signal_id(signal_id);
+                });
                 false
             }
         };

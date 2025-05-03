@@ -51,7 +51,7 @@ impl Tile {
         builder.object.set_keyword_aware(true);
         let signal_id = builder
             .object
-            .connect("row-should-activate", false, move |row| {
+            .connect_local("row-should-activate", false, move |row| {
                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                 execute_from_attrs(&row, &attrs_clone);
                 None

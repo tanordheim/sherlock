@@ -75,11 +75,13 @@ fn update(
 
                         // Connect row-should-activate signal
                         widget.row.upgrade().map(|row| {
-                            let signal_id = row.connect("row-should-activate", false, move |row| {
-                                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                execute_from_attrs(&row, &attrs);
-                                None
-                            });
+                            let signal_id =
+                                row.connect_local("row-should-activate", false, move |row| {
+                                    let row =
+                                        row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                    execute_from_attrs(&row, &attrs);
+                                    None
+                                });
                             row.set_signal_id(signal_id);
                         });
                     }
