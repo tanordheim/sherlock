@@ -3,9 +3,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use gio::glib::object::ObjectExt;
+use gio::glib::WeakRef;
 use gtk4::prelude::WidgetExt;
+use gtk4::Label;
 
-use super::util::TileBuilder;
+use super::util::{update_tag, TileBuilder};
 use super::Tile;
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -60,22 +62,19 @@ impl Tile {
             let row_weak = builder.object.downgrade();
             move |keyword: &str| -> bool {
                 let attrs_clone = Rc::clone(&attrs_rc);
-                title.upgrade().map(|title| title.set_text(&tile_name));
-                if let Some(content) = &tag_start_content {
-                    let content = content.replace("{keyword}", keyword);
-                    tag_start.upgrade().map(|label| {
-                        label.set_text(&content);
-                        label.set_visible(true);
-                    });
-                }
-                if let Some(content) = &tag_end_content {
-                    let content = content.replace("{keyword}", keyword);
-                    tag_end.upgrade().map(|label| {
-                        label.set_text(&content);
-                        label.set_visible(true);
-                    });
+
+                // Update title
+                if let Some(title) = title.upgrade() {
+                    title.set_text(&tile_name.replace("{keyword}", keyword));
                 }
 
+                // update first tag
+                update_tag(&tag_start, &tag_start_content, keyword);
+
+                // update second tag
+                update_tag(&tag_end, &tag_end_content, keyword);
+
+                // update attributes to activate correct action
                 let keyword_clone = keyword.to_string();
                 row_weak.upgrade().map(|row| {
                     let signal_id = row.connect_local("row-should-activate", false, move |row| {

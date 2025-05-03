@@ -364,3 +364,17 @@ impl SherlockSearch for PipeData {
         return false;
     }
 }
+
+/// Used to update tag_start or tag_end
+/// * **label**: The UI label holding the result
+/// * **content**: The content for the label, as specified by the user
+/// * **keyword**: The current keyword of the search
+pub fn update_tag(label: &WeakRef<Label>, content: &Option<String>, keyword: &str) {
+    if let Some(content) = &content {
+        let content = content.replace("{keyword}", keyword);
+        label.upgrade().map(|label| {
+            label.set_text(&content);
+            label.set_visible(true);
+        });
+    }
+}
