@@ -246,6 +246,7 @@ impl Tile {
                     ("engine", "plain"),
                 ]);
 
+                builder.object.with_launcher(&launcher);
                 builder
                     .object
                     .connect_local("row-should-activate", false, move |row| {
@@ -253,6 +254,10 @@ impl Tile {
                         execute_from_attrs(&row, &attrs);
                         None
                     });
+                let update_closure = |_:&str|->bool{
+                    true
+                };
+                builder.object.set_update(update_closure);
 
                 let shortcut_holder = match launcher.shortcut {
                     true => builder.shortcut_holder,
