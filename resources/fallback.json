@@ -151,5 +151,58 @@
             "icon": "google"
         },
         "priority": 100
+    },
+    {
+        "name": "Debug",
+        "type": "debug",
+        "alias": "debug",
+        "args": {
+            "commands": {
+                "Show Errors": {
+                    "icon": "sherlock-process",
+                    "exec": "show_errors",
+                    "search_string": "debug;errors"
+                },
+                "Clear Cache": {
+                    "icon": "sherlock-process",
+                    "exec": "clear_cache",
+                    "search_string": "clear;cache;"
+                },
+                "Reset App Counts": {
+                    "icon": "sherlock-process",
+                    "exec": "reset_counts",
+                    "search_string": "reset;clear;counts;appcounts"
+                }
+            }
+        },
+        "priority": 0
+    },
+    {
+        "name": "Categories",
+        "alias": "cat",
+        "type": "categories",
+        "args": {
+            "categories": {
+                "Kill Processes": {
+                    "icon": "sherlock-process",
+                    "exec": "kill",
+                    "search_string": "terminate;kill;process"
+                },
+                "Power Menu": {
+                    "icon": "battery-full-symbolic",
+                    "icon_class": "reactive",
+                    "exec": "pm",
+                    "search_string": "powermenu;"
+                },
+                "Debug": {
+                    "icon": "tools-report-bug",
+                    "icon_class": "reactive",
+                    "exec": "debug",
+                    "search_string": "debug;error"
+                }
+            }
+        },
+        "priority": 3,
+        "home": true
     }
 ]

@@ -9,7 +9,7 @@ use std::{
 };
 
 use gio::ActionEntry;
-use gtk4::{prelude::*, Application, ApplicationWindow};
+use gtk4::{prelude::*, Application, ApplicationWindow, StackTransitionType};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
 use serde::Deserialize;
@@ -109,14 +109,23 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
     let action_stack_switch = ActionEntry::builder("switch-page")
         .parameter_type(Some(&String::static_variant_type()))
         .activate(move |_: &ApplicationWindow, _, parameter| {
-            let parameter = parameter.and_then(|p| p.get::<String>());
+            let parameter = parameter
+                .and_then(|p| p.get::<String>())
+                .unwrap_or_default();
 
-            if let Some(parameter) = parameter {
+            fn parse_transition(from: &str, to: &str) -> StackTransitionType {
+                match (from, to) {
+                    ("search-page", "error-page") => StackTransitionType::OverRightLeft,
+                    ("error-page", "search-page") => StackTransitionType::OverRightLeft,
+                    _ => StackTransitionType::None,
+                }
+            }
+            if let Some((from, to)) = parameter.split_once("->") {
                 stack_clone.upgrade().map(|stack| {
-                    stack.set_transition_type(gtk4::StackTransitionType::SlideRight);
-                    stack.set_visible_child_name(&parameter);
+                    stack.set_transition_type(parse_transition(&from, &to));
+                    stack.set_visible_child_name(&to);
                 });
-                *page_clone.borrow_mut() = parameter
+                *page_clone.borrow_mut() = to.to_string();
             }
         })
         .build();

@@ -81,7 +81,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                         Err(_) => {
                             let _ = row.activate_action(
                                 "win.switch-page",
-                                Some(&String::from("error-page").to_variant()),
+                                Some(&String::from("search-page->error-page").to_variant()),
                             );
                         }
                     }
@@ -119,7 +119,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     "show_errors" => {
                         let _result = row.activate_action(
                             "win.switch-page",
-                            Some(&String::from("error-page").to_variant()),
+                            Some(&String::from("search-page->error-page").to_variant()),
                         );
                         increment("debug.show_errors");
                     }

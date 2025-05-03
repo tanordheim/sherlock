@@ -82,6 +82,7 @@ pub fn search(
     launchers: &Vec<Launcher>,
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
+    _error_model: WeakRef<ListStore>,
 ) -> GtkBox {
     // Initialize the view to show all apps
     let (search_query, mode, modes, stack_page, ui, taks) = construct_window(&launchers);
@@ -335,14 +336,6 @@ fn construct_window(
         results.scroll_to(0, ListScrollFlags::NONE, None);
     }
 
-    // Disable status-bar
-    CONFIG.get().map(|c| {
-        if !c.appearance.status_bar {
-            let n: Option<GtkBox> = builder.object("status-bar");
-            n.map(|n| n.set_visible(false));
-        }
-    });
-
     search_icon_holder.append(&overlay);
 
     let spinner: Spinner = builder.object("status-bar-spinner").unwrap_or_default();
@@ -364,6 +357,12 @@ fn construct_window(
         binds: custom_binds,
     };
     CONFIG.get().map(|c| {
+        // disable status bar
+        if !c.appearance.status_bar {
+            let n: Option<GtkBox> = builder.object("status-bar");
+            n.map(|n| n.set_visible(false));
+        }
+        // set sizes
         ui.result_viewport.upgrade().map(|viewport| {
             viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
         });

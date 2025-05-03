@@ -69,9 +69,10 @@ async fn main() {
         let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
 
         // Either show user-specified content or show normal search
+        let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
         let search_stack = if pipe.is_empty() {
-            ui::search::search(&launchers, &window, &current_stack_page)
+            ui::search::search(&launchers, &window, &current_stack_page, error_model)
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);
@@ -105,7 +106,6 @@ async fn main() {
         }
 
         // Logic for the Error-View
-        let error_stack = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         stack.add_named(&error_stack, Some("error-page"));
         if !app_config.debug.try_suppress_errors {
             let show_errors = !error_list.is_empty();
@@ -114,13 +114,13 @@ async fn main() {
                 let _ = gtk4::prelude::WidgetExt::activate_action(
                     &window,
                     "win.switch-page",
-                    Some(&String::from("error-page").to_variant()),
+                    Some(&String::from("->error-page").to_variant()),
                 );
             } else {
                 let _ = gtk4::prelude::WidgetExt::activate_action(
                     &window,
                     "win.switch-page",
-                    Some(&String::from("search-page").to_variant()),
+                    Some(&String::from("->search-page").to_variant()),
                 );
             }
         }
@@ -205,16 +205,16 @@ fn startup_loading() -> (
         })
         .ok();
 
+    // Load resources
+    Loader::load_resources()
+        .map_err(|e| startup_errors.push(e))
+        .ok();
+
     // Initialize launchers from 'fallback.json'
     let (launchers, n) = Loader::load_launchers()
         .map_err(|e| startup_errors.push(e))
         .unwrap_or_default();
     non_breaking.extend(n);
-
-    // Load resources
-    Loader::load_resources()
-        .map_err(|e| startup_errors.push(e))
-        .ok();
 
     // Initialize application
     let application = Application::new(

@@ -346,7 +346,7 @@ fn parse_launcher_configs(
         )
         .map_err(|e| SherlockError {
             error: SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
-            traceback: e.to_string(),
+            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
         })?;
         let string_data = std::str::from_utf8(&data)
             .map_err(|e| SherlockError {
