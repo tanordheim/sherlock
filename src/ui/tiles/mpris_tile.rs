@@ -1,20 +1,18 @@
 use std::collections::HashMap;
+use std::pin::Pin;
 
-use gio::glib::clone::Downgrade;
+use gio::glib::object::ObjectExt;
 use gio::glib::Bytes;
 use gtk4::prelude::{BoxExt, WidgetExt};
 use gtk4::{gdk, Image, Overlay};
 
-use super::util::{AsyncLauncherTile, ImageReplacementElements, TileBuilder};
+use super::util::TileBuilder;
 use super::Tile;
 use crate::launcher::audio_launcher::MusicPlayerLauncher;
 use crate::launcher::{Launcher, ResultItem};
 
 impl Tile {
-    pub fn mpris_tile(
-        launcher: Launcher,
-        mpris: &MusicPlayerLauncher,
-    ) -> Option<(AsyncLauncherTile, ResultItem)> {
+    pub fn mpris_tile(launcher: &Launcher, mpris: &MusicPlayerLauncher) -> Vec<ResultItem> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/mpris_tile.ui");
         builder.object.add_css_class("mpris-tile");
         builder.object.set_overflow(gtk4::Overflow::Hidden);
@@ -30,7 +28,6 @@ impl Tile {
             .map(|title| title.set_text(&mpris.mpris.metadata.title));
 
         let overlay = Overlay::new();
-        let mut options = ImageReplacementElements::new();
 
         builder.icon.upgrade().map(|icon| icon.set_visible(false));
 
@@ -62,6 +59,7 @@ impl Tile {
         });
 
         // Add attrs and implement double click capabilities
+        // TODO @skxxtz connect signal
         let attrs: HashMap<String, String> =
             vec![("method", &launcher.method), ("player", &mpris.player)]
                 .into_iter()
@@ -73,23 +71,37 @@ impl Tile {
             true => builder.shortcut_holder,
             _ => None,
         };
+        let overlay = overlay.downgrade();
+        let overlay_clone = overlay.clone();
+        let launcher = launcher.clone();
+
+        let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> =
+            Box::new(move |_keyword: &str| {
+                let icon_overlay = overlay_clone.clone();
+                let launcher = launcher.clone();
+                Box::pin(async move {
+                    if let Some((image, was_cached)) = launcher.get_image().await {
+                        if !was_cached {
+                            if let Some(overlay) = icon_overlay.upgrade() {
+                                overlay.add_css_class("image-replace-overlay");
+                            }
+                        }
+                        let texture = gtk4::gdk::Texture::for_pixbuf(&image);
+                        let gtk_image = gtk4::Image::from_paintable(Some(&texture));
+                        gtk_image.set_widget_name("album-cover");
+                        gtk_image.set_pixel_size(50);
+                        if let Some(overlay) = icon_overlay.upgrade() {
+                            overlay.add_overlay(&gtk_image);
+                        }
+                    }
+                })
+            });
+
+        builder.object.set_async_update(async_update_closure);
         let result_item = ResultItem {
             row_item: builder.object,
             shortcut_holder,
         };
-
-        options.icon_holder_overlay = Some(overlay.downgrade());
-
-        return Some((
-            AsyncLauncherTile {
-                launcher,
-                row: result_item.row_item.downgrade(),
-                text_tile: None,
-                image_replacement: Some(options),
-                weather_tile: None,
-                attrs,
-            },
-            result_item,
-        ));
+        return vec![result_item];
     }
 }

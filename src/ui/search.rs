@@ -17,11 +17,11 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::util::{AsyncLauncherTile, SherlockSearch};
+use super::tiles::util::SherlockSearch;
 use super::util::*;
+use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::{Launcher, ResultItem};
 use crate::CONFIG;
-use crate::{actions::execute_from_attrs, g_subclasses::sherlock_row::SherlockRow};
 
 #[allow(dead_code)]
 struct SearchUI {
@@ -39,51 +39,31 @@ struct SearchUI {
     binds: ConfKeys,
 }
 fn update(
-    update_tiles: Vec<AsyncLauncherTile>,
+    update_tiles: Vec<WeakRef<SherlockRow>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    keyword: String,
 ) {
     let current_task_clone = Rc::clone(current_task);
+    if let Some(t) = current_task.borrow_mut().take() {
+        t.abort();
+    };
     let task = glib::MainContext::default().spawn_local({
         async move {
             // Set spinner active
-            let spinner_row = update_tiles.get(0).map(|t| t.row.clone());
+            let spinner_row = update_tiles.get(0).cloned();
             if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
                 let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
             }
             // Make async tiles update concurrently
             let futures: Vec<_> = update_tiles
                 .into_iter()
-                .map(|widget| {
-                    let current_text = String::new();
+                .map(|row| {
+                    let current_text = keyword.clone();
                     async move {
-                        let mut attrs = widget.attrs.clone();
-
                         // Process text tile
-                        if let Some(opts) = &widget.text_tile {
-                            attrs = opts.update(&widget, &current_text, attrs).await;
+                        if let Some(row) = row.upgrade() {
+                            row.async_update(&current_text).await
                         }
-
-                        // Process image replacement
-                        if let Some(opts) = &widget.image_replacement {
-                            opts.update(&widget).await;
-                        }
-
-                        // Process weather tile
-                        if let Some(wtr) = &widget.weather_tile {
-                            wtr.update(&widget).await
-                        }
-
-                        // Connect row-should-activate signal
-                        widget.row.upgrade().map(|row| {
-                            let signal_id =
-                                row.connect_local("row-should-activate", false, move |row| {
-                                    let row =
-                                        row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                    execute_from_attrs(&row, &attrs);
-                                    None
-                                });
-                            row.set_signal_id(signal_id);
-                        });
                     }
                 })
                 .collect();
@@ -104,7 +84,7 @@ pub fn search(
     stack_page_ref: &Rc<RefCell<String>>,
 ) -> GtkBox {
     // Initialize the view to show all apps
-    let (search_query, mode, modes, stack_page, ui) = construct_window(&launchers);
+    let (search_query, mode, modes, stack_page, ui, taks) = construct_window(&launchers);
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
@@ -139,6 +119,7 @@ pub fn search(
         ui.sorter,
         ui.selection,
         &search_query,
+        &taks,
     );
 
     // Improved mode selection
@@ -245,6 +226,7 @@ fn construct_window(
     HashMap<String, Option<String>>,
     GtkBox,
     SearchUI,
+    Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 ) {
     // Collect Modes
     let custom_binds = ConfKeys::new();
@@ -326,27 +308,19 @@ fn construct_window(
     results.set_model(Some(&selection));
 
     // Launcher setup
-    let (async_launchers, non_async_launchers): (Vec<Launcher>, Vec<Launcher>) = launchers
-        .clone()
-        .into_iter()
-        .partition(|launcher| launcher.r#async);
-    let mut patches: Vec<ResultItem> = non_async_launchers
+    let patches: Vec<ResultItem> = launchers
         .into_iter()
         .map(|launcher| launcher.get_patch(""))
         .flatten()
         .collect();
-    let tile_updates: Vec<AsyncLauncherTile> = async_launchers
-        .into_iter()
-        .filter_map(|launcher| launcher.get_loader_widget(""))
-        .map(|(update, tile)| {
-            patches.push(tile);
-            update
-        })
-        .collect();
 
     // Start first update cycle to update async tiles
     let current_task: Rc<RefCell<Option<glib::JoinHandle<()>>>> = Rc::new(RefCell::new(None));
-    update(tile_updates, &current_task);
+    let weaks: Vec<WeakRef<SherlockRow>> = patches
+        .iter()
+        .map(|patch| patch.row_item.downgrade())
+        .collect();
+    update(weaks, &current_task, String::new());
 
     for item in patches.iter() {
         let row_item = &item.row_item;
@@ -400,7 +374,7 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (search_text, mode, modes, vbox, ui)
+    (search_text, mode, modes, vbox, ui, current_task)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -646,11 +620,13 @@ fn change_event(
     sorter: WeakRef<CustomSorter>,
     selection: WeakRef<SingleSelection>,
     search_query: &Rc<RefCell<String>>,
+    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
         let mode_clone = Rc::clone(mode);
         let search_query_clone = Rc::clone(search_query);
+        let current_task = Rc::clone(current_task);
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
@@ -681,6 +657,20 @@ fn change_event(
                         results.scroll_to(0, ListScrollFlags::NONE, None);
                     }
                 });
+                let weaks: Vec<WeakRef<SherlockRow>> = if let Some(selection) = selection.upgrade()
+                {
+                    (0..n_items)
+                        .filter_map(|i| {
+                            selection
+                                .item(i)
+                                .and_downcast::<SherlockRow>()
+                                .map(|row| row.downgrade())
+                        })
+                        .collect()
+                } else {
+                    vec![]
+                };
+                update(weaks, &current_task, current_text);
             }
         }
     });

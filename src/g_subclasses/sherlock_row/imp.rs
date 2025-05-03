@@ -6,6 +6,8 @@ use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
 use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::OnceLock;
 
 /// ## Fields:
@@ -56,8 +58,13 @@ pub struct SherlockRow {
     pub only_home: Cell<bool>,
 
     // The function used to update ui elements
-    //              (i.e. calculator results or bulk text results)
+    //              (i.e. calculator results)
     pub update: RefCell<Option<Box<dyn Fn(&str) -> bool>>>,
+
+    // The function used to update async ui elements
+    //              (i.e. bulk text results, mpris_tiles)
+    pub async_content_update:
+        RefCell<Option<Box<dyn Fn(&str) -> Pin<Box<dyn Future<Output = ()> + 'static>> + 'static>>>,
 
     /// Whether the tile shuold take the keyword as context
     pub keyword_aware: Cell<bool>,

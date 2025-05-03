@@ -165,9 +165,9 @@ impl SherlockNav for SingleSelection {
         let current_index = self.selected();
         let n_items = self.n_items();
         while i < n_items {
-            self.set_selected(i);
-            if let Some(item) = self.selected_item().and_downcast::<SherlockRow>() {
+            if let Some(item) = self.item(i).and_downcast::<SherlockRow>() {
                 if item.imp().spawn_focus.get() {
+                    self.set_selected(i);
                     return (i, n_items);
                 } else {
                     i += 1;

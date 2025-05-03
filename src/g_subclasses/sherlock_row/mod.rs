@@ -1,5 +1,7 @@
 mod imp;
 
+use std::{future::Future, pin::Pin};
+
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
@@ -47,6 +49,15 @@ impl SherlockRow {
     {
         *self.imp().update.borrow_mut() = Some(Box::new(state));
     }
+    pub fn set_async_update<F, Fut>(&self, f: F)
+    where
+        F: Fn(&str) -> Fut + 'static,
+        Fut: Future<Output = ()> + 'static,
+    {
+        let boxed_fn: Box<dyn Fn(&str) -> Pin<Box<dyn Future<Output = ()>>>> =
+            Box::new(move |s| Box::pin(f(s)));
+        self.imp().async_content_update.replace(Some(boxed_fn));
+    }
     pub fn set_signal_id(&self, signal: SignalHandlerId) {
         // Take the previous signal if it exists and disconnect it
         if let Some(old_id) = self.imp().signal_id.borrow_mut().take() {
@@ -86,6 +97,11 @@ impl SherlockRow {
             callback(keyword)
         } else {
             false
+        }
+    }
+    pub async fn async_update(&self, keyword: &str) {
+        if let Some(callback) = &*self.imp().async_content_update.borrow() {
+            callback(keyword).await;
         }
     }
     pub fn is_keyword_aware(&self) -> bool {

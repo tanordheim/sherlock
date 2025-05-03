@@ -16,11 +16,7 @@ mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
 
-use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
-    loader::util::RawLauncher,
-    ui::tiles::{util::AsyncLauncherTile, Tile},
-};
+use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::RawLauncher, ui::tiles::Tile};
 
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
@@ -125,6 +121,12 @@ impl Launcher {
             LauncherType::Command(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
             LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
 
+            // Async tiles
+            LauncherType::BulkText(bulk_text) => {
+                Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
+            }
+            LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(self, &mpris),
+            LauncherType::Weather(_) => Tile::weather_tile_loader(self),
             _ => Vec::new(),
         }
     }
@@ -156,16 +158,6 @@ impl Launcher {
             LauncherType::BulkText(_) => None,
             LauncherType::Clipboard(_) => None,
             LauncherType::Event(_) => None,
-            _ => None,
-        }
-    }
-    pub fn get_loader_widget(self, keyword: &str) -> Option<(AsyncLauncherTile, ResultItem)> {
-        match self.launcher_type.clone() {
-            LauncherType::BulkText(bulk_text) => {
-                Tile::bulk_text_tile_loader(self, keyword, &bulk_text)
-            }
-            LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(self, &mpris),
-            LauncherType::Weather(_) => Tile::weather_tile_loader(self),
             _ => None,
         }
     }
