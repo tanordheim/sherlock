@@ -70,7 +70,12 @@ impl Tile {
                             .and_then(|tmp| tmp.upgrade())
                             .map(|loc| loc.set_text(&data.format_str));
                     } else {
-                        row.upgrade().map(|row| row.set_visible(false));
+                        spinner.upgrade().map(|spn| spn.set_spinning(false));
+                        location
+                            .as_ref()
+                            .and_then(|tmp| tmp.upgrade())
+                            .map(|loc| loc.set_text("! Failed to load weather"));
+                        // row.upgrade().map(|row| row.set_visible(false));
                     }
                 })
             });
