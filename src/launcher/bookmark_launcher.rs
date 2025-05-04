@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 
-use crate::loader::util::AppData;
+use crate::loader::util::{AppData, RawLauncher};
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::utils::files::home_dir;
 
@@ -13,13 +13,13 @@ pub struct BookmarkLauncher {
     pub bookmarks: HashSet<AppData>,
 }
 impl BookmarkLauncher {
-    pub fn find_bookmarks(browser: &str, prio: f32) -> Result<HashSet<AppData>, SherlockError> {
+    pub fn find_bookmarks(browser: &str, raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         match browser {
-            "zen" | "zen-browser" | "/opt/zen-browser-bin/zen-bin %u" => BookmarkParser::zen(prio),
+            "zen" | "zen-browser" | "/opt/zen-browser-bin/zen-bin %u" => BookmarkParser::zen(raw),
             _ => {
                 // @BaxoPlenty you can check here what this ↑ should be.
                 println!("{:?}", browser);
-                BookmarkParser::zen(prio)
+                BookmarkParser::zen(raw)
             }
         }
     }
@@ -27,7 +27,7 @@ impl BookmarkLauncher {
 
 struct BookmarkParser;
 impl BookmarkParser {
-    fn zen(prio: f32) -> Result<HashSet<AppData>, SherlockError> {
+    fn zen(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = get_path()?;
 
         let data = fs::read(&path).map_err(|e| SherlockError {
@@ -55,7 +55,7 @@ impl BookmarkParser {
         let mut bookmarks = HashSet::new();
         if let Some(children) = json_value["children"].as_array() {
             for folder in children.iter().skip(1) {
-                extract_bookmarks(&folder, &mut bookmarks, prio);
+                extract_bookmarks(&folder, &mut bookmarks, raw);
             }
         }
 
@@ -117,7 +117,7 @@ impl BookmarkParser {
             None
         }
 
-        fn extract_bookmarks(value: &serde_json::Value, out: &mut HashSet<AppData>, prio: f32) {
+        fn extract_bookmarks(value: &serde_json::Value, out: &mut HashSet<AppData>, raw: &RawLauncher) {
             if let Some(children) = value["children"].as_array() {
                 for child in children {
                     if let Some((title, url)) = deserialize_bookmark(child) {
@@ -125,18 +125,18 @@ impl BookmarkParser {
                             let bookmark = AppData {
                                 name: title.to_string(),
                                 icon: None,
-                                icon_class: None,
+                                icon_class: raw.args.get("icon_class").and_then(|v|v.as_str()).map(|s|s.to_string()),
                                 exec: url,
                                 search_string: title,
-                                tag_start: None,
-                                tag_end: None,
+                                tag_start: raw.tag_start.clone(),
+                                tag_end: raw.tag_end.clone(),
                                 desktop_file: None,
-                                priority: prio,
+                                priority: raw.priority,
                             };
                             out.insert(bookmark);
                         }
                     } else {
-                        extract_bookmarks(child, out, prio);
+                        extract_bookmarks(child, out, raw);
                     }
                 }
             }

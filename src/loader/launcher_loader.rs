@@ -161,7 +161,7 @@ fn parse_bookmarks_launcher(raw: &RawLauncher) -> LauncherType {
         .and_then(|c| c.default_apps.browser.clone())
         .or_else(|| parse_default_browser().ok())
     {
-        let bookmarks = BookmarkLauncher::find_bookmarks(&browser, raw.priority);
+        let bookmarks = BookmarkLauncher::find_bookmarks(&browser, raw);
         if let Some(bookmarks) = bookmarks.ok() {
             return LauncherType::Bookmark(BookmarkLauncher { bookmarks });
         }
