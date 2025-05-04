@@ -163,6 +163,8 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="calc-launcher-math" width="100%" style="border-radius: 10px;" src="assets/CalcTile.svg">
+  </picture>
+  <picture>
     <img alt="calc-launcher-unit" width="100%" style="border-radius: 10px;" src="assets/CalcTileUnit.svg">
   </picture>
 </div>
@@ -196,6 +198,8 @@ Specifies what the launcher should parse:
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="clipboard-launcher-url" width="100%" style="border-radius: 10px;" src="assets/ClipboardLink.svg">
+  </picture>
+  <picture>
     <img alt="clipboard-launcher-color" width="100%" style="border-radius: 10px;" src="assets/ClipboardColor.svg">
   </picture>
 </div>
