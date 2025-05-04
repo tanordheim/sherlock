@@ -60,18 +60,19 @@ impl Loader {
             .into_iter()
             .map(|raw| {
                 let launcher_type: LauncherType = match raw.r#type.as_str() {
-                    "categories" => parse_category_launcher(&raw, &counts, max_decimals),
                     "app_launcher" => parse_app_launcher(&raw, &counts, max_decimals),
-                    "web_launcher" => parse_web_launcher(&raw),
-                    "calculation" => parse_calculator(&raw),
-                    "command" => parse_command_launcher(&raw, &counts, max_decimals),
-                    "bulk_text" => parse_bulk_text_launcher(&raw),
-                    "clipboard-execution" => parse_clipboard_launcher(&raw)?,
-                    "teams_event" => parse_event_launcher(&raw),
                     "audio_sink" => parse_audio_sink_launcher(),
+                    "bookmarks" => parse_bookmarks_launcher(&raw);
+                    "bulk_text" => parse_bulk_text_launcher(&raw),
+                    "calculation" => parse_calculator(&raw),
+                    "categories" => parse_category_launcher(&raw, &counts, max_decimals),
+                    "clipboard-execution" => parse_clipboard_launcher(&raw)?,
+                    "command" => parse_command_launcher(&raw, &counts, max_decimals),
+                    "debug" => parse_debug_launcher(&raw, &counts, max_decimals),
+                    "teams_event" => parse_event_launcher(&raw),
                     "process" => parse_process_launcher(&raw),
                     "weather" => parse_weather_launcher(&raw),
-                    "debug" => parse_debug_launcher(&raw, &counts, max_decimals),
+                    "web_launcher" => parse_web_launcher(&raw),
                     _ => LauncherType::Empty,
                 };
                 let method: String = if let Some(value) = &raw.on_return {
@@ -119,16 +120,6 @@ fn parse_appdata(
         })
         .collect::<HashSet<AppData>>()
 }
-fn parse_category_launcher(
-    raw: &RawLauncher,
-    counts: &HashMap<String, f32>,
-    max_decimals: i32,
-) -> LauncherType {
-    let prio = raw.priority;
-    let value = &raw.args["categories"];
-    let categories = parse_appdata(value, prio, counts, max_decimals);
-    LauncherType::Category(CategoryLauncher { categories })
-}
 fn parse_app_launcher(
     raw: &RawLauncher,
     counts: &HashMap<String, f32>,
@@ -147,18 +138,34 @@ fn parse_app_launcher(
     );
     LauncherType::App(AppLauncher { apps })
 }
-fn parse_web_launcher(raw: &RawLauncher) -> LauncherType {
-    LauncherType::Web(WebLauncher {
-        display_name: raw.display_name.clone().unwrap_or("".to_string()),
+fn parse_audio_sink_launcher() -> LauncherType {
+    AudioLauncherFunctions::new()
+        .and_then(|launcher| {
+            launcher.get_current_player().and_then(|player| {
+                launcher
+                    .get_metadata(&player)
+                    .and_then(|launcher| Some(LauncherType::MusicPlayer(launcher)))
+            })
+        })
+        .unwrap_or(LauncherType::Empty)
+}
+fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
+    LauncherType::BulkText(BulkTextLauncher {
         icon: raw
             .args
             .get("icon")
             .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string(),
-        engine: raw
+        exec: raw
             .args
-            .get("search_engine")
+            .get("exec")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        args: raw
+            .args
+            .get("exec-args")
             .and_then(Value::as_str)
             .unwrap_or_default()
             .to_string(),
@@ -177,7 +184,51 @@ fn parse_calculator(raw: &RawLauncher) -> LauncherType {
     };
     LauncherType::Calc(CalculatorLauncher { capabilities })
 }
+fn parse_category_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let prio = raw.priority;
+    let value = &raw.args["categories"];
+    let categories = parse_appdata(value, prio, counts, max_decimals);
+    LauncherType::Category(CategoryLauncher { categories })
+}
+fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockError> {
+    let clipboard_content: String = read_from_clipboard()?;
+    let capabilities: Option<HashSet<String>> = match raw.args.get("capabilities") {
+        Some(Value::Array(arr)) => {
+            let strings: HashSet<String> = arr
+                .iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect();
+            Some(strings)
+        }
+        _ => None,
+    };
+    if clipboard_content.is_empty() {
+        Ok(LauncherType::Empty)
+    } else {
+        Ok(LauncherType::Clipboard((
+            ClipboardLauncher {
+                clipboard_content,
+                capabilities: capabilities.clone(),
+            },
+            CalculatorLauncher { capabilities },
+        )))
+    }
+}
 fn parse_command_launcher(
+    raw: &RawLauncher,
+    counts: &HashMap<String, f32>,
+    max_decimals: i32,
+) -> LauncherType {
+    let prio = raw.priority;
+    let value = &raw.args["commands"];
+    let commands = parse_appdata(value, prio, counts, max_decimals);
+    LauncherType::Command(CommandLauncher { commands })
+}
+fn parse_debug_launcher(
     raw: &RawLauncher,
     counts: &HashMap<String, f32>,
     max_decimals: i32,
@@ -212,63 +263,6 @@ fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
     let event = EventLauncher::get_event(date, event_start, event_end);
     LauncherType::Event(EventLauncher { event, icon })
 }
-fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
-    LauncherType::BulkText(BulkTextLauncher {
-        icon: raw
-            .args
-            .get("icon")
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_string(),
-        exec: raw
-            .args
-            .get("exec")
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_string(),
-        args: raw
-            .args
-            .get("exec-args")
-            .and_then(Value::as_str)
-            .unwrap_or_default()
-            .to_string(),
-    })
-}
-fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockError> {
-    let clipboard_content: String = read_from_clipboard()?;
-    let capabilities: Option<HashSet<String>> = match raw.args.get("capabilities") {
-        Some(Value::Array(arr)) => {
-            let strings: HashSet<String> = arr
-                .iter()
-                .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                .collect();
-            Some(strings)
-        }
-        _ => None,
-    };
-    if clipboard_content.is_empty() {
-        Ok(LauncherType::Empty)
-    } else {
-        Ok(LauncherType::Clipboard((
-            ClipboardLauncher {
-                clipboard_content,
-                capabilities: capabilities.clone(),
-            },
-            CalculatorLauncher { capabilities },
-        )))
-    }
-}
-fn parse_audio_sink_launcher() -> LauncherType {
-    AudioLauncherFunctions::new()
-        .and_then(|launcher| {
-            launcher.get_current_player().and_then(|player| {
-                launcher
-                    .get_metadata(&player)
-                    .and_then(|launcher| Some(LauncherType::MusicPlayer(launcher)))
-            })
-        })
-        .unwrap_or(LauncherType::Empty)
-}
 fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
     let icon = raw
         .args
@@ -297,15 +291,22 @@ fn parse_weather_launcher(raw: &RawLauncher) -> LauncherType {
         LauncherType::Empty
     }
 }
-fn parse_debug_launcher(
-    raw: &RawLauncher,
-    counts: &HashMap<String, f32>,
-    max_decimals: i32,
-) -> LauncherType {
-    let prio = raw.priority;
-    let value = &raw.args["commands"];
-    let commands = parse_appdata(value, prio, counts, max_decimals);
-    LauncherType::Command(CommandLauncher { commands })
+fn parse_web_launcher(raw: &RawLauncher) -> LauncherType {
+    LauncherType::Web(WebLauncher {
+        display_name: raw.display_name.clone().unwrap_or("".to_string()),
+        icon: raw
+            .args
+            .get("icon")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        engine: raw
+            .args
+            .get("search_engine")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+    })
 }
 
 fn parse_launcher_configs(
