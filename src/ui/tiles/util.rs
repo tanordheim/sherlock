@@ -146,40 +146,6 @@ impl TileBuilder {
             result_holder,
         }
     }
-    pub fn display_tag_start<T>(&self, content: &Option<String>, keyword: T)
-    where
-        T: AsRef<str>,
-    {
-        if let Some(start_tag) = content {
-            let text = start_tag.replace("{keyword}", keyword.as_ref());
-            if !text.is_empty() {
-                self.tag_start
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|t| {
-                        t.set_text(&text);
-                        t.set_visible(true);
-                    });
-            }
-        }
-    }
-    pub fn display_tag_end<T>(&self, content: &Option<String>, keyword: T)
-    where
-        T: AsRef<str>,
-    {
-        if let Some(start_tag) = content {
-            let text = start_tag.replace("{keyword}", keyword.as_ref());
-            if !text.is_empty() {
-                self.tag_end
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|t| {
-                        t.set_text(&text);
-                        t.set_visible(true);
-                    });
-            }
-        }
-    }
 }
 
 #[derive(Clone, Default)]

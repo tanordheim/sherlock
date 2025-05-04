@@ -6,15 +6,21 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::Launcher;
 use crate::loader::util::AppData;
 
-use super::util::{update_tag, TileBuilder};
+use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
-    pub fn app_tile(launcher: &Launcher, commands: &HashSet<AppData>) -> Vec<SherlockRow> {
+    pub fn app_tile(
+        launcher: &Launcher,
+        keyword: &str,
+        commands: &HashSet<AppData>,
+    ) -> Vec<SherlockRow> {
         commands
             .into_iter()
             .map(|value| {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+
+
 
                 // Icon stuff
                 builder.icon.and_then(|tmp| tmp.upgrade()).map(|icon| {
@@ -26,42 +32,33 @@ impl Tile {
                     value.icon_class.as_ref().map(|c| icon.add_css_class(c));
                 });
 
+
+                let row_weak = builder.object.downgrade();
                 let update_closure = {
                     // Construct attrs and enable action capabilities
-                    let tag_start = builder.tag_start.clone();
-                    let tag_end = builder.tag_end.clone();
-                    let tag_start_content = launcher.tag_start.clone();
-                    let tag_end_content = launcher.tag_end.clone();
-                    let title = builder.title.clone();
-                    let category = builder.category.clone();
-                    let row_weak = builder.object.downgrade();
-
+                    let row = row_weak.clone();
+                    let category_label = builder.category.clone();
+                    let title_label = builder.title.clone();
                     let launcher = launcher.clone();
-                    let attrs =
-                        get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
-                    let name = value.name.clone();
+                    let attrs = get_attrs_map(
+                        vec![
+                            ("method", &launcher.method),
+                            ("exec", &value.exec)
+                        ]);
                     move |keyword: &str| -> bool {
                         let mut attrs = attrs.clone();
                         attrs.insert(String::from("keyword"), keyword.to_string());
 
-                        let tile_name = name.replace("{keyword}", keyword);
+                        let tile_name = value.name.replace("{keyword}", keyword);
+                        builder.display_tag_start(&value.tag_start, keyword);
+                        builder.display_tag_end(&value.tag_end, keyword);
 
-                        // update first tag
-                        if let Some(tag_start) = &tag_start {
-                            update_tag(&tag_start, &tag_start_content, keyword);
-                        }
-
-                        // update second tag
-                        if let Some(tag_end) = &tag_end {
-                            update_tag(&tag_end, &tag_end_content, keyword);
-                        }
-
-                        title
-                            .as_ref()
+                        title_label
+                            .clone()
                             .and_then(|tmp| tmp.upgrade())
                             .map(|title| title.set_markup(&tile_name));
 
-                        category.as_ref().and_then(|tmp| tmp.upgrade()).map(|cat| {
+                        category_label.clone().and_then(|tmp| tmp.upgrade()).map(|cat| {
                             if let Some(name) = &launcher.name {
                                 cat.set_text(name);
                             } else {
@@ -69,7 +66,7 @@ impl Tile {
                             }
                         });
 
-                        row_weak.upgrade().map(|row| {
+                        row.upgrade().map(|row| {
                             let signal_id =
                                 row.connect_local("row-should-activate", false, move |row| {
                                     let row =

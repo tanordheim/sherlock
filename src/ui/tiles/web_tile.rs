@@ -12,7 +12,7 @@ use crate::launcher::web_launcher::WebLauncher;
 use crate::launcher::Launcher;
 
 impl Tile {
-    pub fn web_tile(launcher: &Launcher, keyword: &str, web: &WebLauncher) -> Vec<SherlockRow> {
+    pub fn web_tile(launcher: &Launcher, web: &WebLauncher) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
         builder
             .category
@@ -38,23 +38,7 @@ impl Tile {
                 }
             });
 
-        let tile_name = if web.display_name.contains("{keyword}") {
-            web.display_name.replace("{keyword}", keyword)
-        } else {
-            web.display_name.clone()
-        };
-
         // Construct attrs and enable action capabilities
-        let mut attrs = get_attrs_map(vec![
-            ("method", &launcher.method),
-            ("result", keyword),
-            ("keyword", keyword),
-            ("engine", &web.engine),
-        ]);
-        if let Some(next) = launcher.next_content.as_deref() {
-            attrs.insert(String::from("next_content"), next.to_string());
-        }
-        let attrs_rc = Rc::new(RefCell::new(attrs));
         builder.object.with_launcher(&launcher);
         builder.object.set_keyword_aware(true);
 
@@ -65,6 +49,13 @@ impl Tile {
             let tag_end_content = launcher.tag_end.clone();
             let title = builder.title.clone();
             let row_weak = builder.object.downgrade();
+            let tile_name = web.display_name.clone();
+            let mut attrs =
+                get_attrs_map(vec![("method", &launcher.method), ("engine", &web.engine)]);
+            if let Some(next) = launcher.next_content.as_deref() {
+                attrs.insert(String::from("next_content"), next.to_string());
+            }
+            let attrs_rc = Rc::new(RefCell::new(attrs));
             move |keyword: &str| -> bool {
                 let attrs_clone = Rc::clone(&attrs_rc);
 
@@ -88,9 +79,9 @@ impl Tile {
                 row_weak.upgrade().map(|row| {
                     let signal_id = row.connect_local("row-should-activate", false, move |row| {
                         let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        attrs_clone
-                            .borrow_mut()
-                            .insert("keyword".to_string(), keyword_clone.clone());
+                        let mut attrs = attrs_clone.borrow_mut();
+                        attrs.insert("keyword".to_string(), keyword_clone.clone());
+                        attrs.insert("result".to_string(), keyword_clone.clone());
                         execute_from_attrs(&row, &attrs_clone.borrow());
                         None
                     });

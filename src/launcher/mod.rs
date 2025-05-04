@@ -99,21 +99,19 @@ impl Launcher {
 
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(&self, keyword: &str) -> Vec<SherlockRow> {
+    pub fn get_patch(&self) -> Vec<SherlockRow> {
         match &self.launcher_type {
-            LauncherType::App(app) => Tile::app_tile(self, keyword, &app.apps),
+            LauncherType::App(app) => Tile::app_tile(self, &app.apps),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc),
-            LauncherType::Category(ctg) => Tile::app_tile(self, keyword, &ctg.categories),
-            LauncherType::Clipboard((clp, calc)) => {
-                Tile::clipboard_tile(self, &clp, &calc, keyword)
-            }
+            LauncherType::Category(ctg) => Tile::app_tile(self, &ctg.categories),
+            LauncherType::Clipboard((clp, calc)) => Tile::clipboard_tile(self, &clp, &calc),
             LauncherType::Event(evl) => Tile::event_tile(self, evl),
             LauncherType::Process(proc) => Tile::process_tile(self, &proc),
-            LauncherType::Command(cmd) => Tile::app_tile(self, keyword, &cmd.commands),
-            LauncherType::Web(web) => Tile::web_tile(self, keyword, &web),
+            LauncherType::Command(cmd) => Tile::app_tile(self, &cmd.commands),
+            LauncherType::Web(web) => Tile::web_tile(self, &web),
 
             // Async tiles
-            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(self, keyword, &bulk_text),
+            LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(self, &bulk_text),
             LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(self, &mpris),
             LauncherType::Weather(_) => Tile::weather_tile_loader(self),
             _ => Vec::new(),

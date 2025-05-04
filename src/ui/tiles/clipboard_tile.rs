@@ -92,7 +92,6 @@ impl Tile {
         launcher: &Launcher,
         clp: &ClipboardLauncher,
         calc: &CalculatorLauncher,
-        keyword: &str,
     ) -> Vec<SherlockRow> {
         let mut results: Vec<SherlockRow> = Vec::with_capacity(1);
         let mut is_valid = false;
@@ -103,7 +102,7 @@ impl Tile {
         };
 
         //TODO implement searchstring before clipboard content
-        if !clipboard_content.is_empty() && clipboard_content.contains(keyword) {
+        if !clipboard_content.is_empty() {
             let mut builder = TileBuilder::default();
             let name = "From Clipboard";
             let mut method = "";
@@ -184,9 +183,8 @@ impl Tile {
 
                     if let Some(rgb) = rgb {
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
-
-                        builder.object.set_spawn_focus(launcher.spawn_focus);
-                        builder.object.set_shortcut(launcher.shortcut);
+                        builder.object.with_launcher(launcher);
+                        builder.object.set_search(clipboard_content);
 
                         let pix_buf = rgb.to_vec();
                         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(

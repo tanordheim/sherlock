@@ -75,7 +75,7 @@ impl SearchHandler {
             let rows: Vec<WeakRef<SherlockRow>> = launchers
                 .into_iter()
                 .map(|launcher| {
-                    let patch = launcher.get_patch("");
+                    let patch = launcher.get_patch();
                     if let Some(alias) = &launcher.alias {
                         holder.insert(format!("{} ", alias), launcher.name);
                     }

@@ -12,11 +12,7 @@ use super::util::TileBuilder;
 use super::Tile;
 
 impl Tile {
-    pub fn bulk_text_tile(
-        launcher: &Launcher,
-        keyword: &str,
-        bulk_text: &BulkTextLauncher,
-    ) -> Vec<SherlockRow> {
+    pub fn bulk_text_tile(launcher: &Launcher, bulk_text: &BulkTextLauncher) -> Vec<SherlockRow> {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/bulk_text_tile.ui");
 
         // Set category name
@@ -46,14 +42,15 @@ impl Tile {
                 icon.set_pixel_size(15);
             });
 
-        let attrs = get_attrs_map(vec![("method", &launcher.method), ("keyword", keyword)]);
         builder.object.add_css_class("bulk-text");
         builder.object.with_launcher(&launcher);
         builder.object.set_keyword_aware(true);
 
         let row_weak = builder.object.downgrade();
         let launcher_clone = launcher.clone();
-        let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> =
+        let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> = {
+            let attrs = get_attrs_map(vec![("method", &launcher.method)]);
+
             Box::new(move |keyword: &str| {
                 let launcher = launcher_clone.clone();
                 let row = row_weak.clone();
@@ -82,6 +79,7 @@ impl Tile {
 
                         if let Some(next_content) = next_content {
                             attrs.insert(String::from("next_content"), next_content.to_string());
+                            attrs.insert(String::from("keyword"), keyword.to_string());
                             row.upgrade().map(|row| {
                                 let signal_id =
                                     row.connect_local("row-should-activate", false, move |row| {
@@ -95,7 +93,8 @@ impl Tile {
                         }
                     }
                 })
-            });
+            })
+        };
         builder.object.set_async_update(async_update_closure);
         if launcher.shortcut {
             builder.object.set_shortcut_holder(builder.shortcut_holder);
