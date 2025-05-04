@@ -63,8 +63,8 @@ impl SherlockRow {
         if let Some(old_id) = self.imp().signal_id.borrow_mut().take() {
             self.disconnect(old_id);
             // Store the new signal
-            *self.imp().signal_id.borrow_mut() = Some(signal);
         }
+        *self.imp().signal_id.borrow_mut() = Some(signal);
     }
     pub fn set_keyword_aware(&self, state: bool) {
         self.imp().keyword_aware.set(state);

@@ -1,5 +1,7 @@
 use gtk4::prelude::*;
+use std::cell::RefCell;
 use std::collections::HashSet;
+use std::rc::Rc;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
@@ -39,10 +41,11 @@ impl Tile {
                     let launcher = launcher.clone();
                     let attrs =
                         get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
+                    let attrs_rc = Rc::new(RefCell::new(attrs));
                     let name = value.name.clone();
                     move |keyword: &str| -> bool {
-                        let mut attrs = attrs.clone();
-                        attrs.insert(String::from("keyword"), keyword.to_string());
+                        let attrs = Rc::clone(&attrs_rc);
+                        attrs.borrow_mut().insert(String::from("keyword"), keyword.to_string());
 
                         let tile_name = name.replace("{keyword}", keyword);
 
@@ -74,7 +77,7 @@ impl Tile {
                                 row.connect_local("row-should-activate", false, move |row| {
                                     let row =
                                         row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                    execute_from_attrs(&row, &attrs);
+                                    execute_from_attrs(&row, &attrs.borrow());
                                     None
                                 });
                             row.set_signal_id(signal_id);

@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use gtk4::prelude::*;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
@@ -59,16 +62,17 @@ impl Tile {
                         ("parent-pid", &parent),
                         ("child-pid", &child),
                     ]);
+                    let attrs_rc = Rc::new(RefCell::new(attrs));
                     move |keyword: &str| -> bool {
-                        let mut attrs = attrs.clone();
-                        attrs.insert(String::from("keyword"), keyword.to_string());
+                        let attrs = Rc::clone(&attrs_rc);
+                        attrs.borrow_mut().insert(String::from("keyword"), keyword.to_string());
 
                         row.upgrade().map(|row| {
                             let signal_id =
                                 row.connect_local("row-should-activate", false, move |row| {
                                     let row =
                                         row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                    execute_from_attrs(&row, &attrs);
+                                    execute_from_attrs(&row, &attrs.borrow());
                                     None
                                 });
                             row.set_signal_id(signal_id);

@@ -87,7 +87,7 @@ impl SearchHandler {
                     row.downgrade()
                 })
                 .collect();
-            update(rows, &self.task, String::new());
+            update_async(rows, &self.task, String::new());
             *self.modes.borrow_mut() = holder;
         }
     }
@@ -108,7 +108,7 @@ struct SearchUI {
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
 }
-fn update(
+fn update_async(
     update_tiles: Vec<WeakRef<SherlockRow>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
     keyword: String,
@@ -451,15 +451,16 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
             let current_text = search_text.borrow().clone();
             let is_home = current_text.is_empty() && mode == "all";
 
+            if item.update(&current_text) {
+                return true;
+            }
+
             if is_home {
                 if home || only_home {
                     return true;
                 }
                 return false;
             } else {
-                if item.update(&current_text) {
-                    return true;
-                }
                 if mode != "all" {
                     if only_home || mode != alias {
                         return false;
@@ -716,7 +717,7 @@ fn change_event(
                 } else {
                     vec![]
                 };
-                update(weaks, &current_task, current_text);
+                update_async(weaks, &current_task, current_text);
             }
         }
     });
