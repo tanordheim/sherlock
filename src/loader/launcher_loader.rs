@@ -5,8 +5,9 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::path::PathBuf;
 
-use crate::actions::util::read_from_clipboard;
+use crate::actions::util::{parse_default_browser, read_from_clipboard};
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
+use crate::launcher::bookmark_launcher::BookmarkLauncher;
 use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::event_launcher::EventLauncher;
@@ -80,7 +81,12 @@ impl Loader {
                 } else {
                     raw.r#type.clone()
                 };
-                Ok(Launcher::from_raw(raw, method, launcher_type))
+                let icon = raw
+                    .args
+                    .get("icon")
+                    .and_then(|s| s.as_str())
+                    .map(|s| s.to_string());
+                Ok(Launcher::from_raw(raw, method, launcher_type, icon))
             })
             .collect();
 
@@ -150,6 +156,16 @@ fn parse_audio_sink_launcher() -> LauncherType {
         .unwrap_or(LauncherType::Empty)
 }
 fn parse_bookmarks_launcher(raw: &RawLauncher) -> LauncherType {
+    if let Some(browser) = CONFIG
+        .get()
+        .and_then(|c| c.default_apps.browser.clone())
+        .or_else(|| parse_default_browser().ok())
+    {
+        let bookmarks = BookmarkLauncher::find_bookmarks(&browser, raw.priority);
+        if let Some(bookmarks) = bookmarks.ok() {
+            return LauncherType::Bookmark(BookmarkLauncher { bookmarks });
+        }
+    }
     LauncherType::Empty
 }
 fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {

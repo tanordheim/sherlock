@@ -49,7 +49,7 @@ fn default_true() -> bool {
 pub struct AppData {
     #[serde(default)]
     pub name: String,
-    pub icon: String,
+    pub icon: Option<String>,
     pub icon_class: Option<String>,
     pub exec: String,
     pub search_string: String,

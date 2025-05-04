@@ -19,14 +19,21 @@ impl Tile {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 // Icon stuff
-                builder.icon.and_then(|tmp| tmp.upgrade()).map(|icon| {
-                    if value.icon.starts_with("/") {
-                        icon.set_from_file(Some(&value.icon));
-                    } else {
-                        icon.set_icon_name(Some(&value.icon));
-                    }
-                    value.icon_class.as_ref().map(|c| icon.add_css_class(c));
-                });
+                if let Some(icon_name) = value.icon.as_ref().or_else(|| launcher.icon.as_ref()) {
+                    builder.icon.and_then(|tmp| tmp.upgrade()).map(|icon| {
+                        if icon_name.starts_with("/") {
+                            icon.set_from_file(Some(icon_name));
+                        } else {
+                            icon.set_icon_name(Some(icon_name));
+                        }
+                        value.icon_class.as_ref().map(|c| icon.add_css_class(c));
+                    });
+                } else {
+                    builder
+                        .icon
+                        .and_then(|tmp| tmp.upgrade())
+                        .map(|icon| icon.set_visible(false));
+                }
 
                 let update_closure = {
                     // Construct attrs and enable action capabilities

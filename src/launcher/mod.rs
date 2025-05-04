@@ -67,6 +67,7 @@ pub enum LauncherType {
 #[derive(Clone, Debug)]
 pub struct Launcher {
     pub name: Option<String>,
+    pub icon: Option<String>,
     pub alias: Option<String>,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
@@ -81,9 +82,15 @@ pub struct Launcher {
     pub only_home: bool,
 }
 impl Launcher {
-    pub fn from_raw(raw: RawLauncher, method: String, launcher_type: LauncherType) -> Self {
+    pub fn from_raw(
+        raw: RawLauncher,
+        method: String,
+        launcher_type: LauncherType,
+        icon: Option<String>,
+    ) -> Self {
         Self {
             name: raw.name,
+            icon: icon.clone(),
             alias: raw.alias,
             tag_start: raw.tag_start,
             tag_end: raw.tag_end,
@@ -105,12 +112,13 @@ impl Launcher {
     pub fn get_patch(&self) -> Vec<SherlockRow> {
         match &self.launcher_type {
             LauncherType::App(app) => Tile::app_tile(self, &app.apps),
+            LauncherType::Bookmark(bmk) => Tile::app_tile(self, &bmk.bookmarks),
             LauncherType::Calc(calc) => Tile::calc_tile(self, &calc),
             LauncherType::Category(ctg) => Tile::app_tile(self, &ctg.categories),
             LauncherType::Clipboard((clp, calc)) => Tile::clipboard_tile(self, &clp, &calc),
+            LauncherType::Command(cmd) => Tile::app_tile(self, &cmd.commands),
             LauncherType::Event(evl) => Tile::event_tile(self, evl),
             LauncherType::Process(proc) => Tile::process_tile(self, &proc),
-            LauncherType::Command(cmd) => Tile::app_tile(self, &cmd.commands),
             LauncherType::Web(web) => Tile::web_tile(self, &web),
 
             // Async tiles

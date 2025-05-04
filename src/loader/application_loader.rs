@@ -138,7 +138,7 @@ impl Loader {
                         // Return the processed app data
                         Some(AppData {
                             name,
-                            icon,
+                            icon: Some(icon),
                             icon_class: None,
                             exec,
                             search_string,

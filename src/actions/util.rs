@@ -1,12 +1,15 @@
-use std::fs;
+use std::{fs, process::Command};
 
 use cli_clipboard::{ClipboardContext, ClipboardProvider};
 
-use crate::utils::{
-    errors::{SherlockError, SherlockErrorType},
-    files::home_dir,
-};
 use crate::CONFIG;
+use crate::{
+    loader::application_loader::{get_applications_dir, get_desktop_files},
+    utils::{
+        errors::{SherlockError, SherlockErrorType},
+        files::{home_dir, read_lines},
+    },
+};
 
 pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {
     let mut ctx = ClipboardContext::new().map_err(|e| SherlockError {
@@ -53,4 +56,47 @@ pub fn reset_app_counter() -> Result<(), SherlockError> {
         error: SherlockErrorType::FileRemoveError(home.join(".sherlock/counts.json")),
         traceback: e.to_string(),
     })
+}
+pub fn parse_default_browser() -> Result<String, SherlockError> {
+    // Find default browser desktop file
+    let output = Command::new("xdg-settings")
+        .arg("get")
+        .arg("default-web-browser")
+        .output()
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError(String::from("default browser")),
+            traceback: e.to_string(),
+        })?;
+
+    let desktop_file: String = if output.status.success() {
+        String::from_utf8_lossy(&output.stdout).trim().to_string()
+    } else {
+        return Err(SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("default browser".to_string()),
+            traceback: String::new(),
+        });
+    };
+    let desktop_dirs = get_applications_dir();
+    let desktop_files = get_desktop_files(desktop_dirs);
+    let browser_file = desktop_files
+        .iter()
+        .find(|f| f.ends_with(&desktop_file))
+        .ok_or_else(|| SherlockError {
+            error: SherlockErrorType::EnvVarNotFoundError("default browser".to_string()),
+            traceback: String::new(),
+        })?;
+    // read default browser desktop file
+    let browser = read_lines(browser_file)
+        .map_err(|e| SherlockError {
+            error: SherlockErrorType::FileReadError(browser_file.clone()),
+            traceback: e.to_string(),
+        })?
+        .filter_map(Result::ok)
+        .find(|line| line.starts_with("Exec="))
+        .and_then(|line| line.strip_prefix("Exec=").map(|l| l.to_string()))
+        .ok_or_else(|| SherlockError {
+            error: SherlockErrorType::FileParseError(browser_file.clone()),
+            traceback: String::new(),
+        })?;
+    Ok(browser)
 }
