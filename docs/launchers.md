@@ -160,14 +160,12 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 
 ## Calculator
 
-<div align="center" style="text-align:center; border-radius:10px;">
-  <picture>
-    <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
-  </picture>
-  <picture>
-    <img alt="calc-launcher-unit" width="100%" src="assets/CalcTileUnit.svg">
-  </picture>
+<div align="center">
+  <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
+  <br />
+  <img alt="calc-launcher-unit" width="100%" src="assets/CalcTileUnit.svg">
 </div>
+
 
 ```json
 {
@@ -195,12 +193,12 @@ Specifies what the launcher should parse:
 ---
 ## Clipboard Launcher
 
-<div align="center" style="text-align:center;">
-    <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg">
+<div align="center">
+  <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg" />
+  <br>
+  <img alt="clipboard-launcher-color" width="100%" src="assets/ClipboardColor.svg" />
 </div>
-<div align="center" style="text-align:center;">
-    <img alt="clipboard-launcher-color" width="100%" src="assets/ClipboardColor.svg">
-</div>
+
 
 ```json
 {
