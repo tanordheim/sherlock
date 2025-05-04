@@ -147,7 +147,8 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 | **Zen Browser**      | `zen`, `zen-browser`, `/opt/zen-browser-bin/zen-bin %u` |
 | **Brave**      | `brave`, `brave %u` |
 | **Firefox**      | `firefox`, `/usr/lib/firefox/firefox %u` |
-
+| **Chrome**      | `chrome`, `google-chrome`, `/usr/bin/google-chrome-stable %u` |
+| **Thorium**      | `thorium`, `/usr/bin/thorium-browser %u` |
 
 ---
 
