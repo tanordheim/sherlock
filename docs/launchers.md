@@ -54,6 +54,7 @@ The launcher can be of the following types:<br>
     <img alt="category-launcher" width="100%" src="assets/CategoryTile.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -101,6 +102,7 @@ The launcher can be of the following types:<br>
     <img alt="app-launcher" width="100%" src="assets/AppTile.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -120,6 +122,7 @@ The launcher can be of the following types:<br>
     <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -165,7 +168,7 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
   <br />
   <img alt="calc-launcher-unit" width="100%" src="assets/CalcTileUnit.svg">
 </div>
-
+<br>
 
 ```json
 {
@@ -198,7 +201,7 @@ Specifies what the launcher should parse:
   <br>
   <img alt="clipboard-launcher-color" width="100%" src="assets/ClipboardColor.svg" />
 </div>
-
+<br>
 
 ```json
 {
@@ -323,6 +326,7 @@ Has following fields of its own:
     <img alt="bulk-text-launcher" width="100%" src="assets/BulkText.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -360,6 +364,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
     <img alt="teams-event-launcher" width="100%" src="assets/TeamsTile.svg">
   </picture>
 </div>
+<br>
 
 > **🚨 Warning:** Currently only supports Thunderbird calendar events
 ```json
@@ -399,6 +404,7 @@ Specifies the second offset from the `date` parameter.<br>
     <img alt="music-launcher" width="100%" src="assets/MprisTile.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -426,6 +432,7 @@ None
     <img alt="process-terminator-launcher" width="100%" src="assets/ProcessTerminator.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
@@ -451,6 +458,7 @@ None
     <img alt="weather-launcher" width="100%" src="assets/WeatherWidget.svg">
   </picture>
 </div>
+<br>
 
 ```json
 {
