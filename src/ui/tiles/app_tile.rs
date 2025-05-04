@@ -45,7 +45,9 @@ impl Tile {
                     let name = value.name.clone();
                     move |keyword: &str| -> bool {
                         let attrs = Rc::clone(&attrs_rc);
-                        attrs.borrow_mut().insert(String::from("keyword"), keyword.to_string());
+                        attrs
+                            .borrow_mut()
+                            .insert(String::from("keyword"), keyword.to_string());
 
                         let tile_name = name.replace("{keyword}", keyword);
 

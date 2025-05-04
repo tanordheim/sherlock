@@ -1,7 +1,7 @@
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData, CONFIG};
 use gio::glib::WeakRef;
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Debug};
 
 #[derive(Default)]
 pub struct TextViewTileBuilder {
@@ -201,22 +201,23 @@ impl WeatherTileBuilder {
 }
 
 pub trait SherlockSearch {
-    fn fuzzy_match<T: AsRef<str>>(&self, substring: T) -> bool;
+    fn fuzzy_match<T: AsRef<str> + Debug>(&self, substring: T) -> bool;
 }
 
 impl SherlockSearch for String {
     fn fuzzy_match<T>(&self, substring: T) -> bool
     where
         Self: AsRef<str>,
-        T: AsRef<str>,
+        T: AsRef<str> + Debug,
     {
-        let char_pattern: HashSet<char> = substring.as_ref().to_lowercase().chars().collect();
+        let lowercase = substring.as_ref().to_lowercase();
+        let char_pattern: HashSet<char> = lowercase.chars().collect();
         let concat_str: String = self
             .to_lowercase()
             .chars()
             .filter(|s| char_pattern.contains(s))
             .collect();
-        concat_str.contains(substring.as_ref())
+        concat_str.contains(&lowercase)
     }
 }
 impl SherlockSearch for PipeData {
@@ -230,12 +231,14 @@ impl SherlockSearch for PipeData {
             None => &self.description,
         };
         if let Some(search_in) = search_in {
-            let char_pattern: HashSet<char> = substring.as_ref().chars().collect();
+            let lowercase = substring.as_ref().to_lowercase();
+            let char_pattern: HashSet<char> = lowercase.chars().collect();
             let concat_str: String = search_in
+                .to_lowercase()
                 .chars()
                 .filter(|s| char_pattern.contains(s))
                 .collect();
-            return concat_str.contains(substring.as_ref());
+            return concat_str.contains(&lowercase);
         }
         return false;
     }

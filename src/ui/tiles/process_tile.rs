@@ -65,7 +65,9 @@ impl Tile {
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     move |keyword: &str| -> bool {
                         let attrs = Rc::clone(&attrs_rc);
-                        attrs.borrow_mut().insert(String::from("keyword"), keyword.to_string());
+                        attrs
+                            .borrow_mut()
+                            .insert(String::from("keyword"), keyword.to_string());
 
                         row.upgrade().map(|row| {
                             let signal_id =
