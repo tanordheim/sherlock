@@ -79,9 +79,11 @@ impl Tile {
                 row_weak.upgrade().map(|row| {
                     let signal_id = row.connect_local("row-should-activate", false, move |row| {
                         let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        let mut attrs = attrs_clone.borrow_mut();
-                        attrs.insert("keyword".to_string(), keyword_clone.clone());
-                        attrs.insert("result".to_string(), keyword_clone.clone());
+                        {
+                            let mut attrs = attrs_clone.borrow_mut();
+                            attrs.insert("keyword".to_string(), keyword_clone.clone());
+                            attrs.insert("result".to_string(), keyword_clone.clone());
+                        }
                         execute_from_attrs(&row, &attrs_clone.borrow());
                         None
                     });
