@@ -93,7 +93,7 @@ Make sure you have the following dependencies installed:
 
     (Make sure to replace the filename if the version number is different.)
 <br><br>
-# 3. Post Installation
+## 3. Post Installation
 
 #### **Config Setup**
 After the installation is completed, you can set up your configuration files. The location for them is `~/.config/sherlock/`. Depending on your needs, you should add the following files:
