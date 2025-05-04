@@ -30,7 +30,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
         - [Arch Linux](#arch-linux)
         - [From Source](#from-source)
         - [Debian](#build-debian-package)
-        - [Nix Flake](#nix-flake)
+        - [Nix](#nix)
     - [Post Installation](#3-post-installation)
         - [Config Setup](#config-setup)
         - [Keybind Setup](#keybind-setup)
@@ -175,13 +175,31 @@ Make sure you have the following dependencies installed:
     (Make sure to replace the filename if the version number is different.)
 <br><br>
 
-#### <ins>Nix Flake</ins>
+#### <ins>Nix</ins>
 
-Add `sherlock.url = "github:Skxxtz/sherlock";` to the `inputs` of `flake.nix`. Sherlock can be installed either as a standalone package; or managed with `home-manager`, which both installs and generates configuration files.
+##### Non-Flakes Systems
+Sherlock is available in `nixpkgs/unstable` as `sherlock-launcher`. If you're installing it as a standalone package you'll need to do the [config setup](#config-setup) yourself.
 
-To install the standalone package, add `sherlock.packages.${pkgs.system}.default` to `environment.systemPackages`. You will need to create the configuration files yourself, see below.
+##### Flakes & Home-Manager
+Add `sherlock.url = "github:Skxxtz/sherlock";` to the `inputs` of `flake.nix`. The sherlock flake can be installed either as a standalone package; or managed with `home-manager`, which both installs and generates configuration files.
 
-For `home-manager` enabled systems, use the `sherlock.homeManagerModules.default` output of the imported flake. An example can be found [here](https://github.com/Vanta1/dots/blob/2888dd05bbba8866f77da4d6fbd9de0122ea7a2b/home/programs/sherlock.nix).
+For `home-manager` enabled systems, import the `homeManagerModules.default`/`homeModules.default` output of the flake. Then, set `programs.sherlock.enable = true;` to install and create default configuration files. home-manager will track all of the config files automatically, and they can be modified using nix syntax with `programs.sherlock.settings.<config-file>`. The config files and their associated names are:
+
+ - `config.json` (`config.toml`): `settings.config
+ - `fallback.json`: `settings.launchers`
+ - `sherlock_alias.json`: `settings.aliases`
+
+The above settings are written nix syntax the following are written as just text:
+
+ - `main.css`: `settings.style`
+ - `sherlockignore`: `settings.ignore`
+
+You can find an example [here](https://github.com/Vanta1/dots/blob/cbefb0351df8a766b534343b4a337d0d38cdd8fe/home/programs/sherlock.nix).
+
+To stop home-manager from symlinking these files from the nix store (this can be useful if you're iterating a lot and don't want to rebuild your system), set the file's corresponding option to `null`. `programs.sherlock.settings = null;` will stop managing all sherlock-related config files.
+
+##### Flakes without Home-Manager
+To install the standalone package, add `sherlock.packages.${pkgs.system}.default` to `environment.systemPackages`/`home.packages`. You will need to create the configuration files yourself, see below.
 
 ### 3. Post Installation
 

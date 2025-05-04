@@ -1,4 +1,4 @@
-{
+self: {
   lib,
   config,
   pkgs,
@@ -33,14 +33,19 @@
 in {
   options.programs.sherlock = with types; {
     enable = lib.mkEnableOption "Manage sherlock & config files with home-manager module." // {default = false;};
-    package = lib.mkPackageOption pkgs "sherlock" {
-      default = ["sherlock-launcher"];
+    package = mkOption {
+      type = nullOr package;
+      default = self.packages.${pkgs.system}.default;
+      description = ''
+        Sherlock is currently only in `nixpkgs/unstable`. If your flake is not on that channel you can add it
+        as an input and then set this option to, for example, `inputs.unstable.legacyPackages.\${pkgs.system}.sherlock`
+      '';
     };
 
     settings = mkOption {
       description = "Sherlock settings, seperated by config file.";
       default = {};
-      type = submodule {
+      type = nullOr (submodule {
         options = {
           aliases = mkOption {
             description = ''
@@ -84,30 +89,32 @@ in {
             type = nullOr lines;
           };
         };
-      };
+      });
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
-    {
+  config = mkMerge [
+    (mkIf (cfg.package != null) {
       home.packages = [cfg.package];
-    }
-    (mkIf (cfg.settings != null) (mkMerge [
-      (mkIf (cfg.settings.aliases != null) {
-        xdg.configFile."sherlock/sherlock_alias.json".text = builtins.toJSON cfg.settings.aliases;
-      })
-      (mkIf (cfg.settings.config != null) {
-        xdg.configFile."sherlock/config.json".text = builtins.toJSON cfg.settings.config;
-      })
-      (mkIf (cfg.settings.ignore != null) {
-        xdg.configFile."sherlock/sherlockignore".text = cfg.settings.ignore;
-      })
-      (mkIf (cfg.settings.launchers != null) {
-        xdg.configFile."sherlock/fallback.json".text = builtins.toJSON cfg.settings.launchers;
-      })
-      (mkIf (cfg.settings.style != null) {
-        xdg.configFile."sherlock/main.css".text = cfg.settings.style;
-      })
+    })
+    (mkIf cfg.enable (mkMerge [
+      (mkIf (cfg.settings != null) (mkMerge [
+        (mkIf (cfg.settings.aliases != null) {
+          xdg.configFile."sherlock/sherlock_alias.json".text = builtins.toJSON cfg.settings.aliases;
+        })
+        (mkIf (cfg.settings.config != null) {
+          xdg.configFile."sherlock/config.json".text = builtins.toJSON cfg.settings.config;
+        })
+        (mkIf (cfg.settings.ignore != null) {
+          xdg.configFile."sherlock/sherlockignore".text = cfg.settings.ignore;
+        })
+        (mkIf (cfg.settings.launchers != null) {
+          xdg.configFile."sherlock/fallback.json".text = builtins.toJSON cfg.settings.launchers;
+        })
+        (mkIf (cfg.settings.style != null) {
+          xdg.configFile."sherlock/main.css".text = cfg.settings.style;
+        })
+      ]))
     ]))
-  ]);
+  ];
 }
