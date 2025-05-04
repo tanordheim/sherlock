@@ -106,6 +106,12 @@ impl SherlockRow {
     pub fn is_keyword_aware(&self) -> bool {
         self.imp().keyword_aware.get()
     }
+    /// Sets shared values from a launcher to the SherlockRow
+    /// * only_home
+    /// * home
+    /// * spawn_focus
+    /// * priority
+    /// * alias
     pub fn with_launcher(&self, launcher: &Launcher) {
         self.set_only_home(launcher.only_home);
         self.set_home(launcher.home);
