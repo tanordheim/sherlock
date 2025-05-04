@@ -145,6 +145,9 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 | Browser   | Name in `config.toml`                                      |
 |-----------------|------------------------------------------|
 | **Zen Browser**      | `zen`, `zen-browser`, `/opt/zen-browser-bin/zen-bin %u` |
+| **Brave**      | `brave`, `brave %u` |
+| **Firefox**      | `firefox`, `/usr/lib/firefox/firefox %u` |
+
 
 ---
 
