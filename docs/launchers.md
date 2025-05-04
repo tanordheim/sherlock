@@ -47,8 +47,13 @@ The launcher can be of the following types:<br>
 | `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
 ---
-
 ## Category Launcher
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="category-launcher" width="100%" style="border-radius: 10px;" src="assets/CategoryTile.svg">
+  </picture>
+</div>
 ```json
 {
     "name": "Categories",
@@ -317,6 +322,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
     "name": "Teams Event",
     "type": "teams_event",
     "args": {
+        "icon": "teams"
         "event_date": "now",
         "event_start": "-5 minutes",
         "event_end": "+15 minutes"
