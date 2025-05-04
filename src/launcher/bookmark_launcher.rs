@@ -22,9 +22,8 @@ impl BookmarkLauncher {
             "brave" | "brave %u" => BookmarkParser::brave(raw),
             "firefox" => BookmarkParser::firefox(raw),
             _ => {
-                // @BaxoPlenty you can check here what this ↑ should be.
                 println!("{:?}", browser);
-                BookmarkParser::zen(raw)
+                Ok(HashSet::new())
             }
         }
     }
