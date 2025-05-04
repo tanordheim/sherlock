@@ -483,16 +483,25 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
 fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
     CustomSorter::new({
         let search_text = Rc::clone(search_text);
-
-        fn make_prio(prio: f32, edits: usize) -> f32 {
-            if edits == 0 {
-                return prio
+        fn search_score(query: &str, match_in: &str) -> f32 {
+            if match_in.len() == 0 {
+                return 0.0;
             }
-            // normalize edit distance; higher → lower result
-            let normalized = (1000.0 / edits as f32).round() / 1000.0;
+            let distance = levenshtein(query, match_in) as f32;
+            let normed = (distance / match_in.len() as f32).clamp(0.2, 1.0);
+            let starts_with = if match_in.starts_with(query) {
+                -0.2
+            } else {
+                0.0
+            };
+            normed + starts_with
+        }
+
+        fn make_prio(prio: f32, query: &str, match_in: &str) -> f32 {
+            let score = search_score(query, match_in);
             // shift counts 3 to right; 1.34 → 1.00034 to make room for levenshtein
             let counters = prio.fract() / 1000.0;
-            prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
+            prio.trunc() + 1.0 + counters + score
         }
         move |item_a, item_b| {
             let search_text = search_text.borrow();
@@ -504,14 +513,8 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
             let mut priority_b = item_b.priority();
 
             if !search_text.is_empty() {
-                priority_a = make_prio(
-                    item_a.priority(),
-                    levenshtein(&search_text, &item_a.search()),
-                );
-                priority_b = make_prio(
-                    item_b.priority(),
-                    levenshtein(&search_text, &item_b.search()),
-                );
+                priority_a = make_prio(item_a.priority(), &search_text, &item_a.search());
+                priority_b = make_prio(item_b.priority(), &search_text, &item_b.search());
             }
 
             priority_a.total_cmp(&priority_b).into()
