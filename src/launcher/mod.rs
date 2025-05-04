@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 pub mod app_launcher;
 pub mod audio_launcher;
+pub mod bookmark_launcher;
 pub mod bulk_text_launcher;
 pub mod calc_launcher;
 pub mod category_launcher;
@@ -17,6 +18,7 @@ use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::RawLauncher, 
 
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
+use bookmark_launcher::BookmarkLauncher;
 use bulk_text_launcher::BulkTextLauncher;
 use calc_launcher::CalculatorLauncher;
 use category_launcher::CategoryLauncher;
@@ -29,17 +31,18 @@ use web_launcher::WebLauncher;
 
 #[derive(Clone, Debug)]
 pub enum LauncherType {
-    Category(CategoryLauncher),
     App(AppLauncher),
-    Web(WebLauncher),
-    Calc(CalculatorLauncher),
+    Bookmark(BookmarkLauncher),
     BulkText(BulkTextLauncher),
-    Command(CommandLauncher),
+    Calc(CalculatorLauncher),
+    Category(CategoryLauncher),
     Clipboard((ClipboardLauncher, CalculatorLauncher)),
+    Command(CommandLauncher),
     Event(EventLauncher),
     MusicPlayer(MusicPlayerLauncher),
     Process(ProcessLauncher),
     Weather(WeatherLauncher),
+    Web(WebLauncher),
     Empty,
 }
 /// # Launcher

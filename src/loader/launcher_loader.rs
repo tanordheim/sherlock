@@ -62,7 +62,7 @@ impl Loader {
                 let launcher_type: LauncherType = match raw.r#type.as_str() {
                     "app_launcher" => parse_app_launcher(&raw, &counts, max_decimals),
                     "audio_sink" => parse_audio_sink_launcher(),
-                    "bookmarks" => parse_bookmarks_launcher(&raw);
+                    "bookmarks" => parse_bookmarks_launcher(&raw),
                     "bulk_text" => parse_bulk_text_launcher(&raw),
                     "calculation" => parse_calculator(&raw),
                     "categories" => parse_category_launcher(&raw, &counts, max_decimals),
@@ -148,6 +148,9 @@ fn parse_audio_sink_launcher() -> LauncherType {
             })
         })
         .unwrap_or(LauncherType::Empty)
+}
+fn parse_bookmarks_launcher(raw: &RawLauncher) -> LauncherType {
+    LauncherType::Empty
 }
 fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
     LauncherType::BulkText(BulkTextLauncher {
