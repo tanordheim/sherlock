@@ -54,6 +54,7 @@ The launcher can be of the following types:<br>
     <img alt="category-launcher" width="100%" style="border-radius: 10px;" src="assets/CategoryTile.svg">
   </picture>
 </div>
+
 ```json
 {
     "name": "Categories",
@@ -94,6 +95,13 @@ The launcher can be of the following types:<br>
 ---
 
 ## App Launcher
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="app-launcher" width="100%" style="border-radius: 10px;" src="assets/AppTile.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "App Launcher",
@@ -106,6 +114,13 @@ The launcher can be of the following types:<br>
 ```
 ---
 ## Web Launcher
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="web-launcher" width="100%" style="border-radius: 10px;" src="assets/BrowserTile.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Web Search",
@@ -144,6 +159,14 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 ---
 
 ## Calculator
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="calc-launcher-math" width="100%" style="border-radius: 10px;" src="assets/CalcTile.svg">
+    <img alt="calc-launcher-unit" width="100%" style="border-radius: 10px;" src="assets/CalcTileUnit.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Calculator",
@@ -169,6 +192,14 @@ Specifies what the launcher should parse:
 
 ---
 ## Clipboard Launcher
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="clipboard-launcher-url" width="100%" style="border-radius: 10px;" src="assets/ClipboardLink.svg">
+    <img alt="clipboard-launcher-color" width="100%" style="border-radius: 10px;" src="assets/ClipboardColor.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Clipboard",
@@ -286,6 +317,13 @@ Has following fields of its own:
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
 ---
 ## Bulk Text
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="bulk-text-launcher" width="100%" style="border-radius: 10px;" src="assets/BulkText.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Wikipedia Search",
@@ -316,6 +354,13 @@ Specifies the arguments to pass along to the `exec` program.<br>
 --- 
 
 ## Teams Event
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="teams-event-launcher" width="100%" style="border-radius: 10px;" src="assets/TeamsTile.svg">
+  </picture>
+</div>
+
 > **🚨 Warning:** Currently only supports Thunderbird calendar events
 ```json
 {
@@ -348,6 +393,13 @@ Specifies the second offset from the `date` parameter.<br>
 --- 
 
 ## Music Player
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="music-launcher" width="100%" style="border-radius: 10px;" src="assets/MprisTile.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Spotify",
@@ -368,6 +420,13 @@ None
 --- 
 
 ## Process Terminator
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="process-terminator-launcher" width="100%" style="border-radius: 10px;" src="assets/ProcessTerminator.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Kill Process",
@@ -386,6 +445,13 @@ None
 --- 
 
 ## Weather Launcher
+
+<div align="center" style="text-align:center; border-radius:10px;">
+  <picture>
+    <img alt="weather-launcher" width="100%" style="border-radius: 10px;" src="assets/WeatherWidget.svg">
+  </picture>
+</div>
+
 ```json
 {
     "name": "Weather",
