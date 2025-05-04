@@ -382,6 +382,8 @@ pub struct ConfigDefaultApps {
     pub terminal: String,
     #[serde(default)]
     pub browser: Option<String>,
+    #[serde(default)]
+    pub mpris: Option<String>,
 }
 impl Default for ConfigDefaultApps {
     fn default() -> Self {
@@ -390,6 +392,7 @@ impl Default for ConfigDefaultApps {
             calendar_client: default_calendar_client(),
             terminal: get_terminal().unwrap_or_default(), // Should never get to this...
             browser: parse_default_browser().ok(),
+            mpris: None,
         }
     }
 }

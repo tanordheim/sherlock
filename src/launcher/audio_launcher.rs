@@ -7,6 +7,7 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use zbus::blocking::{Connection, Proxy};
 
+use crate::CONFIG;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 use super::utils::MprisData;
@@ -45,7 +46,6 @@ impl MusicPlayerLauncher {
     }
     fn cache_cover(image: &Bytes, loc: &str) -> Result<(), SherlockError> {
         // Create dir and parents
-
         let home = env::var("HOME").map_err(|e| SherlockError {
             error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
             traceback: e.to_string(),
@@ -159,7 +159,15 @@ impl AudioLauncherFunctions {
         .ok()?;
         let mut names: Vec<String> = proxy.call("ListNames", &()).ok()?;
         names.retain(|n| n.starts_with("org.mpris.MediaPlayer2."));
-        return names.get(0).cloned();
+        let first = names.first().cloned();
+        if let Some(m) = CONFIG.get().and_then(|c| c.default_apps.mpris.as_deref()) {
+            let preffered = names.into_iter().find(|name| name.contains(m));
+            if preffered.is_some(){
+                return preffered;
+            }
+        } 
+        first
+
     }
     pub fn get_metadata(&self, player: &str) -> Option<MusicPlayerLauncher> {
         let proxy = Proxy::new(
