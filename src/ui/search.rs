@@ -449,20 +449,20 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
             let current_text = search_text.borrow().clone();
             let is_home = current_text.is_empty() && mode == "all";
 
-            if item.update(&current_text) {
-                return true;
-            }
-
             if is_home {
                 if home || only_home {
                     return true;
                 }
                 return false;
             } else {
+                let update_res = item.update(&current_text);
+                if only_home {
+                    return false;
+                }
                 let alias = item.alias();
                 let priority = item.priority();
                 if mode != "all" {
-                    if only_home || mode != alias {
+                    if mode != alias {
                         return false;
                     }
                     if current_text.is_empty() {
@@ -475,6 +475,9 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
                     return true;
                 }
 
+                if update_res {
+                    return true;
+                }
                 item.search().fuzzy_match(&current_text)
             }
         }
