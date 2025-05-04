@@ -10,7 +10,7 @@ use super::{
     errors::{SherlockError, SherlockErrorType},
     files::{expand_path, home_dir},
 };
-use crate::loader::Loader;
+use crate::{actions::util::parse_default_browser, loader::Loader};
 
 #[derive(Clone, Debug, Default)]
 pub struct SherlockFlags {
@@ -89,7 +89,7 @@ impl SherlockConfig {
             default_apps: ConfigDefaultApps::default(),
             units: ConfigUnits::default(),
             debug: ConfigDebug::default(),
-            appearance: ConfigAppearance::default(),
+            appearance: ConfigAppearance::with_root(root),
             behavior: ConfigBehavior::default(),
             binds: ConfigBinds::default(),
             files: ConfigFiles::with_root(root),
@@ -389,7 +389,7 @@ impl Default for ConfigDefaultApps {
             teams: default_teams(),
             calendar_client: default_calendar_client(),
             terminal: get_terminal().unwrap_or_default(), // Should never get to this...
-            browser: None,
+            browser: parse_default_browser().ok(),
         }
     }
 }
@@ -457,6 +457,35 @@ pub struct ConfigAppearance {
     pub status_bar: bool,
     #[serde(default = "default_1")]
     pub opacity: f64,
+}
+impl ConfigAppearance {
+    fn with_root(root: &PathBuf)->Self{
+        let mut root = root.clone();
+        if root.ends_with("/") {
+            root.pop();
+        }
+        let root = root.to_str();
+        fn use_root(root: Option<&str>, path: String) -> Option<String> {
+            if let Some(root) = root {
+                Some(format!("{}{}", root, path.trim_start_matches("~/.config/sherlock")))
+            } else {
+                None
+            }
+        }
+        let icon_paths: Vec<String> = default_icon_paths().into_iter().filter_map(|s| use_root(root, s)).collect();
+        Self {
+            width: 900,
+            height: 593, // 617 with, 593 without notification bar
+            gsk_renderer: String::from("cairo"),
+            icon_paths,
+            icon_size: default_icon_size(),
+            search_icon: false,
+            use_base_css: true,
+            status_bar: true,
+            opacity: 1.0,
+        }
+
+    }
 }
 impl Default for ConfigAppearance {
     fn default() -> Self {
