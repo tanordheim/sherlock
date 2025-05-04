@@ -90,6 +90,9 @@ pub enum SherlockErrorType {
     SocketRemoveError(String),
     SocketConnectError(String),
     SocketWriteError(String),
+
+    // Sqlite
+    SqlConnectionError(),
 }
 impl std::fmt::Display for SherlockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -179,6 +182,11 @@ impl SherlockErrorType {
             SherlockErrorType::SocketRemoveError(socket) => socket_msg("close", socket),
             SherlockErrorType::SocketConnectError(socket) => socket_msg("connect", socket),
             SherlockErrorType::SocketWriteError(socket) => socket_msg("send message to", socket),
+
+            // Sqlite
+            SherlockErrorType::SqlConnectionError() => {
+                format!("Failed to estblish database connection.")
+            }
         };
         (variant_name(self), message)
     }

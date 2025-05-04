@@ -459,7 +459,7 @@ pub struct ConfigAppearance {
     pub opacity: f64,
 }
 impl ConfigAppearance {
-    fn with_root(root: &PathBuf)->Self{
+    fn with_root(root: &PathBuf) -> Self {
         let mut root = root.clone();
         if root.ends_with("/") {
             root.pop();
@@ -467,12 +467,19 @@ impl ConfigAppearance {
         let root = root.to_str();
         fn use_root(root: Option<&str>, path: String) -> Option<String> {
             if let Some(root) = root {
-                Some(format!("{}{}", root, path.trim_start_matches("~/.config/sherlock")))
+                Some(format!(
+                    "{}{}",
+                    root,
+                    path.trim_start_matches("~/.config/sherlock")
+                ))
             } else {
                 None
             }
         }
-        let icon_paths: Vec<String> = default_icon_paths().into_iter().filter_map(|s| use_root(root, s)).collect();
+        let icon_paths: Vec<String> = default_icon_paths()
+            .into_iter()
+            .filter_map(|s| use_root(root, s))
+            .collect();
         Self {
             width: 900,
             height: 593, // 617 with, 593 without notification bar
@@ -484,7 +491,6 @@ impl ConfigAppearance {
             status_bar: true,
             opacity: 1.0,
         }
-
     }
 }
 impl Default for ConfigAppearance {

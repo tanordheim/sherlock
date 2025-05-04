@@ -1,8 +1,8 @@
-use lz4_flex::block::decompress_size_prepended;
-use serde_json::Value;
+use rusqlite::Connection;
 use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
+use std::time::SystemTime;
 
 use crate::loader::util::{AppData, RawLauncher};
 use crate::ui::util::truncate_if_needed;
@@ -21,6 +21,7 @@ impl BookmarkLauncher {
         match browser.to_lowercase().as_str() {
             "zen" | "zen-browser" | "/opt/zen-browser-bin/zen-bin %u" => BookmarkParser::zen(raw),
             "brave" | "brave %u" => BookmarkParser::brave(raw),
+            "firefox" => BookmarkParser::firefox(raw),
             _ => {
                 // @BaxoPlenty you can check here what this ↑ should be.
                 println!("{:?}", browser);
@@ -31,7 +32,6 @@ impl BookmarkLauncher {
 }
 
 struct BookmarkParser;
-
 impl BookmarkParser {
     fn chrome_internal(raw: &RawLauncher, data: String) -> Result<HashSet<AppData>, SherlockError> {
         mod parser {
@@ -118,127 +118,135 @@ impl BookmarkParser {
     }
 
     fn zen(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
-        let path = get_path()?;
-
-        let data = fs::read(&path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(path.clone()),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
-
-        if &data[..8] != b"mozLz40\0" {
-            return Err(SherlockError {
-                error: SherlockErrorType::FileReadError(path.clone()),
-                traceback: format!("{}:{}\nInvalid JSONLZ4 header", file!(), line!()),
-            });
-        }
-
-        let decompressed = decompress_size_prepended(&data[8..]).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(path.clone()),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
-
-        let json_value: Value =
-            serde_json::from_slice(&decompressed).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(path.clone()),
-                traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-            })?;
-        let mut bookmarks = HashSet::new();
-        if let Some(children) = json_value["children"].as_array() {
-            for folder in children.iter().skip(1) {
-                extract_bookmarks(&folder, &mut bookmarks, raw);
-            }
-        }
-
-        fn get_path() -> Result<PathBuf, SherlockError> {
-            let zen_root = home_dir()?.join(".zen");
-            let backup_dir = fs::read_dir(&zen_root)
-                .map_err(|e| SherlockError {
-                    error: SherlockErrorType::DirReadError(String::from("~/.zen")),
-                    traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-                })?
+        fn get_path() -> Option<PathBuf> {
+            let zen_root = home_dir().ok()?.join(".zen");
+            fs::read_dir(&zen_root)
+                .ok()?
                 .filter_map(|entry| {
                     let path = entry.ok()?.path();
-                    if path.is_dir() && path.join("bookmarkbackups").exists() {
-                        Some(path.join("bookmarkbackups"))
+                    if path.is_dir() && path.join("places.sqlite").exists() {
+                        Some(path.join("places.sqlite"))
                     } else {
                         None
                     }
                 })
                 .next()
-                .ok_or_else(|| SherlockError {
-                    error: SherlockErrorType::DirReadError(String::from("~/.zen/")),
-                    traceback: format!(
-                        "{}:{}\nFailed to find 'bookmarkbackups' child directory",
-                        file!(),
-                        line!()
-                    ),
-                })?;
-
-            let mut backups: Vec<_> = fs::read_dir(&backup_dir)
-                .map_err(|e| SherlockError {
-                    error: SherlockErrorType::DirReadError(String::from("~/.zen")),
-                    traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-                })?
+        }
+        let path = get_path().ok_or_else(|| SherlockError {
+            error: SherlockErrorType::FileExistError(PathBuf::from("~/.zen/../places.sqlite")),
+            traceback: format!("{}:{}\nFile does not exist.", file!(), line!()),
+        })?;
+        let parser = MozillaSqliteParser::new(path, "zen");
+        parser.read(raw)
+    }
+    fn firefox(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
+        fn get_path() -> Option<PathBuf> {
+            let zen_root = home_dir().ok()?.join(".mozilla/firefox/");
+            fs::read_dir(&zen_root)
+                .ok()?
                 .filter_map(|entry| {
-                    let entry = entry.ok()?;
-                    let path = entry.path();
-                    if path.file_name()?.to_str()?.starts_with("bookmarks-") {
-                        Some((entry.metadata().ok()?.modified().ok()?, path))
+                    let path = entry.ok()?.path();
+                    if path.is_dir() && path.join("places.sqlite").exists() {
+                        Some(path.join("places.sqlite"))
                     } else {
                         None
                     }
                 })
-                .collect();
-
-            backups.sort_by(|a, b| b.0.cmp(&a.0));
-            backups
-                .first()
-                .map(|(_, path)| path.clone())
-                .ok_or_else(|| SherlockError {
-                    error: SherlockErrorType::DirReadError(String::from("~/.zen/")),
-                    traceback: format!("{}:{}\nFailed to find bookmark backups", file!(), line!()),
-                })
+                .next()
         }
-        fn deserialize_bookmark(bookmark: &Value) -> Option<(String, String)> {
-            if let (Some(title), Some(url)) = (bookmark["title"].as_str(), bookmark["uri"].as_str())
-            {
-                return Some((title.to_string(), url.to_string()));
-            }
-            None
-        }
+        let path = get_path().ok_or_else(|| SherlockError {
+            error: SherlockErrorType::FileExistError(PathBuf::from(
+                "~/.mozilla/firefox//../places.sqlite",
+            )),
+            traceback: format!("{}:{}\nFile does not exist.", file!(), line!()),
+        })?;
+        let parser = MozillaSqliteParser::new(path, "zen");
+        parser.read(raw)
+    }
+}
+struct MozillaSqliteParser {
+    path: PathBuf,
+}
+impl MozillaSqliteParser {
+    fn new(file: PathBuf, prefix: &str) -> Self {
+        let home = home_dir().ok();
+        let path: PathBuf = if let Some(home) = home {
+            let target = format!(".cache/sherlock/bookmarks/{}-places.sqlite", prefix);
+            let cache_path = home.join(target);
+            Self::copy_if_needed(&file, &cache_path);
+            cache_path
+        } else {
+            file.to_path_buf()
+        };
+        Self { path }
+    }
+    fn read(&self, raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
+        let mut res: HashSet<AppData> = HashSet::new();
+        let query = "
+            SELECT b.title, p.url
+            FROM moz_bookmarks b
+            JOIN moz_places p ON b.fk = p.id
+            WHERE b.type = 1
+            AND b.title IS NOT NULL
+            AND p.url IS NOT NULL
+            AND b.parent > 6;
+            ";
+        let conn = Connection::open(&self.path).map_err(|e| SherlockError {
+            error: SherlockErrorType::SqlConnectionError(),
+            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
+        })?;
 
-        fn extract_bookmarks(
-            value: &serde_json::Value,
-            out: &mut HashSet<AppData>,
-            raw: &RawLauncher,
-        ) {
-            if let Some(children) = value["children"].as_array() {
-                for child in children {
-                    if let Some((title, url)) = deserialize_bookmark(child) {
-                        if !title.is_empty() {
-                            let bookmark = AppData {
-                                name: title.to_string(),
-                                icon: None,
-                                icon_class: raw
-                                    .args
-                                    .get("icon_class")
-                                    .and_then(|v| v.as_str())
-                                    .map(|s| s.to_string()),
-                                exec: url,
-                                search_string: title,
-                                tag_start: raw.tag_start.clone(),
-                                tag_end: raw.tag_end.clone(),
-                                desktop_file: None,
-                                priority: raw.priority,
-                            };
-                            out.insert(bookmark);
-                        }
-                    } else {
-                        extract_bookmarks(child, out, raw);
-                    }
+        if let Ok(mut stmt) = conn.prepare(query) {
+            let event_iter = stmt.query_map([], |row| {
+                let title: String = row.get(0)?;
+                let url: String = row.get(1)?;
+
+                Ok((title, url))
+            });
+
+            if let Ok(rows) = event_iter {
+                for row in rows.flatten() {
+                    let bookmark = AppData {
+                        name: row.0.to_string(),
+                        icon: None,
+                        icon_class: raw
+                            .args
+                            .get("icon_class")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string()),
+                        exec: row.1,
+                        search_string: row.0,
+                        tag_start: raw.tag_start.clone(),
+                        tag_end: raw.tag_end.clone(),
+                        desktop_file: None,
+                        priority: raw.priority,
+                    };
+                    res.insert(bookmark);
                 }
             }
         }
-        Ok(bookmarks)
+        Ok(res)
+    }
+    fn should_update_cache(path: &PathBuf) -> bool {
+        if !path.exists() {
+            return true;
+        }
+
+        if let Ok(metadata) = fs::metadata(path) {
+            if let Ok(mod_time) = metadata.modified() {
+                if let Ok(age) = SystemTime::now().duration_since(mod_time) {
+                    return age.as_secs() > 1 * 24 * 60 * 60; // older than 2 days
+                }
+            }
+        }
+        true
+    }
+    fn copy_if_needed(src: &PathBuf, dst: &PathBuf) {
+        if Self::should_update_cache(dst) {
+            if let Some(parent) = dst.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            let _ = fs::copy(src, dst);
+        }
     }
 }
