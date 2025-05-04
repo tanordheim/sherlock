@@ -11,6 +11,7 @@ The launcher can be of the following types:<br>
 
 - **[Category Launcher](#category-launcher):** Groups your launchers.
 - **[App Launcher](#app-launcher):** Launches your apps. 
+- **[Bookmark Launcher](#bookmark-launcher):** Finds and launches your browser bookmarks.
 - **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default web browser. The used search engine is configurable and the most common search engines are included. 
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Return, it also copies the result into the clipboard.
 - **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the URL in the default web browser. Also displays hex and rgb colors.
@@ -115,9 +116,42 @@ The launcher can be of the following types:<br>
 }
 ```
 ---
+
+## Bookmark Launcher
+
+<div align="center">
+  <picture>
+    <img alt="web-launcher" width="100%" src="assets/BookmarkTile.svg">
+  </picture>
+</div>
+<br>
+
+```json
+{
+    "name": "Bookmarks",
+        "type": "bookmarks",
+        "args": {
+            "icon": "sherlock-bookmark",
+            "icon_class": "reactive"
+        },
+        "priority": 3,
+        "home": false
+}
+```
+
+### Supported Browsers
+Currently these are the supported launchers. It is beneficiary to set the `browser` key in the `default_apps`section.
+
+| Browser   | Name in `config.toml`                                      |
+|-----------------|------------------------------------------|
+| **Zen Browser**      | `zen`, `zen-browser`, `/opt/zen-browser-bin/zen-bin %u` |
+
+---
+
+
 ## Web Launcher
 
-<div align="center" style="text-align:center; border-radius:10px;">
+<div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
   </picture>
@@ -157,7 +191,7 @@ Can be either of the following:
 | **Custom**      | `https://www.example.com/search={keyword}` |
 
 **`icon`** (required):<br>
-Sets the icon-name the launcher should show. For a guide on how to add your own icons see [!WARNING]
+Sets the icon-name the launcher should show.
 
 ---
 
