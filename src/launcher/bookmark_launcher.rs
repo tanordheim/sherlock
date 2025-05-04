@@ -21,8 +21,10 @@ impl BookmarkLauncher {
             "zen" | "zen-browser" | "/opt/zen-browser-bin/zen-bin %u" => BookmarkParser::zen(raw),
             "brave" | "brave %u" => BookmarkParser::brave(raw),
             "firefox" | "/usr/lib/firefox/firefox %u" => BookmarkParser::firefox(raw),
-            "chrome" | "google-chrome" | "/usr/bin/google-chrome-stable %u"=> BookmarkParser::chrome(raw),
-            "thorium" | "/usr/bin/thorium-browser %u"=> BookmarkParser::thorium(raw),
+            "chrome" | "google-chrome" | "/usr/bin/google-chrome-stable %u" => {
+                BookmarkParser::chrome(raw)
+            }
+            "thorium" | "/usr/bin/thorium-browser %u" => BookmarkParser::thorium(raw),
             _ => {
                 println!("{:?}", browser);
                 Ok(HashSet::new())
@@ -34,8 +36,7 @@ impl BookmarkLauncher {
 struct BookmarkParser;
 impl BookmarkParser {
     fn brave(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
-        let path = home_dir()?
-            .join(".config/BraveSoftware/Brave-Browser/Default/Bookmarks");
+        let path = home_dir()?.join(".config/BraveSoftware/Brave-Browser/Default/Bookmarks");
         let data = fs::read_to_string(&path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileReadError(path),
             traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
@@ -43,18 +44,16 @@ impl BookmarkParser {
 
         ChromeParser::parse(raw, data)
     }
-    fn thorium(raw: &RawLauncher)->Result<HashSet<AppData>, SherlockError>{
-        let path = home_dir()?
-            .join(".config/thorium/Default/Bookmarks");
+    fn thorium(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
+        let path = home_dir()?.join(".config/thorium/Default/Bookmarks");
         let data = fs::read_to_string(&path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileReadError(path),
             traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
         })?;
         ChromeParser::parse(raw, data)
     }
-    fn chrome(raw: &RawLauncher)->Result<HashSet<AppData>, SherlockError>{
-        let path = home_dir()?
-            .join(".config/google-chrome/Default/Bookmarks");
+    fn chrome(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
+        let path = home_dir()?.join(".config/google-chrome/Default/Bookmarks");
         let data = fs::read_to_string(&path).map_err(|e| SherlockError {
             error: SherlockErrorType::FileReadError(path),
             traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),

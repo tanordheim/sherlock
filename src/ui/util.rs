@@ -131,8 +131,8 @@ impl ConfKeys {
                     None
                 }
             })
-        .unwrap_or_else(default_modkey_ascii);
-        
+            .unwrap_or_else(default_modkey_ascii);
+
         let k = match mod_key {
             Some(ModifierType::SHIFT_MASK) => 0,
             Some(ModifierType::LOCK_MASK) => 1,

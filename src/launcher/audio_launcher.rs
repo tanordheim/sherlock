@@ -7,8 +7,8 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use zbus::blocking::{Connection, Proxy};
 
-use crate::CONFIG;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::CONFIG;
 
 use super::utils::MprisData;
 
@@ -162,12 +162,11 @@ impl AudioLauncherFunctions {
         let first = names.first().cloned();
         if let Some(m) = CONFIG.get().and_then(|c| c.default_apps.mpris.as_deref()) {
             let preffered = names.into_iter().find(|name| name.contains(m));
-            if preffered.is_some(){
+            if preffered.is_some() {
                 return preffered;
             }
-        } 
+        }
         first
-
     }
     pub fn get_metadata(&self, player: &str) -> Option<MusicPlayerLauncher> {
         let proxy = Proxy::new(
