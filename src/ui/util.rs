@@ -5,6 +5,7 @@ use gtk4::gdk::{Key, ModifierType};
 use gtk4::{prelude::*, Box as HVBox, Label, SingleSelection};
 
 use crate::g_subclasses::sherlock_row::SherlockRow;
+use crate::utils::config::default_modkey_ascii;
 use crate::CONFIG;
 
 pub trait ShortCut {
@@ -120,14 +121,29 @@ impl ConfKeys {
         }
     }
     fn get_mod_str(mod_key: &Option<ModifierType>) -> String {
+        let strings = CONFIG
+            .get()
+            .and_then(|c| {
+                let s = &c.appearance.mod_key_ascii;
+                if s.len() == 8 {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+        .unwrap_or_else(default_modkey_ascii);
+        
         let k = match mod_key {
-            Some(ModifierType::SHIFT_MASK) | Some(ModifierType::LOCK_MASK) => "⇧",
-            Some(ModifierType::CONTROL_MASK) | Some(ModifierType::META_MASK) => "⌘",
-            Some(ModifierType::ALT_MASK) => "⎇",
-            Some(ModifierType::SUPER_MASK) | Some(ModifierType::HYPER_MASK) => "✦",
-            _ => "⌘",
+            Some(ModifierType::SHIFT_MASK) => 0,
+            Some(ModifierType::LOCK_MASK) => 1,
+            Some(ModifierType::CONTROL_MASK) => 2,
+            Some(ModifierType::META_MASK) => 3,
+            Some(ModifierType::ALT_MASK) => 4,
+            Some(ModifierType::SUPER_MASK) => 5,
+            Some(ModifierType::HYPER_MASK) => 6,
+            _ => 7,
         };
-        k.to_string()
+        strings.get(k).cloned().unwrap_or(String::from("modkey"))
     }
 }
 

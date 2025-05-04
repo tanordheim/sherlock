@@ -457,6 +457,9 @@ pub struct ConfigAppearance {
     pub status_bar: bool,
     #[serde(default = "default_1")]
     pub opacity: f64,
+    #[serde(default = "default_modkey_ascii")]
+    pub mod_key_ascii: Vec<String>,
+
 }
 impl ConfigAppearance {
     fn with_root(root: &PathBuf) -> Self {
@@ -490,6 +493,7 @@ impl ConfigAppearance {
             use_base_css: true,
             status_bar: true,
             opacity: 1.0,
+            mod_key_ascii: default_modkey_ascii()
         }
     }
 }
@@ -505,6 +509,7 @@ impl Default for ConfigAppearance {
             use_base_css: true,
             status_bar: true,
             opacity: 1.0,
+            mod_key_ascii: default_modkey_ascii(),
         }
     }
 }
@@ -669,6 +674,18 @@ pub fn default_icon_paths() -> Vec<String> {
 }
 pub fn default_icon_size() -> i32 {
     22
+}
+pub fn default_modkey_ascii()->Vec<String> {
+    vec![
+        String::from("⇧"), // shift
+        String::from("⇧"), // lock
+        String::from("⌘"), // control
+        String::from("⌘"), // meta
+        String::from("⎇"), // alt
+        String::from("✦"), // super
+        String::from("✦"), // hyper
+        String::from("⌘"), // default
+    ]
 }
 pub fn get_terminal() -> Result<String, SherlockError> {
     let mut terminal = None;

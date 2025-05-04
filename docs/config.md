@@ -35,8 +35,8 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 
 ## Appearance Section `[appearance]`
 
-| **Keyword**     | **Default** | **Explanation**                                                                                                                 |
-|-----------------|-------------|-------------------------------------------------------------------------------------------------------------------------------|
+| **Keyword**     | **Default** | **Explanation** |
+|-----------------|-------------|-------------------------------------------------------------|
 | `width`    | `900`        | Sets the width of the main window.|
 | `height`    | `593`        | Sets the height of the main window. | 
 | `gsk_renderer`  | `"cairo"`   | Specifies the renderer used to display the Sherlock application. During testing, `cairo` showed the fastest startup times. You can also use `ngl`, `gl`, or `vulkan` based on your system's performance. |
@@ -47,6 +47,8 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `use_base_css`    | `true`        | Enables or disables the extension of Sherlock's default style sheet. |
 | `status_bar`    | `true`        | Enables or disables the status bar. |
 | `opacity` | `1.0` | Controls the opacity of the window. Allowed range: `0.1 - 1.0` |
+| `pub mod_key_ascii` | `["⇧", "⇧", "⌘", "⌘", "⎇", "✦", "✦", "⌘"]` | Sets the ascii character for: `Shift`, `Caps Lock`, `Control`, `Meta`, `Alt`, `Super`, `Hyper`, `Fallback` in that order. |
+
 
 ---
 ## Behavior Section `[behavior]`
