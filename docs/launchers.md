@@ -195,13 +195,11 @@ Specifies what the launcher should parse:
 ---
 ## Clipboard Launcher
 
-<div align="center" style="text-align:center; border-radius:10px;">
-  <picture>
+<div align="center" style="text-align:center;">
     <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg">
-  </picture>
-  <picture>
+</div>
+<div align="center" style="text-align:center;">
     <img alt="clipboard-launcher-color" width="100%" src="assets/ClipboardColor.svg">
-  </picture>
 </div>
 
 ```json
