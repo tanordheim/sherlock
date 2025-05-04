@@ -444,8 +444,6 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
         move |entry| {
             let item = entry.downcast_ref::<SherlockRow>().unwrap();
             let (home, only_home) = item.home();
-            let alias = item.alias();
-            let priority = item.priority();
 
             let mode = search_mode.borrow().trim().to_string();
             let current_text = search_text.borrow().clone();
@@ -461,6 +459,8 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
                 }
                 return false;
             } else {
+                let alias = item.alias();
+                let priority = item.priority();
                 if mode != "all" {
                     if only_home || mode != alias {
                         return false;
@@ -485,7 +485,12 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
         let search_text = Rc::clone(search_text);
 
         fn make_prio(prio: f32, edits: usize) -> f32 {
+            if edits == 0 {
+                return prio
+            }
+            // normalize edit distance; higher → lower result
             let normalized = (1000.0 / edits as f32).round() / 1000.0;
+            // shift counts 3 to right; 1.34 → 1.00034 to make room for levenshtein
             let counters = prio.fract() / 1000.0;
             prio.trunc() + 1.0 + counters - normalized.clamp(0.0, 1.0)
         }
