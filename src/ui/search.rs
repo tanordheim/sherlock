@@ -501,7 +501,7 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
             let score = search_score(query, match_in);
             // shift counts 3 to right; 1.34 → 1.00034 to make room for levenshtein
             let counters = prio.fract() / 1000.0;
-            prio.trunc() + 1.0 + counters + score
+            prio.trunc() + (counters + score).min(0.99)
         }
         move |item_a, item_b| {
             let search_text = search_text.borrow();

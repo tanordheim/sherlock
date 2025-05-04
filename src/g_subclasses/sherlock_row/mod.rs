@@ -26,7 +26,7 @@ impl SherlockRow {
         self.imp().shortcut.set(shortcut);
     }
     pub fn set_search(&self, search: &str) {
-        *self.imp().search.borrow_mut() = search.to_string();
+        *self.imp().search.borrow_mut() = search.to_lowercase();
     }
     pub fn set_priority(&self, prio: f32) {
         self.imp().priority.set(prio);
