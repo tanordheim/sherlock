@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 
 use crate::loader::util::{AppData, RawLauncher};
-use crate::ui::util::truncate_if_needed;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::utils::files::home_dir;
 
@@ -75,10 +74,8 @@ impl BookmarkParser {
                 }
                 "url" => {
                     if let Some(url) = bookmark.url {
-                        let name = truncate_if_needed(bookmark.name.clone(), 72);
-
                         bookmarks.insert(AppData {
-                            name: name.clone(),
+                            name: bookmark.name.clone(),
                             icon: None,
                             icon_class: raw
                                 .args
@@ -189,7 +186,7 @@ impl MozillaSqliteParser {
             WHERE b.type = 1
             AND b.title IS NOT NULL
             AND p.url IS NOT NULL
-            AND b.parent > 6;
+            AND b.parent != 7;
             ";
         let conn = Connection::open(&self.path).map_err(|e| SherlockError {
             error: SherlockErrorType::SqlConnectionError(),
