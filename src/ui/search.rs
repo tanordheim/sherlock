@@ -474,7 +474,7 @@ fn make_filter(search_text: &Rc<RefCell<String>>, mode: &Rc<RefCell<String>>) ->
                 }
 
                 if update_res {
-                    return true
+                    return true;
                 }
                 item.search().fuzzy_match(&current_text)
             }
