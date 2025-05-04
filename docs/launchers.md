@@ -51,7 +51,7 @@ The launcher can be of the following types:<br>
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="category-launcher" width="100%" style="border-radius: 10px;" src="assets/CategoryTile.svg">
+    <img alt="category-launcher" width="100%" src="assets/CategoryTile.svg">
   </picture>
 </div>
 
@@ -98,7 +98,7 @@ The launcher can be of the following types:<br>
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="app-launcher" width="100%" style="border-radius: 10px;" src="assets/AppTile.svg">
+    <img alt="app-launcher" width="100%" src="assets/AppTile.svg">
   </picture>
 </div>
 
@@ -117,7 +117,7 @@ The launcher can be of the following types:<br>
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="web-launcher" width="100%" style="border-radius: 10px;" src="assets/BrowserTile.svg">
+    <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
   </picture>
 </div>
 
@@ -162,10 +162,10 @@ Sets the icon-name the launcher should show. For a guide on how to add your own 
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="calc-launcher-math" width="100%" style="border-radius: 10px;" src="assets/CalcTile.svg">
+    <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
   </picture>
   <picture>
-    <img alt="calc-launcher-unit" width="100%" style="border-radius: 10px;" src="assets/CalcTileUnit.svg">
+    <img alt="calc-launcher-unit" width="100%" src="assets/CalcTileUnit.svg">
   </picture>
 </div>
 
@@ -197,10 +197,10 @@ Specifies what the launcher should parse:
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="clipboard-launcher-url" width="100%" style="border-radius: 10px;" src="assets/ClipboardLink.svg">
+    <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg">
   </picture>
   <picture>
-    <img alt="clipboard-launcher-color" width="100%" style="border-radius: 10px;" src="assets/ClipboardColor.svg">
+    <img alt="clipboard-launcher-color" width="100%" src="assets/ClipboardColor.svg">
   </picture>
 </div>
 
@@ -324,7 +324,7 @@ Has following fields of its own:
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="bulk-text-launcher" width="100%" style="border-radius: 10px;" src="assets/BulkText.svg">
+    <img alt="bulk-text-launcher" width="100%" src="assets/BulkText.svg">
   </picture>
 </div>
 
@@ -361,7 +361,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="teams-event-launcher" width="100%" style="border-radius: 10px;" src="assets/TeamsTile.svg">
+    <img alt="teams-event-launcher" width="100%" src="assets/TeamsTile.svg">
   </picture>
 </div>
 
@@ -400,7 +400,7 @@ Specifies the second offset from the `date` parameter.<br>
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="music-launcher" width="100%" style="border-radius: 10px;" src="assets/MprisTile.svg">
+    <img alt="music-launcher" width="100%" src="assets/MprisTile.svg">
   </picture>
 </div>
 
@@ -427,7 +427,7 @@ None
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="process-terminator-launcher" width="100%" style="border-radius: 10px;" src="assets/ProcessTerminator.svg">
+    <img alt="process-terminator-launcher" width="100%" src="assets/ProcessTerminator.svg">
   </picture>
 </div>
 
@@ -452,7 +452,7 @@ None
 
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
-    <img alt="weather-launcher" width="100%" style="border-radius: 10px;" src="assets/WeatherWidget.svg">
+    <img alt="weather-launcher" width="100%" src="assets/WeatherWidget.svg">
   </picture>
 </div>
 
