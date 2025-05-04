@@ -12,6 +12,7 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `terminal`        | Automatically detected | May be required if the `TERMINAL` environment variable is not set. Specify the executable name of your terminal (e.g., `"gnome-terminal"`, `"konsole"`). |
 | `teams`        | `teams-for-linux --enable-features=UseOzonePlatform --ozone-platform=wayland --url {meeting_url}` | Only required for the teams-event tile to automatically enter a teams meeting. The `{meeting_url}` will be replaced by the actual teams meeting URL. |
 | `calendar_client`        | `thunderbird` | Sets your calendar client used in event tiles. Currently only thunderbird is supported. |
+| `mpris`        | `None` | Sets your preffered mpris device. When multiple devices are active, it will select `mpris`. Otherwise, it will select the first device. |
 
 ---
 ## Units Section `[units]`
