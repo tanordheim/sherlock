@@ -71,7 +71,7 @@ impl Tile {
                         title
                             .as_ref()
                             .and_then(|tmp| tmp.upgrade())
-                            .map(|title| title.set_markup(&tile_name));
+                            .map(|title| title.set_text(&tile_name));
 
                         category.as_ref().and_then(|tmp| tmp.upgrade()).map(|cat| {
                             if let Some(name) = &launcher.name {

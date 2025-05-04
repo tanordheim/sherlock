@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use crate::loader::util::AppData;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::utils::files::home_dir;
 
 #[derive(Clone, Debug)]
 pub struct BookmarkLauncher {
@@ -27,28 +28,28 @@ impl BookmarkLauncher {
 struct BookmarkParser;
 impl BookmarkParser {
     fn zen(prio: f32) -> Result<HashSet<AppData>, SherlockError> {
-        let path = "/home/basti/.zen/c8yxxptw.Default (release)/bookmarkbackups/bookmarks-2025-05-04_67_ZUtc1iq1cN2vI-qhCjIXNoSsj74LZxBh6mN54Kpbcj4=.jsonlz4";
+        let path = get_path()?;
 
-        let data = fs::read(path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(PathBuf::from(path)),
+        let data = fs::read(&path).map_err(|e| SherlockError {
+            error: SherlockErrorType::FileReadError(path.clone()),
             traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
         })?;
 
         if &data[..8] != b"mozLz40\0" {
             return Err(SherlockError {
-                error: SherlockErrorType::FileReadError(PathBuf::from(path)),
+                error: SherlockErrorType::FileReadError(path.clone()),
                 traceback: format!("{}:{}\nInvalid JSONLZ4 header", file!(), line!()),
             });
         }
 
         let decompressed = decompress_size_prepended(&data[8..]).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(PathBuf::from(path)),
+            error: SherlockErrorType::FileReadError(path.clone()),
             traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
         })?;
 
         let json_value: Value =
             serde_json::from_slice(&decompressed).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(PathBuf::from(path)),
+                error: SherlockErrorType::FileParseError(path.clone()),
                 traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
             })?;
         let mut bookmarks = HashSet::new();
@@ -58,6 +59,56 @@ impl BookmarkParser {
             }
         }
 
+        fn get_path() -> Result<PathBuf, SherlockError> {
+            let zen_root = home_dir()?.join(".zen");
+            let backup_dir = fs::read_dir(&zen_root)
+                .map_err(|e| SherlockError {
+                    error: SherlockErrorType::DirReadError(String::from("~/.zen")),
+                    traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
+                })?
+                .filter_map(|entry| {
+                    let path = entry.ok()?.path();
+                    if path.is_dir() && path.join("bookmarkbackups").exists() {
+                        Some(path.join("bookmarkbackups"))
+                    } else {
+                        None
+                    }
+                })
+                .next()
+                .ok_or_else(|| SherlockError {
+                    error: SherlockErrorType::DirReadError(String::from("~/.zen/")),
+                    traceback: format!(
+                        "{}:{}\nFailed to find 'bookmarkbackups' child directory",
+                        file!(),
+                        line!()
+                    ),
+                })?;
+
+            let mut backups: Vec<_> = fs::read_dir(&backup_dir)
+                .map_err(|e| SherlockError {
+                    error: SherlockErrorType::DirReadError(String::from("~/.zen")),
+                    traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
+                })?
+                .filter_map(|entry| {
+                    let entry = entry.ok()?;
+                    let path = entry.path();
+                    if path.file_name()?.to_str()?.starts_with("bookmarks-") {
+                        Some((entry.metadata().ok()?.modified().ok()?, path))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            backups.sort_by(|a, b| b.0.cmp(&a.0));
+            backups
+                .first()
+                .map(|(_, path)| path.clone())
+                .ok_or_else(|| SherlockError {
+                    error: SherlockErrorType::DirReadError(String::from("~/.zen/")),
+                    traceback: format!("{}:{}\nFailed to find bookmark backups", file!(), line!()),
+                })
+        }
         fn deserialize_bookmark(bookmark: &Value) -> Option<(String, String)> {
             if let (Some(title), Some(url)) = (bookmark["title"].as_str(), bookmark["uri"].as_str())
             {
