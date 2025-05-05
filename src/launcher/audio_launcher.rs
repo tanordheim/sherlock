@@ -46,10 +46,12 @@ impl MusicPlayerLauncher {
     }
     fn cache_cover(image: &Bytes, loc: &str) -> Result<(), SherlockError> {
         // Create dir and parents
-        let home = env::var("HOME").map_err(|e| sherlock_error!(
-            SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-            &e.to_string()
-        ))?;
+        let home = env::var("HOME").map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+                &e.to_string()
+            )
+        })?;
 
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".cache/sherlock/mpris-cache/").join(loc);
@@ -67,75 +69,86 @@ impl MusicPlayerLauncher {
         } else {
             File::create(&path)
         }
-        .map_err(|e| sherlock_error!(
-            SherlockErrorType::FileExistError(path.clone()),
-            &e.to_string()
-        ))?;
+        .map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileExistError(path.clone()),
+                &e.to_string()
+            )
+        })?;
 
-        file.write_all(&image).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileExistError(path.clone()),
-            &e.to_string()
-        ))?;
+        file.write_all(&image).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileExistError(path.clone()),
+                &e.to_string()
+            )
+        })?;
         // if file not exist, create and write it
         Ok(())
     }
     fn read_cached_cover(loc: &str) -> Result<Bytes, SherlockError> {
-        let home = env::var("HOME").map_err(|e| sherlock_error!(
-            SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-            &e.to_string()
-        ))?;
+        let home = env::var("HOME").map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+                &e.to_string()
+            )
+        })?;
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".cache/sherlock/mpris-cache/").join(loc);
 
-        let mut file = File::open(&path).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileExistError(path.clone()),
-            &e.to_string()
-        ))?;
+        let mut file = File::open(&path).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileExistError(path.clone()),
+                &e.to_string()
+            )
+        })?;
         let mut buffer = vec![];
-        file.read_to_end(&mut buffer).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileReadError(path.clone()),
-            &e.to_string()
-        ))?;
+        file.read_to_end(&mut buffer).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileReadError(path.clone()),
+                &e.to_string()
+            )
+        })?;
         Ok(buffer.into())
     }
     fn read_image_file(loc: &str) -> Result<Bytes, SherlockError> {
         let path = PathBuf::from(loc.trim_start_matches("file://"));
 
-        let mut file = File::open(&path).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileExistError(path.clone()),
-            &e.to_string()
-        ))?;
+        let mut file = File::open(&path).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileExistError(path.clone()),
+                &e.to_string()
+            )
+        })?;
         let mut buffer = vec![];
-        file.read_to_end(&mut buffer).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileReadError(path.clone()),
-            &e.to_string()
-        ))?;
+        file.read_to_end(&mut buffer).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileReadError(path.clone()),
+                &e.to_string()
+            )
+        })?;
         Ok(buffer.into())
     }
     pub fn playpause(player: &str) -> Result<(), SherlockError> {
-        let conn = Connection::session().map_err(|e| sherlock_error!(
-            SherlockErrorType::DBusConnectionError,
-            &e.to_string()
-        ))?;
+        let conn = Connection::session()
+            .map_err(|e| sherlock_error!(SherlockErrorType::DBusConnectionError, &e.to_string()))?;
         let proxy = Proxy::new(
             &conn,
             player,
             "/org/mpris/MediaPlayer2",
             "org.mpris.MediaPlayer2.Player",
         )
-        .map_err(|e| sherlock_error!(
-            SherlockErrorType::DBusMessageConstructError(format!(
-                "PlayPause for {}",
-                player
-            )),
-            &e.to_string()
-        ))?;
-        proxy
-            .call_method("PlayPause", &())
-            .map_err(|e| sherlock_error!(
+        .map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::DBusMessageConstructError(format!("PlayPause for {}", player)),
+                &e.to_string()
+            )
+        })?;
+        proxy.call_method("PlayPause", &()).map_err(|e| {
+            sherlock_error!(
                 SherlockErrorType::DBusMessageSendError(format!("PlayPause to {}", player)),
                 &e.to_string()
-            ))?;
+            )
+        })?;
         Ok(())
     }
 }

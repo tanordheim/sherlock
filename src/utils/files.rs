@@ -35,9 +35,11 @@ pub fn expand_path(path: &Path, home: &Path) -> PathBuf {
 }
 pub fn home_dir() -> Result<PathBuf, SherlockError> {
     env::var("HOME")
-        .map_err(|e| sherlock_error!(
-            SherlockErrorType::EnvVarNotFoundError(String::from("HOME")),
-            e.to_string()
-        ))
+        .map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::EnvVarNotFoundError(String::from("HOME")),
+                e.to_string()
+            )
+        })
         .map(PathBuf::from)
 }

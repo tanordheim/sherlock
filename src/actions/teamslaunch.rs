@@ -3,8 +3,11 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::{sherlock_error, utils::errors::{SherlockError, SherlockErrorType}};
 use crate::CONFIG;
+use crate::{
+    sherlock_error,
+    utils::errors::{SherlockError, SherlockErrorType},
+};
 
 pub fn teamslaunch(meeting_url: &str) -> Result<(), SherlockError> {
     if let Some(c) = CONFIG.get() {
@@ -15,8 +18,8 @@ pub fn teamslaunch(meeting_url: &str) -> Result<(), SherlockError> {
 
         if parts.is_empty() {
             return Err(sherlock_error!(
-                    SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
-                    "Command is empty"
+                SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
+                "Command is empty"
             ));
         }
 
@@ -39,16 +42,18 @@ pub fn teamslaunch(meeting_url: &str) -> Result<(), SherlockError> {
                 });
         }
 
-        let _output = command.spawn().map_err(|e| sherlock_error!(
+        let _output = command.spawn().map_err(|e| {
+            sherlock_error!(
                 SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
                 &e.to_string()
-        ))?;
+            )
+        })?;
 
         Ok(())
     } else {
         Err(sherlock_error!(
-                SherlockErrorType::ConfigError(None),
-                "It should never get to this"
+            SherlockErrorType::ConfigError(None),
+            "It should never get to this"
         ))
     }
 }
