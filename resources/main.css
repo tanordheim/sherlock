@@ -77,6 +77,9 @@ listview,
 window {
     background: hsl(var(--background));
 }
+#backdrop{
+    background: black;
+}
 
 
 label {
@@ -84,7 +87,7 @@ label {
 }
 
 
-window {
+window:not(#backdrop) {
     color: hsl(var(--text));
     border-radius: 5px;
     border: 2px solid hsl(var(--border));

@@ -59,13 +59,15 @@ async fn main() {
         non_breaking.extend(n);
 
         // Main logic for the Search-View
-        let (window, stack, current_stack_page) = ui::window::window(app);
+        let (window, stack, current_stack_page, open_win) = ui::window::window(app);
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
 
         // Significantly better id done here
-        let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+        if let Some(window) = open_win.upgrade(){
+            let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+        }
 
         // Either show user-specified content or show normal search
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
@@ -128,8 +130,10 @@ async fn main() {
         if let Some(c) = CONFIG.get() {
             if c.behavior.daemonize {
                 // Used to cache render
-                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+                if let Some(window) = open_win.upgrade() {
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+                }
 
                 window.connect_show({
                     move |_window|{
@@ -144,11 +148,14 @@ async fn main() {
                 });
 
                 // Handle receiving using pipline
+                let open_win_clone = open_win.clone();
                 MainContext::default().spawn_local(async move {
                     while let Ok(_msg) = receiver.recv().await {
-                        let _ = gtk4::prelude::WidgetExt::activate_action(
-                            &window, "win.open", None,
-                        );
+                        if let Some(window) = open_win_clone.upgrade() {
+                            let _ = gtk4::prelude::WidgetExt::activate_action(
+                                &window, "win.open", None,
+                            );
+                        }
                     }
                 });
             }

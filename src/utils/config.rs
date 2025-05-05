@@ -473,6 +473,10 @@ pub struct ConfigAppearance {
     pub opacity: f64,
     #[serde(default = "default_modkey_ascii")]
     pub mod_key_ascii: Vec<String>,
+    #[serde(default)]
+    pub backdrop: bool,
+    #[serde(default = "default_backdrop_opacity")]
+    pub backdrop_opacity: f64,
 }
 impl ConfigAppearance {
     fn with_root(root: &PathBuf) -> Self {
@@ -507,6 +511,8 @@ impl ConfigAppearance {
             status_bar: true,
             opacity: 1.0,
             mod_key_ascii: default_modkey_ascii(),
+            backdrop: false,
+            backdrop_opacity: default_backdrop_opacity(),
         }
     }
 }
@@ -523,6 +529,8 @@ impl Default for ConfigAppearance {
             status_bar: true,
             opacity: 1.0,
             mod_key_ascii: default_modkey_ascii(),
+            backdrop: false,
+            backdrop_opacity: default_backdrop_opacity(),
         }
     }
 }
@@ -681,6 +689,9 @@ pub fn default_true() -> bool {
 }
 pub fn default_1() -> f64 {
     1.0
+}
+pub fn default_backdrop_opacity() -> f64 {
+    0.6
 }
 pub fn default_icon_paths() -> Vec<String> {
     vec![String::from("~/.config/sherlock/icons/")]
