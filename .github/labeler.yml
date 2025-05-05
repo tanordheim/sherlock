@@ -14,7 +14,7 @@ nix-os:
   - "(nix|nixos|nix-os)"
 
 installation:
-  - "(package manager|dependency|install|installation|config)"
+  - "(package manager|dependency|install|installation)"
 
 question:
   - "(question|help|how to|need help|issue details)"
