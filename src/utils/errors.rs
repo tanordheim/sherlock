@@ -19,7 +19,7 @@ impl SherlockError {
     pub fn new<T: AsRef<str>>(error: SherlockErrorType, source: T, file: &str, line: u32) -> Self {
         Self {
             error,
-            traceback: format!("{}:{}\n{}", file, line, source.as_ref()),
+            traceback: format!("Location: {}:{}\n\n{}", file, line, source.as_ref()),
         }
     }
     pub fn tile(&self, tile_type: &str) -> SherlockRow {
