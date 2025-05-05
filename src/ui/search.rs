@@ -18,8 +18,12 @@ use std::rc::Rc;
 
 use super::tiles::util::SherlockSearch;
 use super::util::*;
-use crate::CONFIG;
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::Loader};
+use crate::{
+    sherlock_error,
+    utils::errors::{SherlockError, SherlockErrorType},
+    CONFIG,
+};
 
 #[derive(Clone, Debug)]
 pub struct SearchHandler {
@@ -152,9 +156,9 @@ pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
     error_model: WeakRef<ListStore>,
-) -> (GtkBox, SearchHandler) {
+) -> Result<(GtkBox, SearchHandler), SherlockError> {
     // Initialize the view to show all apps
-    let (search_query, mode, stack_page, ui, handler) = construct_window(error_model);
+    let (search_query, mode, stack_page, ui, handler) = construct_window(error_model)?;
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
@@ -285,24 +289,27 @@ pub fn search(
         .build();
     window.add_action_entries([mode_action, action_clear_win, action_spinner]);
 
-    return (stack_page, handler);
+    return Ok((stack_page, handler));
 }
 
 fn construct_window(
     error_model: WeakRef<ListStore>,
-) -> (
-    Rc<RefCell<String>>,
-    Rc<RefCell<String>>,
-    GtkBox,
-    SearchUI,
-    SearchHandler,
-) {
+) -> Result<
+    (
+        Rc<RefCell<String>>,
+        Rc<RefCell<String>>,
+        GtkBox,
+        SearchUI,
+        SearchHandler,
+    ),
+    SherlockError,
+> {
     // Collect Modes
     let custom_binds = ConfKeys::new();
-    let original_mode = CONFIG
+    let config = CONFIG
         .get()
-        .and_then(|c| c.behavior.sub_menu.as_deref())
-        .unwrap_or("all");
+        .ok_or_else(|| sherlock_error!(SherlockErrorType::ConfigError(None), ""))?;
+    let original_mode = config.behavior.sub_menu.as_deref().unwrap_or("all");
     let mode = Rc::new(RefCell::new(original_mode.to_string()));
     let search_text = Rc::new(RefCell::new(String::from("")));
 
@@ -318,14 +325,16 @@ fn construct_window(
     search_icon_holder.add_css_class("search");
     // Create the search icon
     let search_icon = Image::new();
-    search_icon.set_icon_name(Some("system-search-symbolic"));
+    search_icon.set_icon_name(Some(&config.appearance.search_bar_icon));
     search_icon.set_widget_name("search-icon");
     search_icon.set_halign(gtk4::Align::End);
+    search_icon.set_pixel_size(config.appearance.search_icon_size);
     // Create the back arrow
     let search_icon_back = Image::new();
-    search_icon_back.set_icon_name(Some("go-previous-symbolic"));
+    search_icon_back.set_icon_name(Some(&config.appearance.search_bar_icon_back));
     search_icon_back.set_widget_name("search-icon-back");
     search_icon_back.set_halign(gtk4::Align::End);
+    search_icon_back.set_pixel_size(config.appearance.search_icon_size);
     // Set search icons
     let overlay = Overlay::new();
     overlay.set_child(Some(&search_icon));
@@ -420,7 +429,7 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (search_text, mode, vbox, ui, handler)
+    Ok((search_text, mode, vbox, ui, handler))
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
