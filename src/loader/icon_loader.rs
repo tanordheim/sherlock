@@ -14,7 +14,7 @@ impl Loader {
                 .map_err(|e| {
                     non_breaking.push(sherlock_error!(
                         SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-                        &e.to_string()
+                        e.to_string()
                     ));
                 })
                 .ok();

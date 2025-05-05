@@ -30,7 +30,7 @@ impl ProcessLauncher {
             kill(child, Signal::SIGKILL).map_err(|e| {
                 sherlock_error!(
                     SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", child)),
-                    &e.to_string()
+                    e.to_string()
                 )
             })?;
         };
@@ -38,7 +38,7 @@ impl ProcessLauncher {
         kill(parent, Signal::SIGKILL).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", parent)),
-                &e.to_string()
+                e.to_string()
             )
         })
     }

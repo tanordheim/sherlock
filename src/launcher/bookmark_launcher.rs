@@ -39,20 +39,20 @@ impl BookmarkParser {
     fn brave(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/BraveSoftware/Brave-Browser/Default/Bookmarks");
         let data = fs::read_to_string(&path)
-            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), &e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), e.to_string()))?;
 
         ChromeParser::parse(raw, data)
     }
     fn thorium(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/thorium/Default/Bookmarks");
         let data = fs::read_to_string(&path)
-            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), &e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), e.to_string()))?;
         ChromeParser::parse(raw, data)
     }
     fn chrome(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/google-chrome/Default/Bookmarks");
         let data = fs::read_to_string(&path)
-            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), &e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::FileReadError(path), e.to_string()))?;
         ChromeParser::parse(raw, data)
     }
 
@@ -135,7 +135,7 @@ impl MozillaSqliteParser {
             AND b.parent != 7;
             ";
         let conn = Connection::open(&self.path).map_err(|e| {
-            sherlock_error!(SherlockErrorType::SqlConnectionError(), &e.to_string())
+            sherlock_error!(SherlockErrorType::SqlConnectionError(), e.to_string())
         })?;
 
         if let Ok(mut stmt) = conn.prepare(query) {
@@ -216,7 +216,7 @@ impl ChromeParser {
 
         let mut bookmarks = HashSet::new();
         let file = serde_json::from_str::<parser::ChromeFile>(&data)
-            .map_err(|e| sherlock_error!(SherlockErrorType::FlagLoadError, &e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::FlagLoadError, e.to_string()))?;
 
         fn process_bookmark(
             raw: &RawLauncher,

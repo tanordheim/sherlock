@@ -57,10 +57,10 @@ fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), Sh
             });
     }
 
-    command.spawn().map_err(|e| SherlockError {
-        error: SherlockErrorType::CommandExecutionError(cmd.to_string()),
-        traceback: e.to_string(),
-    })?;
+    command.spawn().map_err(|e| sherlock_error!(
+        SherlockErrorType::CommandExecutionError(cmd.to_string()),
+        e.to_string()
+    ))?;
 
     Ok(())
 }

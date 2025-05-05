@@ -13,7 +13,7 @@ use crate::{sherlock_error, CONFIG};
 
 pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {
     let mut ctx = ClipboardContext::new()
-        .map_err(|e| sherlock_error!(SherlockErrorType::ClipboardError, &e.to_string()))?;
+        .map_err(|e| sherlock_error!(SherlockErrorType::ClipboardError, e.to_string()))?;
 
     let _ = ctx.set_contents(string.to_string());
     Ok(())
@@ -21,7 +21,7 @@ pub fn copy_to_clipboard(string: &str) -> Result<(), SherlockError> {
 //TODO: takes 2.9ms/1.6ms - how to improve
 pub fn read_from_clipboard() -> Result<String, SherlockError> {
     let mut ctx = ClipboardContext::new()
-        .map_err(|e| sherlock_error!(SherlockErrorType::ClipboardError, &e.to_string()))?;
+        .map_err(|e| sherlock_error!(SherlockErrorType::ClipboardError, e.to_string()))?;
     Ok(ctx.get_contents().unwrap_or_default().trim().to_string())
 }
 
@@ -34,7 +34,7 @@ pub fn clear_cached_files() -> Result<(), SherlockError> {
     fs::remove_dir_all(home.join(".cache/sherlock")).map_err(|e| {
         sherlock_error!(
             SherlockErrorType::DirRemoveError(String::from("~/.cache/sherlock")),
-            &e.to_string()
+            e.to_string()
         )
     })?;
 
@@ -42,7 +42,7 @@ pub fn clear_cached_files() -> Result<(), SherlockError> {
     fs::remove_file(&config.behavior.cache).map_err(|e| {
         sherlock_error!(
             SherlockErrorType::FileRemoveError(config.behavior.cache.clone()),
-            &e.to_string()
+            e.to_string()
         )
     })?;
 
@@ -54,7 +54,7 @@ pub fn reset_app_counter() -> Result<(), SherlockError> {
     fs::remove_file(home.join(".sherlock/counts.json")).map_err(|e| {
         sherlock_error!(
             SherlockErrorType::FileRemoveError(home.join(".sherlock/counts.json")),
-            &e.to_string()
+            e.to_string()
         )
     })
 }
@@ -67,7 +67,7 @@ pub fn parse_default_browser() -> Result<String, SherlockError> {
         .map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::EnvVarNotFoundError(String::from("default browser")),
-                &e.to_string()
+                e.to_string()
             )
         })?;
 
@@ -95,7 +95,7 @@ pub fn parse_default_browser() -> Result<String, SherlockError> {
         .map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileReadError(browser_file.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?
         .filter_map(Result::ok)

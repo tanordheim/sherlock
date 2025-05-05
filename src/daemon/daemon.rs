@@ -45,7 +45,7 @@ impl SherlockDaemon {
         std::fs::remove_file(&self.socket).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketRemoveError(self.socket.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         Ok(())
@@ -54,13 +54,13 @@ impl SherlockDaemon {
         let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         stream.write_all(b"show").map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
 
