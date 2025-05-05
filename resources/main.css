@@ -508,65 +508,22 @@ row:selected .tile{
 
 
 
-
-
-
 /*WEATHER CLASSES*/
-.tile.weather-tile label
-{
-    color: hsl(var(--text));
-}
-.tile.weather-tile.weather-clear {
-    background: var(--weather-clear); /* Light sky blue */
-}
+/* Weather Types */
+.tile.weather-tile.weather-clear                   { background: var(--weather-clear); }
+.tile.weather-tile.weather-few-clouds             { background: var(--weather-few-clouds); }
+.tile.weather-tile.weather-many-clouds            { background: var(--weather-many-clouds); }
+.tile.weather-tile.weather-mist                   { background: var(--weather-mist); }
+.tile.weather-tile.weather-showers                { background: var(--weather-showers); }
+.tile.weather-tile.weather-freezing-scattered-rain-storm { background: var(--weather-freezing-scattered-rain-storm); }
+.tile.weather-tile.weather-freezing-scattered-rain { background: var(--weather-freezing-scattered-rain); }
+.tile.weather-tile.weather-snow-scattered-day     { background: var(--weather-snow-scattered-day); }
+.tile.weather-tile.weather-storm                  { background: var(--weather-storm); }
+.tile.weather-tile.weather-snow-storm             { background: var(--weather-snow-storm); }
+.tile.weather-tile.weather-snow-scattered-storm   { background: var(--weather-snow-scattered-storm); }
+.tile.weather-tile.weather-showers-scattered      { background: var(--weather-showers-scattered); }
+.tile.weather-tile.weather-none-available         { background: hsl(var(--weather-none-available)); }
 
-.tile.weather-tile.weather-few-clouds {
-    background: var(--weather-few-clouds); /* Very light */
-}
-
-.tile.weather-tile.weather-many-clouds {
-    background: var(--weather-many-clouds); /* Medium-light */
-}
-
-.tile.weather-tile.weather-mist {
-    background: var(--weather-mist); /* Light beige */
-}
-
-.tile.weather-tile.weather-showers {
-    background: var(--weather-showers); /* Medium-dark blue */
-}
-
-.tile.weather-tile.weather-freezing-scattered-rain-storm {
-    background: var(--weather-freezing-scattered-rain-storm);
-}
-
-.tile.weather-tile.weather-freezing-scattered-rain {
-    background: var(--weather-freezing-scattered-rain);
-}
-
-.tile.weather-tile.weather-snow-scattered-day {
-    background: var(--weather-snow-scattered-day);
-}
-
-.tile.weather-tile.weather-storm {
-    background: var(--weather-storm); /* Very dark */
-}
-
-.tile.weather-tile.weather-snow-storm {
-    background: var(--weather-snow-storm); /* Light */
-}
-
-.tile.weather-tile.weather-snow-scattered-storm {
-    background: var(--weather-snow-scattered-storm); /* Still light */
-}
-
-.tile.weather-tile.weather-showers-scattered {
-    background: var(--weather-showers-scattered);
-}
-
-.tile.weather-tile.weather-none-available {
-    background: hsl(var(--weather-none-available)); /* Neutral gray */
-}
 
 
 
