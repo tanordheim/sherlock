@@ -95,7 +95,7 @@ impl Tile {
     ) -> Vec<SherlockRow> {
         let mut results: Vec<SherlockRow> = Vec::with_capacity(1);
         let mut is_valid = false;
-        let clipboard_content = &clp.clipboard_content;
+        let mut clipboard_content: String = clp.clipboard_content.clone();
         let capabilities: HashSet<&str> = match &clp.capabilities {
             Some(c) => c.iter().map(|s| s.as_str()).collect(),
             _ => HashSet::from(["url", "calc.math", "calc.units", "colors.all"]),
@@ -120,12 +120,11 @@ impl Tile {
             let url_re = Regex::new(url_raw).unwrap();
             let color_re = Regex::new(color_raw).unwrap();
             if capabilities.contains("url") {
-                if let Some(captures) = url_re.captures(clipboard_content) {
+                if let Some(captures) = url_re.captures(&clipboard_content) {
                     if let Some(main_domain) = captures.get(3) {
                         // setting up builder
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
-                        builder.object.set_spawn_focus(launcher.spawn_focus);
-                        builder.object.set_shortcut(launcher.shortcut);
+                        builder.object.with_launcher(launcher);
 
                         is_valid = true;
                         method = "web_launcher";
@@ -135,13 +134,14 @@ impl Tile {
                 };
             };
             if !is_valid {
-                if let Some(captures) = color_re.captures(clipboard_content) {
+                if let Some(captures) = color_re.captures(&clipboard_content) {
                     // Groups: 2: RGB, 3: HSL, 4: HEX
                     let rgb = if let Some(rgb) = captures.get(2) {
+                        println!("{:?}", rgb);
                         if capabilities.contains("colors.rgb")
                             || capabilities.contains("colors.all")
                         {
-                            Some(RGB::from_str(rgb.as_str()))
+                            Some((RGB::from_str(rgb.as_str()), format!("rbg({})", rgb.as_str().trim())))
                         } else {
                             None
                         }
@@ -165,7 +165,7 @@ impl Tile {
                                         tmp = 0;
                                     }
                                 });
-                            Some(RGB::from_hsl(res))
+                            Some((RGB::from_hsl(res), format!("hsl({})", hsl.as_str().trim())))
                         } else {
                             None
                         }
@@ -173,7 +173,7 @@ impl Tile {
                         if capabilities.contains("colors.hex")
                             || capabilities.contains("colors.all")
                         {
-                            Some(RGB::from_hex(hex.as_str()))
+                            Some((RGB::from_hex(hex.as_str()), format!("#{}", hex.as_str().trim())))
                         } else {
                             None
                         }
@@ -181,10 +181,11 @@ impl Tile {
                         None
                     };
 
-                    if let Some(rgb) = rgb {
+                    if let Some((rgb, raw)) = rgb {
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                         builder.object.with_launcher(launcher);
-                        builder.object.set_search(clipboard_content);
+                        builder.object.set_search(&raw);
+                        clipboard_content = raw;
 
                         let pix_buf = rgb.to_vec();
                         let image_buf = gdk::gdk_pixbuf::Pixbuf::from_bytes(
@@ -228,7 +229,7 @@ impl Tile {
                 let mut calc_tile = Tile::calc_tile(launcher, calc);
                 if calc_tile.len() >= 1 {
                     let tile = calc_tile.remove(0);
-                    if tile.update(clipboard_content) {
+                    if tile.update(&clipboard_content) {
                         tile.set_only_home(true);
                         results.push(tile)
                     }
@@ -259,12 +260,12 @@ impl Tile {
                     .title
                     .as_ref()
                     .and_then(|tmp| tmp.upgrade())
-                    .map(|title| title.set_text(clipboard_content));
+                    .map(|title| title.set_text(&clipboard_content));
 
                 // Add action capabilities
                 let attrs = get_attrs_map(vec![
                     ("method", method),
-                    ("keyword", clipboard_content),
+                    ("keyword", &clipboard_content),
                     ("engine", "plain"),
                 ]);
 
@@ -276,8 +277,6 @@ impl Tile {
                         execute_from_attrs(&row, &attrs);
                         None
                     });
-                let update_closure = |_: &str| -> bool { true };
-                builder.object.set_update(update_closure);
 
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
