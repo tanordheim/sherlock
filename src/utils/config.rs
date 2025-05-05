@@ -129,10 +129,9 @@ impl SherlockConfig {
         let write_file = |name: &str, content: &str| {
             let alias_path = path.join(name);
             if !alias_path.exists() {
-                if let Err(error) = fs::write(&alias_path, content).map_err(|e| sherlock_error!(
-                    SherlockErrorType::FileWriteError(alias_path),
-                    e.to_string()
-                )) {
+                if let Err(error) = fs::write(&alias_path, content).map_err(|e| {
+                    sherlock_error!(SherlockErrorType::FileWriteError(alias_path), e.to_string())
+                }) {
                     error_message(name, error);
                 } else {
                     created_message(name);
@@ -144,16 +143,20 @@ impl SherlockConfig {
 
         // build default config
         let config = SherlockConfig::with_root(&loc);
-        let toml_str = toml::to_string(&config).map_err(|e| sherlock_error!(
-            SherlockErrorType::FileWriteError(path.clone()),
-            e.to_string()
-        ))?;
+        let toml_str = toml::to_string(&config).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileWriteError(path.clone()),
+                e.to_string()
+            )
+        })?;
 
         // mkdir -p
-        fs::create_dir_all(&path).map_err(|e| sherlock_error!(
-            SherlockErrorType::DirCreateError(format!("{:?}", path)),
-            e.to_string()
-        ))?;
+        fs::create_dir_all(&path).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::DirCreateError(format!("{:?}", path)),
+                e.to_string()
+            )
+        })?;
         // create subdirs
         ensure_dir(&path.join("icons/"), "icons");
         ensure_dir(&path.join("scripts/"), "scripts");
@@ -183,19 +186,25 @@ impl SherlockConfig {
                 "/dev/skxxtz/sherlock/fallback.json",
                 gio::ResourceLookupFlags::NONE,
             )
-            .map_err(|e| sherlock_error!(
-                SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
-                e.to_string()
-            ))?;
+            .map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
+                    e.to_string()
+                )
+            })?;
 
-            let json_str = std::str::from_utf8(&data).map_err(|e| sherlock_error!(
-                SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
-                e.to_string()
-            ))?;
-            if let Err(error) = fs::write(&fallback_path, json_str).map_err(|e| sherlock_error!(
-                SherlockErrorType::FileWriteError(fallback_path),
-                e.to_string()
-            )) {
+            let json_str = std::str::from_utf8(&data).map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
+                    e.to_string()
+                )
+            })?;
+            if let Err(error) = fs::write(&fallback_path, json_str).map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::FileWriteError(fallback_path),
+                    e.to_string()
+                )
+            }) {
                 error_message("fallback.json", error);
             } else {
                 created_message("fallback.json");
@@ -260,15 +269,19 @@ impl SherlockConfig {
                 let config_res: Result<SherlockConfig, SherlockError> = match filetype.as_str() {
                     "json" => {
                         let mut bytes = config_str.into_bytes();
-                        simd_json::from_slice(&mut bytes).map_err(|e| sherlock_error!(
+                        simd_json::from_slice(&mut bytes).map_err(|e| {
+                            sherlock_error!(
+                                SherlockErrorType::FileParseError(path.clone()),
+                                e.to_string()
+                            )
+                        })
+                    }
+                    "toml" => toml::de::from_str(&config_str).map_err(|e| {
+                        sherlock_error!(
                             SherlockErrorType::FileParseError(path.clone()),
                             e.to_string()
-                        ))
-                    }
-                    "toml" => toml::de::from_str(&config_str).map_err(|e| sherlock_error!(
-                        SherlockErrorType::FileParseError(path.clone()),
-                        e.to_string()
-                    )),
+                        )
+                    }),
                     _ => {
                         return Err(sherlock_error!(
                             SherlockErrorType::FileParseError(path.clone()),
@@ -294,10 +307,8 @@ impl SherlockConfig {
             }
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    let error = sherlock_error!(
-                        SherlockErrorType::FileExistError(path),
-                        e.to_string()
-                    );
+                    let error =
+                        sherlock_error!(SherlockErrorType::FileExistError(path), e.to_string());
 
                     let mut config = SherlockConfig::default();
 

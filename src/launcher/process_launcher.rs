@@ -27,19 +27,20 @@ impl ProcessLauncher {
     pub fn kill(pid: (i32, i32)) -> Result<(), SherlockError> {
         if pid.0 != pid.1 {
             let child = Pid::from_raw(pid.1);
-            kill(child, Signal::SIGKILL).map_err(|e| sherlock_error!(
-                SherlockErrorType::CommandExecutionError(format!(
-                    "Kill process \"{}\"",
-                    child
-                )),
-                &e.to_string()
-            ))?;
+            kill(child, Signal::SIGKILL).map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", child)),
+                    &e.to_string()
+                )
+            })?;
         };
         let parent = Pid::from_raw(pid.0);
-        kill(parent, Signal::SIGKILL).map_err(|e| sherlock_error!(
-            SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", parent)),
-            &e.to_string()
-        ))
+        kill(parent, Signal::SIGKILL).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::CommandExecutionError(format!("Kill process \"{}\"", parent)),
+                &e.to_string()
+            )
+        })
     }
 }
 

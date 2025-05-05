@@ -202,10 +202,7 @@ fn startup_loading() -> (
     CONFIG
         .set(app_config.clone())
         .map_err(|_| {
-            startup_errors.push(sherlock_error!(
-                SherlockErrorType::ConfigError(None),
-                ""
-            ));
+            startup_errors.push(sherlock_error!(SherlockErrorType::ConfigError(None), ""));
         })
         .ok();
 

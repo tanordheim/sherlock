@@ -26,10 +26,7 @@ impl Loader {
                     .for_each(|path| icon_theme.add_search_path(path));
             }
         } else {
-            non_breaking.push(sherlock_error!(
-                SherlockErrorType::ConfigError(None),
-                ""
-            ));
+            non_breaking.push(sherlock_error!(SherlockErrorType::ConfigError(None), ""));
         }
         non_breaking
     }

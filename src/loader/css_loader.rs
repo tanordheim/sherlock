@@ -11,14 +11,12 @@ impl Loader {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         let provider = CssProvider::new();
 
-        let config = CONFIG.get().ok_or_else(|| sherlock_error!(
-            SherlockErrorType::ConfigError(None),
-            ""
-        ))?;
-        let display = Display::default().ok_or_else(|| sherlock_error!(
-            SherlockErrorType::DisplayError,
-            "No display available"
-        ))?;
+        let config = CONFIG
+            .get()
+            .ok_or_else(|| sherlock_error!(SherlockErrorType::ConfigError(None), ""))?;
+        let display = Display::default().ok_or_else(|| {
+            sherlock_error!(SherlockErrorType::DisplayError, "No display available")
+        })?;
 
         // Load the base line css
         if config.appearance.use_base_css {

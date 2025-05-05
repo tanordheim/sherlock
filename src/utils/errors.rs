@@ -16,7 +16,7 @@ pub struct SherlockError {
     pub traceback: String,
 }
 impl SherlockError {
-    pub fn new<T: AsRef<str>>(error: SherlockErrorType, source: T, file: &str, line: u32)->Self{
+    pub fn new<T: AsRef<str>>(error: SherlockErrorType, source: T, file: &str, line: u32) -> Self {
         Self {
             error,
             traceback: format!("{}:{}\n{}", file, line, source.as_ref()),
