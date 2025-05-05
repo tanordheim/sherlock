@@ -233,6 +233,7 @@ impl Tile {
                     let tile = calc_tile.remove(0);
                     if tile.update(&clipboard_content) {
                         tile.set_only_home(true);
+                        tile.set_update(|_| false);
                         results.push(tile)
                     }
                 }
