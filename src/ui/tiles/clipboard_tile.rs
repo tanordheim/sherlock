@@ -125,6 +125,7 @@ impl Tile {
                         // setting up builder
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                         builder.object.with_launcher(launcher);
+                        builder.object.set_search(&clipboard_content);
 
                         is_valid = true;
                         method = "web_launcher";
@@ -184,6 +185,7 @@ impl Tile {
                     if let Some((rgb, raw)) = rgb {
                         builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
                         builder.object.with_launcher(launcher);
+                        builder.object.set_spawn_focus(false);
                         builder.object.set_search(&raw);
                         clipboard_content = raw;
 
@@ -269,7 +271,6 @@ impl Tile {
                     ("engine", "plain"),
                 ]);
 
-                builder.object.with_launcher(&launcher);
                 builder
                     .object
                     .connect_local("row-should-activate", false, move |row| {
