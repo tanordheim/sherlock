@@ -8,7 +8,9 @@ use std::{
     fs::{self, File},
 };
 
+use gio::glib::WeakRef;
 use gio::ActionEntry;
+use gtk4::gdk::{Display, Monitor};
 use gtk4::{prelude::*, Application, ApplicationWindow, StackTransitionType};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
@@ -21,7 +23,14 @@ use crate::{sherlock_error, CONFIG};
 
 use super::tiles::util::TextViewTileBuilder;
 
-pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCell<String>>) {
+pub fn window(
+    application: &Application,
+) -> (
+    ApplicationWindow,
+    Stack,
+    Rc<RefCell<String>>,
+    WeakRef<ApplicationWindow>,
+) {
     // 617 with, 593 without notification bar
     let (width, height, opacity) = CONFIG.get().map_or_else(
         || (900, 593, 1.0),
@@ -43,11 +52,17 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         .resizable(false)
         .opacity(opacity.clamp(0.1, 1.0))
         .build();
-
     window.init_layer_shell();
     window.set_namespace("sherlock");
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
+
+    // Make backdrop if config key is set
+    let backdrop = CONFIG
+        .get()
+        .filter(|c| c.appearance.backdrop)
+        .map(|c| make_backdrop(application, &window, c.appearance.backdrop_opacity))
+        .flatten();
 
     //Build main fame here that holds logic for stacking
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
@@ -159,15 +174,24 @@ pub fn window(application: &Application) -> (ApplicationWindow, Stack, Rc<RefCel
         })
         .build();
 
-    window.add_action_entries([
-        action_close,
-        action_open,
-        action_stack_switch,
-        action_next_page,
-    ]);
-
     window.set_child(Some(&stack));
-    return (window, stack, current_stack_page);
+    let win_ref = match backdrop {
+        Some(backdrop) => {
+            backdrop.add_action_entries([action_open]);
+            window.add_action_entries([action_close, action_stack_switch, action_next_page]);
+            backdrop.downgrade()
+        }
+        _ => {
+            window.add_action_entries([
+                action_close,
+                action_open,
+                action_stack_switch,
+                action_next_page,
+            ]);
+            window.downgrade()
+        }
+    };
+    return (window, stack, current_stack_page, win_ref);
 }
 
 #[derive(Debug, Deserialize)]
@@ -244,4 +268,53 @@ impl SherlockCounter {
 
         Ok(())
     }
+}
+
+fn make_backdrop(
+    application: &Application,
+    main_window: &ApplicationWindow,
+    opacity: f64,
+) -> Option<ApplicationWindow> {
+    let monitor = Display::default()
+        .map(|d| d.monitors())
+        .and_then(|m| m.item(0).and_downcast::<Monitor>())?;
+    let rect = monitor.geometry();
+    let backdrop = ApplicationWindow::builder()
+        .application(application)
+        .decorated(false)
+        .title("Backdrop")
+        .opacity(opacity)
+        .default_width(rect.width()) // Adjust to your screen resolution or use monitor API
+        .default_height(rect.height())
+        .resizable(false)
+        .build();
+    // Initialize layershell
+    backdrop.set_widget_name("backdrop");
+    backdrop.init_layer_shell();
+    backdrop.set_namespace("sherlock-backdrop");
+    backdrop.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
+    backdrop.set_layer(Layer::Overlay);
+
+    let window_clone = main_window.downgrade();
+    let backdrop_clone = backdrop.downgrade();
+    backdrop.connect_show({
+        let window = window_clone.clone();
+        move |_| {
+            window.upgrade().map(|win| win.set_visible(true));
+        }
+    });
+    main_window.connect_destroy({
+        let backdrop = backdrop_clone.clone();
+        move |_| {
+            backdrop.upgrade().map(|win| win.close());
+        }
+    });
+    main_window.connect_hide({
+        let backdrop = backdrop_clone.clone();
+        move |_| {
+            backdrop.upgrade().map(|win| win.set_visible(false));
+        }
+    });
+
+    Some(backdrop)
 }

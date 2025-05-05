@@ -142,7 +142,10 @@ impl Tile {
                         if capabilities.contains("colors.rgb")
                             || capabilities.contains("colors.all")
                         {
-                            Some((RGB::from_str(rgb.as_str()), format!("rbg({})", rgb.as_str().trim())))
+                            Some((
+                                RGB::from_str(rgb.as_str()),
+                                format!("rbg({})", rgb.as_str().trim()),
+                            ))
                         } else {
                             None
                         }
@@ -174,7 +177,10 @@ impl Tile {
                         if capabilities.contains("colors.hex")
                             || capabilities.contains("colors.all")
                         {
-                            Some((RGB::from_hex(hex.as_str()), format!("#{}", hex.as_str().trim())))
+                            Some((
+                                RGB::from_hex(hex.as_str()),
+                                format!("#{}", hex.as_str().trim()),
+                            ))
                         } else {
                             None
                         }

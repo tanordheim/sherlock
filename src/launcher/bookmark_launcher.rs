@@ -134,9 +134,8 @@ impl MozillaSqliteParser {
             AND p.url IS NOT NULL
             AND b.parent != 7;
             ";
-        let conn = Connection::open(&self.path).map_err(|e| {
-            sherlock_error!(SherlockErrorType::SqlConnectionError(), e.to_string())
-        })?;
+        let conn = Connection::open(&self.path)
+            .map_err(|e| sherlock_error!(SherlockErrorType::SqlConnectionError(), e.to_string()))?;
 
         if let Ok(mut stmt) = conn.prepare(query) {
             let event_iter = stmt.query_map([], |row| {
