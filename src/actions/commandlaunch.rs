@@ -3,14 +3,13 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::{sherlock_error, utils::errors::{SherlockError, SherlockErrorType}};
 use crate::CONFIG;
-
 pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
-    let config = CONFIG.get().ok_or(SherlockError {
-        error: SherlockErrorType::ConfigError(None),
-        traceback: String::new(),
-    })?;
+    let config = CONFIG.get().ok_or( sherlock_error!(
+            SherlockErrorType::ConfigError(None),
+            ""
+    ))?;
     let prefix = config
         .behavior
         .global_prefix
@@ -37,12 +36,12 @@ fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), Sh
         .split_whitespace()
         .filter(|s| !s.starts_with("%"));
 
-    let mut command = Command::new(parts.next().ok_or_else(|| SherlockError {
-        error: SherlockErrorType::CommandExecutionError(String::from(
+    let mut command = Command::new(parts.next().ok_or_else(||sherlock_error!(
+        SherlockErrorType::CommandExecutionError(String::from(
             "The command list was empty.",
         )),
-        traceback: String::from("Location: src/commandlaunch.rs"),
-    })?);
+        ""
+    ))?);
     command.args(parts);
 
     unsafe {

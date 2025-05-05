@@ -4,12 +4,24 @@ use gtk4::prelude::WidgetExt;
 
 use crate::{g_subclasses::sherlock_row::SherlockRow, ui::tiles::util::TileBuilder};
 
+#[macro_export]
+macro_rules! sherlock_error {
+    ($errtype:expr, $source:expr) => {
+        $crate::SherlockError::new($errtype, $source, file!(), line!())
+    };
+}
 #[derive(Clone, Debug)]
 pub struct SherlockError {
     pub error: SherlockErrorType,
     pub traceback: String,
 }
 impl SherlockError {
+    pub fn new<T: AsRef<str>>(error: SherlockErrorType, source: T, file: &str, line: u32)->Self{
+        Self {
+            error,
+            traceback: format!("{}:{}\n{}", file, line, source.as_ref()),
+        }
+    }
     pub fn tile(&self, tile_type: &str) -> SherlockRow {
         let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
 

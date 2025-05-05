@@ -11,10 +11,10 @@ use std::{
     path::PathBuf,
 };
 
-use crate::utils::{
+use crate::{sherlock_error, utils::{
     errors::{SherlockError, SherlockErrorType},
     files::{expand_path, home_dir},
-};
+}};
 
 #[derive(Deserialize, Debug)]
 pub struct RawLauncher {
@@ -114,17 +114,17 @@ pub struct CounterReader {
 }
 impl CounterReader {
     pub fn new() -> Result<Self, SherlockError> {
-        let home = env::var("HOME").map_err(|e| SherlockError {
-            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-            traceback: e.to_string(),
-        })?;
+        let home = env::var("HOME").map_err(|e| sherlock_error!(
+            SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+            e.to_string()
+        ))?;
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".sherlock/counts.json");
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).map_err(|e| SherlockError {
-                error: SherlockErrorType::DirCreateError(".sherlock".to_string()),
-                traceback: e.to_string(),
-            })?;
+            fs::create_dir_all(parent).map_err(|e| sherlock_error!(
+                SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                e.to_string()
+            ))?;
         }
         Ok(CounterReader { path })
     }
@@ -165,10 +165,10 @@ impl JsonCache {
             println!("{:?}", path);
             File::create(&path)
         }
-        .map_err(|e| SherlockError {
-            error: SherlockErrorType::FileExistError(path.clone()),
-            traceback: e.to_string(),
-        })?;
+        .map_err(|e| sherlock_error!(
+            SherlockErrorType::FileExistError(path.clone()),
+            e.to_string()
+        ))?;
         let res: Result<T, simd_json::Error> = simd_json::from_reader(file);
         Ok(res.unwrap_or_default())
     }

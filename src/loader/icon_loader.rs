@@ -1,6 +1,6 @@
 use super::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
-use crate::CONFIG;
+use crate::{sherlock_error, CONFIG};
 use gtk4::{gdk::Display, IconTheme};
 use std::env;
 
@@ -12,10 +12,10 @@ impl Loader {
             let icon_theme = IconTheme::for_display(Display::default().as_ref().unwrap());
             let home_dir = env::var("HOME")
                 .map_err(|e| {
-                    non_breaking.push(SherlockError {
-                        error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-                        traceback: e.to_string(),
-                    });
+                    non_breaking.push(sherlock_error!(
+                        SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+                        &e.to_string()
+                    ));
                 })
                 .ok();
 
@@ -26,10 +26,10 @@ impl Loader {
                     .for_each(|path| icon_theme.add_search_path(path));
             }
         } else {
-            non_breaking.push(SherlockError {
-                error: SherlockErrorType::ConfigError(None),
-                traceback: format!(""),
-            });
+            non_breaking.push(sherlock_error!(
+                SherlockErrorType::ConfigError(None),
+                ""
+            ));
         }
         non_breaking
     }
