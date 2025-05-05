@@ -1,4 +1,4 @@
-// CRATES
+// CRATE
 use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::{GtkApplicationExt, WidgetExt};
@@ -73,7 +73,13 @@ async fn main() {
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
         let (search_stack, handler) = if pipe.is_empty() {
-            ui::search::search(&window, &current_stack_page, error_model)
+            match ui::search::search(&window, &current_stack_page, error_model.clone()) {
+                Ok(r) => r,
+                Err(e) => {
+                    error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
+                    return
+                }
+            }
         } else {
             if sherlock_flags.display_raw {
                 let pipe = String::from_utf8_lossy(&pipe);

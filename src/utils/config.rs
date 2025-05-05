@@ -477,6 +477,12 @@ pub struct ConfigAppearance {
     pub backdrop: bool,
     #[serde(default = "default_backdrop_opacity")]
     pub backdrop_opacity: f64,
+    #[serde(default = "default_search_icon")]
+    pub search_bar_icon: String,
+    #[serde(default = "default_search_icon_back")]
+    pub search_bar_icon_back: String,
+    #[serde(default = "default_icon_size")]
+    pub search_icon_size: i32,
 }
 impl ConfigAppearance {
     fn with_root(root: &PathBuf) -> Self {
@@ -500,20 +506,9 @@ impl ConfigAppearance {
             .into_iter()
             .filter_map(|s| use_root(root, s))
             .collect();
-        Self {
-            width: 900,
-            height: 593, // 617 with, 593 without notification bar
-            gsk_renderer: String::from("cairo"),
-            icon_paths,
-            icon_size: default_icon_size(),
-            search_icon: false,
-            use_base_css: true,
-            status_bar: true,
-            opacity: 1.0,
-            mod_key_ascii: default_modkey_ascii(),
-            backdrop: false,
-            backdrop_opacity: default_backdrop_opacity(),
-        }
+        let mut default = Self::default();
+        default.icon_paths = icon_paths;
+        default
     }
 }
 impl Default for ConfigAppearance {
@@ -531,6 +526,9 @@ impl Default for ConfigAppearance {
             mod_key_ascii: default_modkey_ascii(),
             backdrop: false,
             backdrop_opacity: default_backdrop_opacity(),
+            search_bar_icon: default_search_icon(),
+            search_bar_icon_back: default_search_icon_back(),
+            search_icon_size: default_icon_size(),
         }
     }
 }
@@ -698,6 +696,12 @@ pub fn default_icon_paths() -> Vec<String> {
 }
 pub fn default_icon_size() -> i32 {
     22
+}
+pub fn default_search_icon() -> String {
+    String::from("system-search-symbolic")
+}
+pub fn default_search_icon_back() -> String {
+    String::from("go-previous-symbolic")
 }
 pub fn default_modkey_ascii() -> Vec<String> {
     vec![
