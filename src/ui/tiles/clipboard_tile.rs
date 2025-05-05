@@ -231,6 +231,7 @@ impl Tile {
                 let mut calc_tile = Tile::calc_tile(launcher, calc);
                 if calc_tile.len() >= 1 {
                     let tile = calc_tile.remove(0);
+                    // first update checks if the content is valid. then unsets
                     if tile.update(&clipboard_content) {
                         tile.set_only_home(true);
                         tile.set_update(|_| false);

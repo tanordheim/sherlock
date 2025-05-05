@@ -45,7 +45,7 @@ pub fn teamslaunch(meeting_url: &str) -> Result<(), SherlockError> {
         let _output = command.spawn().map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::CommandExecutionError(String::from("Teams Start")),
-                &e.to_string()
+                e.to_string()
             )
         })?;
 

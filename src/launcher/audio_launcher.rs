@@ -49,7 +49,7 @@ impl MusicPlayerLauncher {
         let home = env::var("HOME").map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
 
@@ -60,7 +60,7 @@ impl MusicPlayerLauncher {
                 SherlockErrorType::DirCreateError(
                     "~/.cache/sherlock/mpris-cache/".to_string(),
                 ),
-                &e.to_string()
+                e.to_string()
             ))?;
         };
 
@@ -72,14 +72,14 @@ impl MusicPlayerLauncher {
         .map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
 
         file.write_all(&image).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         // if file not exist, create and write it
@@ -89,7 +89,7 @@ impl MusicPlayerLauncher {
         let home = env::var("HOME").map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         let home_dir = PathBuf::from(home);
@@ -98,14 +98,14 @@ impl MusicPlayerLauncher {
         let mut file = File::open(&path).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         let mut buffer = vec![];
         file.read_to_end(&mut buffer).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileReadError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         Ok(buffer.into())
@@ -116,21 +116,21 @@ impl MusicPlayerLauncher {
         let mut file = File::open(&path).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         let mut buffer = vec![];
         file.read_to_end(&mut buffer).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileReadError(path.clone()),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         Ok(buffer.into())
     }
     pub fn playpause(player: &str) -> Result<(), SherlockError> {
         let conn = Connection::session()
-            .map_err(|e| sherlock_error!(SherlockErrorType::DBusConnectionError, &e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::DBusConnectionError, e.to_string()))?;
         let proxy = Proxy::new(
             &conn,
             player,
@@ -140,13 +140,13 @@ impl MusicPlayerLauncher {
         .map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::DBusMessageConstructError(format!("PlayPause for {}", player)),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         proxy.call_method("PlayPause", &()).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::DBusMessageSendError(format!("PlayPause to {}", player)),
-                &e.to_string()
+                e.to_string()
             )
         })?;
         Ok(())

@@ -50,7 +50,7 @@ impl Loader {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
             Err(e) => Err(sherlock_error!(
                 SherlockErrorType::FileReadError(config.files.ignore.clone()),
-                &e.to_string()
+                e.to_string()
             ))?,
         };
 
@@ -59,13 +59,13 @@ impl Loader {
             Ok(f) => simd_json::from_reader(f).map_err(|e| {
                 sherlock_error!(
                     SherlockErrorType::FileReadError(config.files.alias.clone()),
-                    &e.to_string()
+                    e.to_string()
                 )
             })?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
             Err(e) => Err(sherlock_error!(
                 SherlockErrorType::FileReadError(config.files.alias.clone()),
-                &e.to_string()
+                e.to_string()
             ))?,
         };
 
@@ -283,7 +283,7 @@ fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), Sh
         Regex::new(&pattern).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::RegexError(key.to_string()),
-                &e.to_string()
+                e.to_string()
             )
         })
     }
