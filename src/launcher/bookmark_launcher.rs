@@ -161,7 +161,7 @@ impl MozillaSqliteParser {
                         tag_start: raw.tag_start.clone(),
                         tag_end: raw.tag_end.clone(),
                         desktop_file: None,
-                        priority: raw.priority,
+                        priority: raw.priority + 1.0,
                     };
                     res.insert(bookmark);
                 }
@@ -246,7 +246,7 @@ impl ChromeParser {
                             tag_start: raw.tag_start.clone(),
                             tag_end: raw.tag_end.clone(),
                             desktop_file: None,
-                            priority: raw.priority,
+                            priority: raw.priority + 1.0,
                         });
                     }
                 }

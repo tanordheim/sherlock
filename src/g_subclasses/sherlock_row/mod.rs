@@ -117,7 +117,7 @@ impl SherlockRow {
         self.set_home(launcher.home);
         self.set_shortcut(launcher.shortcut);
         self.set_spawn_focus(launcher.spawn_focus);
-        self.set_priority(launcher.priority as f32);
+        self.set_priority((launcher.priority + 1) as f32);
         if let Some(alias) = &launcher.alias {
             self.set_alias(alias);
         }
