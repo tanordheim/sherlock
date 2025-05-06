@@ -6,7 +6,7 @@ use glib::Object;
 use gtk4::glib;
 
 use crate::{
-    actions::applaunch::applaunch, loader::util::ApplicationAction, ui::tiles::util::IconComp,
+    actions::{execute_from_attrs, get_attrs_map}, loader::util::ApplicationAction, ui::tiles::util::IconComp,
 };
 
 glib::wrapper! {
@@ -37,12 +37,17 @@ impl ContextAction {
             .get()
             .and_then(|tmp| tmp.upgrade())
             .map(|icon| icon.set_icon(&action.icon, &None, &None));
-        imp.terminal.set(terminal);
         if let Some(exec) = &action.exec {
             let signal_id = obj.connect_local("context-action-should-activate", false, {
                 let exec = exec.clone();
-                move |_| {
-                    applaunch(&exec, terminal);
+                move |row| {
+                    let row = row.first().map(|f| f.get::<ContextAction>().ok())??;
+                    let attrs = get_attrs_map(vec![
+                        ("method", "app_launcher"),
+                        ("exec", &exec),
+                        ("term", &terminal.to_string())
+                    ]);
+                    execute_from_attrs(&row, &attrs);
                     None
                 }
             });
