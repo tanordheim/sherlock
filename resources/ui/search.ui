@@ -86,6 +86,28 @@
                     </object>
                 </child>
                 <child>
+                    <object class="GtkLabel" id="context-menu-first">
+                        <style>
+                            <class name="inactive"/>
+                        </style>
+                        <property name="name">shortcut-modifier</property>
+                        <property name="hexpand">false</property>
+                        <property name="label">⌘</property>
+                        <property name="xalign">0.0</property>
+                    </object>
+                </child>
+                <child>
+                    <object class="GtkLabel" id="context-menu-second">
+                        <style>
+                            <class name="inactive"/>
+                        </style>
+                        <property name="name">shortcut-key</property>
+                        <property name="hexpand">false</property>
+                        <property name="label">L</property>
+                        <property name="xalign">0.0</property>
+                    </object>
+                </child>
+                <child>
                     <object class="GtkSpinner" id="status-bar-spinner">
                         <property name="name">spinner</property>
                         <property name="spinning">false</property>

@@ -7,7 +7,10 @@ use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
-use crate::{launcher::Launcher, loader::util::ApplicationAction};
+use crate::{
+    launcher::Launcher,
+    loader::util::{AppData, ApplicationAction},
+};
 
 glib::wrapper! {
     pub struct SherlockRow(ObjectSubclass<imp::SherlockRow>)
@@ -72,6 +75,9 @@ impl SherlockRow {
     pub fn set_actions(&self, actions: Vec<ApplicationAction>) {
         *self.imp().actions.borrow_mut() = actions;
     }
+    pub fn set_num_actions(&self, num: usize) {
+        self.imp().num_actions.set(num);
+    }
     pub fn set_terminal(&self, term: bool) {
         self.imp().terminal.set(term);
     }
@@ -115,6 +121,9 @@ impl SherlockRow {
     pub fn actions(&self) -> Ref<Vec<ApplicationAction>> {
         self.imp().actions.borrow()
     }
+    pub fn num_actions(&self) -> usize {
+        self.imp().num_actions.get()
+    }
     pub fn terminal(&self) -> bool {
         self.imp().terminal.get()
     }
@@ -133,6 +142,13 @@ impl SherlockRow {
         if let Some(alias) = &launcher.alias {
             self.set_alias(alias);
         }
+    }
+    pub fn with_appdata(&self, data: &AppData) {
+        self.set_search(&data.search_string);
+        self.set_priority(data.priority);
+        self.set_actions(data.actions.clone());
+        self.set_num_actions(data.actions.len());
+        self.set_terminal(data.terminal);
     }
 }
 
