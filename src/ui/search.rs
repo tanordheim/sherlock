@@ -115,7 +115,7 @@ struct SearchUI {
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
     context_model: WeakRef<ListStore>,
-    context_selection: WeakRef<SingleSelection>,
+    context_view: WeakRef<ListView>,
     context_menu_first: WeakRef<Label>,
     context_menu_second: WeakRef<Label>,
 }
@@ -191,7 +191,7 @@ pub fn search(
         stack_page_ref,
         &mode,
         ui.context_model.clone(),
-        ui.context_selection.clone(),
+        ui.context_view.clone(),
     );
     change_event(
         ui.search_bar.clone(),
@@ -366,7 +366,7 @@ fn construct_window(
     // test_box.append(&Label::new(Some("App-Specific-Action")));
     // test_box.append(&Label::new(Some("App-Specific-Action")));
     // test_box.set_widget_name("context-menu");
-    let (context, context_model, context_selection) = make_context();
+    let (context, context_model) = make_context();
     let main_overlay = Overlay::new();
     main_overlay.set_child(Some(&vbox));
     main_overlay.add_overlay(&context);
@@ -438,7 +438,7 @@ fn construct_window(
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
-    let (_, n_items) = selection.focus_first();
+    let (_, n_items) = results.focus_first();
     if n_items > 0 {
         results.scroll_to(0, ListScrollFlags::NONE, None);
     }
@@ -466,7 +466,7 @@ fn construct_window(
         sorter: sorter.downgrade(),
         binds: custom_binds,
         context_model: context_model.downgrade(),
-        context_selection,
+        context_view: context.downgrade(),
         context_menu_first: context_action_first.downgrade(),
         context_menu_second: context_action_second.downgrade(),
     };
@@ -600,7 +600,7 @@ fn nav_event(
     stack_page: &Rc<RefCell<String>>,
     current_mode: &Rc<RefCell<String>>,
     context_model: WeakRef<ListStore>,
-    context_selection: WeakRef<SingleSelection>,
+    context_view: WeakRef<ListView>,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
@@ -609,64 +609,34 @@ fn nav_event(
         let search_bar = search_bar.clone();
         let current_mode = Rc::clone(current_mode);
         fn move_prev(
-            selection: &WeakRef<SingleSelection>,
             results: &WeakRef<ListView>,
             context_model: &WeakRef<ListStore>,
         ) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let current = selection.selected();
-            let (new_index, n_items) = selection.focus_prev();
-
-            if new_index != current {
-                let results = results.upgrade()?;
-                if new_index < n_items {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None);
-                    let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-                    let _ = results.activate_action(
-                        "win.context-mode",
-                        Some(&(selected.num_actions() > 0).to_variant()),
-                    );
-                }
-                context_model.upgrade().map(|ctx| ctx.remove_all());
-            }
+            let results = results.upgrade()?;
+            results.focus_prev(Some(context_model));
             None
         }
         fn move_next(
-            selection: &WeakRef<SingleSelection>,
             results: &WeakRef<ListView>,
             context_model: &WeakRef<ListStore>,
         ) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let current = selection.selected();
-            let (new_index, n_items) = selection.focus_next();
-
-            if new_index != current {
-                let results = results.upgrade()?;
-                if new_index < n_items {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None);
-                    let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-                    let _ = results.activate_action(
-                        "win.context-mode",
-                        Some(&(selected.num_actions() > 0).to_variant()),
-                    );
-                }
-                context_model.upgrade().map(|ctx| ctx.remove_all());
-            }
+            let results = results.upgrade()?;
+            results.focus_next(Some(context_model));
             None
         }
-        fn move_next_context(selection: &WeakRef<SingleSelection>) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let _ = selection.focus_next();
+        fn move_next_context(model: &WeakRef<ListView>) -> Option<()> {
+            let model = model.upgrade()?;
+            let _ = model.focus_next(None);
             None
         }
-        fn move_prev_context(selection: &WeakRef<SingleSelection>) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let _ = selection.focus_prev();
+        fn move_prev_context(model: &WeakRef<ListView>) -> Option<()> {
+            let model = model.upgrade()?;
+            let _ = model.focus_prev(None);
             None
         }
         fn open_context(
             selection: &WeakRef<SingleSelection>,
-            context_selection: &WeakRef<SingleSelection>,
+            context_view: &WeakRef<ListView>,
             context_model: &WeakRef<ListStore>,
             context_open: &Cell<bool>,
         ) -> Option<()> {
@@ -678,8 +648,8 @@ fn nav_event(
                 for action in row.actions().iter() {
                     context.append(&ContextAction::new("", &action, row.terminal()))
                 }
-                let context_selection = context_selection.upgrade()?;
-                let _ = context_selection.set_selected(0);
+                let context_selection = context_view.upgrade()?;
+                let _ = context_selection.focus_first();
                 context_open.set(true);
             }
             None
@@ -705,12 +675,7 @@ fn nav_event(
                         .context_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    open_context(
-                        &selection,
-                        &context_selection,
-                        &context_model,
-                        &context_open,
-                    );
+                    open_context(&selection, &context_view, &context_model, &context_open);
                 }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
@@ -719,9 +684,9 @@ fn nav_event(
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
                     if context_open.get() {
-                        move_prev_context(&context_selection);
+                        move_prev_context(&context_view);
                     } else {
-                        move_prev(&selection, &results, &context_model);
+                        move_prev(&results, &context_model);
                     }
                     return true.into();
                 }
@@ -732,25 +697,25 @@ fn nav_event(
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
                     if context_open.get() {
-                        move_next_context(&context_selection);
+                        move_next_context(&context_view);
                     } else {
-                        move_next(&selection, &results, &context_model);
+                        move_next(&results, &context_model);
                     }
                     return true.into();
                 }
                 gdk::Key::Up => {
                     if context_open.get() {
-                        move_prev_context(&context_selection);
+                        move_prev_context(&context_view);
                     } else {
-                        move_prev(&selection, &results, &context_model);
+                        move_prev(&results, &context_model);
                     }
                     return true.into();
                 }
                 gdk::Key::Down => {
                     if context_open.get() {
-                        move_next_context(&context_selection);
+                        move_next_context(&context_view);
                     } else {
-                        move_next(&selection, &results, &context_model);
+                        move_next(&results, &context_model);
                     }
                     return true.into();
                 }
@@ -780,7 +745,7 @@ fn nav_event(
                     }
                     // Focus first item and check for overflow
                     if let Some((_, n_items)) =
-                        selection.upgrade().map(|results| results.focus_first())
+                        results.upgrade().map(|results| results.focus_first())
                     {
                         if n_items > 0 {
                             results
@@ -792,7 +757,7 @@ fn nav_event(
                 gdk::Key::Return => {
                     if context_open.get() {
                         // Activate action
-                        if let Some(upgr) = context_selection.upgrade() {
+                        if let Some(upgr) = context_view.upgrade() {
                             if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>()
                             {
                                 row.emit_by_name::<()>("context-action-should-activate", &[]);
@@ -820,7 +785,7 @@ fn nav_event(
                             .name()
                             .and_then(|name| name.parse::<u32>().ok().map(|v| v - 1))
                         {
-                            selection.upgrade().map(|r| r.execute_by_index(index));
+                            results.upgrade().map(|r| r.execute_by_index(index));
                             return true.into();
                         }
                     }
@@ -830,10 +795,10 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        move_prev(&selection, &results, &context_model);
+                        move_prev(&results, &context_model);
                         return true.into();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        move_next(&selection, &results, &context_model);
+                        move_next(&results, &context_model);
                         return true.into();
                     }
                 }
@@ -888,7 +853,7 @@ fn change_event(
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             // focus first item
-            if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()) {
+            if let Some((_, n_items)) = results.upgrade().map(|results| results.focus_first()) {
                 results.upgrade().map(|results| {
                     if n_items > 0 {
                         results.scroll_to(0, ListScrollFlags::NONE, None);

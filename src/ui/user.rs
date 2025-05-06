@@ -57,7 +57,6 @@ pub fn display_pipe(
         ui.results.clone(),
         ui.filter.clone(),
         ui.sorter.clone(),
-        ui.selection.clone(),
         &search_text,
     );
     nav_event(
@@ -179,7 +178,7 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
-    let (_, n_items) = selection.focus_first();
+    let (_, n_items) = results.focus_first();
     if n_items > 0 {
         results.scroll_to(0, ListScrollFlags::NONE, None);
     }
@@ -278,25 +277,11 @@ fn nav_event(
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
-        fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
-            let (new_index, n_items) = selection
-                .upgrade()
-                .map_or((0, 0), |results| results.focus_prev());
-            results.upgrade().map(|results| {
-                if n_items > 0 {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                }
-            });
+        fn move_prev(results: &WeakRef<ListView>) {
+            results.upgrade().map(|results| results.focus_prev(None));
         }
-        fn move_next(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
-            let (new_index, n_items) = selection
-                .upgrade()
-                .map_or((0, 0), |results| results.focus_next());
-            results.upgrade().map(|results| {
-                if new_index < n_items {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                }
-            });
+        fn move_next(results: &WeakRef<ListView>) {
+            results.upgrade().map(|results| results.focus_next(None));
         }
         move |_, key, i, modifiers| {
             match key {
@@ -305,7 +290,7 @@ fn nav_event(
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_prev(&selection, &results);
+                    move_prev(&results);
                     return true.into();
                 }
                 k if Some(k) == custom_binds.next
@@ -313,15 +298,15 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_next(&selection, &results);
+                    move_next(&results);
                     return true.into();
                 }
                 gdk::Key::Up => {
-                    move_prev(&selection, &results);
+                    move_prev(&results);
                     return true.into();
                 }
                 gdk::Key::Down => {
-                    move_next(&selection, &results);
+                    move_next(&results);
                     return true.into();
                 }
                 gdk::Key::BackSpace => {
@@ -332,7 +317,7 @@ fn nav_event(
                         search_bar.upgrade().map(|entry| entry.set_text(""));
                         // Focus first item and check for overflow
                         if let Some((_, n_items)) =
-                            selection.upgrade().map(|results| results.focus_first())
+                            results.upgrade().map(|results| results.focus_first())
                         {
                             if n_items > 0 {
                                 results.upgrade().map(|results| {
@@ -358,7 +343,7 @@ fn nav_event(
                             .name()
                             .and_then(|name| name.parse::<u32>().ok().map(|v| v - 1))
                         {
-                            selection.upgrade().map(|r| r.execute_by_index(index));
+                            results.upgrade().map(|r| r.execute_by_index(index));
                             return true.into();
                         }
                     }
@@ -368,10 +353,10 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        move_prev(&selection, &results);
+                        move_prev(&results);
                         return true.into();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        move_next(&selection, &results);
+                        move_next(&results);
                         return true.into();
                     }
                 }
@@ -391,7 +376,6 @@ fn change_event(
     results: WeakRef<ListView>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
-    selection: WeakRef<SingleSelection>,
     search_query: &Rc<RefCell<String>>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
@@ -416,7 +400,7 @@ fn change_event(
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             // focus first item
-            if let Some((_, n_items)) = selection.upgrade().map(|results| results.focus_first()) {
+            if let Some((_, n_items)) = results.upgrade().map(|results| results.focus_first()) {
                 results.upgrade().map(|results| {
                     if n_items > 0 {
                         results.scroll_to(0, ListScrollFlags::NONE, None);
