@@ -133,7 +133,8 @@ impl Loader {
                                 }
                             }
                         }
-                        data.actions.iter_mut()
+                        data.actions
+                            .iter_mut()
                             .filter(|action| action.icon.is_none())
                             .for_each(|action| action.icon = data.icon.clone());
                         data.apply_alias(aliases.get(&data.name));

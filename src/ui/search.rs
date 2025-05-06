@@ -590,12 +590,12 @@ fn nav_event(
             }
             None
         }
-        fn move_next_context(selection: &WeakRef<SingleSelection>)->Option<()>{
+        fn move_next_context(selection: &WeakRef<SingleSelection>) -> Option<()> {
             let selection = selection.upgrade()?;
             let _ = selection.focus_next();
             None
         }
-        fn move_prev_context(selection: &WeakRef<SingleSelection>)->Option<()>{
+        fn move_prev_context(selection: &WeakRef<SingleSelection>) -> Option<()> {
             let selection = selection.upgrade()?;
             let _ = selection.focus_prev();
             None
@@ -635,7 +635,7 @@ fn nav_event(
             let _ = context_selection.set_selected(0);
             Some(())
         }
-        fn close_context(context_model: &WeakRef<ListStore>)->Option<()>{
+        fn close_context(context_model: &WeakRef<ListStore>) -> Option<()> {
             let context = context_model.upgrade()?;
             context.remove_all();
             Some(())
@@ -646,13 +646,14 @@ fn nav_event(
                 return false.into();
             };
             match key {
-                k if Some(k) == custom_binds.context 
-                    && custom_binds.context_mod
-                    .map_or(true, |m| modifiers.contains(m)) => 
+                k if Some(k) == custom_binds.context
+                    && custom_binds
+                        .context_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                        open_context(&selection, &context_selection, &context_model);
-                        context_open.set(true);
-                },
+                    open_context(&selection, &context_selection, &context_model);
+                    context_open.set(true);
+                }
                 k if Some(k) == custom_binds.prev
                     && custom_binds
                         .prev_mod
@@ -732,7 +733,8 @@ fn nav_event(
                     if context_open.get() {
                         // Activate action
                         if let Some(upgr) = context_selection.upgrade() {
-                            if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>() {
+                            if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>()
+                            {
                                 row.emit_by_name::<()>("context-action-should-activate", &[]);
                             }
                         }

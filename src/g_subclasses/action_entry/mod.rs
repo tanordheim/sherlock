@@ -5,7 +5,9 @@ use gio::glib::{object::ObjectExt, SignalHandlerId};
 use glib::Object;
 use gtk4::glib;
 
-use crate::{actions::applaunch::applaunch, loader::util::ApplicationAction, ui::tiles::util::IconComp};
+use crate::{
+    actions::applaunch::applaunch, loader::util::ApplicationAction, ui::tiles::util::IconComp,
+};
 
 glib::wrapper! {
     pub struct ContextAction(ObjectSubclass<imp::ContextAction>)
@@ -31,7 +33,10 @@ impl ContextAction {
                 title_label.set_text(&title);
             }
         }
-        imp.icon.get().and_then(|tmp| tmp.upgrade()).map(|icon| icon.set_icon(&action.icon, &None, &None));
+        imp.icon
+            .get()
+            .and_then(|tmp| tmp.upgrade())
+            .map(|icon| icon.set_icon(&action.icon, &None, &None));
         imp.terminal.set(terminal);
         if let Some(exec) = &action.exec {
             let signal_id = obj.connect_local("context-action-should-activate", false, {
