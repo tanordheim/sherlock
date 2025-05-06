@@ -60,6 +60,7 @@ overshoot:backdrop {
     font-family: "Cantarell";
 }
 
+
 #overlay spinner{
     color: hsl(var(--text));
 }

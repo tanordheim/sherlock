@@ -5,3 +5,4 @@ pub mod search;
 pub mod user;
 pub mod util;
 pub mod window;
+pub mod context;

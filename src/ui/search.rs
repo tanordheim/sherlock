@@ -2,12 +2,7 @@ use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
-    self,
-    gdk::{self, Key, ModifierType},
-    prelude::*,
-    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
-    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
-    Spinner,
+    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -16,9 +11,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::tiles::util::SherlockSearch;
+use super::{context::make_context, tiles::util::SherlockSearch};
 use super::util::*;
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::Loader};
+use crate::{g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow}, loader::Loader};
 use crate::{
     sherlock_error,
     utils::errors::{SherlockError, SherlockErrorType},
@@ -111,6 +106,7 @@ struct SearchUI {
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
+    context_model: WeakRef<ListStore>,
 }
 fn update_async(
     update_tiles: Vec<WeakRef<SherlockRow>>,
@@ -156,7 +152,7 @@ pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
     error_model: WeakRef<ListStore>,
-) -> Result<(GtkBox, SearchHandler), SherlockError> {
+) -> Result<(Overlay, SearchHandler), SherlockError> {
     // Initialize the view to show all apps
     let (search_query, mode, stack_page, ui, handler) = construct_window(error_model)?;
     ui.result_viewport
@@ -183,6 +179,7 @@ pub fn search(
         ui.binds,
         stack_page_ref,
         &mode,
+        ui.context_model.clone(),
     );
     change_event(
         ui.search_bar.clone(),
@@ -298,7 +295,7 @@ fn construct_window(
     (
         Rc<RefCell<String>>,
         Rc<RefCell<String>>,
-        GtkBox,
+        Overlay,
         SearchUI,
         SearchHandler,
     ),
@@ -320,6 +317,18 @@ fn construct_window(
     let vbox: GtkBox = builder.object("vbox").unwrap();
     let results: ListView = builder.object("result-frame").unwrap();
     results.set_focusable(false);
+
+    // Make overlay
+    // let test_box = GtkBox::new(gtk4::Orientation::Vertical, 0);
+    // test_box.append(&Label::new(Some("App-Specific-Action")));
+    // test_box.append(&Label::new(Some("App-Specific-Action")));
+    // test_box.append(&Label::new(Some("App-Specific-Action")));
+    // test_box.set_widget_name("context-menu");
+    let (context, context_model) = make_context();
+    let main_overlay = Overlay::new();
+    main_overlay.set_child(Some(&vbox));
+    main_overlay.add_overlay(&context);
+    // main_overlay.add_overlay(&test_box);
 
     let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
@@ -411,6 +420,7 @@ fn construct_window(
         filter: filter.downgrade(),
         sorter: sorter.downgrade(),
         binds: custom_binds,
+        context_model: context_model.downgrade(),
     };
     CONFIG.get().map(|c| {
         // disable status bar
@@ -429,7 +439,7 @@ fn construct_window(
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    Ok((search_text, mode, vbox, ui, handler))
+    Ok((search_text, mode, main_overlay, ui, handler))
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -541,6 +551,7 @@ fn nav_event(
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
     current_mode: &Rc<RefCell<String>>,
+    context_model: WeakRef<ListStore>,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
@@ -548,37 +559,65 @@ fn nav_event(
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
         let current_mode = Rc::clone(current_mode);
-        fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
-            let (new_index, n_items) = selection
-                .upgrade()
-                .map_or((0, 0), |results| results.focus_prev());
-            results.upgrade().map(|results| {
-                if n_items > 0 {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                }
-            });
+        fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>, context_model: &WeakRef<ListStore>)->Option<()>{
+            let selection = selection.upgrade()?;
+            let current = selection.selected();
+            let (new_index, n_items) = selection.focus_prev();
+
+            if new_index != current {
+                results.upgrade().map(|results| {
+                    if new_index < n_items {
+                        results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                    }
+                });
+                context_model.upgrade().map(|ctx| ctx.remove_all());
+            }
+            None
         }
-        fn move_next(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>) {
-            let (new_index, n_items) = selection
-                .upgrade()
-                .map_or((0, 0), |results| results.focus_next());
-            results.upgrade().map(|results| {
-                if new_index < n_items {
-                    results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                }
-            });
+        fn move_next(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>, context_model: &WeakRef<ListStore>)->Option<()> {
+            let selection = selection.upgrade()?;
+            let current = selection.selected();
+            let (new_index, n_items) = selection.focus_next();
+
+            if new_index != current {
+                results.upgrade().map(|results| {
+                    if new_index < n_items {
+                        results.scroll_to(new_index, ListScrollFlags::NONE, None)
+                    }
+                });
+                context_model.upgrade().map(|ctx| ctx.remove_all());
+            }
+            None
+        }
+        fn print_actions(selection: &WeakRef<SingleSelection>, context_model: &WeakRef<ListStore>)->Option<()>{
+            let selection = selection.upgrade()?;
+            let row = selection.selected_item().and_downcast::<SherlockRow>()?;
+            let context = context_model.upgrade()?;
+            context.remove_all();
+            for item in row.actions().iter() {
+                context.append(&ContextAction::new("", &item.0, item.1.clone(), row.terminal()))
+            }
+            Some(())
         }
         move |_, key, i, modifiers| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
             };
             match key {
+                gdk::Key::p => {
+                    if custom_binds
+                        .shortcut_modifier
+                        .map_or(false, |modifier| modifiers.contains(modifier))
+                    {
+                        print_actions(&selection, &context_model); 
+                    }
+                }
                 k if Some(k) == custom_binds.prev
                     && custom_binds
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_prev(&selection, &results);
+                    move_prev(&selection, &results, &context_model);
                     return true.into();
                 }
                 k if Some(k) == custom_binds.next
@@ -586,15 +625,15 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_next(&selection, &results);
+                    move_next(&selection, &results, &context_model);
                     return true.into();
                 }
                 gdk::Key::Up => {
-                    move_prev(&selection, &results);
+                    move_prev(&selection, &results, &context_model);
                     return true.into();
                 }
                 gdk::Key::Down => {
-                    move_next(&selection, &results);
+                    move_next(&selection, &results, &context_model);
                     return true.into();
                 }
                 gdk::Key::BackSpace => {
@@ -658,10 +697,10 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        move_prev(&selection, &results);
+                        move_prev(&selection, &results, &context_model);
                         return true.into();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        move_next(&selection, &results);
+                        move_next(&selection, &results, &context_model);
                         return true.into();
                     }
                 }

@@ -14,7 +14,7 @@ use levenshtein::levenshtein;
 
 use super::{search::SearchHandler, tiles::util::SherlockSearch, util::*};
 use crate::{g_subclasses::sherlock_row::SherlockRow, CONFIG};
-use gtk4::{Box as HVBox, ScrolledWindow};
+use gtk4::ScrolledWindow;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use crate::loader::pipe_loader::PipeData;
@@ -35,7 +35,7 @@ pub fn display_pipe(
     pipe_content: Vec<PipeData>,
     method: &str,
     error_model: WeakRef<ListStore>,
-) -> (HVBox, SearchHandler) {
+) -> (Overlay, SearchHandler) {
     let (search_text, stack_page, ui) = construct(pipe_content, method);
 
     if let Some(viewport) = ui.result_viewport.upgrade() {
@@ -74,7 +74,7 @@ pub fn display_raw<T: AsRef<str>>(
     content: T,
     center: bool,
     error_model: WeakRef<ListStore>,
-) -> (HVBox, SearchHandler) {
+) -> (Overlay, SearchHandler) {
     let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
     builder
         .content
@@ -96,10 +96,12 @@ pub fn display_raw<T: AsRef<str>>(
         .as_ref()
         .and_then(|tmp| tmp.upgrade())
         .unwrap_or_default();
-
-    (row, handler)
+    
+    let overlay = Overlay::new();
+    overlay.set_child(Some(&row));
+    (overlay, handler)
 }
-fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>, GtkBox, PipeUI) {
+fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>, Overlay, PipeUI) {
     // Collect Modes
     let custom_binds = ConfKeys::new();
     let search_text = Rc::new(RefCell::new(String::new()));
@@ -215,7 +217,9 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
         search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
-    (search_text, vbox, ui)
+    let main_overlay = Overlay::new();
+    main_overlay.set_child(Some(&vbox));
+    (search_text, main_overlay, ui)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();

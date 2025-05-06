@@ -23,6 +23,7 @@ use std::sync::OnceLock;
 /// * **disable**: Whether the tile be forced to not show.
 /// * **update**: The function used to update ui elements (i.e. calculator results or bulk text results)
 /// * **keyword_aware**: Whether the tile shuold take the keyword as context
+/// * **actions**: Additional actions this tile has
 #[derive(Default)]
 pub struct SherlockRow {
     /// Whether the tile should receive focus when Sherlock starts  
@@ -68,6 +69,12 @@ pub struct SherlockRow {
 
     /// Whether the tile shuold take the keyword as context
     pub keyword_aware: Cell<bool>,
+
+    /// * **actions**: Additional actions this tile has
+    pub actions: RefCell<Vec<(String, String)>>,
+
+    /// * **terminal**: If this tile should be executed using the terminal
+    pub terminal: Cell<bool>,
 }
 
 // The central trait for subclassing a GObject
