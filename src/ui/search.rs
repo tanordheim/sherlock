@@ -646,6 +646,7 @@ fn nav_event(
                 return false.into();
             };
             match key {
+                // Context menu opening
                 k if Some(k) == custom_binds.context
                     && custom_binds
                         .context_mod
@@ -654,6 +655,7 @@ fn nav_event(
                     open_context(&selection, &context_selection, &context_model);
                     context_open.set(true);
                 }
+                // Custom previous key
                 k if Some(k) == custom_binds.prev
                     && custom_binds
                         .prev_mod
@@ -666,6 +668,7 @@ fn nav_event(
                     }
                     return true.into();
                 }
+                // Custom next key
                 k if Some(k) == custom_binds.next
                     && custom_binds
                         .next_mod
