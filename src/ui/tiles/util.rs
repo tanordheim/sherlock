@@ -257,3 +257,31 @@ pub fn update_tag(label: &WeakRef<Label>, content: &Option<String>, keyword: &st
         });
     }
 }
+
+pub trait IconComp {
+    fn set_icon(
+        &self,
+        icon_name: &Option<String>,
+        icon_class: &Option<String>,
+        fallback: &Option<String>,
+    );
+}
+impl IconComp for Image {
+    fn set_icon(
+        &self,
+        icon_name: &Option<String>,
+        icon_class: &Option<String>,
+        fallback: &Option<String>,
+    ) {
+        if let Some(icon_name) = icon_name.as_ref().or_else(|| fallback.as_ref()) {
+            if icon_name.starts_with("/") {
+                self.set_from_file(Some(icon_name));
+            } else {
+                self.set_icon_name(Some(icon_name));
+            }
+        } else {
+            self.set_visible(false);
+        }
+        icon_class.as_ref().map(|c| self.add_css_class(c));
+    }
+}

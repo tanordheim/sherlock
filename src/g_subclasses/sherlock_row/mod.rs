@@ -7,7 +7,7 @@ use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
-use crate::launcher::Launcher;
+use crate::{launcher::Launcher, loader::util::ApplicationAction};
 
 glib::wrapper! {
     pub struct SherlockRow(ObjectSubclass<imp::SherlockRow>)
@@ -69,10 +69,10 @@ impl SherlockRow {
     pub fn set_keyword_aware(&self, state: bool) {
         self.imp().keyword_aware.set(state);
     }
-    pub fn set_actions(&self, actions: Vec<(String, String)>){
+    pub fn set_actions(&self, actions: Vec<ApplicationAction>) {
         *self.imp().actions.borrow_mut() = actions;
     }
-    pub fn set_terminal(&self, term: bool){
+    pub fn set_terminal(&self, term: bool) {
         self.imp().terminal.set(term);
     }
 
@@ -112,10 +112,10 @@ impl SherlockRow {
     pub fn is_keyword_aware(&self) -> bool {
         self.imp().keyword_aware.get()
     }
-    pub fn actions(&self) -> Ref<Vec<(String, String)>>{
+    pub fn actions(&self) -> Ref<Vec<ApplicationAction>> {
         self.imp().actions.borrow()
     }
-    pub fn terminal(&self)->bool{
+    pub fn terminal(&self) -> bool {
         self.imp().terminal.get()
     }
     /// Sets shared values from a launcher to the SherlockRow

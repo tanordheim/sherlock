@@ -180,6 +180,9 @@ impl SherlockNav for SingleSelection {
         let mut i = 0;
         let current_index = self.selected();
         let n_items = self.n_items();
+        if n_items == 0 {
+            return (0, 0)
+        }
         while i < n_items {
             if let Some(item) = self.item(i).and_downcast::<SherlockRow>() {
                 if item.imp().spawn_focus.get() {
@@ -188,6 +191,8 @@ impl SherlockNav for SingleSelection {
                 } else {
                     i += 1;
                 }
+            } else {
+                return (0,0)
             }
         }
         self.set_selected(current_index);

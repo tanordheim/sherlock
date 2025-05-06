@@ -3,7 +3,7 @@ use gio::glib::subclass::Signal;
 use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::prelude::{BoxExt, GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
-use gtk4::{glib, GestureClick, Label};
+use gtk4::{glib, GestureClick, Image, Label};
 use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::sync::OnceLock;
@@ -19,6 +19,7 @@ pub struct ContextAction {
     pub gesture: OnceCell<GestureClick>,
     pub signal_id: RefCell<Option<SignalHandlerId>>,
 
+    pub icon: OnceCell<WeakRef<Image>>,
     pub modkey: OnceCell<WeakRef<Label>>,
     pub title: OnceCell<WeakRef<Label>>,
 }
@@ -35,19 +36,27 @@ impl ObjectSubclass for ContextAction {
 impl ObjectImpl for ContextAction {
     fn constructed(&self) {
         self.parent_constructed();
+        let obj = self.obj();
+        obj.set_spacing(10);
+        // Modkey label
+        let icon = Image::new();
+        icon.set_halign(gtk4::Align::Start);
+        icon.set_valign(gtk4::Align::Center);
+        obj.append(&icon);
+        self.icon.set(icon.downgrade()).unwrap();
 
         // Modkey label
         let modkey = Label::new(None);
         modkey.set_halign(gtk4::Align::Start);
         modkey.set_valign(gtk4::Align::Center);
-        self.obj().append(&modkey);
+        obj.append(&modkey);
         self.modkey.set(modkey.downgrade()).unwrap();
 
         // Title label
         let title = Label::new(None);
         title.set_halign(gtk4::Align::Start);
         title.set_valign(gtk4::Align::Center);
-        self.obj().append(&title);
+        obj.append(&title);
         self.title.set(title.downgrade()).unwrap();
 
         // Only install gesture once
@@ -55,7 +64,7 @@ impl ObjectImpl for ContextAction {
             let gesture = GestureClick::new();
             gesture.set_button(0);
 
-            let obj = self.obj().downgrade();
+            let obj = obj.downgrade();
             gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {

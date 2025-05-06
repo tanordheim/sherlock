@@ -10,6 +10,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::OnceLock;
 
+use crate::loader::util::ApplicationAction;
+
 /// ## Fields:
 /// * **spawn_focus**: Whether the tile should receive focus when Sherlock starts.
 /// * **shortcut**: Whether the tile can display `modkey + number` shortcuts.
@@ -71,7 +73,7 @@ pub struct SherlockRow {
     pub keyword_aware: Cell<bool>,
 
     /// * **actions**: Additional actions this tile has
-    pub actions: RefCell<Vec<(String, String)>>,
+    pub actions: RefCell<Vec<ApplicationAction>>,
 
     /// * **terminal**: If this tile should be executed using the terminal
     pub terminal: Cell<bool>,
