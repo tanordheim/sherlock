@@ -6,7 +6,9 @@ use glib::Object;
 use gtk4::glib;
 
 use crate::{
-    actions::{execute_from_attrs, get_attrs_map}, loader::util::ApplicationAction, ui::tiles::util::IconComp,
+    actions::{execute_from_attrs, get_attrs_map},
+    loader::util::ApplicationAction,
+    ui::tiles::util::IconComp,
 };
 
 glib::wrapper! {
@@ -45,7 +47,7 @@ impl ContextAction {
                     let attrs = get_attrs_map(vec![
                         ("method", "app_launcher"),
                         ("exec", &exec),
-                        ("term", &terminal.to_string())
+                        ("term", &terminal.to_string()),
                     ]);
                     execute_from_attrs(&row, &attrs);
                     None

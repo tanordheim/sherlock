@@ -88,11 +88,8 @@ impl Tile {
                 };
 
                 builder.object.set_update(update_closure);
-                builder.object.set_search(&value.search_string);
                 builder.object.with_launcher(launcher);
-                builder.object.set_priority(value.priority);
-                builder.object.set_actions(value.actions.clone());
-                builder.object.set_terminal(value.terminal);
+                builder.object.with_appdata(&value);
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }

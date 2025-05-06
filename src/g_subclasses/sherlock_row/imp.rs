@@ -26,6 +26,8 @@ use crate::loader::util::ApplicationAction;
 /// * **update**: The function used to update ui elements (i.e. calculator results or bulk text results)
 /// * **keyword_aware**: Whether the tile shuold take the keyword as context
 /// * **actions**: Additional actions this tile has
+/// * **num_actions**: Number of additional actions
+/// * **terminal**: If the app should be executed using the terminal
 #[derive(Default)]
 pub struct SherlockRow {
     /// Whether the tile should receive focus when Sherlock starts  
@@ -74,6 +76,9 @@ pub struct SherlockRow {
 
     /// * **actions**: Additional actions this tile has
     pub actions: RefCell<Vec<ApplicationAction>>,
+
+    /// * **num_actions**: Number of additional actions
+    pub num_actions: Cell<usize>,
 
     /// * **terminal**: If this tile should be executed using the terminal
     pub terminal: Cell<bool>,

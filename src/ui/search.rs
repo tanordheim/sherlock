@@ -116,6 +116,8 @@ struct SearchUI {
     binds: ConfKeys,
     context_model: WeakRef<ListStore>,
     context_selection: WeakRef<SingleSelection>,
+    context_menu_first: WeakRef<Label>,
+    context_menu_second: WeakRef<Label>,
 }
 fn update_async(
     update_tiles: Vec<WeakRef<SherlockRow>>,
@@ -284,6 +286,31 @@ pub fn search(
         })
         .build();
 
+    // Action to display or hide context menu shortcut
+    let context_action = ActionEntry::builder("context-mode")
+        .parameter_type(Some(&bool::static_variant_type()))
+        .activate({
+            let first = ui.context_menu_first.clone();
+            let second = ui.context_menu_second.clone();
+            move |_, _, parameter| {
+                let parameter = parameter.and_then(|p| p.get::<bool>());
+                parameter.map(|p| {
+                    if p {
+                        first.upgrade().map(|tmp| tmp.set_css_classes(&["active"]));
+                        second.upgrade().map(|tmp| tmp.set_css_classes(&["active"]));
+                    } else {
+                        first
+                            .upgrade()
+                            .map(|tmp| tmp.set_css_classes(&["inactive"]));
+                        second
+                            .upgrade()
+                            .map(|tmp| tmp.set_css_classes(&["inactive"]));
+                    };
+                });
+            }
+        })
+        .build();
+
     let search_bar = ui.search_bar.clone();
     let action_clear_win = ActionEntry::builder("clear-search")
         .activate(move |_: &ApplicationWindow, _, _| {
@@ -294,7 +321,12 @@ pub fn search(
             });
         })
         .build();
-    window.add_action_entries([mode_action, action_clear_win, action_spinner]);
+    window.add_action_entries([
+        mode_action,
+        action_clear_win,
+        action_spinner,
+        context_action,
+    ]);
 
     return Ok((stack_page, handler));
 }
@@ -418,6 +450,9 @@ fn construct_window(
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
     let mode_title: Label = builder.object("category-type-label").unwrap_or_default();
+    let context_action_first: Label = builder.object("context-menu-first").unwrap_or_default();
+    let context_action_second: Label = builder.object("context-menu-second").unwrap_or_default();
+
     let ui = SearchUI {
         result_viewport: result_viewport.downgrade(),
         results: results.downgrade(),
@@ -432,6 +467,8 @@ fn construct_window(
         binds: custom_binds,
         context_model: context_model.downgrade(),
         context_selection,
+        context_menu_first: context_action_first.downgrade(),
+        context_menu_second: context_action_second.downgrade(),
     };
     CONFIG.get().map(|c| {
         // disable status bar
@@ -581,11 +618,38 @@ fn nav_event(
             let (new_index, n_items) = selection.focus_prev();
 
             if new_index != current {
-                results.upgrade().map(|results| {
-                    if new_index < n_items {
-                        results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                    }
-                });
+                let results = results.upgrade()?;
+                if new_index < n_items {
+                    results.scroll_to(new_index, ListScrollFlags::NONE, None);
+                    let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
+                    let _ = results.activate_action(
+                        "win.context-mode",
+                        Some(&(selected.num_actions() > 0).to_variant()),
+                    );
+                }
+                context_model.upgrade().map(|ctx| ctx.remove_all());
+            }
+            None
+        }
+        fn move_next(
+            selection: &WeakRef<SingleSelection>,
+            results: &WeakRef<ListView>,
+            context_model: &WeakRef<ListStore>,
+        ) -> Option<()> {
+            let selection = selection.upgrade()?;
+            let current = selection.selected();
+            let (new_index, n_items) = selection.focus_next();
+
+            if new_index != current {
+                let results = results.upgrade()?;
+                if new_index < n_items {
+                    results.scroll_to(new_index, ListScrollFlags::NONE, None);
+                    let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
+                    let _ = results.activate_action(
+                        "win.context-mode",
+                        Some(&(selected.num_actions() > 0).to_variant()),
+                    );
+                }
                 context_model.upgrade().map(|ctx| ctx.remove_all());
             }
             None
@@ -600,45 +664,34 @@ fn nav_event(
             let _ = selection.focus_prev();
             None
         }
-        fn move_next(
-            selection: &WeakRef<SingleSelection>,
-            results: &WeakRef<ListView>,
-            context_model: &WeakRef<ListStore>,
-        ) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let current = selection.selected();
-            let (new_index, n_items) = selection.focus_next();
-
-            if new_index != current {
-                results.upgrade().map(|results| {
-                    if new_index < n_items {
-                        results.scroll_to(new_index, ListScrollFlags::NONE, None)
-                    }
-                });
-                context_model.upgrade().map(|ctx| ctx.remove_all());
-            }
-            None
-        }
         fn open_context(
             selection: &WeakRef<SingleSelection>,
             context_selection: &WeakRef<SingleSelection>,
             context_model: &WeakRef<ListStore>,
+            context_open: &Cell<bool>,
         ) -> Option<()> {
             let selection = selection.upgrade()?;
             let row = selection.selected_item().and_downcast::<SherlockRow>()?;
             let context = context_model.upgrade()?;
             context.remove_all();
-            for action in row.actions().iter() {
-                context.append(&ContextAction::new("", &action, row.terminal()))
+            if row.num_actions() > 0 {
+                for action in row.actions().iter() {
+                    context.append(&ContextAction::new("", &action, row.terminal()))
+                }
+                let context_selection = context_selection.upgrade()?;
+                let _ = context_selection.set_selected(0);
+                context_open.set(true);
             }
-            let context_selection = context_selection.upgrade()?;
-            let _ = context_selection.set_selected(0);
-            Some(())
+            None
         }
-        fn close_context(context_model: &WeakRef<ListStore>) -> Option<()> {
+        fn close_context(
+            context_model: &WeakRef<ListStore>,
+            context_open: &Cell<bool>,
+        ) -> Option<()> {
             let context = context_model.upgrade()?;
             context.remove_all();
-            Some(())
+            context_open.set(false);
+            None
         }
         let context_open: Cell<bool> = Cell::new(false);
         move |_, key, i, modifiers| {
@@ -652,8 +705,12 @@ fn nav_event(
                         .context_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    open_context(&selection, &context_selection, &context_model);
-                    context_open.set(true);
+                    open_context(
+                        &selection,
+                        &context_selection,
+                        &context_model,
+                        &context_open,
+                    );
                 }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
@@ -751,8 +808,7 @@ fn nav_event(
                     }
                 }
                 Key::Escape if context_open.get() => {
-                    close_context(&context_model);
-                    context_open.set(false);
+                    close_context(&context_model, &context_open);
                     return true.into();
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {

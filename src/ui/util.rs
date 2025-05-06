@@ -49,6 +49,7 @@ pub struct ConfKeys {
     // ContextMenu
     pub context: Option<Key>,
     pub context_mod: Option<ModifierType>,
+    pub context_str: Option<String>,
     pub context_mod_str: String,
     // Shortcuts
     pub shortcut_modifier: Option<ModifierType>,
@@ -59,15 +60,15 @@ impl ConfKeys {
         if let Some(c) = CONFIG.get() {
             let (prev_mod, prev) = match &c.binds.prev {
                 Some(prev) => ConfKeys::eval_bind_combination(prev),
-                _ => (None, None),
+                _ => (None, (None, None)),
             };
             let (next_mod, next) = match &c.binds.next {
                 Some(next) => ConfKeys::eval_bind_combination(next),
-                _ => (None, None),
+                _ => (None, (None, None)),
             };
             let (context_mod, context) = match &c.binds.context {
                 Some(context) => ConfKeys::eval_bind_combination(context),
-                _ => (None, None),
+                _ => (None, (None, None)),
             };
             let shortcut_modifier = match &c.binds.modifier {
                 Some(shortcut) => ConfKeys::eval_mod(shortcut),
@@ -76,12 +77,13 @@ impl ConfKeys {
             let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
             let context_mod_str = ConfKeys::get_mod_str(&context_mod);
             return ConfKeys {
-                next,
+                next: next.0,
                 next_mod,
-                prev,
+                prev: prev.0,
                 prev_mod,
-                context,
+                context: context.0,
                 context_mod,
+                context_str: context.1,
                 context_mod_str,
                 shortcut_modifier,
                 shortcut_modifier_str,
@@ -98,32 +100,37 @@ impl ConfKeys {
             context: None,
             context_mod: None,
             context_mod_str: String::new(),
+            context_str: None,
             shortcut_modifier: None,
             shortcut_modifier_str: String::new(),
         }
     }
-    fn eval_bind_combination<T: AsRef<str>>(key: T) -> (Option<ModifierType>, Option<Key>) {
+    fn eval_bind_combination<T: AsRef<str>>(
+        key: T,
+    ) -> (Option<ModifierType>, (Option<Key>, Option<String>)) {
         let key_str = key.as_ref();
         match key_str.split("-").collect::<Vec<&str>>().as_slice() {
             [modifier, key, ..] => (ConfKeys::eval_mod(modifier), ConfKeys::eval_key(key)),
             [key, ..] => (None, ConfKeys::eval_key(key)),
-            _ => (None, None),
+            _ => (None, (None, None)),
         }
     }
-    fn eval_key<T: AsRef<str>>(key: T) -> Option<Key> {
+    fn eval_key<T: AsRef<str>>(key: T) -> (Option<Key>, Option<String>) {
         match key.as_ref().to_ascii_lowercase().as_ref() {
-            "tab" => Some(Key::Tab),
-            "up" => Some(Key::Up),
-            "down" => Some(Key::Down),
-            "left" => Some(Key::Left),
-            "right" => Some(Key::Right),
-            "pgup" => Some(Key::Page_Up),
-            "pgdown" => Some(Key::Page_Down),
-            "end" => Some(Key::End),
-            "home" => Some(Key::Home),
+            "tab" => (Some(Key::Tab), Some(String::from("⇥"))),
+            "up" => (Some(Key::Up), Some(String::from("↑"))),
+            "down" => (Some(Key::Down), Some(String::from("↓"))),
+            "left" => (Some(Key::Left), Some(String::from("←"))),
+            "right" => (Some(Key::Right), Some(String::from("→"))),
+            "pgup" => (Some(Key::Page_Up), Some(String::from("⇞"))),
+            "pgdown" => (Some(Key::Page_Down), Some(String::from("⇟"))),
+            "end" => (Some(Key::End), Some(String::from("End"))),
+            "home" => (Some(Key::Home), Some(String::from("Home"))),
             // Alphabet
-            k if k.len() == 1 && k.chars().all(|c| c.is_ascii_alphabetic()) => Key::from_name(k),
-            _ => None,
+            k if k.len() == 1 && k.chars().all(|c| c.is_ascii_alphabetic()) => {
+                (Key::from_name(k), Some(k.to_uppercase()))
+            }
+            _ => (None, None),
         }
     }
     fn eval_mod(key: &str) -> Option<ModifierType> {
