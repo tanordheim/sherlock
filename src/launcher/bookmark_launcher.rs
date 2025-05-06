@@ -161,6 +161,8 @@ impl MozillaSqliteParser {
                         tag_end: raw.tag_end.clone(),
                         desktop_file: None,
                         priority: raw.priority + 1.0,
+                        actions: vec![],
+                        terminal: false
                     };
                     res.insert(bookmark);
                 }
@@ -246,6 +248,8 @@ impl ChromeParser {
                             tag_end: raw.tag_end.clone(),
                             desktop_file: None,
                             priority: raw.priority + 1.0,
+                            actions: vec![],
+                            terminal: false,
                         });
                     }
                 }

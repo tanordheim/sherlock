@@ -1,21 +1,13 @@
 use std::{
     env,
     fs::File,
-    io::{self, BufRead, BufReader, Read},
+    io::{self, BufRead},
     path::{Path, PathBuf},
 };
 
 use crate::sherlock_error;
 
 use super::errors::{SherlockError, SherlockErrorType};
-
-pub fn read_file(file_path: &str) -> std::io::Result<String> {
-    let file = File::open(file_path)?;
-    let mut reader = BufReader::new(file);
-    let mut content = String::new();
-    reader.read_to_string(&mut content)?;
-    Ok(content)
-}
 
 pub fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
 where
