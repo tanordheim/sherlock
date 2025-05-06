@@ -1,8 +1,5 @@
 use gio::{
-    glib::{
-        object::{Cast, CastNone, ObjectExt},
-        WeakRef,
-    },
+    glib::object::{Cast, CastNone, ObjectExt},
     prelude::ListModelExt,
     ListStore,
 };
@@ -13,12 +10,11 @@ use gtk4::{
 
 use crate::g_subclasses::action_entry::ContextAction;
 
-pub fn make_context() -> (ListView, ListStore, WeakRef<SingleSelection>) {
+pub fn make_context() -> (ListView, ListStore) {
     let factory = make_factory();
     let model = ListStore::new::<ContextAction>();
     let selection = SingleSelection::new(Some(model.clone()));
-    let selection_weak = selection.downgrade();
-    let context = ListView::new(Some(selection.clone()), Some(factory));
+    let context = ListView::new(Some(selection), Some(factory));
 
     model.connect_items_changed({
         let context_clone = context.downgrade();
@@ -36,7 +32,7 @@ pub fn make_context() -> (ListView, ListStore, WeakRef<SingleSelection>) {
     context.set_width_request(300);
     context.set_halign(gtk4::Align::End);
     context.set_valign(gtk4::Align::End);
-    (context, model, selection_weak)
+    (context, model)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();

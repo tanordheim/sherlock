@@ -94,48 +94,6 @@ window:not(#backdrop) {
     border: 2px solid hsl(var(--border));
 }
 
-/* STATUS BAR */
-.status-bar {
-    background: hsla(var(--foreground), 0.2);
-    border-top: 1px solid hsl(var(--border));
-    padding: 4px 10px 4px 20px;
-}
-.status-bar label {
-    color: hsl(var(--text), 0.3);
-}
-.spinner-disappear {
-    animation: vanish-rotate 0.3s ease forwards;
-}
-.spinner-appear {
-    animation: ease-opacity 0.3s ease forwards;
-    animation: rotate 0.3s linear infinite;
-}
-
-/* CONTEXT MENU */
-#context-menu {
-    /* activation animation */
-    /* animation: context-menu 0.5s ease forwards; */
-    min-width: 50px;
-    padding: 5px;
-    margin: 4px;
-    margin-bottom: 31px;
-    background: hsl(var(--background));
-    border: 1px solid hsl(var(--border));
-    border-radius: 5px;
-}
-#context-menu row {
-    color: hsla(var(--text), 0.8);
-    transition: 0.1s ease;
-    padding: 10px 20px;
-    border-radius: 5px;
-}
-#context-menu label {
-    color: hsla(var(--text), 0.8);
-    font-size: 13px;
-}
-#context-menu row:selected {
-    background: hsl(var(--foreground));
-}
 
 
 /* SEARCH PAGE */
@@ -492,20 +450,56 @@ row:selected .tile{
     border-top: 1px solid hsl(var(--border));
     padding: 4px 10px 4px 20px;
 }
-.status-bar label {
+.status-bar label#logo {
     color: hsl(var(--text), 0.3);
 }
-
-
-@keyframes slide {
-    from {
-        transform: translate(0px, 0px);
-    }
-
-    to {
-        transform: translate(-20px, 0px);
-    }
+.status-bar #shortcut-key, .status-bar #shortcut-modifier {
+    background: hsl(var(--foreground));
+    margin: 2px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 13px;
 }
+.spinner-disappear {
+    animation: vanish-rotate 0.3s ease forwards;
+}
+.spinner-appear {
+    animation: ease-opacity 0.3s ease forwards;
+    animation: rotate 0.3s linear infinite;
+}
+.inactive {
+    opacity: 0;
+    transition: 0.1s ease;
+}
+.active {
+    opacity: 1;
+    transition: 0.1s ease;
+}
+
+/* CONTEXT MENU */
+#context-menu {
+    min-width: 50px;
+    padding: 5px;
+    margin: 4px;
+    margin-bottom: 40px;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: 5px;
+}
+#context-menu row {
+    color: hsla(var(--text), 0.8);
+    transition: 0.1s ease;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+#context-menu label {
+    color: hsla(var(--text), 0.8);
+    font-size: 13px;
+}
+#context-menu row:selected {
+    background: hsl(var(--foreground));
+}
+
 
 /* WEATHER TILE */
 .weather-tile {
@@ -598,3 +592,12 @@ row:selected .tile{
     }
 }
 
+@keyframes slide {
+    from {
+        transform: translate(0px, 0px);
+    }
+
+    to {
+        transform: translate(-20px, 0px);
+    }
+}
