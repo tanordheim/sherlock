@@ -180,6 +180,7 @@ pub trait SherlockNav {
     fn focus_first(&self) -> (u32, u32);
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
+    fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
 }
 impl SherlockNav for ListView {
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
@@ -269,5 +270,18 @@ impl SherlockNav for ListView {
     fn selected_item(&self) -> Option<glib::Object> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
         selection.selected_item()
+    }
+    fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let n_items = selection.n_items();
+        let weaks = (0..n_items)
+            .filter_map(|i| {
+                selection
+                    .item(i)
+                    .and_downcast::<SherlockRow>()
+                    .map(|row| row.downgrade())
+            })
+            .collect();
+        Some(weaks)
     }
 }
