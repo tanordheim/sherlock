@@ -111,6 +111,32 @@ window:not(#backdrop) {
     animation: rotate 0.3s linear infinite;
 }
 
+/* CONTEXT MENU */
+#context-menu {
+    /* activation animation */
+    /* animation: context-menu 0.5s ease forwards; */
+    min-width: 50px;
+    padding: 5px;
+    margin: 4px;
+    margin-bottom: 31px;
+    background: hsl(var(--background));
+    border: 1px solid hsl(var(--border));
+    border-radius: 5px;
+}
+#context-menu row {
+    color: hsla(var(--text), 0.8);
+    transition: 0.1s ease;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+#context-menu label {
+    color: hsla(var(--text), 0.8);
+    font-size: 13px;
+}
+#context-menu row:selected {
+    background: hsl(var(--foreground));
+}
+
 
 /* SEARCH PAGE */
 #search-bar {
