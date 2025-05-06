@@ -110,7 +110,6 @@ struct SearchUI {
     search_icon_holder: WeakRef<GtkBox>,
     mode_title: WeakRef<Label>,
     spinner: WeakRef<Spinner>,
-    selection: WeakRef<SingleSelection>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
@@ -182,7 +181,6 @@ pub fn search(
     });
 
     nav_event(
-        ui.selection.clone(),
         ui.results.clone(),
         ui.search_bar.clone(),
         ui.filter.clone(),
@@ -200,7 +198,6 @@ pub fn search(
         &mode,
         ui.filter,
         ui.sorter,
-        ui.selection,
         &search_query,
         &handler.task,
     );
@@ -461,7 +458,6 @@ fn construct_window(
         search_icon_holder: search_icon_holder.downgrade(),
         mode_title: mode_title.downgrade(),
         spinner: spinner.downgrade(),
-        selection: selection.downgrade(),
         filter: filter.downgrade(),
         sorter: sorter.downgrade(),
         binds: custom_binds,
@@ -591,7 +587,6 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
 }
 
 fn nav_event(
-    selection: WeakRef<SingleSelection>,
     results: WeakRef<ListView>,
     search_bar: WeakRef<Entry>,
     filter: WeakRef<CustomFilter>,
@@ -635,13 +630,13 @@ fn nav_event(
             None
         }
         fn open_context(
-            selection: &WeakRef<SingleSelection>,
+            results: &WeakRef<ListView>,
             context_view: &WeakRef<ListView>,
             context_model: &WeakRef<ListStore>,
             context_open: &Cell<bool>,
         ) -> Option<()> {
-            let selection = selection.upgrade()?;
-            let row = selection.selected_item().and_downcast::<SherlockRow>()?;
+            let results = results.upgrade()?;
+            let row = results.selected_item().and_downcast::<SherlockRow>()?;
             let context = context_model.upgrade()?;
             context.remove_all();
             if row.num_actions() > 0 {
@@ -675,7 +670,7 @@ fn nav_event(
                         .context_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    open_context(&selection, &context_view, &context_model, &context_open);
+                    open_context(&results, &context_view, &context_model, &context_open);
                 }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
@@ -765,10 +760,12 @@ fn nav_event(
                         }
                     } else {
                         // Activate apptile
-                        if let Some(upgr) = selection.upgrade() {
-                            if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
-                                row.emit_by_name::<()>("row-should-activate", &[]);
-                            }
+                        if let Some(row) = results
+                            .upgrade()
+                            .and_then(|r| r.selected_item())
+                            .and_downcast::<SherlockRow>()
+                        {
+                            row.emit_by_name::<()>("row-should-activate", &[]);
                         }
                     }
                 }
@@ -820,7 +817,6 @@ fn change_event(
     mode: &Rc<RefCell<String>>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
-    selection: WeakRef<SingleSelection>,
     search_query: &Rc<RefCell<String>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
 ) -> Option<()> {
@@ -859,19 +855,10 @@ fn change_event(
                         results.scroll_to(0, ListScrollFlags::NONE, None);
                     }
                 });
-                let weaks: Vec<WeakRef<SherlockRow>> = if let Some(selection) = selection.upgrade()
-                {
-                    (0..n_items)
-                        .filter_map(|i| {
-                            selection
-                                .item(i)
-                                .and_downcast::<SherlockRow>()
-                                .map(|row| row.downgrade())
-                        })
-                        .collect()
-                } else {
-                    vec![]
-                };
+                let weaks = results
+                    .upgrade()
+                    .and_then(|r| r.get_weaks())
+                    .unwrap_or(vec![]);
                 update_async(weaks, &current_task, current_text);
             }
         }
