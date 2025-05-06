@@ -622,6 +622,8 @@ pub struct ConfigBinds {
     pub prev: Option<String>,
     #[serde(default)]
     pub next: Option<String>,
+    #[serde(default="default_context")]
+    pub context: Option<String>,
     #[serde(default)]
     pub modifier: Option<String>,
 }
@@ -714,6 +716,9 @@ pub fn default_modkey_ascii() -> Vec<String> {
         String::from("✦"), // hyper
         String::from("⌘"), // default
     ]
+}
+pub fn default_context()->Option<String>{
+    Some(String::from("control-l"))
 }
 pub fn get_terminal() -> Result<String, SherlockError> {
     let mut terminal = None;

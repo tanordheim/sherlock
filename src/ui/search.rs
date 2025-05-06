@@ -646,15 +646,13 @@ fn nav_event(
                 return false.into();
             };
             match key {
-                gdk::Key::p => {
-                    if custom_binds
-                        .shortcut_modifier
-                        .map_or(false, |modifier| modifiers.contains(modifier))
-                    {
+                k if Some(k) == custom_binds.context 
+                    && custom_binds.context_mod
+                    .map_or(true, |m| modifiers.contains(m)) => 
+                {
                         open_context(&selection, &context_selection, &context_model);
                         context_open.set(true);
-                    }
-                }
+                },
                 k if Some(k) == custom_binds.prev
                     && custom_binds
                         .prev_mod
