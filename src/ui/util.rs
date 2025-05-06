@@ -40,10 +40,17 @@ impl ShortCut for HVBox {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
+    // Next
     pub next: Option<Key>,
     pub next_mod: Option<ModifierType>,
+    // Previous
     pub prev: Option<Key>,
     pub prev_mod: Option<ModifierType>,
+    // ContextMenu
+    pub context: Option<Key>,
+    pub context_mod: Option<ModifierType>,
+    pub context_mod_str: String,
+    // Shortcuts
     pub shortcut_modifier: Option<ModifierType>,
     pub shortcut_modifier_str: String,
 }
@@ -58,16 +65,24 @@ impl ConfKeys {
                 Some(next) => ConfKeys::eval_bind_combination(next),
                 _ => (None, None),
             };
+            let (context_mod, context) = match &c.binds.context {
+                Some(context) => ConfKeys::eval_bind_combination(context),
+                _ => (None, None),
+            };
             let shortcut_modifier = match &c.binds.modifier {
                 Some(shortcut) => ConfKeys::eval_mod(shortcut),
                 _ => Some(ModifierType::CONTROL_MASK),
             };
             let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
+            let context_mod_str = ConfKeys::get_mod_str(&context_mod);
             return ConfKeys {
                 next,
                 next_mod,
                 prev,
                 prev_mod,
+                context,
+                context_mod,
+                context_mod_str,
                 shortcut_modifier,
                 shortcut_modifier_str,
             };
@@ -80,6 +95,9 @@ impl ConfKeys {
             next_mod: None,
             prev: None,
             prev_mod: None,
+            context: None,
+            context_mod: None,
+            context_mod_str: String::new(),
             shortcut_modifier: None,
             shortcut_modifier_str: String::new(),
         }
