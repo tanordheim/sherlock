@@ -1,6 +1,5 @@
 use glob::Pattern;
 use rayon::prelude::*;
-use regex::Regex;
 use simd_json;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -11,10 +10,19 @@ use std::time::SystemTime;
 use super::{util, Loader};
 use crate::utils::{
     errors::{SherlockError, SherlockErrorType},
-    files::{read_file, read_lines},
+    files::read_lines,
 };
 use crate::{sherlock_error, CONFIG};
 use util::{AppData, SherlockAlias};
+pub struct ApplicationAction {
+    name: Option<String>,
+    exec: Option<String>,
+}
+impl ApplicationAction {
+    pub fn new()->Self{
+        Self { name: None, exec: None }
+    }
+}
 
 impl Loader {
     pub fn load_applications_from_disk(
@@ -29,17 +37,6 @@ impl Loader {
 
         // Define required paths for application parsing
         let system_apps = get_applications_dir();
-
-        // Parse needed fields from the '.desktop'
-        let (name_re, icon_re, exec_re, display_re, terminal_re, keywords_re) =
-            get_regex_patterns().map_err(|e| return e)?;
-
-        let parse_field = |content: &str, regex: &Regex| {
-            regex
-                .captures(content)
-                .and_then(|caps| caps.get(1).map(|m| m.as_str().to_string()))
-                .unwrap_or_default()
-        };
 
         // Parse user-specified 'sherlockignore' file
         let ignore_apps: Vec<Pattern> = match read_lines(&config.files.ignore) {
@@ -80,74 +77,80 @@ impl Loader {
             .into_par_iter()
             .filter_map(|entry| {
                 let r_path = entry.to_str()?;
-                match read_file(r_path) {
+                match read_lines(r_path) {
                     Ok(content) => {
-                        if parse_field(&content, &display_re) == "true" {
-                            return None;
-                        }
-
-                        // Extract keywords, icon, and name fields
-                        let mut keywords = parse_field(&content, &keywords_re);
-                        let mut icon = parse_field(&content, &icon_re);
-                        let mut name = parse_field(&content, &name_re);
-                        if name.is_empty() || should_ignore(&ignore_apps, &name) {
-                            return None; // Skip entries with empty names
-                        }
-
-                        // Construct the executable command
-                        let mut exec = config
-                            .behavior
-                            .global_prefix
-                            .as_ref()
-                            .map_or(String::new(), |pre| format!("{} ", pre));
-                        if parse_field(&content, &terminal_re) == "true" {
-                            exec.push_str(&config.default_apps.terminal);
-                            exec.push(' ');
-                        }
-                        exec.push_str(&parse_field(&content, &exec_re));
-                        if let Some(flag) = &config.behavior.global_flags {
-                            exec.push(' ');
-                            exec.push_str(&flag);
-                        }
-
-                        // apply aliases
-                        if let Some(alias) = aliases.get(&name) {
-                            if let Some(alias_name) = alias.name.as_ref() {
-                                name = alias_name.to_string();
+                        let mut data = AppData::new();
+                        let mut current_section = None;
+                        let mut current_action = ApplicationAction::new();
+                        data.desktop_file = Some(entry);
+                        for line in content.flatten() {
+                            let line = line.trim();
+                            // Skip useless lines
+                            if line.is_empty() || line.starts_with('#'){
+                                continue;
                             }
-                            if let Some(alias_icon) = alias.icon.as_ref() {
-                                icon = alias_icon.to_string();
+                            if line.starts_with('[') && line.ends_with(']') {
+                                current_section = Some(line[1..line.len() -1].to_string());
+                                current_action = ApplicationAction::new();
+                                continue;
                             }
-                            if let Some(alias_keywords) = alias.keywords.as_ref() {
-                                keywords = alias_keywords.to_string();
+                            if current_section.is_none() {
+                                continue;
                             }
-                            if let Some(alias_exec) = alias.exec.as_ref() {
-                                exec = alias_exec.to_string();
-                            }
-                        };
-                        let search_string = format!("{};{}", name, keywords);
+                            if let Some((key, value)) = line.split_once('='){
+                                let key = key.trim().to_ascii_lowercase();
+                                let value = value.trim();
+                                if current_section.as_deref().unwrap() == "Desktop Entry" {
+                                    match key.as_ref() {
+                                        "name" => data.name = {
+                                            if should_ignore(&ignore_apps, value) {
+                                                return None;
+                                            } 
+                                            value.to_string()
+                                        },
+                                        "icon" => data.icon = Some(value.to_string()),
+                                        "exec" => data.exec = {
 
-                        let desktop_file_path = match config.behavior.caching {
-                            true => Some(entry),
-                            false => None,
-                        };
+                                            value.to_string()
+                                        },
+                                        "nodisplay" if value.eq_ignore_ascii_case("true") => return None,
+                                        "terminal" => {
+                                            data.terminal = value.eq_ignore_ascii_case("true");
+                                        },
+                                        "keywords" => data.search_string = value.to_string(),
+                                        _ => {}
+                                    }
+                                } else {
+                                    // Application Actions
+                                    match key.as_ref() {
+                                        "name" => {
+                                            if current_action.exec.is_some() {
+                                                data.actions.push((current_action.name.clone().unwrap(), value.to_string()));
+                                                current_section = None;
+                                            } else {
+                                                current_action.name = Some(value.to_string());
+                                            }
+                                        },
+                                        "exec" => {
+                                            if current_action.name.is_some() {
+                                                data.actions.push((current_action.name.clone().unwrap(), value.to_string()));
+                                            } else {
+                                                current_action.exec = Some(value.to_string());
+                                                current_section = None;
+                                            }
+                                        },
+                                        _ => {}
+                                    }
+                                }
 
+                            }
+                        }
+                        data.apply_alias(aliases.get(&data.name));
                         // apply counts
-                        let count = counts.get(&exec).unwrap_or(&0.0);
+                        let count = counts.get(&data.exec).unwrap_or(&0.0);
                         let priority = parse_priority(priority, *count, decimals);
-
-                        // Return the processed app data
-                        Some(AppData {
-                            name,
-                            icon: Some(icon),
-                            icon_class: None,
-                            exec,
-                            search_string,
-                            tag_start: None,
-                            tag_end: None,
-                            desktop_file: desktop_file_path,
-                            priority,
-                        })
+                        data.priority = priority;
+                        Some(data)
                     }
                     Err(_) => None,
                 }
@@ -281,25 +284,6 @@ pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
     }
 }
 
-fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), SherlockError> {
-    fn construct_pattern(key: &str) -> Result<Regex, SherlockError> {
-        let pattern = format!(r#"(?im)^{}\s*=\s*[\'\"]?(.*?)[\'\"]?\s*$"#, key);
-        Regex::new(&pattern).map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::RegexError(key.to_string()),
-                e.to_string()
-            )
-        })
-    }
-    let name = construct_pattern("Name")?;
-    let icon = construct_pattern("Icon")?;
-    let exec = construct_pattern("Exec")?;
-    let display = construct_pattern("NoDisplay")?;
-    let terminal = construct_pattern("Terminal")?;
-    let keywords = construct_pattern("Keywords")?;
-    return Ok((name, icon, exec, display, terminal, keywords));
-}
-
 pub fn get_applications_dir() -> HashSet<PathBuf> {
     let xdg_paths = match env::var("XDG_DATA_DIRS").ok() {
         Some(paths) => {
@@ -389,68 +373,4 @@ fn test_get_applications_dir() {
 
     // Assert that the result matches the expected HashSet
     assert_eq!(res, expected_app_dirs);
-}
-#[test]
-fn test_desktop_file_entries() {
-    let test_cases = vec![
-        String::from("\ntest=1.0"),
-        String::from("\ntest='Application'"),
-        String::from("\ntest=Example App"),
-        String::from("\ntest=\"Sample Utility\""),
-        String::from("\ntest='This is an example application'"),
-        String::from("\ntest=\"/usr/bin/example-app --example-flag\""),
-        String::from("\ntest='/usr/bin/example-app'"),
-        String::from("\ntest=example-icon"),
-        String::from("\ntest=\"false\""),
-        String::from("\ntest='true'"),
-        String::from("\ntest=application/x-example;"),
-        String::from("\ntest=false"),
-        String::from("\ntest='false'"),
-        String::from("\ntest='/opt/example'"),
-        String::from("\nTest=example-app"),
-        String::from(
-            "[Desktop Entry]
-test=/usr/bin/bssh
-        ",
-        ),
-    ];
-
-    let expected_values: Vec<String> = vec![
-        String::from("1.0"),
-        String::from("Application"),
-        String::from("Example App"),
-        String::from("Sample Utility"),
-        String::from("This is an example application"),
-        String::from("/usr/bin/example-app --example-flag"),
-        String::from("/usr/bin/example-app"),
-        String::from("example-icon"),
-        String::from("false"),
-        String::from("true"),
-        String::from("application/x-example;"),
-        String::from("false"),
-        String::from("false"),
-        String::from("/opt/example"),
-        String::from("example-app"),
-        String::from("/usr/bin/bssh"),
-    ];
-
-    // Fixed regex pattern: simpler and correctly matching optional quotes
-    let pattern = format!(r#"(?im)^{}\s*=\s*[\'\"]?(.*?)[\'\"]?\s*$"#, "test");
-    let re = Regex::new(&pattern).expect("Failed to construct regex pattern");
-
-    // Iterate over the test cases and expected results
-    test_cases
-        .iter()
-        .zip(expected_values.iter())
-        .for_each(|(case, res)| {
-            let catch = re
-                .captures(case)
-                .expect(&format!("Didn't match the pattern. String: {}", case));
-            let group = catch
-                .get(1)
-                .expect("Group 1 is non-existent")
-                .as_str()
-                .to_string();
-            assert_eq!(group, *res);
-        });
 }

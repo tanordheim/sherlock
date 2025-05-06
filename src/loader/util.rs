@@ -52,20 +52,58 @@ fn default_true() -> bool {
 pub struct AppData {
     #[serde(default)]
     pub name: String,
-    pub icon: Option<String>,
-    pub icon_class: Option<String>,
     pub exec: String,
     pub search_string: String,
+    #[serde(default)]
+    pub priority: f32,
+    pub icon: Option<String>,
+    pub icon_class: Option<String>,
     pub tag_start: Option<String>,
     pub tag_end: Option<String>,
     pub desktop_file: Option<PathBuf>,
     #[serde(default)]
-    pub priority: f32,
+    pub actions: Vec<(String, String)>,
+    pub terminal: bool,
 }
 impl AppData {
+    pub fn new()->Self{
+        Self {
+            name: String::new(),
+            exec: String::new(),
+            search_string: String::new(),
+            priority: 0.0,
+            icon: None,
+            icon_class: None,
+            tag_start: None,
+            tag_end: None,
+            desktop_file: None,
+            actions: vec![],
+            terminal: false,
+        }
+    }
     pub fn with_priority(mut self, priority: f32) -> Self {
         self.priority = priority;
         self
+    }
+    pub fn apply_alias(&mut self, alias: Option<&SherlockAlias>){
+        if let Some(alias) = alias {
+            if let Some(alias_name) = alias.name.as_ref() {
+                self.name = alias_name.to_string();
+            }
+            if let Some(alias_icon) = alias.icon.as_ref() {
+                self.icon = Some(alias_icon.to_string());
+            }
+            if let Some(alias_keywords) = alias.keywords.as_ref() {
+                self.search_string = format!("{};{}", self.name, alias_keywords)
+            } else {
+                self.search_string = format!("{};{}", self.name, self.search_string);
+            }
+            if let Some(alias_exec) = alias.exec.as_ref() {
+                self.exec = alias_exec.to_string();
+            }
+        } else {
+            self.search_string = format!("{};{}", self.name, self.search_string);
+        }
     }
 }
 impl Eq for AppData {}
