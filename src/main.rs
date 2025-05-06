@@ -62,7 +62,7 @@ async fn main() {
         let (window, stack, current_stack_page, open_win) = ui::window::window(app);
 
         // Add closing logic
-        app.set_accels_for_action("win.close", &["<Ctrl>W", "Escape"]);
+        app.set_accels_for_action("win.close", &["<Ctrl>W"]);
 
         // Significantly better id done here
         if let Some(window) = open_win.upgrade(){

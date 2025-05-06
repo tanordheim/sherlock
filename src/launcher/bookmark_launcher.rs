@@ -162,7 +162,7 @@ impl MozillaSqliteParser {
                         desktop_file: None,
                         priority: raw.priority + 1.0,
                         actions: vec![],
-                        terminal: false
+                        terminal: false,
                     };
                     res.insert(bookmark);
                 }

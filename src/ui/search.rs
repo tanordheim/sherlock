@@ -2,18 +2,26 @@ use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
-    self, gdk::{self, Key, ModifierType}, prelude::*, Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner
+    self,
+    gdk::{self, Key, ModifierType},
+    prelude::*,
+    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
+    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
+    Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use super::{context::make_context, tiles::util::SherlockSearch};
 use super::util::*;
-use crate::{g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow}, loader::Loader};
+use super::{context::make_context, tiles::util::SherlockSearch};
+use crate::{
+    g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow},
+    loader::Loader,
+};
 use crate::{
     sherlock_error,
     utils::errors::{SherlockError, SherlockErrorType},
@@ -107,6 +115,7 @@ struct SearchUI {
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
     context_model: WeakRef<ListStore>,
+    context_selection: WeakRef<SingleSelection>,
 }
 fn update_async(
     update_tiles: Vec<WeakRef<SherlockRow>>,
@@ -180,6 +189,7 @@ pub fn search(
         stack_page_ref,
         &mode,
         ui.context_model.clone(),
+        ui.context_selection.clone(),
     );
     change_event(
         ui.search_bar.clone(),
@@ -324,7 +334,7 @@ fn construct_window(
     // test_box.append(&Label::new(Some("App-Specific-Action")));
     // test_box.append(&Label::new(Some("App-Specific-Action")));
     // test_box.set_widget_name("context-menu");
-    let (context, context_model) = make_context();
+    let (context, context_model, context_selection) = make_context();
     let main_overlay = Overlay::new();
     main_overlay.set_child(Some(&vbox));
     main_overlay.add_overlay(&context);
@@ -421,6 +431,7 @@ fn construct_window(
         sorter: sorter.downgrade(),
         binds: custom_binds,
         context_model: context_model.downgrade(),
+        context_selection,
     };
     CONFIG.get().map(|c| {
         // disable status bar
@@ -552,6 +563,7 @@ fn nav_event(
     stack_page: &Rc<RefCell<String>>,
     current_mode: &Rc<RefCell<String>>,
     context_model: WeakRef<ListStore>,
+    context_selection: WeakRef<SingleSelection>,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
@@ -559,7 +571,11 @@ fn nav_event(
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
         let current_mode = Rc::clone(current_mode);
-        fn move_prev(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>, context_model: &WeakRef<ListStore>)->Option<()>{
+        fn move_prev(
+            selection: &WeakRef<SingleSelection>,
+            results: &WeakRef<ListView>,
+            context_model: &WeakRef<ListStore>,
+        ) -> Option<()> {
             let selection = selection.upgrade()?;
             let current = selection.selected();
             let (new_index, n_items) = selection.focus_prev();
@@ -574,7 +590,21 @@ fn nav_event(
             }
             None
         }
-        fn move_next(selection: &WeakRef<SingleSelection>, results: &WeakRef<ListView>, context_model: &WeakRef<ListStore>)->Option<()> {
+        fn move_next_context(selection: &WeakRef<SingleSelection>)->Option<()>{
+            let selection = selection.upgrade()?;
+            let _ = selection.focus_next();
+            None
+        }
+        fn move_prev_context(selection: &WeakRef<SingleSelection>)->Option<()>{
+            let selection = selection.upgrade()?;
+            let _ = selection.focus_prev();
+            None
+        }
+        fn move_next(
+            selection: &WeakRef<SingleSelection>,
+            results: &WeakRef<ListView>,
+            context_model: &WeakRef<ListStore>,
+        ) -> Option<()> {
             let selection = selection.upgrade()?;
             let current = selection.selected();
             let (new_index, n_items) = selection.focus_next();
@@ -589,16 +619,28 @@ fn nav_event(
             }
             None
         }
-        fn print_actions(selection: &WeakRef<SingleSelection>, context_model: &WeakRef<ListStore>)->Option<()>{
+        fn open_context(
+            selection: &WeakRef<SingleSelection>,
+            context_selection: &WeakRef<SingleSelection>,
+            context_model: &WeakRef<ListStore>,
+        ) -> Option<()> {
             let selection = selection.upgrade()?;
             let row = selection.selected_item().and_downcast::<SherlockRow>()?;
             let context = context_model.upgrade()?;
             context.remove_all();
-            for item in row.actions().iter() {
-                context.append(&ContextAction::new("", &item.0, item.1.clone(), row.terminal()))
+            for action in row.actions().iter() {
+                context.append(&ContextAction::new("", &action, row.terminal()))
             }
+            let context_selection = context_selection.upgrade()?;
+            let _ = context_selection.set_selected(0);
             Some(())
         }
+        fn close_context(context_model: &WeakRef<ListStore>)->Option<()>{
+            let context = context_model.upgrade()?;
+            context.remove_all();
+            Some(())
+        }
+        let context_open: Cell<bool> = Cell::new(false);
         move |_, key, i, modifiers| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
@@ -609,7 +651,8 @@ fn nav_event(
                         .shortcut_modifier
                         .map_or(false, |modifier| modifiers.contains(modifier))
                     {
-                        print_actions(&selection, &context_model); 
+                        open_context(&selection, &context_selection, &context_model);
+                        context_open.set(true);
                     }
                 }
                 k if Some(k) == custom_binds.prev
@@ -617,7 +660,11 @@ fn nav_event(
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_prev(&selection, &results, &context_model);
+                    if context_open.get() {
+                        move_prev_context(&context_selection);
+                    } else {
+                        move_prev(&selection, &results, &context_model);
+                    }
                     return true.into();
                 }
                 k if Some(k) == custom_binds.next
@@ -625,15 +672,27 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    move_next(&selection, &results, &context_model);
+                    if context_open.get() {
+                        move_next_context(&context_selection);
+                    } else {
+                        move_next(&selection, &results, &context_model);
+                    }
                     return true.into();
                 }
                 gdk::Key::Up => {
-                    move_prev(&selection, &results, &context_model);
+                    if context_open.get() {
+                        move_prev_context(&context_selection);
+                    } else {
+                        move_prev(&selection, &results, &context_model);
+                    }
                     return true.into();
                 }
                 gdk::Key::Down => {
-                    move_next(&selection, &results, &context_model);
+                    if context_open.get() {
+                        move_next_context(&context_selection);
+                    } else {
+                        move_next(&selection, &results, &context_model);
+                    }
                     return true.into();
                 }
                 gdk::Key::BackSpace => {
@@ -672,11 +731,26 @@ fn nav_event(
                     }
                 }
                 gdk::Key::Return => {
-                    if let Some(upgr) = selection.upgrade() {
-                        if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
-                            row.emit_by_name::<()>("row-should-activate", &[]);
+                    if context_open.get() {
+                        // Activate action
+                        if let Some(upgr) = context_selection.upgrade() {
+                            if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>() {
+                                row.emit_by_name::<()>("context-action-should-activate", &[]);
+                            }
+                        }
+                    } else {
+                        // Activate apptile
+                        if let Some(upgr) = selection.upgrade() {
+                            if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
+                                row.emit_by_name::<()>("row-should-activate", &[]);
+                            }
                         }
                     }
+                }
+                Key::Escape if context_open.get() => {
+                    close_context(&context_model);
+                    context_open.set(false);
+                    return true.into();
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
                     if custom_binds

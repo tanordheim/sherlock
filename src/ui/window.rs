@@ -10,8 +10,8 @@ use std::{
 
 use gio::glib::WeakRef;
 use gio::ActionEntry;
-use gtk4::gdk::{Display, Monitor};
-use gtk4::{prelude::*, Application, ApplicationWindow, StackTransitionType};
+use gtk4::gdk::{Display, Key, Monitor};
+use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey, StackTransitionType};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
 use serde::Deserialize;
@@ -56,6 +56,20 @@ pub fn window(
     window.set_namespace("sherlock");
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
+
+    // Handle the key press event
+    let key_controller = EventControllerKey::new();
+    key_controller.set_propagation_phase(gtk4::PropagationPhase::Bubble);
+    key_controller.connect_key_pressed({
+        let window_clone = window.downgrade();
+        move |_, keyval, _, _| {
+            if keyval == Key::Escape {
+                window_clone.upgrade().map(|win| gtk4::prelude::WidgetExt::activate_action(&win, "win.close", None));
+            }
+            false.into()
+        }
+    });
+    window.add_controller(key_controller);
 
     // Make backdrop if config key is set
     let backdrop = CONFIG
@@ -295,8 +309,11 @@ fn make_backdrop(
     backdrop.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
     backdrop.set_layer(Layer::Overlay);
 
+
+
     let window_clone = main_window.downgrade();
     let backdrop_clone = backdrop.downgrade();
+
     backdrop.connect_show({
         let window = window_clone.clone();
         move |_| {

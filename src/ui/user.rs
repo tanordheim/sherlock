@@ -96,7 +96,7 @@ pub fn display_raw<T: AsRef<str>>(
         .as_ref()
         .and_then(|tmp| tmp.upgrade())
         .unwrap_or_default();
-    
+
     let overlay = Overlay::new();
     overlay.set_child(Some(&row));
     (overlay, handler)

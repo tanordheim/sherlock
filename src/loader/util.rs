@@ -47,6 +47,27 @@ pub struct RawLauncher {
 fn default_true() -> bool {
     true
 }
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct ApplicationAction {
+    pub name: Option<String>,
+    pub exec: Option<String>,
+    pub icon: Option<String>,
+}
+impl ApplicationAction {
+    pub fn new() -> Self {
+        Self {
+            name: None,
+            exec: None,
+            icon: None,
+        }
+    }
+    pub fn is_valid(&self) -> bool {
+        self.name.is_some() && self.exec.is_some()
+    }
+    pub fn is_full(&self) -> bool {
+        self.name.is_some() && self.exec.is_some() && self.icon.is_some()
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct AppData {
@@ -62,11 +83,12 @@ pub struct AppData {
     pub tag_end: Option<String>,
     pub desktop_file: Option<PathBuf>,
     #[serde(default)]
-    pub actions: Vec<(String, String)>,
+    pub actions: Vec<ApplicationAction>,
+    #[serde(default)]
     pub terminal: bool,
 }
 impl AppData {
-    pub fn new()->Self{
+    pub fn new() -> Self {
         Self {
             name: String::new(),
             exec: String::new(),
@@ -85,7 +107,7 @@ impl AppData {
         self.priority = priority;
         self
     }
-    pub fn apply_alias(&mut self, alias: Option<&SherlockAlias>){
+    pub fn apply_alias(&mut self, alias: Option<&SherlockAlias>) {
         if let Some(alias) = alias {
             if let Some(alias_name) = alias.name.as_ref() {
                 self.name = alias_name.to_string();

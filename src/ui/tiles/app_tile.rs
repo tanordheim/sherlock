@@ -8,7 +8,7 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::Launcher;
 use crate::loader::util::AppData;
 
-use super::util::{update_tag, TileBuilder};
+use super::util::{update_tag, IconComp, TileBuilder};
 use super::Tile;
 
 impl Tile {
@@ -19,21 +19,10 @@ impl Tile {
                 let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
 
                 // Icon stuff
-                if let Some(icon_name) = value.icon.as_ref().or_else(|| launcher.icon.as_ref()) {
-                    builder.icon.and_then(|tmp| tmp.upgrade()).map(|icon| {
-                        if icon_name.starts_with("/") {
-                            icon.set_from_file(Some(icon_name));
-                        } else {
-                            icon.set_icon_name(Some(icon_name));
-                        }
-                        value.icon_class.as_ref().map(|c| icon.add_css_class(c));
-                    });
-                } else {
-                    builder
-                        .icon
-                        .and_then(|tmp| tmp.upgrade())
-                        .map(|icon| icon.set_visible(false));
-                }
+                builder
+                    .icon
+                    .and_then(|tmp| tmp.upgrade())
+                    .map(|icon| icon.set_icon(&value.icon, &value.icon_class, &launcher.icon));
 
                 let update_closure = {
                     // Construct attrs and enable action capabilities
@@ -46,8 +35,11 @@ impl Tile {
                     let row_weak = builder.object.downgrade();
 
                     let launcher = launcher.clone();
-                    let attrs =
-                        get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec), ("term", &value.terminal.to_string())]);
+                    let attrs = get_attrs_map(vec![
+                        ("method", &launcher.method),
+                        ("exec", &value.exec),
+                        ("term", &value.terminal.to_string()),
+                    ]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     let name = value.name.clone();
                     move |keyword: &str| -> bool {

@@ -1,12 +1,14 @@
 use glob::Pattern;
 use rayon::prelude::*;
 use simd_json;
+use simd_json::prelude::ArrayTrait;
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+use super::util::ApplicationAction;
 use super::{util, Loader};
 use crate::utils::{
     errors::{SherlockError, SherlockErrorType},
@@ -14,15 +16,6 @@ use crate::utils::{
 };
 use crate::{sherlock_error, CONFIG};
 use util::{AppData, SherlockAlias};
-pub struct ApplicationAction {
-    name: Option<String>,
-    exec: Option<String>,
-}
-impl ApplicationAction {
-    pub fn new()->Self{
-        Self { name: None, exec: None }
-    }
-}
 
 impl Loader {
     pub fn load_applications_from_disk(
@@ -86,65 +79,63 @@ impl Loader {
                         for line in content.flatten() {
                             let line = line.trim();
                             // Skip useless lines
-                            if line.is_empty() || line.starts_with('#'){
+                            if line.is_empty() || line.starts_with('#') {
                                 continue;
                             }
                             if line.starts_with('[') && line.ends_with(']') {
-                                current_section = Some(line[1..line.len() -1].to_string());
+                                current_section = Some(line[1..line.len() - 1].to_string());
+                                if current_action.is_valid() {
+                                    data.actions.push(current_action.clone())
+                                }
                                 current_action = ApplicationAction::new();
                                 continue;
                             }
                             if current_section.is_none() {
                                 continue;
                             }
-                            if let Some((key, value)) = line.split_once('='){
+                            if let Some((key, value)) = line.split_once('=') {
                                 let key = key.trim().to_ascii_lowercase();
                                 let value = value.trim();
                                 if current_section.as_deref().unwrap() == "Desktop Entry" {
                                     match key.as_ref() {
-                                        "name" => data.name = {
-                                            if should_ignore(&ignore_apps, value) {
-                                                return None;
-                                            } 
-                                            value.to_string()
-                                        },
+                                        "name" => {
+                                            data.name = {
+                                                if should_ignore(&ignore_apps, value) {
+                                                    return None;
+                                                }
+                                                value.to_string()
+                                            }
+                                        }
                                         "icon" => data.icon = Some(value.to_string()),
-                                        "exec" => data.exec = {
-
-                                            value.to_string()
-                                        },
-                                        "nodisplay" if value.eq_ignore_ascii_case("true") => return None,
+                                        "exec" => data.exec = value.to_string(),
+                                        "nodisplay" if value.eq_ignore_ascii_case("true") => {
+                                            return None
+                                        }
                                         "terminal" => {
                                             data.terminal = value.eq_ignore_ascii_case("true");
-                                        },
+                                        }
                                         "keywords" => data.search_string = value.to_string(),
                                         _ => {}
                                     }
                                 } else {
                                     // Application Actions
                                     match key.as_ref() {
-                                        "name" => {
-                                            if current_action.exec.is_some() {
-                                                data.actions.push((current_action.name.clone().unwrap(), value.to_string()));
-                                                current_section = None;
-                                            } else {
-                                                current_action.name = Some(value.to_string());
-                                            }
-                                        },
-                                        "exec" => {
-                                            if current_action.name.is_some() {
-                                                data.actions.push((current_action.name.clone().unwrap(), value.to_string()));
-                                            } else {
-                                                current_action.exec = Some(value.to_string());
-                                                current_section = None;
-                                            }
-                                        },
+                                        "name" => current_action.name = Some(value.to_string()),
+                                        "exec" => current_action.exec = Some(value.to_string()),
+                                        "icon" => current_action.icon = Some(value.to_string()),
                                         _ => {}
                                     }
+                                    if current_action.is_full() {
+                                        data.actions.push(current_action.clone());
+                                        current_action = ApplicationAction::new();
+                                        current_section = None;
+                                    }
                                 }
-
                             }
                         }
+                        data.actions.iter_mut()
+                            .filter(|action| action.icon.is_none())
+                            .for_each(|action| action.icon = data.icon.clone());
                         data.apply_alias(aliases.get(&data.name));
                         // apply counts
                         let count = counts.get(&data.exec).unwrap_or(&0.0);
