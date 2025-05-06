@@ -47,7 +47,7 @@ impl Tile {
 
                     let launcher = launcher.clone();
                     let attrs =
-                        get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec)]);
+                        get_attrs_map(vec![("method", &launcher.method), ("exec", &value.exec), ("term", &value.terminal.to_string())]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     let name = value.name.clone();
                     move |keyword: &str| -> bool {
@@ -99,6 +99,8 @@ impl Tile {
                 builder.object.set_search(&value.search_string);
                 builder.object.with_launcher(launcher);
                 builder.object.set_priority(value.priority);
+                builder.object.set_actions(value.actions.clone());
+                builder.object.set_terminal(value.terminal);
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }

@@ -1,6 +1,6 @@
 mod imp;
 
-use std::{future::Future, pin::Pin};
+use std::{cell::Ref, future::Future, pin::Pin};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
@@ -69,6 +69,12 @@ impl SherlockRow {
     pub fn set_keyword_aware(&self, state: bool) {
         self.imp().keyword_aware.set(state);
     }
+    pub fn set_actions(&self, actions: Vec<(String, String)>){
+        *self.imp().actions.borrow_mut() = actions;
+    }
+    pub fn set_terminal(&self, term: bool){
+        self.imp().terminal.set(term);
+    }
 
     // getters
     pub fn shortcut_holder(&self) -> Option<gtk4::Box> {
@@ -105,6 +111,12 @@ impl SherlockRow {
     }
     pub fn is_keyword_aware(&self) -> bool {
         self.imp().keyword_aware.get()
+    }
+    pub fn actions(&self) -> Ref<Vec<(String, String)>>{
+        self.imp().actions.borrow()
+    }
+    pub fn terminal(&self)->bool{
+        self.imp().terminal.get()
     }
     /// Sets shared values from a launcher to the SherlockRow
     /// * only_home

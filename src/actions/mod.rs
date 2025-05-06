@@ -32,7 +32,8 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             }
             "app_launcher" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
-                applaunch::applaunch(exec);
+                let term = attrs.get("term").map_or(false, |s| s.as_str() == "true");
+                applaunch::applaunch(exec, term);
                 increment(&exec);
                 eval_close(row);
             }
