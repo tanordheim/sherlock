@@ -64,7 +64,9 @@ pub fn window(
         let window_clone = window.downgrade();
         move |_, keyval, _, _| {
             if keyval == Key::Escape {
-                window_clone.upgrade().map(|win| gtk4::prelude::WidgetExt::activate_action(&win, "win.close", None));
+                window_clone
+                    .upgrade()
+                    .map(|win| gtk4::prelude::WidgetExt::activate_action(&win, "win.close", None));
             }
             false.into()
         }
@@ -308,8 +310,6 @@ fn make_backdrop(
     backdrop.set_namespace("sherlock-backdrop");
     backdrop.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
     backdrop.set_layer(Layer::Overlay);
-
-
 
     let window_clone = main_window.downgrade();
     let backdrop_clone = backdrop.downgrade();

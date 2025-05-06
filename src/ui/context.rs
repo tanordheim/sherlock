@@ -1,5 +1,8 @@
 use gio::{
-    glib::{object::{Cast, CastNone, ObjectExt}, WeakRef},
+    glib::{
+        object::{Cast, CastNone, ObjectExt},
+        WeakRef,
+    },
     prelude::ListModelExt,
     ListStore,
 };
