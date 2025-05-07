@@ -45,10 +45,10 @@ impl Tile {
                     let name = value.name.clone();
                     move |keyword: &str| -> bool {
                         let attrs = Rc::clone(&attrs_rc);
-                        attrs
-                            .borrow_mut()
-                            .insert(String::from("keyword"), keyword.to_string());
-
+                        {
+                            let mut attrs_ref = attrs.borrow_mut();
+                            attrs_ref.insert(String::from("keyword"), keyword.to_string());
+                        }
                         let tile_name = name.replace("{keyword}", keyword);
 
                         // update first tag
@@ -80,6 +80,8 @@ impl Tile {
                                     let row =
                                         row.first().map(|f| f.get::<SherlockRow>().ok())??;
                                     execute_from_attrs(&row, &attrs.borrow());
+                                    // To reload ui according to mode
+                                    let _ = row.activate_action("win.update-items", None);
                                     None
                                 });
                             row.set_signal_id(signal_id);

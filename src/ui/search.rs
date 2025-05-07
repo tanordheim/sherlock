@@ -75,8 +75,8 @@ pub fn search(
         ui.results.clone(),
         Rc::clone(&handler.modes),
         &mode,
-        ui.filter,
-        ui.sorter,
+        ui.filter.clone(),
+        ui.sorter.clone(),
         &search_query,
         &handler.task,
         ui.context_model.clone(),
@@ -127,6 +127,22 @@ pub fn search(
                         action.set_state(&state.to_variant());
                     }
                 }
+            }
+        })
+        .build();
+
+    // Action to update filter and sorter
+    let sorter_actions = ActionEntry::builder("update-items")
+        .activate({
+            let filter = ui.filter.clone();
+            let sorter = ui.sorter.clone();
+            move |_: &ApplicationWindow, _, _| {
+                filter
+                    .upgrade()
+                    .map(|filter| filter.changed(gtk4::FilterChange::Different));
+                sorter
+                    .upgrade()
+                    .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             }
         })
         .build();
@@ -197,6 +213,7 @@ pub fn search(
         action_clear_win,
         action_spinner,
         context_action,
+        sorter_actions,
     ]);
 
     return Ok((stack_page, handler));
