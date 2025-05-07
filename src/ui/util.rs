@@ -249,22 +249,24 @@ impl SherlockNav for ListView {
                 break;
             }
         }
-        if new_index != current_index {
+        let changed = new_index != current_index;
+        if changed {
             selection.set_selected(new_index);
-            if new_index < n_items {
-                self.scroll_to(new_index, ListScrollFlags::NONE, None);
-                let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-                let _ = self.activate_action(
-                    "win.context-mode",
-                    Some(&(selected.num_actions() > 0).to_variant()),
-                );
-            }
-            context_model
-                .and_then(|tmp| tmp.upgrade())
-                .map(|ctx| ctx.remove_all());
-            return Some(());
         }
-        None
+        if new_index < n_items {
+            self.scroll_to(new_index, ListScrollFlags::NONE, None);
+        }
+        // Update context mode shortcuts
+        let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
+        let _ = self.activate_action(
+            "win.context-mode",
+            Some(&(selected.num_actions() > 0).to_variant()),
+        );
+        context_model
+            .and_then(|tmp| tmp.upgrade())
+            .map(|ctx| ctx.remove_all());
+
+        changed.then_some(())
     }
     fn execute_by_index(&self, index: u32) {
         if let Some(selection) = self.model().and_downcast::<SingleSelection>() {

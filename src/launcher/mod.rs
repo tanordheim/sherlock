@@ -14,7 +14,11 @@ mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::{ApplicationAction, RawLauncher}, ui::tiles::Tile};
+use crate::{
+    g_subclasses::sherlock_row::SherlockRow,
+    loader::util::{ApplicationAction, RawLauncher},
+    ui::tiles::Tile,
+};
 
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;

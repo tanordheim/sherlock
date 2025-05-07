@@ -143,7 +143,7 @@ impl SherlockRow {
         if let Some(alias) = &launcher.alias {
             self.set_alias(alias);
         }
-        if let Some(actions) = &launcher.actions{
+        if let Some(actions) = &launcher.actions {
             self.set_actions(actions.clone());
             self.set_num_actions(actions.len());
         }
@@ -151,7 +151,7 @@ impl SherlockRow {
     pub fn with_appdata(&self, data: &AppData) {
         self.set_search(&data.search_string);
         self.set_priority(data.priority);
-        if !data.actions.is_empty(){
+        if !data.actions.is_empty() {
             self.set_actions(data.actions.clone());
             self.set_num_actions(data.actions.len());
         }
