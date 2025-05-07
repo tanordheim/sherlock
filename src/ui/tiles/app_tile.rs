@@ -90,6 +90,7 @@ impl Tile {
                 builder.object.set_update(update_closure);
                 builder.object.with_launcher(launcher);
                 builder.object.with_appdata(&value);
+                builder.object.add_actions(&launcher.add_actions);
                 if launcher.shortcut {
                     builder.object.set_shortcut_holder(builder.shortcut_holder);
                 }
