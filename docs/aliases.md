@@ -4,6 +4,8 @@ Sherlock aliases provide a way for you to customize the:
 2. Icon
 3. Keywords
 4. Exec
+5. Add_actions: adds additional actions to the context menu
+6. Actions: overwrites default actions
 of an app.
 <br>
 > **Example File:** [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
@@ -21,7 +23,14 @@ of an app.
         "icon": "your icon",
         "exec": "/path/to/applicatoin --your-flags %U",
         "keywords": "sample alias",
-        "add_actionns": [
+        "add_actions": [
+        {
+            "Example Action",
+            "exec": "/path/to/application --your-flags",
+            "icon": "your icon",
+            "method": "method",
+        }
+        "actions": [
         {
             "Example Action",
             "exec": "/path/to/application --your-flags",
@@ -32,7 +41,7 @@ of an app.
     }
 }
 ```
-### Available Methods 
+### Available Methods for Actions/Add_actions
 
 - `category`: Uses the `exec` to open a new mode
 - `app_launcher`: Opens the `exec` as an app
