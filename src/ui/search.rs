@@ -521,7 +521,7 @@ fn nav_event(
         ) -> Option<()> {
             // Early return if context is already opened
             if context_open.get() {
-                return None;
+                close_context(context_model, context_open)?;
             }
             let results = results.upgrade()?;
             let row = results.selected_item().and_downcast::<SherlockRow>()?;
