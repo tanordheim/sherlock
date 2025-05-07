@@ -542,7 +542,21 @@ Specifies the second offset from the `date` parameter.<br>
     "priority": 1,
     "home": true,
     "only_home": true,
-    "spawn_focus": false
+    "spawn_focus": false,
+    "actions": [
+        {
+            "name": "Skip",
+            "icon": "media-seek-forward",
+            "exec": "playerctl next",
+            "method": "command"
+        },
+        {
+            "name": "Previous",
+            "icon": "media-seek-backward",
+            "exec": "playerctl previous",
+            "method": "command"
+        }
+    ]
 }
 ```
 
