@@ -1,7 +1,7 @@
 mod imp;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::glib::{object::ObjectExt, SignalHandlerId};
+use gio::glib::{object::ObjectExt, variant::ToVariant, SignalHandlerId};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
@@ -52,7 +52,7 @@ impl ContextAction {
                     ]);
                     execute_from_attrs(&row, &attrs);
                     // To reload ui according to mode
-                    let _ = row.activate_action("win.update-items", None);
+                    let _ = row.activate_action("win.update-items", Some(&false.to_variant()));
                     None
                 }
             });

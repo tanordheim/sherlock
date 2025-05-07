@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::rc::Rc;
 
 use gio::glib::object::ObjectExt;
+use gio::glib::variant::ToVariant;
 use gio::glib::Bytes;
 use gio::prelude::ListModelExt;
 use gtk4::prelude::{BoxExt, WidgetExt};
@@ -143,7 +144,7 @@ impl Tile {
                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                 execute_from_attrs(&row, &attrs);
                 // To reload ui according to mode
-                let _ = row.activate_action("win.update-items", None);
+                let _ = row.activate_action("win.update-items", Some(&false.to_variant()));
                 None
             });
         builder.object.set_signal_id(signal_id);

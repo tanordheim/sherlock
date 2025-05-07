@@ -128,6 +128,7 @@ pub fn search(
 
     // Action to update filter and sorter
     let sorter_actions = ActionEntry::builder("update-items")
+        .parameter_type(Some(&bool::static_variant_type()))
         .activate({
             let filter = ui.filter.clone();
             let sorter = ui.sorter.clone();
@@ -135,17 +136,23 @@ pub fn search(
             let current_task = handler.task.clone();
             let current_text = search_query.clone();
             let context_model = context.model.clone();
-            move |_: &ApplicationWindow, _, _| {
-                filter
-                    .upgrade()
-                    .map(|filter| filter.changed(gtk4::FilterChange::Different));
-                sorter
-                    .upgrade()
-                    .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
-                if let Some(results) = results.upgrade() {
-                    if results.focus_first(Some(&context_model)).is_some() {
+            move |_: &ApplicationWindow, _, parameter| {
+                if let Some(focus_first) = parameter.and_then(|p| p.get::<bool>()) {
+                    filter
+                        .upgrade()
+                        .map(|filter| filter.changed(gtk4::FilterChange::Different));
+                    sorter
+                        .upgrade()
+                        .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+                    if let Some(results) = results.upgrade() {
                         let weaks = results.get_weaks().unwrap_or(vec![]);
-                        update_async(weaks, &current_task, current_text.borrow().clone());
+                        if focus_first {
+                            if results.focus_first(Some(&context_model)).is_some() {
+                                update_async(weaks, &current_task, current_text.borrow().clone());
+                            }
+                        } else {
+                            update_async(weaks, &current_task, current_text.borrow().clone());
+                        }
                     }
                 }
             }
@@ -543,8 +550,8 @@ fn nav_event(
             context_open: &Cell<bool>,
         ) -> Option<()> {
             // Early return if context is closed
-            if !context_open.get(){
-                return None
+            if !context_open.get() {
+                return None;
             }
             let context = context_model.upgrade()?;
             context.remove_all();
@@ -727,7 +734,7 @@ fn change_event(
             // filter and sort
             if let Some(res) = results.upgrade() {
                 // To reload ui according to mode
-                let _ = res.activate_action("win.update-items", None);
+                let _ = res.activate_action("win.update-items", Some(&true.to_variant()));
             }
         }
     });

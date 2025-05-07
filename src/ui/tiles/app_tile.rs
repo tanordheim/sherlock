@@ -81,7 +81,10 @@ impl Tile {
                                         row.first().map(|f| f.get::<SherlockRow>().ok())??;
                                     execute_from_attrs(&row, &attrs.borrow());
                                     // To reload ui according to mode
-                                    let _ = row.activate_action("win.update-items", None);
+                                    let _ = row.activate_action(
+                                        "win.update-items",
+                                        Some(&false.to_variant()),
+                                    );
                                     None
                                 });
                             row.set_signal_id(signal_id);
