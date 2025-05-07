@@ -542,6 +542,10 @@ fn nav_event(
             context_model: &WeakRef<ListStore>,
             context_open: &Cell<bool>,
         ) -> Option<()> {
+            // Early return if context is closed
+            if !context_open.get(){
+                return None
+            }
             let context = context_model.upgrade()?;
             context.remove_all();
             context_open.set(false);
