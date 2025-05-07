@@ -3,7 +3,7 @@ mod imp;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{object::ObjectExt, SignalHandlerId};
 use glib::Object;
-use gtk4::glib;
+use gtk4::{glib, prelude::WidgetExt};
 
 use crate::{
     actions::{execute_from_attrs, get_attrs_map},
@@ -51,6 +51,8 @@ impl ContextAction {
                         ("term", Some(&terminal.to_string())),
                     ]);
                     execute_from_attrs(&row, &attrs);
+                    // To reload ui according to mode
+                    let _ = row.activate_action("win.update-items", None);
                     None
                 }
             });

@@ -75,11 +75,7 @@ pub fn search(
         ui.results.clone(),
         Rc::clone(&handler.modes),
         &mode,
-        ui.filter.clone(),
-        ui.sorter.clone(),
         &search_query,
-        &handler.task,
-        ui.context_model.clone(),
     );
 
     // Improved mode selection
@@ -136,6 +132,9 @@ pub fn search(
         .activate({
             let filter = ui.filter.clone();
             let sorter = ui.sorter.clone();
+            let results = ui.results.clone();
+            let current_task = handler.task.clone();
+            let current_text = search_query.clone();
             move |_: &ApplicationWindow, _, _| {
                 filter
                     .upgrade()
@@ -143,6 +142,11 @@ pub fn search(
                 sorter
                     .upgrade()
                     .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+                let weaks = results
+                    .upgrade()
+                    .and_then(|r| r.get_weaks())
+                    .unwrap_or(vec![]);
+                update_async(weaks, &current_task, current_text.borrow().clone());
             }
         })
         .build();
@@ -690,17 +694,12 @@ fn change_event(
     results: WeakRef<ListView>,
     modes: Rc<RefCell<HashMap<String, Option<String>>>>,
     mode: &Rc<RefCell<String>>,
-    filter: WeakRef<CustomFilter>,
-    sorter: WeakRef<CustomSorter>,
     search_query: &Rc<RefCell<String>>,
-    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-    context_model: WeakRef<ListStore>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
         let mode_clone = Rc::clone(mode);
         let search_query_clone = Rc::clone(search_query);
-        let current_task = Rc::clone(current_task);
 
         move |search_bar| {
             let mut current_text = search_bar.text().to_string();
@@ -719,23 +718,9 @@ fn change_event(
             }
             *search_query_clone.borrow_mut() = current_text.clone();
             // filter and sort
-            filter
-                .upgrade()
-                .map(|filter| filter.changed(gtk4::FilterChange::Different));
-            sorter
-                .upgrade()
-                .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
-            // focus first item
-            if results
-                .upgrade()
-                .map(|results| results.focus_first(Some(&context_model)))
-                .is_some()
-            {
-                let weaks = results
-                    .upgrade()
-                    .and_then(|r| r.get_weaks())
-                    .unwrap_or(vec![]);
-                update_async(weaks, &current_task, current_text);
+            if let Some(res) = results.upgrade() {
+                // To reload ui according to mode
+                let _ = res.activate_action("win.update-items", None);
             }
         }
     });
