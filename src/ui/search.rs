@@ -453,6 +453,13 @@ fn construct_window(
     let context_action_desc: Label = builder.object("context-menu-desc").unwrap_or_default();
     let context_action_first: Label = builder.object("context-menu-first").unwrap_or_default();
     let context_action_second: Label = builder.object("context-menu-second").unwrap_or_default();
+    if let Some(context_str) = &custom_binds.context_str {
+        context_action_first.set_text(&custom_binds.context_mod_str);
+        context_action_second.set_text(context_str);
+    } else {
+        context_action_first.set_visible(false);
+        context_action_second.set_visible(false);
+    }
 
     let ui = SearchUI {
         result_viewport: result_viewport.downgrade(),
