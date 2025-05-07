@@ -252,10 +252,10 @@ fn construct_window(
     let results: ListView = builder.object("result-frame").unwrap();
     results.set_focusable(false);
 
-    let (context, context_model) = make_context();
+    let (context, context_model, revealer) = make_context();
     let main_overlay = Overlay::new();
     main_overlay.set_child(Some(&vbox));
-    main_overlay.add_overlay(&context);
+    main_overlay.add_overlay(&revealer);
 
     let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
