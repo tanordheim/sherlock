@@ -372,17 +372,10 @@ fn construct_window(
     let results: ListView = builder.object("result-frame").unwrap();
     results.set_focusable(false);
 
-    // Make overlay
-    // let test_box = GtkBox::new(gtk4::Orientation::Vertical, 0);
-    // test_box.append(&Label::new(Some("App-Specific-Action")));
-    // test_box.append(&Label::new(Some("App-Specific-Action")));
-    // test_box.append(&Label::new(Some("App-Specific-Action")));
-    // test_box.set_widget_name("context-menu");
     let (context, context_model) = make_context();
     let main_overlay = Overlay::new();
     main_overlay.set_child(Some(&vbox));
     main_overlay.add_overlay(&context);
-    // main_overlay.add_overlay(&test_box);
 
     let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
     search_icon_holder.add_css_class("search");
@@ -491,8 +484,6 @@ fn construct_window(
         ui.search_icon_holder
             .upgrade()
             .map(|holder| holder.set_visible(c.appearance.search_icon));
-        search_icon.set_pixel_size(c.appearance.icon_size);
-        search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
     Ok((search_text, mode, main_overlay, ui, handler))
