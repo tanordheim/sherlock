@@ -37,18 +37,18 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 increment(&exec);
                 eval_close(row);
             }
-            "bookmarks" => {
-                let query = attrs.get("exec").map_or("", |s| s.as_str());
+            "web_launcher" | "bookmarks" => {
                 let engine = attrs.get("engine").map_or("plain", |s| s.as_str());
+                let query = if let Some(query) = attrs.get("keyword"){
+                    let exec = format!("websearch-{}", engine);
+                    increment(&exec);
+                    query.as_str()
+                } else if let Some(query) = attrs.get("exec"){
+                    query.as_str()
+                } else {
+                    ""
+                };
                 let _ = websearch::websearch(engine, query);
-                eval_close(row);
-            }
-            "web_launcher" => {
-                let query = attrs.get("keyword").map_or("", |s| s.as_str());
-                let engine = attrs.get("engine").map_or("", |s| s.as_str());
-                let _ = websearch::websearch(engine, query);
-                let exec = format!("websearch-{}", engine);
-                increment(&exec);
                 eval_close(row);
             }
             "command" => {
