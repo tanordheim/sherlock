@@ -52,13 +52,15 @@ pub struct ApplicationAction {
     pub name: Option<String>,
     pub exec: Option<String>,
     pub icon: Option<String>,
+    pub method: String,
 }
 impl ApplicationAction {
-    pub fn new() -> Self {
+    pub fn new(method: &str) -> Self {
         Self {
             name: None,
             exec: None,
             icon: None,
+            method: method.to_string(),
         }
     }
     pub fn is_valid(&self) -> bool {
