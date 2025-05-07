@@ -29,7 +29,7 @@ of an app.
             "exec": "/path/to/application --your-flags",
             "icon": "your icon",
             "method": "method",
-        }
+        },
         "actions": [
         {
             "Example Action",
