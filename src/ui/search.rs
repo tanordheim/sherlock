@@ -37,22 +37,22 @@ pub fn search(
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
 
+    // Mode setup - used to decide which tiles should be shown
     let initial_mode = mode.borrow().clone();
     let modes_clone = Rc::clone(&handler.modes);
     let mode_clone = Rc::clone(&mode);
 
-    let search_bar = ui.search_bar.clone();
-    stack_page.connect_realize(move |_| {
-        search_bar
-            .upgrade()
-            .map(|search_bar| search_bar.grab_focus());
-    });
-
-    // Show or hide context menu shortcuts whenever stack shows
+    // Initial setup on show
     stack_page.connect_realize({
+        let search_bar = ui.search_bar.clone();
         let results = ui.results.clone();
         let context_model = ui.context_model.clone();
         move |_| {
+            // Focus search bar as soon as it's visible
+            search_bar
+                .upgrade()
+                .map(|search_bar| search_bar.grab_focus());
+            // Show or hide context menu shortcuts whenever stack shows
             results
                 .upgrade()
                 .map(|r| r.focus_first(Some(&context_model)));
@@ -83,7 +83,6 @@ pub fn search(
     );
 
     // Improved mode selection
-    let search_bar = ui.search_bar.clone();
     let mode_action = ActionEntry::builder("switch-mode")
         .parameter_type(Some(&String::static_variant_type()))
         .state(initial_mode.to_variant())
@@ -125,14 +124,6 @@ pub fn search(
                                 state = parameter;
                             }
                         }
-                        let search_bar = search_bar.clone();
-                        glib::idle_add_local(move || {
-                            // to trigger homescreen rebuild
-                            search_bar.upgrade().map(|entry| {
-                                entry.set_text("");
-                            });
-                            glib::ControlFlow::Break
-                        });
                         action.set_state(&state.to_variant());
                     }
                 }
@@ -706,6 +697,7 @@ fn change_event(
             if !trimmed.is_empty() && modes.borrow().contains_key(&current_text) {
                 // Logic to apply modes
                 let _ = search_bar.activate_action("win.switch-mode", Some(&trimmed.to_variant()));
+                let _ = search_bar.activate_action("win.clear-search", None);
                 current_text.clear();
             }
             *search_query_clone.borrow_mut() = current_text.clone();
