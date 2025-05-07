@@ -471,20 +471,15 @@ fn construct_window(
         context_menu_first: context_action_first.downgrade(),
         context_menu_second: context_action_second.downgrade(),
     };
-    CONFIG.get().map(|c| {
-        // disable status bar
-        if !c.appearance.status_bar {
-            let n: Option<GtkBox> = builder.object("status-bar");
-            n.map(|n| n.set_visible(false));
-        }
-        // set sizes
-        ui.result_viewport.upgrade().map(|viewport| {
-            viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
-        });
-        ui.search_icon_holder
-            .upgrade()
-            .map(|holder| holder.set_visible(c.appearance.search_icon));
-    });
+    // disable status bar
+    if !config.appearance.status_bar {
+        let n: Option<GtkBox> = builder.object("status-bar");
+        n.map(|n| n.set_visible(false));
+    }
+    // enable or disable search bar icons
+    ui.search_icon_holder
+        .upgrade()
+        .map(|holder| holder.set_visible(config.appearance.search_icon));
 
     Ok((search_text, mode, main_overlay, ui, handler))
 }
