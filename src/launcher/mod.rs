@@ -14,7 +14,7 @@ mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::RawLauncher, ui::tiles::Tile};
+use crate::{g_subclasses::sherlock_row::SherlockRow, loader::util::{ApplicationAction, RawLauncher}, ui::tiles::Tile};
 
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
@@ -80,6 +80,7 @@ pub struct Launcher {
     pub shortcut: bool,
     pub spawn_focus: bool,
     pub only_home: bool,
+    pub actions: Option<Vec<ApplicationAction>>,
 }
 impl Launcher {
     pub fn from_raw(
@@ -103,6 +104,7 @@ impl Launcher {
             launcher_type,
             shortcut: raw.shortcut,
             spawn_focus: raw.spawn_focus,
+            actions: raw.actions,
         }
     }
 }
