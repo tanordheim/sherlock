@@ -1,8 +1,11 @@
 # Launchers
+Launchers are the backbone of Sherlock. Each item – including applications, custom commands, or functional widgets like the weather – inherit from a Launcher. The `fallback.json` file can be thought of as something like Sherlock's "package manager", to toggle specific features on and off or to customize their behavior.<br>
 
-In the Sherlock Application Launcher, each tile is associated with a specific "launcher." You can think of a launcher as a category to which tiles belong. For example, if a launcher is set to invisible, all tiles under that launcher will also be invisible.<br>
-
-Launchers are defined in the `fallback.json` file located in your config directory (`/home/user/.config/sherlock/`). If the application cannot find your configuration, it will fallback to the default configuration, which is stored in [resources/fallback.json](https://github.com/Skxxtz/sherlock/blob/main/resources/fallback.json).<br>
+The default location for the `fallback.json` file is in your Sherlock config
+directory (`/home/user/.config/sherlock/`). If the file does not exist, you'll
+be greeted with a warning and the default fallback file – [packaged in the
+binary](https://github.com/Skxxtz/sherlock/blob/main/resources/fallback.json) –
+will be used.<br>
 
 > **Example File:** [fallback.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json)
 <br>
