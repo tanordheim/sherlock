@@ -85,6 +85,7 @@ pub struct Launcher {
     pub spawn_focus: bool,
     pub only_home: bool,
     pub actions: Option<Vec<ApplicationAction>>,
+    pub add_actions: Option<Vec<ApplicationAction>>,
 }
 impl Launcher {
     pub fn from_raw(
@@ -109,6 +110,7 @@ impl Launcher {
             shortcut: raw.shortcut,
             spawn_focus: raw.spawn_focus,
             actions: raw.actions,
+            add_actions: raw.add_actions,
         }
     }
 }

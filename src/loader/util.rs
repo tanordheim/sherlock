@@ -45,6 +45,8 @@ pub struct RawLauncher {
     pub args: serde_json::Value,
     #[serde(default)]
     pub actions: Option<Vec<ApplicationAction>>,
+    #[serde(default)]
+    pub add_actions: Option<Vec<ApplicationAction>>,
 }
 fn default_true() -> bool {
     true
