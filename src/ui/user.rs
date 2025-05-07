@@ -385,7 +385,9 @@ fn change_event(
             }
 
             // filter and sort
-            *search_query_clone.borrow_mut() = current_text;
+            {
+                *search_query_clone.borrow_mut() = current_text;
+            }
             filter
                 .upgrade()
                 .map(|filter| filter.changed(gtk4::FilterChange::Different));
