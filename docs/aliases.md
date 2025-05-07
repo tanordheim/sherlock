@@ -8,7 +8,8 @@ Sherlock aliases provide a way for you to customize the:
 6. Actions: overwrites default actions
 of an app.
 <br>
-> **Example File:** [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
+
+> **Example File**: [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
 
 ## Setup:
 1. Create the `sherlock_alias.json` file:
