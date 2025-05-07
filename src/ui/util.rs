@@ -254,7 +254,7 @@ impl SherlockNav for ListView {
             selection.set_selected(new_index);
         }
         if new_index < n_items {
-            self.scroll_to(new_index, ListScrollFlags::NONE, None);
+            self.scroll_to(0, ListScrollFlags::NONE, None);
         }
         // Update context mode shortcuts
         let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
