@@ -48,8 +48,10 @@ The launcher can be of the following types:<br>
 | `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
 
-## Category Launcher
 
+<br>
+
+## Category Launcher
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="category-launcher" width="100%" src="assets/CategoryTile.svg">
@@ -93,8 +95,9 @@ The launcher can be of the following types:<br>
 2. `search_string`: the string to match to on search
 3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
 
-## App Launcher
+<br>
 
+## App Launcher
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="app-launcher" width="100%" src="assets/AppTile.svg">
@@ -113,8 +116,9 @@ The launcher can be of the following types:<br>
 }
 ```
 
-## Bookmark Launcher
+<br>
 
+## Bookmark Launcher
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BookmarkTile.svg">
@@ -135,6 +139,8 @@ The launcher can be of the following types:<br>
 }
 ```
 
+<br>
+
 ### Supported Browsers
 Currently these are the supported launchers. It is beneficiary to set the `browser` key in the `default_apps`section.
 
@@ -146,8 +152,9 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 | **Chrome**      | `chrome`, `google-chrome`, `/usr/bin/google-chrome-stable %u` |
 | **Thorium**      | `thorium`, `/usr/bin/thorium-browser %u` |
 
-## Web Launcher
+<br>
 
+## Web Launcher
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
@@ -190,8 +197,9 @@ Can be either of the following:
 **`icon`** (required):<br>
 Sets the icon-name the launcher should show.
 
-## Calculator
+<br>
 
+## Calculator
 <div align="center">
   <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
   <br />
@@ -222,8 +230,9 @@ Specifies what the launcher should parse:
 - **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
-## Clipboard Launcher
+<br>
 
+## Clipboard Launcher
 <div align="center">
   <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg" />
   <br>
@@ -267,6 +276,8 @@ Specifies what the launcher should parse:
 > You can also use
 > - `colors.all` to use all available color formats
 > - `calc.units` to use all available unit transformations
+
+<br>
 
 ## Command Launcher
 ```json
@@ -345,8 +356,9 @@ Has following fields of its own:
 - `clear_cache`: Clears the files within the location set as cache.
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
 
-## Bulk Text
+<br>
 
+## Bulk Text
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="bulk-text-launcher" width="100%" src="assets/BulkText.svg">
@@ -382,8 +394,9 @@ Specifies the arguments to pass along to the `exec` program.<br>
 
 > The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
 
-## Teams Event
+<br>
 
+## Teams Event
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="teams-event-launcher" width="100%" src="assets/TeamsTile.svg">
@@ -420,8 +433,9 @@ Specifies the offset from the `date` parameter.<br>
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
 
-## Music Player
+<br>
 
+## Music Player
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="music-launcher" width="100%" src="assets/MprisTile.svg">
@@ -443,8 +457,9 @@ Specifies the second offset from the `date` parameter.<br>
 
 ```
 
-## Process Terminator
+<br>
 
+## Process Terminator
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="process-terminator-launcher" width="100%" src="assets/ProcessTerminator.svg">
@@ -464,8 +479,9 @@ Specifies the second offset from the `date` parameter.<br>
 
 ```
 
-## Weather Launcher
+<br>
 
+## Weather Launcher
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="weather-launcher" width="100%" src="assets/WeatherWidget.svg">
