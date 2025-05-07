@@ -1,20 +1,26 @@
 # Aliases
-Sherlock aliases provide a way for you to customize the:
+Sherlock aliases allow you to customize how applications are displayed and launcher within Sherlock. 
+## Example Problem
+The application `Brave Browser` should:
+- Appear with the display name **Webbrowser**#
+- Use a custom **Webbrowser icon**
+- Alwaays be launched with **Electron Wayland flags** to enhance rendering quality
+- Should have context menu entries to start a new private window
+This is a problem Sherlock aliases can fix.<br><
+
+Sherlock aliases provide a way for you to customize the application's:
 1. Name
 2. Icon
 3. Keywords
 4. Exec
-5. Add_actions: adds additional actions to the context menu
-6. Actions: overwrites default actions
-of an app.
+5. Sherlock Context Menu Entries
 <br>
 
 > **Example File**: [sherlock_alias.json](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/sherlock_alias.json)
 
-## Setup:
+## Usage:
 1. Create the `sherlock_alias.json` file:
-```echo {} > ~/.config/sherlock/sherlock_alias.json
-```
+`echo {} > ~/.config/sherlock/sherlock_alias.json` or `Sherlock init`
 2. Find the application you want to alias
 3. Write a simple alias entry into the alias file
 ```json
