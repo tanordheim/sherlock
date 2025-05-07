@@ -36,9 +36,9 @@ impl Tile {
 
                     let launcher = launcher.clone();
                     let attrs = get_attrs_map(vec![
-                        ("method", &launcher.method),
-                        ("exec", &value.exec),
-                        ("term", &value.terminal.to_string()),
+                        ("method", Some(&launcher.method)),
+                        ("exec", value.exec.as_deref()),
+                        ("term", Some(&value.terminal.to_string())),
                     ]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     let name = value.name.clone();

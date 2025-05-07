@@ -120,8 +120,12 @@ fn parse_appdata(
         deserialize_named_appdata(value.clone().into_deserializer()).unwrap_or_default();
     data.into_iter()
         .map(|c| {
-            let count = counts.get(&c.exec).copied().unwrap_or(0.0);
-            c.with_priority(parse_priority(prio, count, max_decimals))
+            let count = c
+                .exec
+                .as_ref()
+                .and_then(|exec| counts.get(exec))
+                .unwrap_or(&0.0);
+            c.with_priority(parse_priority(prio, *count, max_decimals))
         })
         .collect::<HashSet<AppData>>()
 }

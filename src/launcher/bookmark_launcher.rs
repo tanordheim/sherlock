@@ -155,7 +155,7 @@ impl MozillaSqliteParser {
                             .get("icon_class")
                             .and_then(|v| v.as_str())
                             .map(|s| s.to_string()),
-                        exec: row.1,
+                        exec: Some(row.1),
                         search_string: row.0,
                         tag_start: raw.tag_start.clone(),
                         tag_end: raw.tag_end.clone(),
@@ -242,7 +242,7 @@ impl ChromeParser {
                                 .get("icon_class")
                                 .and_then(|v| v.as_str())
                                 .map(|s| s.to_string()),
-                            exec: url.clone(),
+                            exec: Some(url.clone()),
                             search_string: format!("{};{}", bookmark.name, url),
                             tag_start: raw.tag_start.clone(),
                             tag_end: raw.tag_end.clone(),

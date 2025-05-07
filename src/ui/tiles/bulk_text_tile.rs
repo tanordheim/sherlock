@@ -49,7 +49,7 @@ impl Tile {
         let row_weak = builder.object.downgrade();
         let launcher_clone = launcher.clone();
         let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> = {
-            let attrs = get_attrs_map(vec![("method", &launcher.method)]);
+            let attrs = get_attrs_map(vec![("method", Some(&launcher.method))]);
 
             Box::new(move |keyword: &str| {
                 let launcher = launcher_clone.clone();

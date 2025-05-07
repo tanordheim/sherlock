@@ -57,10 +57,10 @@ impl Tile {
                     // Construct attrs and enable action capabilities
                     let row = row_weak.clone();
                     let attrs = get_attrs_map(vec![
-                        ("method", "kill-process"),
-                        ("result", &value),
-                        ("parent-pid", &parent),
-                        ("child-pid", &child),
+                        ("method", Some("kill-process")),
+                        ("result", Some(&value)),
+                        ("parent-pid", Some(&parent)),
+                        ("child-pid", Some(&child)),
                     ]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     move |keyword: &str| -> bool {

@@ -78,7 +78,10 @@ impl Tile {
                     .as_ref()
                     .and_then(|tmp| tmp.upgrade())
                     .map(|result| result.set_text(&result_text));
-                let attrs = get_attrs_map(vec![("method", &method_clone), ("result", &num)]);
+                let attrs = get_attrs_map(vec![
+                    ("method", Some(&method_clone)),
+                    ("result", Some(&num)),
+                ]);
 
                 object_weak.upgrade().map(|row| {
                     let signal_id = row.connect_local("row-should-activate", false, move |row| {
