@@ -55,7 +55,7 @@ The launcher can be of the following types:<br>
 ## Complex Attributes
 
 ### actions
-Actions are a list/array of maps with the following strcuture:
+Actions are used to define entries within Sherlock's context menu. They are defined as an array of actions, following a simple structure:
 ```json
 {
     "name": "display name",
@@ -64,6 +64,12 @@ Actions are a list/array of maps with the following strcuture:
     "method": "some method"
 }
 ```
+**Arguments**:
+- `name`: Defines the name to be shown in the context menu
+- `icon`: Defines the icon to be shown in the context menu
+- `exec`: The argument to be processed by `method`. For instance, in case of `app_launcher`, this should be the app with its flags
+- `method`: The function to be executed whenever you activate this menu entry
+
 #### Available Methods 
 
 - `category`: Uses the `exec` to open a new mode
