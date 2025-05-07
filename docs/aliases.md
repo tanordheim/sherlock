@@ -2,11 +2,11 @@
 Sherlock aliases allow you to customize how applications are displayed and launcher within Sherlock. 
 ## Example Problem
 The application `Brave Browser` should:
-- Appear with the display name **Webbrowser**#
+- Appear with the display name **Webbrowser**
 - Use a custom **Webbrowser icon**
 - Alwaays be launched with **Electron Wayland flags** to enhance rendering quality
 - Should have context menu entries to start a new private window
-This is a problem Sherlock aliases can fix.<br><
+This is a problem Sherlock aliases can fix.<br>
 
 Sherlock aliases provide a way for you to customize the application's:
 1. Name
