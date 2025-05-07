@@ -215,7 +215,7 @@ impl SherlockSearch for String {
         let concat_str: String = self
             .to_lowercase()
             .chars()
-            .filter(|s| char_pattern.contains(s))
+            .filter(|s| char_pattern.contains(s) || *s == ';')
             .collect();
         concat_str.contains(&lowercase)
     }
