@@ -47,6 +47,30 @@ The launcher can be of the following types:<br>
 | `on_return`     | `[FC]` | Specifies what to do if return is pressed on the tile. |
 | `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
+| `actions`     | `[FC]` | Sets custom actions for launchers or – if applicable – its children. Examples: [Debug Launcher](#debug-launcher), Detailed: [Actions](#actions)|
+
+## Complex Attributes
+
+### actions
+Actions are a list/array of maps with the following strcuture:
+```json
+{
+    "name": "display name",
+    "exec": "should be executed",
+    "icon": "display icon",
+    "method": "some method"
+}
+```
+#### Available Methods 
+
+- `category`: Uses the `exec` to open a new mode
+- `app_launcher`: Opens the `exec` as an app
+- `command`: Opens the `exec` as a command
+- `debug`: Matches the `exec` against
+    - `clear_cache`: To clear the application's cache
+    - `show_errors`: To switch to the error/warning screen
+    - `reset_counts`: To reset the execution counter
+
 ---
 ## Category Launcher
 
@@ -339,6 +363,19 @@ Has following fields of its own:
                 }
             }
         },
+        "actions": [
+        {
+            "name": "Clear Cache",
+            "icon": "sherlock-process",
+            "exec": "clear_cache",
+            "method": "debug"
+        },
+        {
+            "name": "Reset App Counts",
+            "icon": "sherlock-process",
+            "exec": "reset_counts",
+            "method": "debug"
+        } ],
         "priority": 0
 }
 ```
