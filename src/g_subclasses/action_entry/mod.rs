@@ -46,9 +46,9 @@ impl ContextAction {
                 move |row| {
                     let row = row.first().map(|f| f.get::<ContextAction>().ok())??;
                     let attrs = get_attrs_map(vec![
-                        ("method", &method),
-                        ("exec", &exec),
-                        ("term", &terminal.to_string()),
+                        ("method", Some(&method)),
+                        ("exec", Some(&exec)),
+                        ("term", Some(&terminal.to_string())),
                     ]);
                     execute_from_attrs(&row, &attrs);
                     None

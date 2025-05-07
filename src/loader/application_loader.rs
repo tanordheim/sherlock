@@ -110,7 +110,7 @@ impl Loader {
                                             }
                                         }
                                         "icon" => data.icon = Some(value.to_string()),
-                                        "exec" => data.exec = value.to_string(),
+                                        "exec" => data.exec = Some(value.to_string()),
                                         "nodisplay" if value.eq_ignore_ascii_case("true") => {
                                             return None
                                         }
@@ -146,7 +146,11 @@ impl Loader {
                         };
                         data.apply_alias(alias);
                         // apply counts
-                        let count = counts.get(&data.exec).unwrap_or(&0.0);
+                        let count = data
+                            .exec
+                            .as_ref()
+                            .and_then(|exec| counts.get(exec))
+                            .unwrap_or(&0.0);
                         let priority = parse_priority(priority, *count, decimals);
                         data.priority = priority;
                         Some(data)
@@ -237,7 +241,11 @@ impl Loader {
                 apps = apps
                     .drain()
                     .map(|mut v| {
-                        let count = counts.get(&v.exec).unwrap_or(&0.0);
+                        let count = v
+                            .exec
+                            .as_ref()
+                            .and_then(|exec| counts.get(exec))
+                            .unwrap_or(&0.0);
                         let new_priority = parse_priority(priority, *count, decimals);
                         v.priority = new_priority;
                         v

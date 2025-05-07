@@ -75,7 +75,7 @@ impl SherlockRow {
     pub fn set_actions(&self, actions: Vec<ApplicationAction>) {
         *self.imp().actions.borrow_mut() = actions;
     }
-    pub fn add_actions(&self, actions: &Option<Vec<ApplicationAction>>){
+    pub fn add_actions(&self, actions: &Option<Vec<ApplicationAction>>) {
         if let Some(actions) = actions {
             self.imp().actions.borrow_mut().extend(actions.clone());
         }

@@ -39,11 +39,11 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             }
             "web_launcher" | "bookmarks" => {
                 let engine = attrs.get("engine").map_or("plain", |s| s.as_str());
-                let query = if let Some(query) = attrs.get("keyword"){
+                let query = if let Some(query) = attrs.get("keyword") {
                     let exec = format!("websearch-{}", engine);
                     increment(&exec);
                     query.as_str()
-                } else if let Some(query) = attrs.get("exec"){
+                } else if let Some(query) = attrs.get("exec") {
                     query.as_str()
                 } else {
                     ""
@@ -151,10 +151,16 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
         }
     }
 }
-pub fn get_attrs_map(in_attrs: Vec<(&str, &str)>) -> HashMap<String, String> {
+pub fn get_attrs_map(in_attrs: Vec<(&str, Option<&str>)>) -> HashMap<String, String> {
     in_attrs
         .into_iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .filter_map(|(k, v)| {
+            if let (k, Some(v)) = (k, v) {
+                Some((k.to_string(), v.to_string()))
+            } else {
+                None
+            }
+        })
         .collect()
 }
 fn increment(key: &str) {

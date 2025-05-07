@@ -87,17 +87,17 @@ impl Tile {
                 // Create attributes and enable action capability
                 let method = item.method.as_deref().unwrap_or(method);
                 let result = item.result.as_deref().or(item.title.as_deref());
-                let mut constructor: Vec<(&str, &str)> =
+                let mut constructor: Vec<(&str, Option<&str>)> =
                     item.hidden.as_ref().map_or_else(Vec::new, |a| {
-                        a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect()
+                        a.iter()
+                            .map(|(k, v)| (k.as_str(), Some(v.as_str())))
+                            .collect()
                     });
-                constructor.extend([("method", method)]);
-                if let Some(result) = result {
-                    constructor.push(("result", result))
-                }
-                if let Some(field) = &item.field {
-                    constructor.push(("field", field));
-                }
+                constructor.extend(vec![
+                    ("method", Some(method)),
+                    ("result", result),
+                    ("field", item.field.as_deref()),
+                ]);
                 let attrs = get_attrs_map(constructor);
 
                 builder.object.set_spawn_focus(true);

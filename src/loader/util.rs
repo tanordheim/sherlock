@@ -79,7 +79,7 @@ impl ApplicationAction {
 pub struct AppData {
     #[serde(default)]
     pub name: String,
-    pub exec: String,
+    pub exec: Option<String>,
     pub search_string: String,
     #[serde(default)]
     pub priority: f32,
@@ -97,7 +97,7 @@ impl AppData {
     pub fn new() -> Self {
         Self {
             name: String::new(),
-            exec: String::new(),
+            exec: None,
             search_string: String::new(),
             priority: 0.0,
             icon: None,
@@ -127,7 +127,7 @@ impl AppData {
                 self.search_string = format!("{};{}", self.name, self.search_string);
             }
             if let Some(alias_exec) = alias.exec.as_ref() {
-                self.exec = alias_exec.to_string();
+                self.exec = Some(alias_exec.to_string());
             }
             if let Some(add_actions) = alias.add_actions {
                 add_actions.into_iter().for_each(|mut a| {

@@ -42,14 +42,11 @@ impl Tile {
             .and_then(|tmp| tmp.upgrade())
             .map(|end_time| end_time.set_text(format!(".. {}", event.end_time).as_str()));
 
-        let mut constructor: Vec<(&str, &str)> = vec![
-            ("method", &launcher.method),
-            ("meeting_url", &event.meeting_url),
-        ];
-        if let Some(next) = launcher.next_content.as_deref() {
-            constructor.push(("next_content", next));
-        }
-        let attrs = get_attrs_map(constructor);
+        let attrs = get_attrs_map(vec![
+            ("method", Some(&launcher.method)),
+            ("meeting_url", Some(&event.meeting_url)),
+            ("next_content", launcher.next_content.as_deref()),
+        ]);
 
         builder.object.add_css_class("event-tile");
         builder.object.with_launcher(launcher);

@@ -50,8 +50,10 @@ impl Tile {
             let title = builder.title.clone();
             let row_weak = builder.object.downgrade();
             let tile_name = web.display_name.clone();
-            let mut attrs =
-                get_attrs_map(vec![("method", &launcher.method), ("engine", &web.engine)]);
+            let mut attrs = get_attrs_map(vec![
+                ("method", Some(&launcher.method)),
+                ("engine", Some(&web.engine)),
+            ]);
             if let Some(next) = launcher.next_content.as_deref() {
                 attrs.insert(String::from("next_content"), next.to_string());
             }
