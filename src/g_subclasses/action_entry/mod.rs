@@ -42,10 +42,11 @@ impl ContextAction {
         if let Some(exec) = &action.exec {
             let signal_id = obj.connect_local("context-action-should-activate", false, {
                 let exec = exec.clone();
+                let method = action.method.clone();
                 move |row| {
                     let row = row.first().map(|f| f.get::<ContextAction>().ok())??;
                     let attrs = get_attrs_map(vec![
-                        ("method", "app_launcher"),
+                        ("method", &method),
                         ("exec", &exec),
                         ("term", &terminal.to_string()),
                     ]);

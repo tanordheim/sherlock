@@ -74,7 +74,7 @@ impl Loader {
                     Ok(content) => {
                         let mut data = AppData::new();
                         let mut current_section = None;
-                        let mut current_action = ApplicationAction::new();
+                        let mut current_action = ApplicationAction::new("app_launcher");
                         data.desktop_file = Some(entry);
                         for line in content.flatten() {
                             let line = line.trim();
@@ -87,7 +87,7 @@ impl Loader {
                                 if current_action.is_valid() {
                                     data.actions.push(current_action.clone())
                                 }
-                                current_action = ApplicationAction::new();
+                                current_action = ApplicationAction::new("app_launcher");
                                 continue;
                             }
                             if current_section.is_none() {
@@ -127,7 +127,7 @@ impl Loader {
                                     }
                                     if current_action.is_full() {
                                         data.actions.push(current_action.clone());
-                                        current_action = ApplicationAction::new();
+                                        current_action = ApplicationAction::new("app_launcher");
                                         current_section = None;
                                     }
                                 }
