@@ -1,44 +1,26 @@
+use futures::future::join_all;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::{BufWriter, Read, Write};
+use std::path::PathBuf;
+use std::rc::Rc;
 use std::u32;
 
-use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{self, WeakRef};
 use gio::ListStore;
 use gtk4::gdk::{Key, ModifierType};
-use gtk4::{prelude::*, Box as HVBox, Label, ListScrollFlags, ListView, SingleSelection};
+use gtk4::{
+    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Label, ListView, ScrolledWindow,
+    Spinner,
+};
+use serde::Deserialize;
 
 use crate::g_subclasses::sherlock_row::SherlockRow;
+use crate::loader::Loader;
 use crate::utils::config::default_modkey_ascii;
-use crate::CONFIG;
-
-pub trait ShortCut {
-    fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32;
-    fn remove_shortcut(&self) -> i32;
-}
-impl ShortCut for HVBox {
-    fn apply_shortcut(&self, index: i32, mod_str: &str) -> i32 {
-        if index < 6 {
-            if let Some(child) = self.first_child() {
-                if let Some(label) = child.downcast_ref::<Label>() {
-                    self.set_visible(true);
-                    label.set_text(&format!("{}", mod_str));
-                }
-            }
-            if let Some(child) = self.last_child() {
-                if let Some(label) = child.downcast_ref::<Label>() {
-                    self.set_visible(true);
-                    label.set_text(&format!("{}", index));
-                    return 1;
-                }
-            }
-        }
-        return 0;
-    }
-    fn remove_shortcut(&self) -> i32 {
-        let r = if self.is_visible() { 1 } else { 0 };
-        self.set_visible(false);
-        r
-    }
-}
+use crate::utils::errors::{SherlockError, SherlockErrorType};
+use crate::{sherlock_error, CONFIG};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
@@ -174,127 +156,209 @@ impl ConfKeys {
     }
 }
 
-pub trait SherlockNav {
-    fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn execute_by_index(&self, index: u32);
-    fn selected_item(&self) -> Option<glib::Object>;
-    fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
+#[derive(Debug, Deserialize)]
+pub struct SherlockAction {
+    pub on: u32,
+    pub action: String,
 }
-impl SherlockNav for ListView {
-    fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
-        let selection = self.model().and_downcast::<SingleSelection>()?;
-        let index = selection.selected();
-        if index == u32::MAX {
-            return None;
+pub struct SherlockCounter {
+    path: PathBuf,
+}
+impl SherlockCounter {
+    pub fn new() -> Result<Self, SherlockError> {
+        let home = std::env::var("HOME").map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+                e.to_string()
+            )
+        })?;
+        let home_dir = PathBuf::from(home);
+        let path = home_dir.join(".sherlock/sherlock_count");
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                    e.to_string()
+                )
+            })?;
         }
-        let n_items = selection.n_items();
-        let new_index = index + 1;
-        if new_index < n_items {
-            selection.set_selected(new_index);
-            self.scroll_to(new_index, ListScrollFlags::NONE, None);
-            let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-            let _ = self.activate_action(
-                "win.context-mode",
-                Some(&(selected.num_actions() > 0).to_variant()),
-            );
-        }
-        context_model
-            .and_then(|tmp| tmp.upgrade())
-            .map(|ctx| ctx.remove_all());
-        None
+        Ok(Self { path })
     }
-    fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
-        let selection = self.model().and_downcast::<SingleSelection>()?;
-        let index = selection.selected();
-        let n_items = selection.n_items();
-        let new_index = if index > 0 {
-            selection.set_selected(index - 1);
-            index - 1
-        } else {
-            index
+    pub fn increment(&self) -> Result<u32, SherlockError> {
+        let content = self.read()?.saturating_add(1);
+        self.write(content)?;
+        Ok(content)
+    }
+    pub fn read(&self) -> Result<u32, SherlockError> {
+        let mut file = match File::open(&self.path) {
+            Ok(file) => file,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(0);
+            }
+            Err(e) => {
+                return Err(sherlock_error!(
+                    SherlockErrorType::FileReadError(self.path.clone()),
+                    e.to_string()
+                ));
+            }
         };
-        if new_index != index {
-            if new_index < n_items {
-                self.scroll_to(new_index, ListScrollFlags::NONE, None);
-                let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-                let _ = self.activate_action(
-                    "win.context-mode",
-                    Some(&(selected.num_actions() > 0).to_variant()),
-                );
-            }
-            context_model
-                .and_then(|tmp| tmp.upgrade())
-                .map(|ctx| ctx.remove_all());
-        }
-        None
-    }
-    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
-        let selection = self.model().and_downcast::<SingleSelection>()?;
-        let mut new_index = 0;
-        let current_index = selection.selected();
-        let n_items = selection.n_items();
-        if n_items == 0 {
-            return None;
-        }
-        while new_index < n_items {
-            if let Some(item) = selection.item(new_index).and_downcast::<SherlockRow>() {
-                if item.imp().spawn_focus.get() {
-                    break;
-                } else {
-                    new_index += 1;
-                }
-            } else {
-                break;
-            }
-        }
-        let changed = new_index != current_index;
-        if changed {
-            selection.set_selected(new_index);
-        }
-        if new_index < n_items {
-            self.scroll_to(0, ListScrollFlags::NONE, None);
-        }
-        // Update context mode shortcuts
-        let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
-        let _ = self.activate_action(
-            "win.context-mode",
-            Some(&(selected.num_actions() > 0).to_variant()),
-        );
-        context_model
-            .and_then(|tmp| tmp.upgrade())
-            .map(|ctx| ctx.remove_all());
+        let mut buf = [0u8; 4];
 
-        changed.then_some(())
+        file.read_exact(&mut buf).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileReadError(self.path.clone()),
+                e.to_string()
+            )
+        })?;
+        Ok(u32::from_le_bytes(buf))
     }
-    fn execute_by_index(&self, index: u32) {
-        if let Some(selection) = self.model().and_downcast::<SingleSelection>() {
-            for item in index..selection.n_items() {
-                if let Some(row) = selection.item(item).and_downcast::<SherlockRow>() {
-                    if row.imp().shortcut.get() {
-                        row.emit_by_name::<()>("row-should-activate", &[]);
-                        break;
-                    }
-                }
-            }
+    pub fn write(&self, count: u32) -> Result<(), SherlockError> {
+        let file = File::create(self.path.clone()).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileWriteError(self.path.clone()),
+                e.to_string()
+            )
+        })?;
+
+        let mut writer = BufWriter::new(file);
+        writer.write_all(&count.to_le_bytes()).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileWriteError(self.path.clone()),
+                e.to_string()
+            )
+        })?;
+
+        Ok(())
+    }
+}
+#[derive(Clone, Debug)]
+pub struct SearchHandler {
+    pub model: Option<WeakRef<ListStore>>,
+    pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
+    pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    pub error_model: WeakRef<ListStore>,
+}
+impl SearchHandler {
+    pub fn new(model: WeakRef<ListStore>, error_model: WeakRef<ListStore>) -> Self {
+        Self {
+            model: Some(model),
+            modes: Rc::new(RefCell::new(HashMap::new())),
+            task: Rc::new(RefCell::new(None)),
+            error_model,
         }
     }
-    fn selected_item(&self) -> Option<glib::Object> {
-        let selection = self.model().and_downcast::<SingleSelection>()?;
-        selection.selected_item()
+    pub fn empty(error_model: WeakRef<ListStore>) -> Self {
+        Self {
+            model: None,
+            modes: Rc::new(RefCell::new(HashMap::new())),
+            task: Rc::new(RefCell::new(None)),
+            error_model,
+        }
     }
-    fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
-        let selection = self.model().and_downcast::<SingleSelection>()?;
-        let n_items = selection.n_items();
-        let weaks = (0..n_items)
-            .filter_map(|i| {
-                selection
-                    .item(i)
-                    .and_downcast::<SherlockRow>()
-                    .map(|row| row.downgrade())
-            })
-            .collect();
-        Some(weaks)
+    pub fn clear(&self) {
+        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
+            model.remove_all();
+        }
     }
+    pub fn populate(&self) {
+        // clear potentially stuck rows
+        self.clear();
+
+        // load launchers
+        let (launchers, n) = match Loader::load_launchers().map_err(|e| e.tile("ERROR")) {
+            Ok(r) => r,
+            Err(e) => {
+                if let Some(model) = self.error_model.upgrade() {
+                    model.append(&e);
+                }
+                return;
+            }
+        };
+        if let Some(model) = self.error_model.upgrade() {
+            n.into_iter()
+                .map(|n| n.tile("WARNING"))
+                .for_each(|row| model.append(&row));
+        }
+
+        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
+            let mut holder: HashMap<String, Option<String>> = HashMap::new();
+            let rows: Vec<WeakRef<SherlockRow>> = launchers
+                .into_iter()
+                .map(|launcher| {
+                    let patch = launcher.get_patch();
+                    if let Some(alias) = &launcher.alias {
+                        holder.insert(format!("{} ", alias), launcher.name);
+                    }
+                    patch
+                })
+                .flatten()
+                .map(|row| {
+                    model.append(&row);
+                    row.downgrade()
+                })
+                .collect();
+            update_async(rows, &self.task, String::new());
+            *self.modes.borrow_mut() = holder;
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub struct SearchUI {
+    pub result_viewport: WeakRef<ScrolledWindow>,
+    pub results: WeakRef<ListView>,
+    // will be later used for split view to display information about apps/commands
+    pub preview_box: WeakRef<GtkBox>,
+    pub search_bar: WeakRef<Entry>,
+    pub search_icon_holder: WeakRef<GtkBox>,
+    pub mode_title: WeakRef<Label>,
+    pub spinner: WeakRef<Spinner>,
+    pub filter: WeakRef<CustomFilter>,
+    pub sorter: WeakRef<CustomSorter>,
+    pub binds: ConfKeys,
+    pub context_model: WeakRef<ListStore>,
+    pub context_view: WeakRef<ListView>,
+    pub context_menu_desc: WeakRef<Label>,
+    pub context_menu_first: WeakRef<Label>,
+    pub context_menu_second: WeakRef<Label>,
+}
+pub fn update_async(
+    update_tiles: Vec<WeakRef<SherlockRow>>,
+    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    keyword: String,
+) {
+    let current_task_clone = Rc::clone(current_task);
+    if let Some(t) = current_task.borrow_mut().take() {
+        t.abort();
+    };
+    let task = glib::MainContext::default().spawn_local({
+        async move {
+            // Set spinner active
+            let spinner_row = update_tiles.get(0).cloned();
+            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
+                let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
+            }
+            // Make async tiles update concurrently
+            let futures: Vec<_> = update_tiles
+                .into_iter()
+                .map(|row| {
+                    let current_text = keyword.clone();
+                    async move {
+                        // Process text tile
+                        if let Some(row) = row.upgrade() {
+                            row.async_update(&current_text).await
+                        }
+                    }
+                })
+                .collect();
+
+            let _ = join_all(futures).await;
+            // Set spinner inactive
+            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
+                let _ = row.activate_action("win.spinner-mode", Some(&false.to_variant()));
+            }
+            *current_task_clone.borrow_mut() = None;
+        }
+    });
+    *current_task.borrow_mut() = Some(task);
 }

@@ -15,6 +15,7 @@ mod daemon;
 mod g_subclasses;
 mod launcher;
 mod loader;
+pub mod prelude;
 mod ui;
 mod utils;
 

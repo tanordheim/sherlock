@@ -7,8 +7,9 @@ use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::Launcher;
 use crate::loader::util::AppData;
+use crate::prelude::IconComp;
 
-use super::util::{update_tag, IconComp, TileBuilder};
+use super::util::{update_tag, TileBuilder};
 use super::Tile;
 
 impl Tile {

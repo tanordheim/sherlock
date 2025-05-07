@@ -1,27 +1,19 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::io::{BufWriter, Read, Write};
-use std::path::PathBuf;
-use std::rc::Rc;
-use std::{
-    env,
-    fs::{self, File},
-};
-
 use gio::glib::WeakRef;
 use gio::ActionEntry;
 use gtk4::gdk::{Display, Key, Monitor};
 use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey, StackTransitionType};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
-use serde::Deserialize;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
 use crate::loader::util::JsonCache;
-use crate::utils::errors::{SherlockError, SherlockErrorType};
-use crate::{sherlock_error, CONFIG};
+use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
+use super::util::{SherlockAction, SherlockCounter};
 
 pub fn window(
     application: &Application,
@@ -208,82 +200,6 @@ pub fn window(
         }
     };
     return (window, stack, current_stack_page, win_ref);
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SherlockAction {
-    pub on: u32,
-    pub action: String,
-}
-pub struct SherlockCounter {
-    path: PathBuf,
-}
-impl SherlockCounter {
-    fn new() -> Result<Self, SherlockError> {
-        let home = env::var("HOME").map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-                e.to_string()
-            )
-        })?;
-        let home_dir = PathBuf::from(home);
-        let path = home_dir.join(".sherlock/sherlock_count");
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).map_err(|e| {
-                sherlock_error!(
-                    SherlockErrorType::DirCreateError(".sherlock".to_string()),
-                    e.to_string()
-                )
-            })?;
-        }
-        Ok(Self { path })
-    }
-    fn increment(&self) -> Result<u32, SherlockError> {
-        let content = self.read()?.saturating_add(1);
-        self.write(content)?;
-        Ok(content)
-    }
-    fn read(&self) -> Result<u32, SherlockError> {
-        let mut file = match File::open(&self.path) {
-            Ok(file) => file,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-                return Ok(0);
-            }
-            Err(e) => {
-                return Err(sherlock_error!(
-                    SherlockErrorType::FileReadError(self.path.clone()),
-                    e.to_string()
-                ));
-            }
-        };
-        let mut buf = [0u8; 4];
-
-        file.read_exact(&mut buf).map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::FileReadError(self.path.clone()),
-                e.to_string()
-            )
-        })?;
-        Ok(u32::from_le_bytes(buf))
-    }
-    fn write(&self, count: u32) -> Result<(), SherlockError> {
-        let file = File::create(self.path.clone()).map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::FileWriteError(self.path.clone()),
-                e.to_string()
-            )
-        })?;
-
-        let mut writer = BufWriter::new(file);
-        writer.write_all(&count.to_le_bytes()).map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::FileWriteError(self.path.clone()),
-                e.to_string()
-            )
-        })?;
-
-        Ok(())
-    }
 }
 
 fn make_backdrop(
