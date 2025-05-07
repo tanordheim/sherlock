@@ -84,16 +84,15 @@ The launcher can be of the following types:<br>
 ### Arguments (args):
 **commands**:<br>
 (required)<br>
-1. `name field` / the name you want to have displayed for the category
-2. `icon` / the icon-name for the icon to display 
-3. `exec` / the alias of the launcher you want to execute
+1. `name field`: the name you want to have displayed for the category
+2. `icon`: the icon-name for the icon to display 
 
 <br>
 (optional)<br>
-1. `icon_class` / Sets the css class for the icon to style it according to your theme
-2. `search_string` / the string to match to on search
+1. `icon_class`: Sets the css class for the icon to style it according to your theme
+2. `search_string`: the string to match to on search
+3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
 
-<br>
 ---
 
 ## App Launcher
@@ -115,7 +114,6 @@ The launcher can be of the following types:<br>
     "home": true
 }
 ```
----
 
 ## Bookmark Launcher
 
@@ -149,9 +147,6 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 | **Firefox**      | `firefox`, `/usr/lib/firefox/firefox %u` |
 | **Chrome**      | `chrome`, `google-chrome`, `/usr/bin/google-chrome-stable %u` |
 | **Thorium**      | `thorium`, `/usr/bin/thorium-browser %u` |
-
----
-
 
 ## Web Launcher
 
@@ -197,8 +192,6 @@ Can be either of the following:
 **`icon`** (required):<br>
 Sets the icon-name the launcher should show.
 
----
-
 ## Calculator
 
 <div align="center">
@@ -231,7 +224,6 @@ Specifies what the launcher should parse:
 - **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
----
 ## Clipboard Launcher
 
 <div align="center">
@@ -278,7 +270,6 @@ Specifies what the launcher should parse:
 > - `colors.all` to use all available color formats
 > - `calc.units` to use all available unit transformations
 
----
 ## Command Launcher
 ```json
 {
@@ -318,7 +309,6 @@ Has following fields of its own:
 6. `tag_start` / specifies what will be displayed in the start tag
 7. `tag_end` / specifies what will be displayed in the end tag
 
----
 ## Debug Launcher
 ```json
 {
@@ -356,7 +346,7 @@ Has following fields of its own:
 ### Available Debug Commands
 - `clear_cache`: Clears the files within the location set as cache.
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
----
+
 ## Bulk Text
 
 <div align="center" style="text-align:center; border-radius:10px;">
@@ -393,7 +383,6 @@ Specifies the program that should be run. **Note:** that its probably suitable t
 Specifies the arguments to pass along to the `exec` program.<br>
 
 > The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
---- 
 
 ## Teams Event
 
@@ -433,8 +422,6 @@ Specifies the offset from the `date` parameter.<br>
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
 
---- 
-
 ## Music Player
 
 <div align="center" style="text-align:center; border-radius:10px;">
@@ -458,11 +445,6 @@ Specifies the second offset from the `date` parameter.<br>
 
 ```
 
-### Arguments (args):
-None
-
---- 
-
 ## Process Terminator
 
 <div align="center" style="text-align:center; border-radius:10px;">
@@ -483,11 +465,6 @@ None
 },
 
 ```
-
-### Arguments (args):
-None
-
---- 
 
 ## Weather Launcher
 
@@ -524,5 +501,3 @@ Specifies the location for which the weather should be gathered.<br>
 
 **`update_interval`** (optional):<br>
 Specifies how often you want to update the weather. In minutes.<br>
-
---- 
