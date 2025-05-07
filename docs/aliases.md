@@ -20,24 +20,25 @@ of an app.
 {
     "the current app name":{
         "name": "your desired name",
-        "icon": "your icon",
-        "exec": "/path/to/applicatoin --your-flags %U",
-        "keywords": "sample alias",
-        "add_actions": [
-        {
-            "Example Action",
-            "exec": "/path/to/application --your-flags",
             "icon": "your icon",
-            "method": "method",
-        },
-        "actions": [
-        {
-            "Example Action",
-            "exec": "/path/to/application --your-flags",
-            "icon": "your icon",
-            "method": "method",
-        }
-        ]
+            "exec": "/path/to/applicatoin --your-flags %U",
+            "keywords": "sample alias",
+            "add_actions": [
+            {
+                "Example Action",
+                "exec": "/path/to/application --your-flags",
+                "icon": "your icon",
+                "method": "method",
+            }
+            ],
+            "actions": [
+            {
+                "Example Action",
+                "exec": "/path/to/application --your-flags",
+                "icon": "your icon",
+                "method": "method",
+            }
+            ]
     }
 }
 ```
