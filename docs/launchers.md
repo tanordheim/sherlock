@@ -47,7 +47,7 @@ The launcher can be of the following types:<br>
 | `on_return`     | `[FC]` | Specifies what to do if return is pressed on the tile. |
 | `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
----
+
 ## Category Launcher
 
 <div align="center" style="text-align:center; border-radius:10px;">
@@ -92,8 +92,6 @@ The launcher can be of the following types:<br>
 1. `icon_class`: Sets the css class for the icon to style it according to your theme
 2. `search_string`: the string to match to on search
 3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
-
----
 
 ## App Launcher
 
