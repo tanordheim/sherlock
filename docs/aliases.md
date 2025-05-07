@@ -20,10 +20,28 @@ of an app.
         "name": "your desired name",
         "icon": "your icon",
         "exec": "/path/to/applicatoin --your-flags %U",
-        "keywords": "sample alias"
+        "keywords": "sample alias",
+        "add_actionns": [
+        {
+            "Example Action",
+            "exec": "/path/to/application --your-flags",
+            "icon": "your icon",
+            "method": "method",
+        }
+        ]
     }
 }
 ```
+### Available Methods 
+
+- `category`: Uses the `exec` to open a new mode
+- `app_launcher`: Opens the `exec` as an app
+- `command`: Opens the `exec` as a command
+- `debug`: Matches the `exec` against
+    - `clear_cache`: To clear the application's cache
+    - `show_errors`: To switch to the error/warning screen
+    - `reset_counts`: To reset the execution counter
+
 **DONE!**<br>
 
 ## Examples
