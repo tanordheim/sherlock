@@ -86,6 +86,17 @@
                     </object>
                 </child>
                 <child>
+                    <object class="GtkLabel" id="context-menu-desc">
+                        <style>
+                            <class name="inactive"/>
+                        </style>
+                        <property name="name">shortcut-description</property>
+                        <property name="hexpand">false</property>
+                        <property name="label">Additional actions</property>
+                        <property name="xalign">0.0</property>
+                    </object>
+                </child>
+                <child>
                     <object class="GtkLabel" id="context-menu-first">
                         <style>
                             <class name="inactive"/>

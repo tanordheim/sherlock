@@ -114,6 +114,7 @@ struct SearchUI {
     binds: ConfKeys,
     context_model: WeakRef<ListStore>,
     context_view: WeakRef<ListView>,
+    context_menu_desc: WeakRef<Label>,
     context_menu_first: WeakRef<Label>,
     context_menu_second: WeakRef<Label>,
 }
@@ -298,15 +299,18 @@ pub fn search(
     let context_action = ActionEntry::builder("context-mode")
         .parameter_type(Some(&bool::static_variant_type()))
         .activate({
+            let desc = ui.context_menu_desc.clone();
             let first = ui.context_menu_first.clone();
             let second = ui.context_menu_second.clone();
             move |_, _, parameter| {
                 let parameter = parameter.and_then(|p| p.get::<bool>());
                 parameter.map(|p| {
                     if p {
+                        desc.upgrade().map(|tmp| tmp.set_css_classes(&["active"]));
                         first.upgrade().map(|tmp| tmp.set_css_classes(&["active"]));
                         second.upgrade().map(|tmp| tmp.set_css_classes(&["active"]));
                     } else {
+                        desc.upgrade().map(|tmp| tmp.set_css_classes(&["inactive"]));
                         first
                             .upgrade()
                             .map(|tmp| tmp.set_css_classes(&["inactive"]));
@@ -453,6 +457,7 @@ fn construct_window(
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
     let mode_title: Label = builder.object("category-type-label").unwrap_or_default();
+    let context_action_desc: Label = builder.object("context-menu-desc").unwrap_or_default();
     let context_action_first: Label = builder.object("context-menu-first").unwrap_or_default();
     let context_action_second: Label = builder.object("context-menu-second").unwrap_or_default();
 
@@ -469,6 +474,7 @@ fn construct_window(
         binds: custom_binds,
         context_model: context_model.downgrade(),
         context_view: context.downgrade(),
+        context_menu_desc: context_action_desc.downgrade(),
         context_menu_first: context_action_first.downgrade(),
         context_menu_second: context_action_second.downgrade(),
     };
