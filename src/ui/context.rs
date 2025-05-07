@@ -19,8 +19,11 @@ pub fn make_context() -> (ListView, ListStore, Revealer) {
     let revealer = Revealer::builder()
         .transition_type(gtk4::RevealerTransitionType::Crossfade)
         .transition_duration(100)
+        .valign(gtk4::Align::End)
+        .halign(gtk4::Align::End)
         .child(&context)
         .build();
+
     if !CONFIG.get().map_or(false, |c| c.behavior.animate) {
         revealer.set_transition_duration(0);
     }
@@ -45,8 +48,6 @@ pub fn make_context() -> (ListView, ListStore, Revealer) {
     context.set_widget_name("context-menu");
     context.set_focusable(false);
     context.set_width_request(300);
-    context.set_halign(gtk4::Align::End);
-    context.set_valign(gtk4::Align::End);
     (context, model, revealer)
 }
 fn make_factory() -> SignalListItemFactory {

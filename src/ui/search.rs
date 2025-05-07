@@ -135,6 +135,7 @@ pub fn search(
             let results = ui.results.clone();
             let current_task = handler.task.clone();
             let current_text = search_query.clone();
+            let context_model = ui.context_model.clone();
             move |_: &ApplicationWindow, _, _| {
                 filter
                     .upgrade()
@@ -142,11 +143,14 @@ pub fn search(
                 sorter
                     .upgrade()
                     .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
-                let weaks = results
-                    .upgrade()
-                    .and_then(|r| r.get_weaks())
-                    .unwrap_or(vec![]);
-                update_async(weaks, &current_task, current_text.borrow().clone());
+                if let Some(results) = results.upgrade() {
+                    if results.focus_first(Some(&context_model)).is_some() {
+                        let weaks = results
+                            .get_weaks()
+                            .unwrap_or(vec![]);
+                        update_async(weaks, &current_task, current_text.borrow().clone());
+                    }
+                }
             }
         })
         .build();
