@@ -1,5 +1,5 @@
 use futures::future::join_all;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufWriter, Read, Write};
@@ -303,6 +303,13 @@ impl SearchHandler {
     }
 }
 
+#[derive(Clone)]
+pub struct ContextUI {
+    pub model: WeakRef<ListStore>,
+    pub view: WeakRef<ListView>,
+    pub open: Rc<Cell<bool>>,
+}
+
 #[allow(dead_code)]
 pub struct SearchUI {
     pub result_viewport: WeakRef<ScrolledWindow>,
@@ -316,8 +323,6 @@ pub struct SearchUI {
     pub filter: WeakRef<CustomFilter>,
     pub sorter: WeakRef<CustomSorter>,
     pub binds: ConfKeys,
-    pub context_model: WeakRef<ListStore>,
-    pub context_view: WeakRef<ListView>,
     pub context_menu_desc: WeakRef<Label>,
     pub context_menu_first: WeakRef<Label>,
     pub context_menu_second: WeakRef<Label>,

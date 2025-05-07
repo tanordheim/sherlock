@@ -1,3 +1,5 @@
+use std::{cell::Cell, rc::Rc};
+
 use gio::{
     glib::object::{Cast, CastNone, ObjectExt},
     prelude::ListModelExt,
@@ -10,11 +12,14 @@ use gtk4::{
 
 use crate::{g_subclasses::action_entry::ContextAction, CONFIG};
 
-pub fn make_context() -> (ListView, ListStore, Revealer) {
+use super::util::ContextUI;
+
+pub fn make_context() -> (ContextUI, Revealer) {
     let factory = make_factory();
     let model = ListStore::new::<ContextAction>();
     let selection = SingleSelection::new(Some(model.clone()));
     let context = ListView::new(Some(selection), Some(factory));
+    let context_open = Rc::new(Cell::new(false));
 
     let revealer = Revealer::builder()
         .transition_type(gtk4::RevealerTransitionType::Crossfade)
@@ -30,16 +35,19 @@ pub fn make_context() -> (ListView, ListStore, Revealer) {
 
     model.connect_items_changed({
         let revealer = revealer.downgrade();
+        let context_open = Rc::clone(&context_open);
         move |model, _, _, _| {
             let n_items = model.n_items();
             if let Some(revealer) = revealer.upgrade() {
                 if n_items != 0 {
                     revealer.set_reveal_child(true);
+                    context_open.set(true);
                 } else {
                     let tmp = revealer.transition_duration();
                     revealer.set_transition_duration(0);
                     revealer.set_reveal_child(false);
                     revealer.set_transition_duration(tmp);
+                    context_open.set(false);
                 }
             }
         }
@@ -48,7 +56,12 @@ pub fn make_context() -> (ListView, ListStore, Revealer) {
     context.set_widget_name("context-menu");
     context.set_focusable(false);
     context.set_width_request(300);
-    (context, model, revealer)
+    let ui = ContextUI {
+        model: model.downgrade(),
+        view: context.downgrade(),
+        open: context_open,
+    };
+    (ui, revealer)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
