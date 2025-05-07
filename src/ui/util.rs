@@ -177,7 +177,7 @@ impl ConfKeys {
 pub trait SherlockNav {
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
     fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn focus_first(&self) -> (u32, u32);
+    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
@@ -230,30 +230,41 @@ impl SherlockNav for ListView {
         }
         None
     }
-    fn focus_first(&self) -> (u32, u32) {
-        let mut i = 0;
-        if let Some(selection) = self.model().and_downcast::<SingleSelection>() {
-            let current_index = selection.selected();
-            let n_items = selection.n_items();
-            if n_items == 0 {
-                return (0, 0);
-            }
-            while i < n_items {
-                if let Some(item) = selection.item(i).and_downcast::<SherlockRow>() {
-                    if item.imp().spawn_focus.get() {
-                        selection.set_selected(i);
-                        return (i, n_items);
-                    } else {
-                        i += 1;
-                    }
-                } else {
-                    return (0, 0);
-                }
-            }
-            selection.set_selected(current_index);
-            return (current_index, n_items);
+    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let mut new_index = 0;
+        let current_index = selection.selected();
+        let n_items = selection.n_items();
+        if n_items == 0 {
+            return None;
         }
-        (0, 0)
+        while new_index < n_items {
+            if let Some(item) = selection.item(new_index).and_downcast::<SherlockRow>() {
+                if item.imp().spawn_focus.get() {
+                    break;
+                } else {
+                    new_index += 1;
+                }
+            } else {
+                break;
+            }
+        }
+        if new_index != current_index {
+            selection.set_selected(new_index);
+            if new_index < n_items {
+                self.scroll_to(new_index, ListScrollFlags::NONE, None);
+                let selected = selection.selected_item().and_downcast::<SherlockRow>()?;
+                let _ = self.activate_action(
+                    "win.context-mode",
+                    Some(&(selected.num_actions() > 0).to_variant()),
+                );
+            }
+            context_model
+                .and_then(|tmp| tmp.upgrade())
+                .map(|ctx| ctx.remove_all());
+            return Some(());
+        }
+        None
     }
     fn execute_by_index(&self, index: u32) {
         if let Some(selection) = self.model().and_downcast::<SingleSelection>() {

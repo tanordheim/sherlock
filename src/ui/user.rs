@@ -7,7 +7,7 @@ use gtk4::{
     gdk::{self, Key, ModifierType},
     prelude::*,
     ApplicationWindow, Box as GtkBox, Builder, CustomFilter, CustomSorter, Entry,
-    EventControllerKey, FilterListModel, Image, Justification, ListScrollFlags, ListView, Overlay,
+    EventControllerKey, FilterListModel, Image, Justification, ListView, Overlay,
     SignalListItemFactory, SingleSelection, SortListModel,
 };
 use levenshtein::levenshtein;
@@ -178,10 +178,7 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
-    let (_, n_items) = results.focus_first();
-    if n_items > 0 {
-        results.scroll_to(0, ListScrollFlags::NONE, None);
-    }
+    results.focus_first(None);
 
     // Disable status-bar
     CONFIG.get().map(|c| {
@@ -316,15 +313,7 @@ fn nav_event(
                     {
                         search_bar.upgrade().map(|entry| entry.set_text(""));
                         // Focus first item and check for overflow
-                        if let Some((_, n_items)) =
-                            results.upgrade().map(|results| results.focus_first())
-                        {
-                            if n_items > 0 {
-                                results.upgrade().map(|results| {
-                                    results.scroll_to(0, ListScrollFlags::NONE, None)
-                                });
-                            }
-                        }
+                        results.upgrade().map(|results| results.focus_first(None));
                     }
                 }
                 gdk::Key::Return => {
@@ -400,13 +389,7 @@ fn change_event(
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             // focus first item
-            if let Some((_, n_items)) = results.upgrade().map(|results| results.focus_first()) {
-                results.upgrade().map(|results| {
-                    if n_items > 0 {
-                        results.scroll_to(0, ListScrollFlags::NONE, None);
-                    }
-                });
-            }
+            results.upgrade().map(|results| results.focus_first(None));
         }
     });
     Some(())
