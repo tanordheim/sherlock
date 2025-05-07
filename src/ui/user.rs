@@ -12,8 +12,12 @@ use gtk4::{
 };
 use levenshtein::levenshtein;
 
-use super::{search::SearchHandler, tiles::util::SherlockSearch, util::*};
-use crate::{g_subclasses::sherlock_row::SherlockRow, CONFIG};
+use super::util::*;
+use crate::{
+    g_subclasses::sherlock_row::SherlockRow,
+    prelude::{SherlockNav, SherlockSearch, ShortCut},
+    CONFIG,
+};
 use gtk4::ScrolledWindow;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};

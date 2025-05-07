@@ -8,7 +8,7 @@ use gtk4::glib;
 use crate::{
     actions::{execute_from_attrs, get_attrs_map},
     loader::util::ApplicationAction,
-    ui::tiles::util::IconComp,
+    prelude::IconComp,
 };
 
 glib::wrapper! {

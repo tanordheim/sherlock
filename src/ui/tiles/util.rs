@@ -1,7 +1,6 @@
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData, CONFIG};
+use crate::{g_subclasses::sherlock_row::SherlockRow, CONFIG};
 use gio::glib::WeakRef;
 use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
-use std::{collections::HashSet, fmt::Debug};
 
 #[derive(Default)]
 pub struct TextViewTileBuilder {
@@ -200,50 +199,6 @@ impl WeatherTileBuilder {
     }
 }
 
-pub trait SherlockSearch {
-    fn fuzzy_match<T: AsRef<str> + Debug>(&self, substring: T) -> bool;
-}
-
-impl SherlockSearch for String {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
-    where
-        Self: AsRef<str>,
-        T: AsRef<str> + Debug,
-    {
-        let lowercase = substring.as_ref().to_lowercase();
-        let char_pattern: HashSet<char> = lowercase.chars().collect();
-        let concat_str: String = self
-            .to_lowercase()
-            .chars()
-            .filter(|s| char_pattern.contains(s) || *s == ';')
-            .collect();
-        concat_str.contains(&lowercase)
-    }
-}
-impl SherlockSearch for PipeData {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
-    where
-        T: AsRef<str>,
-    {
-        // check which value to use
-        let search_in = match self.title {
-            Some(_) => &self.title,
-            None => &self.description,
-        };
-        if let Some(search_in) = search_in {
-            let lowercase = substring.as_ref().to_lowercase();
-            let char_pattern: HashSet<char> = lowercase.chars().collect();
-            let concat_str: String = search_in
-                .to_lowercase()
-                .chars()
-                .filter(|s| char_pattern.contains(s))
-                .collect();
-            return concat_str.contains(&lowercase);
-        }
-        return false;
-    }
-}
-
 /// Used to update tag_start or tag_end
 /// * **label**: The UI label holding the result
 /// * **content**: The content for the label, as specified by the user
@@ -255,33 +210,5 @@ pub fn update_tag(label: &WeakRef<Label>, content: &Option<String>, keyword: &st
             label.set_text(&content);
             label.set_visible(true);
         });
-    }
-}
-
-pub trait IconComp {
-    fn set_icon(
-        &self,
-        icon_name: &Option<String>,
-        icon_class: &Option<String>,
-        fallback: &Option<String>,
-    );
-}
-impl IconComp for Image {
-    fn set_icon(
-        &self,
-        icon_name: &Option<String>,
-        icon_class: &Option<String>,
-        fallback: &Option<String>,
-    ) {
-        if let Some(icon_name) = icon_name.as_ref().or_else(|| fallback.as_ref()) {
-            if icon_name.starts_with("/") {
-                self.set_from_file(Some(icon_name));
-            } else {
-                self.set_icon_name(Some(icon_name));
-            }
-        } else {
-            self.set_visible(false);
-        }
-        icon_class.as_ref().map(|c| self.add_css_class(c));
     }
 }

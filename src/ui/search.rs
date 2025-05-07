@@ -1,4 +1,3 @@
-use futures::future::join_all;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ActionEntry, ListStore};
 use gtk4::{
@@ -15,11 +14,11 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use super::context::make_context;
 use super::util::*;
-use super::{context::make_context, tiles::util::SherlockSearch};
 use crate::{
     g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow},
-    loader::Loader,
+    prelude::{SherlockNav, SherlockSearch, ShortCut},
 };
 use crate::{
     sherlock_error,
@@ -27,137 +26,6 @@ use crate::{
     CONFIG,
 };
 
-#[derive(Clone, Debug)]
-pub struct SearchHandler {
-    pub model: Option<WeakRef<ListStore>>,
-    pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
-    pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-    pub error_model: WeakRef<ListStore>,
-}
-impl SearchHandler {
-    pub fn new(model: WeakRef<ListStore>, error_model: WeakRef<ListStore>) -> Self {
-        Self {
-            model: Some(model),
-            modes: Rc::new(RefCell::new(HashMap::new())),
-            task: Rc::new(RefCell::new(None)),
-            error_model,
-        }
-    }
-    pub fn empty(error_model: WeakRef<ListStore>) -> Self {
-        Self {
-            model: None,
-            modes: Rc::new(RefCell::new(HashMap::new())),
-            task: Rc::new(RefCell::new(None)),
-            error_model,
-        }
-    }
-    pub fn clear(&self) {
-        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
-            model.remove_all();
-        }
-    }
-    pub fn populate(&self) {
-        // clear potentially stuck rows
-        self.clear();
-
-        // load launchers
-        let (launchers, n) = match Loader::load_launchers().map_err(|e| e.tile("ERROR")) {
-            Ok(r) => r,
-            Err(e) => {
-                if let Some(model) = self.error_model.upgrade() {
-                    model.append(&e);
-                }
-                return;
-            }
-        };
-        if let Some(model) = self.error_model.upgrade() {
-            n.into_iter()
-                .map(|n| n.tile("WARNING"))
-                .for_each(|row| model.append(&row));
-        }
-
-        if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
-            let mut holder: HashMap<String, Option<String>> = HashMap::new();
-            let rows: Vec<WeakRef<SherlockRow>> = launchers
-                .into_iter()
-                .map(|launcher| {
-                    let patch = launcher.get_patch();
-                    if let Some(alias) = &launcher.alias {
-                        holder.insert(format!("{} ", alias), launcher.name);
-                    }
-                    patch
-                })
-                .flatten()
-                .map(|row| {
-                    model.append(&row);
-                    row.downgrade()
-                })
-                .collect();
-            update_async(rows, &self.task, String::new());
-            *self.modes.borrow_mut() = holder;
-        }
-    }
-}
-
-#[allow(dead_code)]
-struct SearchUI {
-    result_viewport: WeakRef<ScrolledWindow>,
-    results: WeakRef<ListView>,
-    // will be later used for split view to display information about apps/commands
-    preview_box: WeakRef<GtkBox>,
-    search_bar: WeakRef<Entry>,
-    search_icon_holder: WeakRef<GtkBox>,
-    mode_title: WeakRef<Label>,
-    spinner: WeakRef<Spinner>,
-    filter: WeakRef<CustomFilter>,
-    sorter: WeakRef<CustomSorter>,
-    binds: ConfKeys,
-    context_model: WeakRef<ListStore>,
-    context_view: WeakRef<ListView>,
-    context_menu_desc: WeakRef<Label>,
-    context_menu_first: WeakRef<Label>,
-    context_menu_second: WeakRef<Label>,
-}
-fn update_async(
-    update_tiles: Vec<WeakRef<SherlockRow>>,
-    current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
-    keyword: String,
-) {
-    let current_task_clone = Rc::clone(current_task);
-    if let Some(t) = current_task.borrow_mut().take() {
-        t.abort();
-    };
-    let task = glib::MainContext::default().spawn_local({
-        async move {
-            // Set spinner active
-            let spinner_row = update_tiles.get(0).cloned();
-            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
-                let _ = row.activate_action("win.spinner-mode", Some(&true.to_variant()));
-            }
-            // Make async tiles update concurrently
-            let futures: Vec<_> = update_tiles
-                .into_iter()
-                .map(|row| {
-                    let current_text = keyword.clone();
-                    async move {
-                        // Process text tile
-                        if let Some(row) = row.upgrade() {
-                            row.async_update(&current_text).await
-                        }
-                    }
-                })
-                .collect();
-
-            let _ = join_all(futures).await;
-            // Set spinner inactive
-            if let Some(row) = spinner_row.as_ref().and_then(|row| row.upgrade()) {
-                let _ = row.activate_action("win.spinner-mode", Some(&false.to_variant()));
-            }
-            *current_task_clone.borrow_mut() = None;
-        }
-    });
-    *current_task.borrow_mut() = Some(task);
-}
 pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
