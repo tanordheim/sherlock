@@ -88,13 +88,12 @@ The launcher can be of the following types:<br>
 (required)<br>
 1. `name field`: the name you want to have displayed for the category
 2. `icon`: the icon-name for the icon to display 
-
 <br>
+
 (optional)<br>
 1. `icon_class`: Sets the css class for the icon to style it according to your theme
 2. `search_string`: the string to match to on search
 3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
-
 <br>
 
 ## App Launcher
