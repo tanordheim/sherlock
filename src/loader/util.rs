@@ -43,6 +43,8 @@ pub struct RawLauncher {
     pub only_home: bool,
     #[serde(default)]
     pub args: serde_json::Value,
+    #[serde(default)]
+    pub actions: Option<Vec<ApplicationAction>>,
 }
 fn default_true() -> bool {
     true

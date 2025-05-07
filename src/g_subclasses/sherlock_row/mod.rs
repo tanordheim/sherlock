@@ -6,6 +6,7 @@ use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
+use simd_json::prelude::ArrayTrait;
 
 use crate::{
     launcher::Launcher,
@@ -142,12 +143,18 @@ impl SherlockRow {
         if let Some(alias) = &launcher.alias {
             self.set_alias(alias);
         }
+        if let Some(actions) = &launcher.actions{
+            self.set_actions(actions.clone());
+            self.set_num_actions(actions.len());
+        }
     }
     pub fn with_appdata(&self, data: &AppData) {
         self.set_search(&data.search_string);
         self.set_priority(data.priority);
-        self.set_actions(data.actions.clone());
-        self.set_num_actions(data.actions.len());
+        if !data.actions.is_empty(){
+            self.set_actions(data.actions.clone());
+            self.set_num_actions(data.actions.len());
+        }
         self.set_terminal(data.terminal);
     }
 }
