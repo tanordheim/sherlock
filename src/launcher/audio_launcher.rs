@@ -18,6 +18,10 @@ pub struct MusicPlayerLauncher {
     pub mpris: MprisData,
 }
 impl MusicPlayerLauncher {
+    /// Get current image
+    /// Return:
+    /// image: Pixbuf
+    /// was_cached: bool
     pub async fn get_image(&self) -> Option<(Pixbuf, bool)> {
         let loc = match &self.mpris.metadata.art.split("/").last() {
             Some(s) => s.to_string(),
@@ -150,6 +154,13 @@ impl MusicPlayerLauncher {
             )
         })?;
         Ok(())
+    }
+    pub fn update(&self) -> Option<(Self, bool)> {
+        let audio_launcher = AudioLauncherFunctions::new()?;
+        let player = audio_launcher.get_current_player()?;
+        let mpris = audio_launcher.get_metadata(&player)?;
+        let changed = mpris.mpris.metadata.title != self.mpris.metadata.title;
+        Some((mpris, changed))
     }
 }
 

@@ -1,8 +1,11 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::pin::Pin;
+use std::rc::Rc;
 
 use gio::glib::object::ObjectExt;
 use gio::glib::Bytes;
+use gio::prelude::ListModelExt;
 use gtk4::prelude::{BoxExt, WidgetExt};
 use gtk4::{gdk, Image, Overlay};
 
@@ -19,17 +22,10 @@ impl Tile {
         builder.object.add_css_class("mpris-tile");
         builder.object.set_overflow(gtk4::Overflow::Hidden);
         builder.object.with_launcher(&launcher);
-
-        builder
-            .category
-            .as_ref()
-            .and_then(|tmp| tmp.upgrade())
-            .map(|category| category.set_text(&mpris.mpris.metadata.artists.join(", ")));
-        builder
-            .title
-            .as_ref()
-            .and_then(|tmp| tmp.upgrade())
-            .map(|title| title.set_text(&mpris.mpris.metadata.title));
+        let (category, title) = match (builder.category, builder.title) {
+            (Some(cat), Some(tit)) => (cat, tit),
+            _ => return vec![],
+        };
 
         let overlay = Overlay::new();
 
@@ -81,30 +77,62 @@ impl Tile {
         if launcher.shortcut {
             builder.object.set_shortcut_holder(builder.shortcut_holder);
         }
-        let overlay = overlay.downgrade();
-        let overlay_clone = overlay.clone();
-        let launcher = launcher.clone();
 
+        let mpris = Rc::new(RefCell::new(mpris.clone()));
         let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> =
-            Box::new(move |_keyword: &str| {
-                let icon_overlay = overlay_clone.clone();
-                let launcher = launcher.clone();
-                Box::pin(async move {
-                    if let Some((image, was_cached)) = launcher.get_image().await {
-                        if !was_cached {
-                            if let Some(overlay) = icon_overlay.upgrade() {
-                                overlay.add_css_class("image-replace-overlay");
+            Box::new({
+                let overlay = overlay.downgrade();
+                let row_weak = builder.object.downgrade();
+                move |_keyword: &str| {
+                    let mpris = Rc::clone(&mpris);
+                    let icon_overlay = overlay.clone();
+                    let row = row_weak.clone();
+                    let category = category.clone();
+                    let title = title.clone();
+                    Box::pin(async move {
+                        let overlay = match icon_overlay.upgrade() {
+                            Some(overlay) => overlay,
+                            None => return,
+                        };
+                        {
+                            // check if new song is playing here
+                            let mut mpris = mpris.borrow_mut();
+                            if let Some((new, changed)) = mpris.update() {
+                                if !changed && overlay.observe_children().n_items() == 2 {
+                                    //early return if it didnt change
+                                    return;
+                                }
+                                // Update mpris and ui title and artist
+                                *mpris = new;
+                                category.upgrade().map(|category| {
+                                    category.set_text(&mpris.mpris.metadata.artists.join(", "))
+                                });
+                                title
+                                    .upgrade()
+                                    .map(|title| title.set_text(&mpris.mpris.metadata.title));
+                            } else {
+                                // hide tile if nothing is playing
+                                row.upgrade().map(|row| row.set_visible(false));
+                                return;
                             }
                         }
-                        let texture = gtk4::gdk::Texture::for_pixbuf(&image);
-                        let gtk_image = gtk4::Image::from_paintable(Some(&texture));
-                        gtk_image.set_widget_name("album-cover");
-                        gtk_image.set_pixel_size(50);
-                        if let Some(overlay) = icon_overlay.upgrade() {
-                            overlay.add_overlay(&gtk_image);
+                        row.upgrade().map(|row| row.set_visible(true));
+                        if let Some((image, was_cached)) = mpris.borrow().get_image().await {
+                            if !was_cached {
+                                if let Some(overlay) = icon_overlay.upgrade() {
+                                    overlay.add_css_class("image-replace-overlay");
+                                }
+                            }
+                            let texture = gtk4::gdk::Texture::for_pixbuf(&image);
+                            let gtk_image = gtk4::Image::from_paintable(Some(&texture));
+                            gtk_image.set_widget_name("album-cover");
+                            gtk_image.set_pixel_size(50);
+                            if let Some(overlay) = icon_overlay.upgrade() {
+                                overlay.add_overlay(&gtk_image);
+                            }
                         }
-                    }
-                })
+                    })
+                }
             });
 
         // attatch signal
@@ -114,6 +142,8 @@ impl Tile {
             .connect_local("row-should-activate", false, move |row| {
                 let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
                 execute_from_attrs(&row, &attrs);
+                // To reload ui according to mode
+                let _ = row.activate_action("win.update-items", None);
                 None
             });
         builder.object.set_signal_id(signal_id);
