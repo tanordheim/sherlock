@@ -17,6 +17,7 @@ use gtk4::{
 
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData};
 
+/// Custom string matching
 pub trait SherlockSearch {
     fn fuzzy_match<T: AsRef<str> + Debug>(&self, substring: T) -> bool;
 }
@@ -53,13 +54,14 @@ impl SherlockSearch for PipeData {
             let concat_str: String = search_in
                 .to_lowercase()
                 .chars()
-                .filter(|s| char_pattern.contains(s))
+                .filter(|s| char_pattern.contains(s) || *s == ';')
                 .collect();
             return concat_str.contains(&lowercase);
         }
         return false;
     }
 }
+/// Apply icon by name or by path if applicable
 pub trait IconComp {
     fn set_icon(
         &self,
@@ -116,6 +118,8 @@ impl ShortCut for GtkBox {
         r
     }
 }
+
+/// Navigation for elements within a ListView
 pub trait SherlockNav {
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
     fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
