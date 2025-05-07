@@ -109,7 +109,7 @@ impl AppData {
         self.priority = priority;
         self
     }
-    pub fn apply_alias(&mut self, alias: Option<&SherlockAlias>) {
+    pub fn apply_alias(&mut self, alias: Option<SherlockAlias>) {
         if let Some(alias) = alias {
             if let Some(alias_name) = alias.name.as_ref() {
                 self.name = alias_name.to_string();
@@ -124,6 +124,25 @@ impl AppData {
             }
             if let Some(alias_exec) = alias.exec.as_ref() {
                 self.exec = alias_exec.to_string();
+            }
+            if let Some(add_actions) = alias.add_actions {
+                add_actions.into_iter().for_each(|mut a| {
+                    if a.icon.is_none() {
+                        a.icon = self.icon.clone();
+                    }
+                    self.actions.push(a);
+                });
+            }
+            if let Some(actions) = alias.actions {
+                self.actions = actions
+                    .into_iter()
+                    .map(|mut a| {
+                        if a.icon.is_none() {
+                            a.icon = self.icon.clone();
+                        }
+                        a
+                    })
+                    .collect();
             }
         } else {
             self.search_string = format!("{};{}", self.name, self.search_string);
@@ -172,6 +191,8 @@ pub struct SherlockAlias {
     pub icon: Option<String>,
     pub exec: Option<String>,
     pub keywords: Option<String>,
+    pub actions: Option<Vec<ApplicationAction>>,
+    pub add_actions: Option<Vec<ApplicationAction>>,
 }
 
 pub struct CounterReader {

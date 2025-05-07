@@ -1,3 +1,4 @@
+use async_std::sync::Mutex;
 use glob::Pattern;
 use rayon::prelude::*;
 use simd_json;
@@ -6,6 +7,7 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::SystemTime;
 
 use super::util::ApplicationAction;
@@ -58,6 +60,7 @@ impl Loader {
                 e.to_string()
             ))?,
         };
+        let aliases = Arc::new(Mutex::new(aliases));
 
         // Gather '.desktop' files
         let desktop_files: HashSet<PathBuf> = match applications {
@@ -137,7 +140,11 @@ impl Loader {
                             .iter_mut()
                             .filter(|action| action.icon.is_none())
                             .for_each(|action| action.icon = data.icon.clone());
-                        data.apply_alias(aliases.get(&data.name));
+                        let alias = {
+                            let mut aliases = aliases.lock_blocking();
+                            aliases.remove(&data.name)
+                        };
+                        data.apply_alias(alias);
                         // apply counts
                         let count = counts.get(&data.exec).unwrap_or(&0.0);
                         let priority = parse_priority(priority, *count, decimals);
