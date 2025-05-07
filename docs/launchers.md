@@ -74,6 +74,7 @@ Actions are used to define entries within Sherlock's context menu. They are defi
 
 - `category`: Uses the `exec` to open a new mode
 - `app_launcher`: Opens the `exec` as an app
+- `web_launcher`: Opens the `exec` as a link in your default web browser
 - `command`: Opens the `exec` as a command
 - `debug`: Matches the `exec` against
     - `clear_cache`: To clear the application's cache
