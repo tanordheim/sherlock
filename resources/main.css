@@ -485,6 +485,7 @@ row:selected .tile{
     background: hsl(var(--background));
     border: 1px solid hsl(var(--border));
     border-radius: 5px;
+    box-shadow: 0px 0px 10px 10px rgba(22,22,22,0.4);
 }
 #context-menu row {
     color: hsla(var(--text), 0.8);
