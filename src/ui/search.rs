@@ -32,7 +32,7 @@ pub fn search(
     error_model: WeakRef<ListStore>,
 ) -> Result<(Overlay, SearchHandler), SherlockError> {
     // Initialize the view to show all apps
-    let (search_query, mode, stack_page, ui, handler) = construct_window(error_model)?;
+    let (search_query, mode, stack_page, ui, handler, context) = construct_window(error_model)?;
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
@@ -46,7 +46,7 @@ pub fn search(
     stack_page.connect_realize({
         let search_bar = ui.search_bar.clone();
         let results = ui.results.clone();
-        let context_model = ui.context_model.clone();
+        let context_model = context.model.clone();
         move |_| {
             // Focus search bar as soon as it's visible
             search_bar
@@ -67,8 +67,7 @@ pub fn search(
         ui.binds,
         stack_page_ref,
         &mode,
-        ui.context_model.clone(),
-        ui.context_view.clone(),
+        context.clone(),
     );
     change_event(
         ui.search_bar.clone(),
@@ -135,7 +134,7 @@ pub fn search(
             let results = ui.results.clone();
             let current_task = handler.task.clone();
             let current_text = search_query.clone();
-            let context_model = ui.context_model.clone();
+            let context_model = context.model.clone();
             move |_: &ApplicationWindow, _, _| {
                 filter
                     .upgrade()
@@ -145,9 +144,7 @@ pub fn search(
                     .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
                 if let Some(results) = results.upgrade() {
                     if results.focus_first(Some(&context_model)).is_some() {
-                        let weaks = results
-                            .get_weaks()
-                            .unwrap_or(vec![]);
+                        let weaks = results.get_weaks().unwrap_or(vec![]);
                         update_async(weaks, &current_task, current_text.borrow().clone());
                     }
                 }
@@ -236,6 +233,7 @@ fn construct_window(
         Overlay,
         SearchUI,
         SearchHandler,
+        ContextUI,
     ),
     SherlockError,
 > {
@@ -256,7 +254,7 @@ fn construct_window(
     let results: ListView = builder.object("result-frame").unwrap();
     results.set_focusable(false);
 
-    let (context, context_model, revealer) = make_context();
+    let (context, revealer) = make_context();
     let main_overlay = Overlay::new();
     main_overlay.set_child(Some(&vbox));
     main_overlay.add_overlay(&revealer);
@@ -356,8 +354,6 @@ fn construct_window(
         filter: filter.downgrade(),
         sorter: sorter.downgrade(),
         binds: custom_binds,
-        context_model: context_model.downgrade(),
-        context_view: context.downgrade(),
         context_menu_desc: context_action_desc.downgrade(),
         context_menu_first: context_action_first.downgrade(),
         context_menu_second: context_action_second.downgrade(),
@@ -372,7 +368,7 @@ fn construct_window(
         .upgrade()
         .map(|holder| holder.set_visible(config.appearance.search_icon));
 
-    Ok((search_text, mode, main_overlay, ui, handler))
+    Ok((search_text, mode, main_overlay, ui, handler, context))
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -483,8 +479,7 @@ fn nav_event(
     custom_binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
     current_mode: &Rc<RefCell<String>>,
-    context_model: WeakRef<ListStore>,
-    context_view: WeakRef<ListView>,
+    context: ContextUI,
 ) {
     let stack_page = Rc::clone(stack_page);
     let event_controller = EventControllerKey::new();
@@ -524,9 +519,14 @@ fn nav_event(
             context_model: &WeakRef<ListStore>,
             context_open: &Cell<bool>,
         ) -> Option<()> {
+            // Early return if context is already opened
+            if context_open.get() {
+                return None;
+            }
             let results = results.upgrade()?;
             let row = results.selected_item().and_downcast::<SherlockRow>()?;
             let context = context_model.upgrade()?;
+
             context.remove_all();
             if row.num_actions() > 0 {
                 for action in row.actions().iter() {
@@ -547,7 +547,6 @@ fn nav_event(
             context_open.set(false);
             None
         }
-        let context_open: Cell<bool> = Cell::new(false);
         move |_, key, i, modifiers| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
@@ -559,7 +558,7 @@ fn nav_event(
                         .context_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    open_context(&results, &context_view, &context_model, &context_open);
+                    open_context(&results, &context.view, &context.model, &context.open);
                 }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
@@ -567,10 +566,10 @@ fn nav_event(
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    if context_open.get() {
-                        move_prev_context(&context_view);
+                    if context.open.get() {
+                        move_prev_context(&context.view);
                     } else {
-                        move_prev(&results, &context_model);
+                        move_prev(&results, &context.model);
                     }
                     return true.into();
                 }
@@ -580,26 +579,26 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    if context_open.get() {
-                        move_next_context(&context_view);
+                    if context.open.get() {
+                        move_next_context(&context.view);
                     } else {
-                        move_next(&results, &context_model);
+                        move_next(&results, &context.model);
                     }
                     return true.into();
                 }
                 gdk::Key::Up => {
-                    if context_open.get() {
-                        move_prev_context(&context_view);
+                    if context.open.get() {
+                        move_prev_context(&context.view);
                     } else {
-                        move_prev(&results, &context_model);
+                        move_prev(&results, &context.model);
                     }
                     return true.into();
                 }
                 gdk::Key::Down => {
-                    if context_open.get() {
-                        move_next_context(&context_view);
+                    if context.open.get() {
+                        move_next_context(&context.view);
                     } else {
-                        move_next(&results, &context_model);
+                        move_next(&results, &context.model);
                     }
                     return true.into();
                 }
@@ -630,12 +629,12 @@ fn nav_event(
                     // Focus first item and check for overflow
                     results
                         .upgrade()
-                        .map(|results| results.focus_first(Some(&context_model)));
+                        .map(|results| results.focus_first(Some(&context.model)));
                 }
                 gdk::Key::Return => {
-                    if context_open.get() {
+                    if context.open.get() {
                         // Activate action
-                        if let Some(upgr) = context_view.upgrade() {
+                        if let Some(upgr) = context.view.upgrade() {
                             if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>()
                             {
                                 row.emit_by_name::<()>("context-action-should-activate", &[]);
@@ -652,8 +651,8 @@ fn nav_event(
                         }
                     }
                 }
-                Key::Escape if context_open.get() => {
-                    close_context(&context_model, &context_open);
+                Key::Escape if context.open.get() => {
+                    close_context(&context.model, &context.open);
                     return true.into();
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
@@ -675,10 +674,10 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        move_prev(&results, &context_model);
+                        move_prev(&results, &context.model);
                         return true.into();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        move_next(&results, &context_model);
+                        move_next(&results, &context.model);
                         return true.into();
                     }
                 }
