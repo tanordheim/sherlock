@@ -5,9 +5,8 @@ use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
-    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image,
-    ListScrollFlags, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
-    Spinner,
+    Builder, CustomFilter, CustomSorter, EventControllerKey, FilterListModel, Image, ListView,
+    Overlay, SignalListItemFactory, SingleSelection, SortListModel, Spinner,
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
@@ -180,6 +179,17 @@ pub fn search(
             .map(|search_bar| search_bar.grab_focus());
     });
 
+    // Show or hide context menu shortcuts whenever stack shows
+    stack_page.connect_realize({
+        let results = ui.results.clone();
+        let context_model = ui.context_model.clone();
+        move |_| {
+            results
+                .upgrade()
+                .map(|r| r.focus_first(Some(&context_model)));
+        }
+    });
+
     nav_event(
         ui.results.clone(),
         ui.search_bar.clone(),
@@ -193,13 +203,14 @@ pub fn search(
     );
     change_event(
         ui.search_bar.clone(),
-        ui.results,
+        ui.results.clone(),
         Rc::clone(&handler.modes),
         &mode,
         ui.filter,
         ui.sorter,
         &search_query,
         &handler.task,
+        ui.context_model.clone(),
     );
 
     // Improved mode selection
@@ -435,11 +446,6 @@ fn construct_window(
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
-    let (_, n_items) = results.focus_first();
-    if n_items > 0 {
-        results.scroll_to(0, ListScrollFlags::NONE, None);
-    }
-
     search_icon_holder.append(&overlay);
 
     let spinner: Spinner = builder.object("status-bar-spinner").unwrap_or_default();
@@ -644,7 +650,7 @@ fn nav_event(
                     context.append(&ContextAction::new("", &action, row.terminal()))
                 }
                 let context_selection = context_view.upgrade()?;
-                let _ = context_selection.focus_first();
+                context_selection.focus_first(None);
                 context_open.set(true);
             }
             None
@@ -739,15 +745,9 @@ fn nav_event(
                         });
                     }
                     // Focus first item and check for overflow
-                    if let Some((_, n_items)) =
-                        results.upgrade().map(|results| results.focus_first())
-                    {
-                        if n_items > 0 {
-                            results
-                                .upgrade()
-                                .map(|results| results.scroll_to(0, ListScrollFlags::NONE, None));
-                        }
-                    }
+                    results
+                        .upgrade()
+                        .map(|results| results.focus_first(Some(&context_model)));
                 }
                 gdk::Key::Return => {
                     if context_open.get() {
@@ -819,6 +819,7 @@ fn change_event(
     sorter: WeakRef<CustomSorter>,
     search_query: &Rc<RefCell<String>>,
     current_task: &Rc<RefCell<Option<glib::JoinHandle<()>>>>,
+    context_model: WeakRef<ListStore>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
@@ -849,12 +850,11 @@ fn change_event(
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             // focus first item
-            if let Some((_, n_items)) = results.upgrade().map(|results| results.focus_first()) {
-                results.upgrade().map(|results| {
-                    if n_items > 0 {
-                        results.scroll_to(0, ListScrollFlags::NONE, None);
-                    }
-                });
+            if results
+                .upgrade()
+                .map(|results| results.focus_first(Some(&context_model)))
+                .is_some()
+            {
                 let weaks = results
                     .upgrade()
                     .and_then(|r| r.get_weaks())
