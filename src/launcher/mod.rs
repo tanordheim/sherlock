@@ -13,6 +13,7 @@ pub mod system_cmd_launcher;
 mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
+pub mod emoji_picker;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
