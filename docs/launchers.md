@@ -66,22 +66,21 @@ The launcher can be of the following types:<br>
     "type": "categories",
     "args": {
         "Kill Processes": {
-            "icon": "sherlock-process", 
-            "icon_class": "reactive", 
-            "exec": "kill", 
+            "icon": "sherlock-process",
+            "icon_class": "reactive",
+            "exec": "kill",
             "search_string": "terminate;kill;process"
-            },
+        },
         "Power Menu": {
             "icon": "battery-full-symbolic",
-            "icon_class": "reactive", 
-            "exec": "pm", 
+            "icon_class": "reactive",
+            "exec": "pm",
             "search_string": "powermenu;"
-            }
+        }
     },
     "priority": 3,
     "home": true
 }
-
 ```
 ### Arguments (args):
 **commands**:<br>
@@ -114,7 +113,6 @@ The launcher can be of the following types:<br>
     "home": true
 }
 ```
-
 <br>
 
 ## Bookmark Launcher
@@ -128,13 +126,13 @@ The launcher can be of the following types:<br>
 ```json
 {
     "name": "Bookmarks",
-        "type": "bookmarks",
-        "args": {
-            "icon": "sherlock-bookmark",
-            "icon_class": "reactive"
-        },
-        "priority": 3,
-        "home": false
+    "type": "bookmarks",
+    "args": {
+        "icon": "sherlock-bookmark",
+        "icon_class": "reactive"
+    },
+    "priority": 3,
+    "home": false
 }
 ```
 
@@ -164,7 +162,7 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 ```json
 {
     "name": "Web Search",
-    "display_name": "Google Search"
+    "display_name": "Google Search",
     "tag_start": "{keyword}",
     "tag_end": "{keyword}",
     "alias": "gg",
@@ -216,7 +214,7 @@ Sets the icon-name the launcher should show.
             "calc.units"
         ]
     },
-    "priority": 1,
+    "priority": 1
 }
 ```
 ### Arguments (args):
@@ -242,22 +240,22 @@ Specifies what the launcher should parse:
 ```json
 {
     "name": "Clipboard",
-        "type": "clipboard-execution",
-        "args": {
-            "capabilities": [
-                "url",
-                "colors.hex",
-                "colors.rgb",
-                "colors.hsl",
-                "calc.math",
-                "calc.lengths",
-                "calc.weights",
-                "calc.temperatures"
-            ]
-        },
-        "priority": 1,
-        "home": true
-},
+    "type": "clipboard-execution",
+    "args": {
+        "capabilities": [
+            "url",
+            "colors.hex",
+            "colors.rgb",
+            "colors.hsl",
+            "calc.math",
+            "calc.lengths",
+            "calc.weights",
+            "calc.temperatures"
+        ]
+    },
+    "priority": 1,
+    "home": true
+}
 ```
 ### Arguments (args):
 **`capabilities`** (optional):<br>
@@ -289,16 +287,16 @@ Specifies what the launcher should parse:
             "command name": {
                 "icon": "icon-name",
                 "icon_class": "reactive",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-                "tag_start": "{keyword}"
+                "exec": "command to execute",
+                "search_string": "examplecommand",
+                "tag_start": "{keyword}",
                 "tag_end": "{keyword}"
             },
             "command2": {
                 "icon": "icon-name",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-                "tag_start": "{keyword}"
+                "exec": "command to execute",
+                "search_string": "examplecommand",
+                "tag_start": "{keyword}",
                 "tag_end": "{keyword}"
             }
         }
@@ -323,23 +321,23 @@ Has following fields of its own:
 ```json
 {
     "name": "Debug",
-        "type": "debug",
-        "alias": "debug",
-        "args": {
-            "commands": {
-                "Clear Cache": {
-                    "icon": "sherlock-process",
-                    "exec": "clear_cache",
-                    "search_string": "clear;cache;"
-                },
-                "Reset App Counts": {
-                    "icon": "sherlock-process",
-                    "exec": "reset_counts",
-                    "search_string": "reset;clear;counts;appcounts"
-                }
+    "type": "debug",
+    "alias": "debug",
+    "args": {
+        "commands": {
+            "Clear Cache": {
+                "icon": "sherlock-process",
+                "exec": "clear_cache",
+                "search_string": "clear;cache;"
+            },
+            "Reset App Counts": {
+                "icon": "sherlock-process",
+                "exec": "reset_counts",
+                "search_string": "reset;clear;counts;appcounts"
             }
-        },
-        "priority": 0
+        }
+    },
+    "priority": 0
 }
 ```
 ### Arguments (args):
@@ -376,7 +374,7 @@ Has following fields of its own:
     "on_return": "copy",
     "args": {
         "icon": "wikipedia",
-        "exec": "~/.config/sherlock/scripts/sherlock-wiki"
+        "exec": "~/.config/sherlock/scripts/sherlock-wiki",
         "exec-args": "{keyword}"
     },
     "priority": 0,
@@ -411,14 +409,14 @@ Specifies the arguments to pass along to the `exec` program.<br>
     "name": "Teams Event",
     "type": "teams_event",
     "args": {
-        "icon": "teams"
+        "icon": "teams",
         "event_date": "now",
         "event_start": "-5 minutes",
         "event_end": "+15 minutes"
     },
     "priority": 1,
     "home": true
-},
+}
 ```
 
 ### Arguments (args):
@@ -448,14 +446,13 @@ Specifies the second offset from the `date` parameter.<br>
 {
     "name": "Spotify",
     "type": "audio_sink",
-    "args": { },
+    "args": {},
     "async": true,
     "priority": 1,
     "home": true,
     "only_home": true,
     "spawn_focus": false
-},
-
+}
 ```
 
 <br>
@@ -473,11 +470,10 @@ Specifies the second offset from the `date` parameter.<br>
     "name": "Kill Process",
     "alias": "kill",
     "type": "process",
-    "args": { },
+    "args": {},
     "priority": 6,
     "home": false
-},
-
+}
 ```
 
 <br>
@@ -504,9 +500,7 @@ Specifies the second offset from the `date` parameter.<br>
     "async": true,
     "shortcut": false,
     "spawn_focus": false
-},
-
-
+}
 ```
 
 ### Arguments (args):
