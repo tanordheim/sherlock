@@ -84,6 +84,9 @@ Actions are used to define entries within Sherlock's context menu. They are defi
 ---
 ## Category Launcher
 
+<br>
+
+## Category Launcher
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="category-launcher" width="100%" src="assets/CategoryTile.svg">
@@ -98,40 +101,36 @@ Actions are used to define entries within Sherlock's context menu. They are defi
     "type": "categories",
     "args": {
         "Kill Processes": {
-            "icon": "sherlock-process", 
-            "icon_class": "reactive", 
-            "exec": "kill", 
+            "icon": "sherlock-process",
+            "icon_class": "reactive",
+            "exec": "kill",
             "search_string": "terminate;kill;process"
-            },
+        },
         "Power Menu": {
             "icon": "battery-full-symbolic",
-            "icon_class": "reactive", 
-            "exec": "pm", 
+            "icon_class": "reactive",
+            "exec": "pm",
             "search_string": "powermenu;"
-            }
+        }
     },
     "priority": 3,
     "home": true
 }
-
 ```
 ### Arguments (args):
 **commands**:<br>
 (required)<br>
-1. `name field` / the name you want to have displayed for the category
-2. `icon` / the icon-name for the icon to display 
-3. `exec` / the alias of the launcher you want to execute
-
+1. `name field`: the name you want to have displayed for the category
+2. `icon`: the icon-name for the icon to display 
 <br>
+
 (optional)<br>
-1. `icon_class` / Sets the css class for the icon to style it according to your theme
-2. `search_string` / the string to match to on search
-
+1. `icon_class`: Sets the css class for the icon to style it according to your theme
+2. `search_string`: the string to match to on search
+3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
 <br>
----
 
 ## App Launcher
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="app-launcher" width="100%" src="assets/AppTile.svg">
@@ -149,10 +148,9 @@ Actions are used to define entries within Sherlock's context menu. They are defi
     "home": true
 }
 ```
----
+<br>
 
 ## Bookmark Launcher
-
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BookmarkTile.svg">
@@ -163,15 +161,17 @@ Actions are used to define entries within Sherlock's context menu. They are defi
 ```json
 {
     "name": "Bookmarks",
-        "type": "bookmarks",
-        "args": {
-            "icon": "sherlock-bookmark",
-            "icon_class": "reactive"
-        },
-        "priority": 3,
-        "home": false
+    "type": "bookmarks",
+    "args": {
+        "icon": "sherlock-bookmark",
+        "icon_class": "reactive"
+    },
+    "priority": 3,
+    "home": false
 }
 ```
+
+<br>
 
 ### Supported Browsers
 Currently these are the supported launchers. It is beneficiary to set the `browser` key in the `default_apps`section.
@@ -184,11 +184,9 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 | **Chrome**      | `chrome`, `google-chrome`, `/usr/bin/google-chrome-stable %u` |
 | **Thorium**      | `thorium`, `/usr/bin/thorium-browser %u` |
 
----
-
+<br>
 
 ## Web Launcher
-
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
@@ -199,7 +197,7 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 ```json
 {
     "name": "Web Search",
-    "display_name": "Google Search"
+    "display_name": "Google Search",
     "tag_start": "{keyword}",
     "tag_end": "{keyword}",
     "alias": "gg",
@@ -231,10 +229,9 @@ Can be either of the following:
 **`icon`** (required):<br>
 Sets the icon-name the launcher should show.
 
----
+<br>
 
 ## Calculator
-
 <div align="center">
   <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
   <br />
@@ -252,7 +249,7 @@ Sets the icon-name the launcher should show.
             "calc.units"
         ]
     },
-    "priority": 1,
+    "priority": 1
 }
 ```
 ### Arguments (args):
@@ -265,9 +262,9 @@ Specifies what the launcher should parse:
 - **`calc.temperatures`** - displays the solutions to temerature transformations 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
----
-## Clipboard Launcher
+<br>
 
+## Clipboard Launcher
 <div align="center">
   <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg" />
   <br>
@@ -278,22 +275,22 @@ Specifies what the launcher should parse:
 ```json
 {
     "name": "Clipboard",
-        "type": "clipboard-execution",
-        "args": {
-            "capabilities": [
-                "url",
-                "colors.hex",
-                "colors.rgb",
-                "colors.hsl",
-                "calc.math",
-                "calc.lengths",
-                "calc.weights",
-                "calc.temperatures"
-            ]
-        },
-        "priority": 1,
-        "home": true
-},
+    "type": "clipboard-execution",
+    "args": {
+        "capabilities": [
+            "url",
+            "colors.hex",
+            "colors.rgb",
+            "colors.hsl",
+            "calc.math",
+            "calc.lengths",
+            "calc.weights",
+            "calc.temperatures"
+        ]
+    },
+    "priority": 1,
+    "home": true
+}
 ```
 ### Arguments (args):
 **`capabilities`** (optional):<br>
@@ -312,7 +309,8 @@ Specifies what the launcher should parse:
 > - `colors.all` to use all available color formats
 > - `calc.units` to use all available unit transformations
 
----
+<br>
+
 ## Command Launcher
 ```json
 {
@@ -324,16 +322,16 @@ Specifies what the launcher should parse:
             "command name": {
                 "icon": "icon-name",
                 "icon_class": "reactive",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-                "tag_start": "{keyword}"
+                "exec": "command to execute",
+                "search_string": "examplecommand",
+                "tag_start": "{keyword}",
                 "tag_end": "{keyword}"
             },
             "command2": {
                 "icon": "icon-name",
-                "exec": "command to execute", 
-                "search_string": "examplecommand"
-                "tag_start": "{keyword}"
+                "exec": "command to execute",
+                "search_string": "examplecommand",
+                "tag_start": "{keyword}",
                 "tag_end": "{keyword}"
             }
         }
@@ -352,41 +350,43 @@ Has following fields of its own:
 6. `tag_start` / specifies what will be displayed in the start tag
 7. `tag_end` / specifies what will be displayed in the end tag
 
----
+<br>
+
 ## Debug Launcher
 ```json
 {
     "name": "Debug",
-        "type": "debug",
-        "alias": "debug",
-        "args": {
-            "commands": {
-                "Clear Cache": {
-                    "icon": "sherlock-process",
-                    "exec": "clear_cache",
-                    "search_string": "clear;cache;"
-                },
-                "Reset App Counts": {
-                    "icon": "sherlock-process",
-                    "exec": "reset_counts",
-                    "search_string": "reset;clear;counts;appcounts"
-                }
+    "type": "debug",
+    "alias": "debug",
+    "args": {
+        "commands": {
+            "Clear Cache": {
+                "icon": "sherlock-process",
+                "exec": "clear_cache",
+                "search_string": "clear;cache;"
+            },
+            "Reset App Counts": {
+                "icon": "sherlock-process",
+                "exec": "reset_counts",
+                "search_string": "reset;clear;counts;appcounts"
             }
         },
         "actions": [
-        {
-            "name": "Clear Cache",
-            "icon": "sherlock-process",
-            "exec": "clear_cache",
-            "method": "debug"
-        },
-        {
-            "name": "Reset App Counts",
-            "icon": "sherlock-process",
-            "exec": "reset_counts",
-            "method": "debug"
-        } ],
-        "priority": 0
+            {
+                "name": "Clear Cache",
+                "icon": "sherlock-process",
+                "exec": "clear_cache",
+                "method": "debug"
+            },
+            {
+                "name": "Reset App Counts",
+                "icon": "sherlock-process",
+                "exec": "reset_counts",
+                "method": "debug"
+            }
+        ]
+    },
+    "priority": 0
 }
 ```
 ### Arguments (args):
@@ -403,9 +403,10 @@ Has following fields of its own:
 ### Available Debug Commands
 - `clear_cache`: Clears the files within the location set as cache.
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
----
-## Bulk Text
 
+<br>
+
+## Bulk Text
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="bulk-text-launcher" width="100%" src="assets/BulkText.svg">
@@ -422,7 +423,7 @@ Has following fields of its own:
     "on_return": "copy",
     "args": {
         "icon": "wikipedia",
-        "exec": "~/.config/sherlock/scripts/sherlock-wiki"
+        "exec": "~/.config/sherlock/scripts/sherlock-wiki",
         "exec-args": "{keyword}"
     },
     "priority": 0,
@@ -440,10 +441,10 @@ Specifies the program that should be run. **Note:** that its probably suitable t
 Specifies the arguments to pass along to the `exec` program.<br>
 
 > The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
---- 
+
+<br>
 
 ## Teams Event
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="teams-event-launcher" width="100%" src="assets/TeamsTile.svg">
@@ -457,14 +458,14 @@ Specifies the arguments to pass along to the `exec` program.<br>
     "name": "Teams Event",
     "type": "teams_event",
     "args": {
-        "icon": "teams"
+        "icon": "teams",
         "event_date": "now",
         "event_start": "-5 minutes",
         "event_end": "+15 minutes"
     },
     "priority": 1,
     "home": true
-},
+}
 ```
 
 ### Arguments (args):
@@ -480,10 +481,9 @@ Specifies the offset from the `date` parameter.<br>
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
 
---- 
+<br>
 
 ## Music Player
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="music-launcher" width="100%" src="assets/MprisTile.svg">
@@ -495,37 +495,32 @@ Specifies the second offset from the `date` parameter.<br>
 {
     "name": "Spotify",
     "type": "audio_sink",
-    "args": { },
+    "args": {},
     "async": true,
     "priority": 1,
     "home": true,
     "only_home": true,
     "spawn_focus": false,
     "actions": [
-    {
-        "name": "Skip",
-        "icon": "media-seek-forward",
-        "exec": "playerctl next",
-        "method": "command"
-    },
-    {
-        "name": "Previous",
-        "icon": "media-seek-backward",
-        "exec": "playerctl previous",
-        "method": "command"
-    }
+        {
+            "name": "Skip",
+            "icon": "media-seek-forward",
+            "exec": "playerctl next",
+            "method": "command"
+        },
+        {
+            "name": "Previous",
+            "icon": "media-seek-backward",
+            "exec": "playerctl previous",
+            "method": "command"
+        }
     ]
-},
-
+}
 ```
 
-### Arguments (args):
-None
-
---- 
+<br>
 
 ## Process Terminator
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="process-terminator-launcher" width="100%" src="assets/ProcessTerminator.svg">
@@ -538,20 +533,15 @@ None
     "name": "Kill Process",
     "alias": "kill",
     "type": "process",
-    "args": { },
+    "args": {},
     "priority": 6,
     "home": false
-},
-
+}
 ```
 
-### Arguments (args):
-None
-
---- 
+<br>
 
 ## Weather Launcher
-
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="weather-launcher" width="100%" src="assets/WeatherWidget.svg">
@@ -573,9 +563,7 @@ None
     "async": true,
     "shortcut": false,
     "spawn_focus": false
-},
-
-
+}
 ```
 
 ### Arguments (args):
@@ -585,5 +573,3 @@ Specifies the location for which the weather should be gathered.<br>
 
 **`update_interval`** (optional):<br>
 Specifies how often you want to update the weather. In minutes.<br>
-
---- 
