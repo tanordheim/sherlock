@@ -1,7 +1,8 @@
 use gio::glib::subclass::Signal;
 use gio::glib::{SignalHandlerId, WeakRef};
-use gtk4::glib;
 use gtk4::subclass::prelude::*;
+use gtk4::{glib, GestureClick};
+use once_cell::sync::OnceCell;
 use std::cell::RefCell;
 use std::sync::OnceLock;
 
@@ -10,8 +11,11 @@ use std::sync::OnceLock;
 pub struct EmojiObject {
     pub title: RefCell<String>,
     pub emoji: RefCell<String>,
-    pub signal_id: RefCell<Option<SignalHandlerId>>,
     pub parent: RefCell<WeakRef<gtk4::Box>>,
+
+    // Internal
+    pub gesture: OnceCell<GestureClick>,
+    pub signal_id: RefCell<Option<SignalHandlerId>>,
 }
 
 // The central trait for subclassing a GObject
@@ -19,7 +23,7 @@ pub struct EmojiObject {
 impl ObjectSubclass for EmojiObject {
     const NAME: &'static str = "EmojiObject";
     type Type = super::EmojiObject;
-    type ParentType = gtk4::Widget;
+    type ParentType = glib::Object;
 }
 
 // Trait shared by all GObjects
@@ -33,5 +37,3 @@ impl ObjectImpl for EmojiObject {
         SIGNALS.get_or_init(|| vec![Signal::builder("emoji-should-activate").build()])
     }
 }
-impl WidgetImpl for EmojiObject {}
-impl BoxImpl for EmojiObject {}
