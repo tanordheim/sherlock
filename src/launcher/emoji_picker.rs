@@ -44,6 +44,7 @@ impl EmojiPicker {
         })?;
         let emojies: Vec<EmojiObject> = emojies
             .into_iter()
+            .take(100)
             .map(|emj| EmojiObject::from(emj))
             .collect();
         Ok(Self { emojies })
@@ -104,7 +105,8 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
     let factory = make_factory();
     let selection = SingleSelection::new(Some(model.clone()));
     let view: GridView = GridView::new(Some(selection), Some(factory));
-    view.set_focusable(false);
+    view.set_max_columns(999);
+
     view_port.set_child(Some(&view));
 
     let ui = EmojiUI {
@@ -120,14 +122,14 @@ fn make_factory() -> SignalListItemFactory {
         let list_item = item
             .downcast_ref::<gtk4::ListItem>()
             .expect("Should be a list item");
-        let box_ = GtkBox::new(gtk4::Orientation::Vertical, 10);
-        box_.set_halign(gtk4::Align::Start);
+        let box_ = GtkBox::new(gtk4::Orientation::Vertical, 0);
+        box_.set_size_request(50, 50);
 
         let emoji_label = Label::new(Some(""));
+        emoji_label.set_valign(gtk4::Align::Center);
+        emoji_label.set_halign(gtk4::Align::Center);
+        emoji_label.set_vexpand(true);
         box_.append(&emoji_label);
-
-        let name_label = Label::new(Some(""));
-        box_.append(&name_label);
 
         list_item.set_child(Some(&box_));
     });
@@ -148,13 +150,8 @@ fn make_factory() -> SignalListItemFactory {
             .first_child()
             .and_downcast::<Label>()
             .expect("First child should be a label");
-        let title_label = box_
-            .last_child()
-            .and_downcast::<Label>()
-            .expect("First child should be a label");
 
         emoji_label.set_text(&emoji_obj.emoji());
-        title_label.set_text(&emoji_obj.title());
     });
     factory
 }
