@@ -63,6 +63,16 @@ pub fn emojies(
     let emoji_picker = EmojiPicker::new()?;
     let (stack, ui) = construct(emoji_picker.emojies);
 
+    stack.connect_realize({
+        let search_bar = ui.search_bar.clone();
+        move |_| {
+            // Focus search bar as soon as it's visible
+            search_bar
+                .upgrade()
+                .map(|search_bar| search_bar.grab_focus());
+        }
+    });
+
     nav_event(ui.search_bar.clone(), ui.view.clone(), stack_page);
     return Ok((stack, ui.model.clone()));
 }
