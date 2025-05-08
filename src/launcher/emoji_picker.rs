@@ -2,7 +2,7 @@ use gio::glib::WeakRef;
 use gio::ListStore;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
 use gtk4::{
-    Box as GtkBox, GridView, Label, ScrolledWindow, SignalListItemFactory, SingleSelection,
+    Box as GtkBox, Entry, GridView, Label, ScrolledWindow, SignalListItemFactory, SingleSelection,
 };
 use std::cell::RefCell;
 use std::path::PathBuf;
@@ -54,6 +54,7 @@ impl EmojiPicker {
 pub struct EmojiUI {
     model: WeakRef<ListStore>,
     view: WeakRef<GridView>,
+    search_bar: WeakRef<Entry>,
 }
 
 pub fn emojies(
@@ -62,33 +63,40 @@ pub fn emojies(
     let emoji_picker = EmojiPicker::new()?;
     let (stack, ui) = construct(emoji_picker.emojies);
 
-    nav_event(&stack, ui.view.clone(), stack_page);
+    nav_event(ui.search_bar.clone(), ui.view.clone(), stack_page);
     return Ok((stack, ui.model.clone()));
 }
-fn nav_event(stack: &GtkBox, result_holder: WeakRef<GridView>, stack_page: &Rc<RefCell<String>>) {
+fn nav_event(
+    search_bar: WeakRef<Entry>,
+    view: WeakRef<GridView>,
+    stack_page: &Rc<RefCell<String>>,
+) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability
     let event_controller = EventControllerKey::new();
     let stack_page = Rc::clone(&stack_page);
 
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed(move |_, key, _, _| {
-        if stack_page.borrow().as_str() != "emoji-page" {
+        if stack_page.borrow().as_str() != "search-page" {
             return false.into();
         }
         match key {
             Key::Return => {
-                let _ = result_holder.upgrade().map(|widget| {
-                    widget.activate_action(
-                        "win.switch-page",
-                        Some(&String::from("error-page->search-page").to_variant()),
-                    )
-                });
+                if let Some(upgr) = view.upgrade() {
+                    if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
+                        if let Some(row) = selection.selected_item().and_downcast::<EmojiObject>() {
+                            row.emit_by_name::<()>("emoji-should-activate", &[]);
+                        }
+                    }
+                }
                 true.into()
             }
             _ => false.into(),
         }
     });
-    stack.add_controller(event_controller);
+    search_bar
+        .upgrade()
+        .map(|entry| entry.add_controller(event_controller));
 }
 
 fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
@@ -98,6 +106,7 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
     // Get the required object references
     let vbox: GtkBox = builder.object("vbox").unwrap();
     let view_port: ScrolledWindow = builder.object("scrolled-window").unwrap();
+    let search_bar: Entry = builder.object("search-bar").unwrap();
 
     // Setup model and factory
     let model = ListStore::new::<EmojiObject>();
@@ -112,6 +121,7 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
     let ui = EmojiUI {
         model: model.downgrade(),
         view: view.downgrade(),
+        search_bar: search_bar.downgrade(),
     };
 
     (vbox, ui)
@@ -145,6 +155,8 @@ fn make_factory() -> SignalListItemFactory {
             .child()
             .and_downcast::<GtkBox>()
             .expect("The child should be a Box");
+        emoji_obj.set_parent(box_.downgrade());
+        emoji_obj.attach_event();
 
         let emoji_label = box_
             .first_child()
