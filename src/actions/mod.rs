@@ -56,7 +56,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 let _ = commandlaunch::command_launch(exec, keyword);
                 increment(&exec);
-                // eval_close(row);
+                eval_close(row);
             }
             "copy" => {
                 if let Some(field) = attrs.get("field") {

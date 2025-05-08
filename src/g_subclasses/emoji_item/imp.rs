@@ -1,15 +1,17 @@
 use gio::glib::subclass::Signal;
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::glib;
 use gtk4::subclass::prelude::*;
-use serde::Deserialize;
 use std::cell::RefCell;
 use std::sync::OnceLock;
 
 /// ## Fields:
-#[derive(Default, Deserialize)]
+#[derive(Default)]
 pub struct EmojiObject {
     pub title: RefCell<String>,
     pub emoji: RefCell<String>,
+    pub signal_id: RefCell<Option<SignalHandlerId>>,
+    pub parent: RefCell<WeakRef<gtk4::Box>>,
 }
 
 // The central trait for subclassing a GObject
@@ -17,7 +19,7 @@ pub struct EmojiObject {
 impl ObjectSubclass for EmojiObject {
     const NAME: &'static str = "EmojiObject";
     type Type = super::EmojiObject;
-    type ParentType = glib::Object;
+    type ParentType = gtk4::Widget;
 }
 
 // Trait shared by all GObjects
@@ -31,3 +33,5 @@ impl ObjectImpl for EmojiObject {
         SIGNALS.get_or_init(|| vec![Signal::builder("emoji-should-activate").build()])
     }
 }
+impl WidgetImpl for EmojiObject {}
+impl BoxImpl for EmojiObject {}
