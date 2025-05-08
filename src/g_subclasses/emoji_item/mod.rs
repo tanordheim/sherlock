@@ -1,11 +1,9 @@
 mod imp;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::glib::{
-    object::ObjectExt, property::PropertyGet, variant::ToVariant, SignalHandlerId, WeakRef,
-};
+use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
-use gtk4::{glib, prelude::WidgetExt, Box};
+use gtk4::{glib, Box};
 use serde::Deserialize;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
