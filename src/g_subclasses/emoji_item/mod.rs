@@ -26,7 +26,16 @@ pub struct EmojiRaw {
 impl EmojiObject {
     // Setters
     pub fn set_parent(&self, parent: WeakRef<Box>) {
-        *self.imp().parent.borrow_mut() = parent;
+        let imp = self.imp();
+        if let Some(gesture) = imp.gesture.get() {
+            if let Some(parent) = imp.parent.borrow().as_ref().and_then(|tmp| tmp.upgrade()) {
+                parent.remove_controller(gesture);
+            }
+            parent
+                .upgrade()
+                .map(|tmp| tmp.add_controller(gesture.clone()));
+        }
+        *self.imp().parent.borrow_mut() = Some(parent);
     }
     pub fn set_signal_id(&self, signal: SignalHandlerId) {
         // Take the previous signal if it exists and disconnect it
@@ -37,36 +46,15 @@ impl EmojiObject {
     }
     pub fn attach_event(&self) {
         let imp = self.imp();
-        let parent = imp.parent.borrow().clone();
         let signal_id = self.connect_local("emoji-should-activate", false, {
-            let parent = parent.clone();
             let emoji = self.emoji();
+            let parent = imp.parent.clone();
             move |_attrs| {
                 let attrs = get_attrs_map(vec![("method", Some("copy")), ("result", Some(&emoji))]);
-
-                let parent = parent.upgrade()?;
+                let parent = parent.borrow().clone().and_then(|tmp| tmp.upgrade())?;
                 execute_from_attrs(&parent, &attrs);
                 None
             }
-        });
-        imp.gesture.get_or_init(|| {
-            let gesture = GestureClick::new();
-            let parent = parent.clone();
-            let myself = self.downgrade();
-            gesture.set_button(0);
-            gesture.connect_pressed({
-                move |_, n_clicks, _, _| {
-                    if n_clicks >= 2 {
-                        if let Some(obj) = myself.upgrade() {
-                            obj.emit_by_name::<()>("emoji-should-activate", &[]);
-                        }
-                    }
-                }
-            });
-            parent
-                .upgrade()
-                .map(|tmp| tmp.add_controller(gesture.clone()));
-            gesture
         });
         self.set_signal_id(signal_id);
     }
@@ -82,6 +70,22 @@ impl EmojiObject {
     pub fn from(emoji_data: EmojiRaw) -> Self {
         let obj: Self = Object::builder().build();
         let imp = obj.imp();
+
+        imp.gesture.get_or_init(|| {
+            let gesture = GestureClick::new();
+            let obj = obj.downgrade();
+            gesture.set_button(0);
+            gesture.connect_pressed({
+                move |_, n_clicks, _, _| {
+                    if n_clicks >= 2 {
+                        if let Some(obj) = obj.upgrade() {
+                            obj.emit_by_name::<()>("emoji-should-activate", &[]);
+                        }
+                    }
+                }
+            });
+            gesture
+        });
 
         *imp.title.borrow_mut() = emoji_data.name;
         *imp.emoji.borrow_mut() = emoji_data.emoji;

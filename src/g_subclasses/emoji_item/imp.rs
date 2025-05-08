@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 pub struct EmojiObject {
     pub title: RefCell<String>,
     pub emoji: RefCell<String>,
-    pub parent: RefCell<WeakRef<gtk4::Box>>,
+    pub parent: RefCell<Option<WeakRef<gtk4::Box>>>,
 
     // Internal
     pub gesture: OnceCell<GestureClick>,
