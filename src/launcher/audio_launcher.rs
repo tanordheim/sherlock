@@ -5,6 +5,7 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::thread::sleep_ms;
 use zbus::blocking::{Connection, Proxy};
 
 use crate::utils::errors::{SherlockError, SherlockErrorType};
@@ -156,6 +157,8 @@ impl MusicPlayerLauncher {
         Ok(())
     }
     pub fn update(&self) -> Option<(Self, bool)> {
+        // needed because Sherlock is too fast 🥴
+        std::thread::sleep(std::time::Duration::from_millis(50));
         let audio_launcher = AudioLauncherFunctions::new()?;
         let player = audio_launcher.get_current_player()?;
         let mpris = audio_launcher.get_metadata(&player)?;
