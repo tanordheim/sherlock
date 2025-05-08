@@ -3,6 +3,7 @@
     <gresource prefix="/dev/skxxtz/sherlock">
         <file alias="main.css">main.css</file>
         <file alias="fallback.json">fallback.json</file>
+        <file alias="emojies.json">emojies.json</file>
         <file alias="ui/tile.ui">ui/tile.ui</file>
         <file alias="ui/calc_tile.ui">ui/calc_tile.ui</file>
         <file alias="ui/bulk_text_tile.ui">ui/bulk_text_tile.ui</file>

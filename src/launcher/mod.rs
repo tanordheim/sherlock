@@ -7,13 +7,13 @@ pub mod bulk_text_launcher;
 pub mod calc_launcher;
 pub mod category_launcher;
 pub mod clipboard_launcher;
+pub mod emoji_picker;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
 mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
-pub mod emoji_picker;
 
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
