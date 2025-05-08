@@ -44,7 +44,6 @@ impl EmojiPicker {
         })?;
         let emojies: Vec<EmojiObject> = emojies
             .into_iter()
-            .take(100)
             .map(|emj| EmojiObject::from(emj))
             .collect();
         Ok(Self { emojies })
@@ -120,7 +119,8 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
 
     // Setup model and factory
     let model = ListStore::new::<EmojiObject>();
-    emojies.iter().for_each(|emj| model.append(emj));
+    model.extend_from_slice(&emojies);
+
     let factory = make_factory();
     let selection = SingleSelection::new(Some(model.clone()));
     let view: GridView = GridView::new(Some(selection), Some(factory));

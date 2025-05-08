@@ -3,14 +3,18 @@ mod imp;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
 use glib::Object;
-use gtk4::{glib, Box};
+use gtk4::{
+    glib,
+    prelude::{GestureSingleExt, WidgetExt},
+    Box, GestureClick,
+};
 use serde::Deserialize;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 
 glib::wrapper! {
     pub struct EmojiObject(ObjectSubclass<imp::EmojiObject>)
-        @extends gtk4::Widget;
+        @extends gtk4::Box;
 }
 /// For deserialization
 #[derive(Deserialize)]
@@ -33,8 +37,9 @@ impl EmojiObject {
     }
     pub fn attach_event(&self) {
         let imp = self.imp();
+        let parent = imp.parent.borrow().clone();
         let signal_id = self.connect_local("emoji-should-activate", false, {
-            let parent = imp.parent.borrow().clone();
+            let parent = parent.clone();
             let emoji = self.emoji();
             move |_attrs| {
                 let attrs = get_attrs_map(vec![("method", Some("copy")), ("result", Some(&emoji))]);
@@ -43,6 +48,25 @@ impl EmojiObject {
                 execute_from_attrs(&parent, &attrs);
                 None
             }
+        });
+        imp.gesture.get_or_init(|| {
+            let gesture = GestureClick::new();
+            let parent = parent.clone();
+            let myself = self.downgrade();
+            gesture.set_button(0);
+            gesture.connect_pressed({
+                move |_, n_clicks, _, _| {
+                    if n_clicks >= 2 {
+                        if let Some(obj) = myself.upgrade() {
+                            obj.emit_by_name::<()>("emoji-should-activate", &[]);
+                        }
+                    }
+                }
+            });
+            parent
+                .upgrade()
+                .map(|tmp| tmp.add_controller(gesture.clone()));
+            gesture
         });
         self.set_signal_id(signal_id);
     }
