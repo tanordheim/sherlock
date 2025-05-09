@@ -10,8 +10,9 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::g_subclasses::emoji_item::{EmojiObject, EmojiRaw};
-use crate::prelude::SherlockSearch;
+use crate::prelude::{SherlockNav, SherlockSearch};
 use crate::sherlock_error;
+use crate::ui::util::ConfKeys;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 pub struct EmojiPicker {
@@ -75,12 +76,19 @@ pub fn emojies(
         }
     });
 
-    nav_event(ui.search_bar.clone(), ui.view.clone(), stack_page);
+    let custom_binds = ConfKeys::new();
+    nav_event(
+        ui.search_bar.clone(),
+        ui.view.clone(),
+        stack_page,
+        custom_binds,
+    );
     change_event(
         ui.search_bar.clone(),
         &search_query,
         ui.sorter.clone(),
         ui.filter.clone(),
+        ui.view.clone(),
     );
     return Ok((stack, ui.model.clone()));
 }
@@ -88,39 +96,87 @@ fn nav_event(
     search_bar: WeakRef<Entry>,
     view: WeakRef<GridView>,
     stack_page: &Rc<RefCell<String>>,
+    custom_binds: ConfKeys,
 ) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability
     let event_controller = EventControllerKey::new();
     let stack_page = Rc::clone(&stack_page);
 
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
-    event_controller.connect_key_pressed(move |_, key, _, _| {
-        if stack_page.borrow().as_str() != "search-page" {
-            return false.into();
+    event_controller.connect_key_pressed({
+        fn move_prev(view: &WeakRef<GridView>) {
+            view.upgrade().map(|view| view.focus_prev(None));
         }
-        match key {
-            Key::Down => {
-                if let Some(selection) = view
-                    .upgrade()
-                    .and_then(|tmp| tmp.model().and_downcast::<SingleSelection>())
+        fn move_next(view: &WeakRef<GridView>) {
+            view.upgrade().map(|view| view.focus_next(None));
+        }
+        fn move_up(view: &WeakRef<GridView>) {
+            view.upgrade().map(|view| {
+                let width = view.width();
+                let offset = (width / 50).min(10);
+                view.focus_offset(None, -offset)
+            });
+        }
+        fn move_down(view: &WeakRef<GridView>) {
+            view.upgrade().map(|view| {
+                let width = view.width();
+                let offset = (width / 50).min(10);
+                view.focus_offset(None, offset)
+            });
+        }
+        move |_, key, _, modifiers| {
+            if stack_page.borrow().as_str() != "search-page" {
+                return false.into();
+            }
+            match key {
+                // Custom previous key
+                k if Some(k) == custom_binds.prev
+                    && custom_binds
+                        .prev_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    let current = selection.selected();
-                    selection.set_selected(current + 1);
+                    move_prev(&view);
                     return true.into();
                 }
-                false.into()
-            }
-            Key::Return => {
-                if let Some(upgr) = view.upgrade() {
-                    if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
-                        if let Some(row) = selection.selected_item().and_downcast::<EmojiObject>() {
-                            row.emit_by_name::<()>("emoji-should-activate", &[]);
+                // Custom next key
+                k if Some(k) == custom_binds.next
+                    && custom_binds
+                        .next_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
+                {
+                    move_next(&view);
+                    return true.into();
+                }
+                Key::Up => {
+                    move_up(&view);
+                    return true.into();
+                }
+                Key::Down => {
+                    move_down(&view);
+                    return true.into();
+                }
+                Key::Left => {
+                    move_prev(&view);
+                    return true.into();
+                }
+                Key::Right => {
+                    move_next(&view);
+                    return true.into();
+                }
+                Key::Return => {
+                    if let Some(upgr) = view.upgrade() {
+                        if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
+                            if let Some(row) =
+                                selection.selected_item().and_downcast::<EmojiObject>()
+                            {
+                                row.emit_by_name::<()>("emoji-should-activate", &[]);
+                            }
                         }
                     }
+                    true.into()
                 }
-                true.into()
+                _ => false.into(),
             }
-            _ => false.into(),
         }
     });
     search_bar
@@ -235,6 +291,7 @@ fn change_event(
     search_query: &Rc<RefCell<String>>,
     sorter: WeakRef<CustomSorter>,
     filter: WeakRef<CustomFilter>,
+    view: WeakRef<GridView>,
 ) -> Option<()> {
     let search_bar = search_bar.upgrade()?;
     search_bar.connect_changed({
@@ -249,6 +306,7 @@ fn change_event(
             filter
                 .upgrade()
                 .map(|filter| filter.changed(gtk4::FilterChange::Different));
+            view.upgrade().map(|view| view.focus_first(None));
         }
     });
     Some(())
