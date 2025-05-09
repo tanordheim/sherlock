@@ -39,11 +39,11 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             }
             "web_launcher" | "bookmarks" => {
                 let engine = attrs.get("engine").map_or("plain", |s| s.as_str());
-                let query = if let Some(query) = attrs.get("keyword") {
+                let query = if let Some(query) = attrs.get("exec") {
+                    query.as_str()
+                } else if let Some(query) = attrs.get("keyword") {
                     let exec = format!("websearch-{}", engine);
                     increment(&exec);
-                    query.as_str()
-                } else if let Some(query) = attrs.get("exec") {
                     query.as_str()
                 } else {
                     ""
