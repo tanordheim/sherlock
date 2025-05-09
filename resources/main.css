@@ -378,7 +378,6 @@ gridview child {
     background: transparent;
 }
 gridview child box {
-    transition: 0.1s ease;
     background: hsl(var(--foreground));
     border-radius: 5px;
     border: 1px solid transparent;
