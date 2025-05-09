@@ -37,12 +37,24 @@ impl EmojiObject {
         }
         *self.imp().parent.borrow_mut() = Some(parent);
     }
+    fn unset_parent(&self) {
+        let imp = self.imp();
+        if let Some(gesture) = imp.gesture.get() {
+            if let Some(parent) = imp.parent.borrow().as_ref().and_then(|tmp| tmp.upgrade()) {
+                parent.remove_controller(gesture);
+            }
+        }
+        *self.imp().parent.borrow_mut() = None;
+    }
     pub fn set_signal_id(&self, signal: SignalHandlerId) {
+        self.unset_signal_id();
+        *self.imp().signal_id.borrow_mut() = Some(signal);
+    }
+    fn unset_signal_id(&self) {
         // Take the previous signal if it exists and disconnect it
         if let Some(old_id) = self.imp().signal_id.borrow_mut().take() {
             self.disconnect(old_id);
         }
-        *self.imp().signal_id.borrow_mut() = Some(signal);
     }
     pub fn attach_event(&self) {
         let imp = self.imp();
@@ -57,6 +69,10 @@ impl EmojiObject {
             }
         });
         self.set_signal_id(signal_id);
+    }
+    pub fn clean(&self) {
+        self.unset_parent();
+        self.unset_signal_id();
     }
 
     // Getters

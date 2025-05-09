@@ -2,13 +2,15 @@ use gio::glib::WeakRef;
 use gio::ListStore;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
 use gtk4::{
-    Box as GtkBox, Entry, GridView, Label, ScrolledWindow, SignalListItemFactory, SingleSelection,
+    Box as GtkBox, CustomFilter, CustomSorter, Entry, FilterListModel, GridView, Label, Ordering,
+    ScrolledWindow, SignalListItemFactory, SingleSelection, SortListModel,
 };
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::g_subclasses::emoji_item::{EmojiObject, EmojiRaw};
+use crate::prelude::SherlockSearch;
 use crate::sherlock_error;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
@@ -54,13 +56,14 @@ pub struct EmojiUI {
     model: WeakRef<ListStore>,
     view: WeakRef<GridView>,
     search_bar: WeakRef<Entry>,
+    sorter: WeakRef<CustomSorter>,
+    filter: WeakRef<CustomFilter>,
 }
 
 pub fn emojies(
     stack_page: &Rc<RefCell<String>>,
 ) -> Result<(GtkBox, WeakRef<ListStore>), SherlockError> {
-    let emoji_picker = EmojiPicker::new()?;
-    let (stack, ui) = construct(emoji_picker.emojies);
+    let (search_query, stack, ui) = construct()?;
 
     stack.connect_realize({
         let search_bar = ui.search_bar.clone();
@@ -73,6 +76,12 @@ pub fn emojies(
     });
 
     nav_event(ui.search_bar.clone(), ui.view.clone(), stack_page);
+    change_event(
+        ui.search_bar.clone(),
+        &search_query,
+        ui.sorter.clone(),
+        ui.filter.clone(),
+    );
     return Ok((stack, ui.model.clone()));
 }
 fn nav_event(
@@ -90,6 +99,17 @@ fn nav_event(
             return false.into();
         }
         match key {
+            Key::Down => {
+                if let Some(selection) = view
+                    .upgrade()
+                    .and_then(|tmp| tmp.model().and_downcast::<SingleSelection>())
+                {
+                    let current = selection.selected();
+                    selection.set_selected(current + 1);
+                    return true.into();
+                }
+                false.into()
+            }
             Key::Return => {
                 if let Some(upgr) = view.upgrade() {
                     if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
@@ -108,7 +128,9 @@ fn nav_event(
         .map(|entry| entry.add_controller(event_controller));
 }
 
-fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
+fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> {
+    let emojies = EmojiPicker::new()?.emojies;
+    let search_text = Rc::new(RefCell::new(String::new()));
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
@@ -119,26 +141,41 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
 
     // Setup model and factory
     let model = ListStore::new::<EmojiObject>();
-    model.extend_from_slice(&emojies);
+    let model_ref = model.downgrade();
+
+    let sorter = make_sorter(&search_text);
+    let filter = make_filter(&search_text);
+    let filter_model = FilterListModel::new(Some(model.clone()), Some(filter.clone()));
+    let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
 
     let factory = make_factory();
-    let selection = SingleSelection::new(Some(model.clone()));
+    let selection = SingleSelection::new(Some(sorted_model));
     let view: GridView = GridView::new(Some(selection), Some(factory));
-    view.set_max_columns(999);
 
+    model.extend_from_slice(&emojies);
+
+    view.set_max_columns(10);
     view_port.set_child(Some(&view));
 
     let ui = EmojiUI {
-        model: model.downgrade(),
+        model: model_ref.clone(),
         view: view.downgrade(),
         search_bar: search_bar.downgrade(),
+        sorter: sorter.downgrade(),
+        filter: filter.downgrade(),
     };
 
-    (vbox, ui)
+    Ok((search_text, vbox, ui))
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
+    let counter: Cell<usize> = Cell::new(1);
     factory.connect_setup(move |_factory, item| {
+        let current = counter.get();
+        if current < usize::MAX {
+            println!("Factory setup called {:?} times", current);
+            counter.set(current + 1);
+        }
         let list_item = item
             .downcast_ref::<gtk4::ListItem>()
             .expect("Should be a list item");
@@ -173,7 +210,97 @@ fn make_factory() -> SignalListItemFactory {
             .and_downcast::<Label>()
             .expect("First child should be a label");
 
-        emoji_label.set_text(&emoji_obj.emoji());
+        emoji_label.set_label(&emoji_obj.emoji());
+    });
+    factory.connect_unbind(move |_, item| {
+        let item = item
+            .downcast_ref::<gtk4::ListItem>()
+            .expect("Item mut be a ListItem");
+        let emoji_obj = item
+            .item()
+            .and_downcast::<EmojiObject>()
+            .expect("Inner should be an EmojiObject");
+        let box_ = item
+            .child()
+            .and_downcast::<GtkBox>()
+            .expect("The child should be a Box");
+        emoji_obj.clean();
+
+        let emoji_label = box_
+            .first_child()
+            .and_downcast::<Label>()
+            .expect("First child should be a label");
+
+        emoji_label.set_label("");
     });
     factory
+}
+
+fn change_event(
+    search_bar: WeakRef<Entry>,
+    search_query: &Rc<RefCell<String>>,
+    sorter: WeakRef<CustomSorter>,
+    filter: WeakRef<CustomFilter>,
+) -> Option<()> {
+    let search_bar = search_bar.upgrade()?;
+    search_bar.connect_changed({
+        let search_query_clone = Rc::clone(search_query);
+
+        move |search_bar| {
+            let current_text = search_bar.text().to_string();
+            *search_query_clone.borrow_mut() = current_text.clone();
+            sorter
+                .upgrade()
+                .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
+            filter
+                .upgrade()
+                .map(|filter| filter.changed(gtk4::FilterChange::Different));
+        }
+    });
+    Some(())
+}
+fn make_filter(search_text: &Rc<RefCell<String>>) -> CustomFilter {
+    let counter: Rc<Cell<u16>> = Rc::new(Cell::new(0));
+    let filter = CustomFilter::new({
+        let search_text = Rc::clone(search_text);
+        let counter = Rc::clone(&counter);
+        move |entry| {
+            let current = counter.get();
+            if current >= 80 {
+                return false;
+            }
+            let item = entry.downcast_ref::<EmojiObject>().unwrap();
+            let current_text = search_text.borrow().clone();
+            if item.title().fuzzy_match(&current_text) {
+                counter.set(current + 1);
+                return true;
+            }
+            false
+        }
+    });
+    filter.connect_changed({
+        let counter = Rc::clone(&counter);
+        move |_, _| counter.set(0)
+    });
+    filter
+}
+fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
+    CustomSorter::new({
+        let search_text = Rc::clone(search_text);
+        move |item_a, item_b| {
+            let search_text = search_text.borrow();
+
+            let item_a = item_a.downcast_ref::<EmojiObject>().unwrap();
+            let item_b = item_b.downcast_ref::<EmojiObject>().unwrap();
+
+            let priority_a = levenshtein::levenshtein(&item_a.title(), &search_text) as f32;
+            let priority_b = levenshtein::levenshtein(&item_b.title(), &search_text) as f32;
+
+            if !search_text.is_empty() {
+                return Ordering::Equal;
+            }
+
+            priority_a.total_cmp(&priority_b).into()
+        }
+    })
 }
