@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::sync::OnceLock;
 
 /// ## Fields:
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct EmojiObject {
     pub title: RefCell<String>,
     pub emoji: RefCell<String>,
@@ -35,5 +35,10 @@ impl ObjectImpl for EmojiObject {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
         // Signal used to activate actions connected to the Emoji
         SIGNALS.get_or_init(|| vec![Signal::builder("emoji-should-activate").build()])
+    }
+}
+impl Drop for EmojiObject {
+    fn drop(&mut self) {
+        println!("dropped: {:?}", self);
     }
 }
