@@ -169,13 +169,7 @@ fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> 
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
-    let counter: Cell<usize> = Cell::new(1);
     factory.connect_setup(move |_factory, item| {
-        let current = counter.get();
-        if current < usize::MAX {
-            println!("Factory setup called {:?} times", current);
-            counter.set(current + 1);
-        }
         let list_item = item
             .downcast_ref::<gtk4::ListItem>()
             .expect("Should be a list item");
