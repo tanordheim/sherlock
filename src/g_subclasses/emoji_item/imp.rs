@@ -37,8 +37,3 @@ impl ObjectImpl for EmojiObject {
         SIGNALS.get_or_init(|| vec![Signal::builder("emoji-should-activate").build()])
     }
 }
-impl Drop for EmojiObject {
-    fn drop(&mut self) {
-        println!("dropped: {:?}", self);
-    }
-}
