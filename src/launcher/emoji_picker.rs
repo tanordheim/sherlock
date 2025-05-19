@@ -283,10 +283,12 @@ fn make_factory() -> SignalListItemFactory {
         let item = item
             .downcast_ref::<gtk4::ListItem>()
             .expect("Item mut be a ListItem");
+
         let emoji_obj = item
             .item()
             .and_downcast::<EmojiObject>()
             .expect("Inner should be an EmojiObject");
+
         let box_ = item
             .child()
             .and_downcast::<GtkBox>()
