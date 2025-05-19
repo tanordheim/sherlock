@@ -39,8 +39,6 @@ pub fn search(
 
     // Mode setup - used to decide which tiles should be shown
     let initial_mode = mode.borrow().clone();
-    let modes_clone = Rc::clone(&handler.modes);
-    let mode_clone = Rc::clone(&mode);
 
     // Initial setup on show
     stack_page.connect_realize({
@@ -55,7 +53,7 @@ pub fn search(
             // Show or hide context menu shortcuts whenever stack shows
             results
                 .upgrade()
-                .map(|r| r.focus_first(Some(&context_model)));
+                .map(|r| r.focus_first(Some(&context_model), None));
         }
     });
 
@@ -81,45 +79,49 @@ pub fn search(
     let mode_action = ActionEntry::builder("switch-mode")
         .parameter_type(Some(&String::static_variant_type()))
         .state(initial_mode.to_variant())
-        .activate(move |_, action, parameter| {
-            let state = action.state().and_then(|s| s.get::<String>());
-            let parameter = parameter.and_then(|p| p.get::<String>());
+        .activate({
+            let mode_clone = Rc::clone(&mode);
+            let modes_clone = Rc::clone(&handler.modes);
+            move |_, action, parameter| {
+                let state = action.state().and_then(|s| s.get::<String>());
+                let parameter = parameter.and_then(|p| p.get::<String>());
 
-            if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
-                match parameter.as_str() {
-                    "search" => {
-                        ui.search_icon_holder
-                            .upgrade()
-                            .map(|holder| holder.set_css_classes(&["back"]));
-                        ui.mode_title
-                            .upgrade()
-                            .map(|title| title.set_text("Search"));
-                    }
-                    _ => {
-                        parameter.push_str(" ");
-                        let mode_name = modes_clone.borrow().get(&parameter).cloned();
-                        match mode_name {
-                            Some(name) => {
-                                ui.search_icon_holder
-                                    .upgrade()
-                                    .map(|holder| holder.set_css_classes(&["back"]));
-                                ui.mode_title.upgrade().map(|title| {
-                                    title.set_text(name.as_deref().unwrap_or_default())
-                                });
-                                *mode_clone.borrow_mut() = parameter.clone();
-                                state = parameter;
-                            }
-                            _ => {
-                                ui.search_icon_holder
-                                    .upgrade()
-                                    .map(|holder| holder.set_css_classes(&["search"]));
-                                ui.mode_title.upgrade().map(|title| title.set_text("All"));
-                                parameter = String::from("all ");
-                                *mode_clone.borrow_mut() = parameter.clone();
-                                state = parameter;
-                            }
+                if let (Some(mut state), Some(mut parameter)) = (state, parameter) {
+                    match parameter.as_str() {
+                        "search" => {
+                            ui.search_icon_holder
+                                .upgrade()
+                                .map(|holder| holder.set_css_classes(&["back"]));
+                            ui.mode_title
+                                .upgrade()
+                                .map(|title| title.set_text("Search"));
                         }
-                        action.set_state(&state.to_variant());
+                        _ => {
+                            parameter.push_str(" ");
+                            let mode_name = modes_clone.borrow().get(&parameter).cloned();
+                            match mode_name {
+                                Some(name) => {
+                                    ui.search_icon_holder
+                                        .upgrade()
+                                        .map(|holder| holder.set_css_classes(&["back"]));
+                                    ui.mode_title.upgrade().map(|title| {
+                                        title.set_text(name.as_deref().unwrap_or_default())
+                                    });
+                                    *mode_clone.borrow_mut() = parameter.clone();
+                                    state = parameter;
+                                }
+                                _ => {
+                                    ui.search_icon_holder
+                                        .upgrade()
+                                        .map(|holder| holder.set_css_classes(&["search"]));
+                                    ui.mode_title.upgrade().map(|title| title.set_text("All"));
+                                    parameter = String::from("all ");
+                                    *mode_clone.borrow_mut() = parameter.clone();
+                                    state = parameter;
+                                }
+                            }
+                            action.set_state(&state.to_variant());
+                        }
                     }
                 }
             }
@@ -136,6 +138,7 @@ pub fn search(
             let current_task = handler.task.clone();
             let current_text = search_query.clone();
             let context_model = context.model.clone();
+            let current_mode = Rc::clone(&mode);
             move |_: &ApplicationWindow, _, parameter| {
                 if let Some(focus_first) = parameter.and_then(|p| p.get::<bool>()) {
                     filter
@@ -147,7 +150,10 @@ pub fn search(
                     if let Some(results) = results.upgrade() {
                         let weaks = results.get_weaks().unwrap_or(vec![]);
                         if focus_first {
-                            if results.focus_first(Some(&context_model)).is_some() {
+                            if results
+                                .focus_first(Some(&context_model), Some(current_mode.clone()))
+                                .is_some()
+                            {
                                 update_async(weaks, &current_task, current_text.borrow().clone());
                             }
                         } else {
@@ -540,7 +546,7 @@ fn nav_event(
                     context.append(&ContextAction::new("", &action, row.terminal()))
                 }
                 let context_selection = context_view.upgrade()?;
-                context_selection.focus_first(None);
+                context_selection.focus_first(None, None);
                 context_open.set(true);
             }
             None
@@ -640,7 +646,7 @@ fn nav_event(
                     // Focus first item and check for overflow
                     results
                         .upgrade()
-                        .map(|results| results.focus_first(Some(&context.model)));
+                        .map(|results| results.focus_first(Some(&context.model), None));
                 }
                 gdk::Key::Return => {
                     if context.open.get() {

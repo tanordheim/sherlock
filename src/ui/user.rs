@@ -182,7 +182,7 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
     results.set_model(Some(&selection));
     results.set_factory(Some(&factory));
 
-    results.focus_first(None);
+    results.focus_first(None, None);
 
     // Disable status-bar
     CONFIG.get().map(|c| {
@@ -317,7 +317,9 @@ fn nav_event(
                     {
                         search_bar.upgrade().map(|entry| entry.set_text(""));
                         // Focus first item and check for overflow
-                        results.upgrade().map(|results| results.focus_first(None));
+                        results
+                            .upgrade()
+                            .map(|results| results.focus_first(None, None));
                     }
                 }
                 gdk::Key::Return => {
@@ -395,7 +397,9 @@ fn change_event(
                 .upgrade()
                 .map(|sorter| sorter.changed(gtk4::SorterChange::Different));
             // focus first item
-            results.upgrade().map(|results| results.focus_first(None));
+            results
+                .upgrade()
+                .map(|results| results.focus_first(None, None));
         }
     });
     Some(())
