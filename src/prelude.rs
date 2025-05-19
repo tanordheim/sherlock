@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Debug};
+use std::{cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
@@ -123,7 +123,11 @@ impl ShortCut for GtkBox {
 pub trait SherlockNav {
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
     fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
+    fn focus_first(
+        &self,
+        context_model: Option<&WeakRef<ListStore>>,
+        current_mode: Option<Rc<RefCell<String>>>,
+    ) -> Option<()>;
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
@@ -176,8 +180,13 @@ impl SherlockNav for ListView {
         }
         None
     }
-    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
+    fn focus_first(
+        &self,
+        context_model: Option<&WeakRef<ListStore>>,
+        current_mode: Option<Rc<RefCell<String>>>,
+    ) -> Option<()> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
+        let current_mode = current_mode?;
         let mut new_index = 0;
         let current_index = selection.selected();
         let n_items = selection.n_items();
@@ -212,7 +221,7 @@ impl SherlockNav for ListView {
             .and_then(|tmp| tmp.upgrade())
             .map(|ctx| ctx.remove_all());
 
-        changed.then_some(())
+        (changed || selected.alias() == *current_mode.borrow().trim()).then_some(())
     }
     fn execute_by_index(&self, index: u32) {
         if let Some(selection) = self.model().and_downcast::<SingleSelection>() {
