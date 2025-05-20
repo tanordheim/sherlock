@@ -36,6 +36,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
         - [Keybind Setup](#keybind-setup)
 ---
 <br>
+
 # Features
 ## 🔧 Style Customization
 - Fully customize the look and feel of the launcher.
