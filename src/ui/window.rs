@@ -6,7 +6,7 @@ use gtk4::{
     StackTransitionType,
 };
 use gtk4::{Builder, Stack};
-use gtk4_layer_shell::{Layer, LayerShell};
+use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -81,11 +81,22 @@ pub fn window(
     window.add_controller(key_controller);
 
     // Make backdrop if config key is set
-    let backdrop = CONFIG
-        .get()
-        .filter(|c| c.appearance.backdrop)
-        .map(|c| make_backdrop(application, &window, c.appearance.backdrop_opacity))
-        .flatten();
+    let backdrop = if let Some(c) = CONFIG.get() {
+        if c.appearance.backdrop {
+            let edge = match c.appearance.backdrop_edge.to_lowercase().as_str() {
+                "top" => Edge::Top,
+                "bottom" => Edge::Bottom,
+                "left" => Edge::Left,
+                "right" => Edge::Right,
+                _ => Edge::Top,
+            };
+            make_backdrop(application, &window, c.appearance.backdrop_opacity, edge)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
 
     //Build main fame here that holds logic for stacking
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
@@ -224,6 +235,7 @@ fn make_backdrop(
     application: &Application,
     main_window: &ApplicationWindow,
     opacity: f64,
+    edge: Edge,
 ) -> Option<ApplicationWindow> {
     let monitor = Display::default()
         .map(|d| d.monitors())
@@ -242,8 +254,9 @@ fn make_backdrop(
     backdrop.set_widget_name("backdrop");
     backdrop.init_layer_shell();
     backdrop.set_namespace("sherlock-backdrop");
-    backdrop.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
-    backdrop.set_layer(Layer::Overlay);
+    backdrop.set_exclusive_zone(0);
+    backdrop.set_layer(gtk4_layer_shell::Layer::Overlay);
+    backdrop.set_anchor(edge, true);
 
     let window_clone = main_window.downgrade();
     let backdrop_clone = backdrop.downgrade();

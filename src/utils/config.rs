@@ -477,6 +477,8 @@ pub struct ConfigAppearance {
     pub backdrop: bool,
     #[serde(default = "default_backdrop_opacity")]
     pub backdrop_opacity: f64,
+    #[serde(default = "default_backdrop_edge")]
+    pub backdrop_edge: String,
     #[serde(default = "default_search_icon")]
     pub search_bar_icon: String,
     #[serde(default = "default_search_icon_back")]
@@ -526,6 +528,7 @@ impl Default for ConfigAppearance {
             mod_key_ascii: default_modkey_ascii(),
             backdrop: false,
             backdrop_opacity: default_backdrop_opacity(),
+            backdrop_edge: default_backdrop_edge(),
             search_bar_icon: default_search_icon(),
             search_bar_icon_back: default_search_icon_back(),
             search_icon_size: default_icon_size(),
@@ -692,6 +695,9 @@ pub fn default_1() -> f64 {
 }
 pub fn default_backdrop_opacity() -> f64 {
     0.6
+}
+pub fn default_backdrop_edge() -> String {
+    String::from("top")
 }
 pub fn default_icon_paths() -> Vec<String> {
     vec![String::from("~/.config/sherlock/icons/")]
