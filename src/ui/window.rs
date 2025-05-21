@@ -1,7 +1,10 @@
 use gio::glib::WeakRef;
 use gio::ActionEntry;
 use gtk4::gdk::{Display, Key, Monitor};
-use gtk4::{prelude::*, Application, ApplicationWindow, EventControllerKey, StackTransitionType};
+use gtk4::{
+    prelude::*, Application, ApplicationWindow, EventControllerFocus, EventControllerKey,
+    StackTransitionType,
+};
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Layer, LayerShell};
 use std::cell::RefCell;
@@ -42,12 +45,24 @@ pub fn window(
         .default_width(width)
         .default_height(height)
         .resizable(false)
+        .decorated(false)
         .opacity(opacity.clamp(0.1, 1.0))
         .build();
     window.init_layer_shell();
     window.set_namespace("sherlock");
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
+
+    let focus_controller = EventControllerFocus::new();
+    focus_controller.connect_leave({
+        let window_ref = window.downgrade();
+        move |_| {
+            if let Some(window) = window_ref.upgrade() {
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+            }
+        }
+    });
+    window.add_controller(focus_controller);
 
     // Handle the key press event
     let key_controller = EventControllerKey::new();
@@ -79,6 +94,9 @@ pub fn window(
     // Setup action to close the window
     let action_close = ActionEntry::builder("close")
         .activate(move |window: &ApplicationWindow, _, _| {
+            if !window.is_visible() {
+                return;
+            }
             if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
                     true => {

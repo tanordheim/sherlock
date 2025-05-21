@@ -221,7 +221,9 @@ pub fn search(
         .activate(move |_: &ApplicationWindow, _, _| {
             let search_bar = search_bar.clone();
             glib::idle_add_local(move || {
-                search_bar.upgrade().map(|entry| entry.set_text(""));
+                if let Some(entry) = search_bar.upgrade() {
+                    entry.set_text("");
+                }
                 glib::ControlFlow::Break
             });
         })
