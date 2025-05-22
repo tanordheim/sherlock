@@ -57,6 +57,8 @@ pub struct ApplicationAction {
     pub exec: Option<String>,
     pub icon: Option<String>,
     pub method: String,
+    #[serde(default = "default_true")]
+    pub exit: bool,
 }
 impl ApplicationAction {
     pub fn new(method: &str) -> Self {
@@ -65,6 +67,7 @@ impl ApplicationAction {
             exec: None,
             icon: None,
             method: method.to_string(),
+            exit: true,
         }
     }
     pub fn is_valid(&self) -> bool {
