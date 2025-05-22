@@ -43,12 +43,14 @@ impl ContextAction {
             let signal_id = obj.connect_local("context-action-should-activate", false, {
                 let exec = exec.clone();
                 let method = action.method.clone();
+                let exit = action.exit.clone();
                 move |row| {
                     let row = row.first().map(|f| f.get::<ContextAction>().ok())??;
                     let attrs = get_attrs_map(vec![
                         ("method", Some(&method)),
                         ("exec", Some(&exec)),
                         ("term", Some(&terminal.to_string())),
+                        ("exit", Some(&exit.to_string())),
                     ]);
                     execute_from_attrs(&row, &attrs);
                     // To reload ui according to mode
