@@ -29,6 +29,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             "categories" => {
                 attrs.get("exec").map(|mode| {
                     let _ = row.activate_action("win.switch-mode", Some(&mode.to_variant()));
+                    let _ = row.activate_action("win.clear-search", None);
                 });
             }
             "app_launcher" => {
