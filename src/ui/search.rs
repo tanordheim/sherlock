@@ -45,6 +45,7 @@ pub fn search(
         let search_bar = ui.search_bar.clone();
         let results = ui.results.clone();
         let context_model = context.model.clone();
+        let current_mode = Rc::clone(&mode);
         move |_| {
             // Focus search bar as soon as it's visible
             search_bar
@@ -53,7 +54,7 @@ pub fn search(
             // Show or hide context menu shortcuts whenever stack shows
             results
                 .upgrade()
-                .map(|r| r.focus_first(Some(&context_model), None));
+                .map(|r| r.focus_first(Some(&context_model), Some(current_mode.clone())));
         }
     });
 
@@ -646,9 +647,9 @@ fn nav_event(
                         });
                     }
                     // Focus first item and check for overflow
-                    results
-                        .upgrade()
-                        .map(|results| results.focus_first(Some(&context.model), None));
+                    results.upgrade().map(|results| {
+                        results.focus_first(Some(&context.model), Some(current_mode.clone()))
+                    });
                 }
                 gdk::Key::Return => {
                     if context.open.get() {

@@ -186,7 +186,7 @@ impl SherlockNav for ListView {
         current_mode: Option<Rc<RefCell<String>>>,
     ) -> Option<()> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
-        let current_mode = current_mode?;
+        let current_mode = current_mode.unwrap_or(Rc::new(RefCell::new(String::from("all"))));
         let mut new_index = 0;
         let current_index = selection.selected();
         let n_items = selection.n_items();
