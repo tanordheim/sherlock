@@ -33,18 +33,10 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
 }
 
 fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
-    let raw_command = format!("{}{}{}", prefix, cmd, flags);
-    let mut parts = raw_command
-        .split_whitespace()
-        .filter(|s| !s.starts_with("%"));
+    let raw_command = format!("{}{}{}", prefix, cmd, flags).replace('"', "");
 
-    let mut command = Command::new(parts.next().ok_or_else(|| {
-        sherlock_error!(
-            SherlockErrorType::CommandExecutionError(String::from("The command list was empty.",)),
-            ""
-        )
-    })?);
-    command.args(parts);
+    let mut command = Command::new("sh");
+    command.arg("-c").arg(raw_command);
 
     unsafe {
         command

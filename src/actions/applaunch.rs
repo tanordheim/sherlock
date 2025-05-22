@@ -20,7 +20,7 @@ pub fn applaunch(exec: &str, terminal: bool) -> Option<()> {
         parts.push(flag.to_string());
     }
 
-    let cmd = parts.join(" ");
+    let cmd = parts.join(" ").replace('"', "");
 
     let mut parts = cmd
         .trim()
