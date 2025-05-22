@@ -49,6 +49,9 @@ The configuration file for Sherlock is located at `~/.config/sherlock/config.tom
 | `status_bar`    | `true`        | Enables or disables the status bar. |
 | `opacity` | `1.0` | Controls the opacity of the window. Allowed range: `0.1 - 1.0` |
 | `pub mod_key_ascii` | `["⇧", "⇧", "⌘", "⌘", "⎇", "✦", "✦", "⌘"]` | Sets the ascii character for: `Shift`, `Caps Lock`, `Control`, `Meta`, `Alt`, `Super`, `Hyper`, `Fallback` in that order. |
+| `backdrop` | `false` | If set to `true`, enables a backdrop effect for Sherlock, darkening everything behind. |
+| `backdrop_opactiy` | `0.9` | Controls the opacity for the backrop. |
+| `backdrop_edge` | `top` | Controls the `gtk4_layer_shell` edge to which the ovverlay is anchored. |
 
 
 ---
