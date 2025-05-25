@@ -7,20 +7,24 @@ use gtk4::{
     ScrolledWindow, SignalListItemFactory, SingleSelection, SortListModel,
 };
 use std::cell::{Cell, RefCell};
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::g_subclasses::emoji_item::{EmojiObject, EmojiRaw};
+use crate::loader::util::AppData;
 use crate::prelude::{SherlockNav, SherlockSearch};
 use crate::sherlock_error;
 use crate::ui::util::ConfKeys;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
+#[derive(Clone, Debug)]
 pub struct EmojiPicker {
-    emojies: Vec<EmojiObject>,
+    pub data: HashSet<AppData>,
 }
+
 impl EmojiPicker {
-    pub fn new() -> Result<Self, SherlockError> {
+    pub fn load() -> Result<Vec<EmojiObject>, SherlockError> {
         // Loads default fallback.json file and loads the launcher configurations within.
         let data = gio::resources_lookup_data(
             "/dev/skxxtz/sherlock/emojies.json",
@@ -50,7 +54,7 @@ impl EmojiPicker {
             .into_iter()
             .map(|emj| EmojiObject::from(emj))
             .collect();
-        Ok(Self { emojies })
+        Ok(emojies)
     }
 }
 
@@ -134,15 +138,17 @@ fn nav_event(
                     if let Some(view) = view.upgrade() {
                         let first = view.selected_item().and_downcast::<EmojiObject>();
                         if let Some(first) = first {
-                            if let Some(parent) = first.imp().parent.take().and_then(|p| p.upgrade()) {
+                            if let Some(parent) =
+                                first.imp().parent.take().and_then(|p| p.upgrade())
+                            {
                                 view.set_model(None::<SingleSelection>.as_ref());
                                 view.set_factory(None::<SignalListItemFactory>.as_ref());
-                                println!("refcount after clearing {:?} - should be 1", parent.ref_count());
+                                println!(
+                                    "refcount after clearing {:?} - should be 1",
+                                    parent.ref_count()
+                                );
                             }
-
                         }
-
-
                     }
                     true.into()
                 }
@@ -202,7 +208,7 @@ fn nav_event(
 }
 
 fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> {
-    let emojies = EmojiPicker::new()?.emojies;
+    let emojies = EmojiPicker::load()?;
     let search_text = Rc::new(RefCell::new(String::new()));
     // Initialize the builder with the correct path
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
