@@ -2,7 +2,9 @@ use super::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, CONFIG};
 use gtk4::{gdk::Display, IconTheme};
+use std::collections::HashSet;
 use std::env;
+use std::path::PathBuf;
 
 impl Loader {
     pub fn load_icon_theme() -> Vec<SherlockError> {
@@ -18,6 +20,20 @@ impl Loader {
                     ));
                 })
                 .ok();
+
+            let xdg_paths = match env::var("XDG_DATA_DIRS").ok() {
+                Some(paths) => {
+                    let app_dirs: HashSet<PathBuf> = paths
+                        .split(":")
+                        .map(|p| PathBuf::from(p).join("icons/"))
+                        .collect();
+                    app_dirs
+                }
+                _ => HashSet::new(),
+            };
+            xdg_paths.into_iter().for_each(|path|{
+                icon_theme.add_search_path(path);
+            });
 
             if let Some(h) = home_dir {
                 icon_paths
