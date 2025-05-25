@@ -4,6 +4,7 @@ use crate::actions::execute_from_attrs;
 use crate::actions::get_attrs_map;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::loader::pipe_loader::PipeData;
+use crate::prelude::IconComp;
 use gdk_pixbuf::Pixbuf;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::BoxExt;
@@ -50,15 +51,7 @@ impl Tile {
                     .as_ref()
                     .and_then(|tmp| tmp.upgrade())
                     .map(|ico| {
-                        if let Some(icon) = &item.icon {
-                            if icon.starts_with("/") {
-                                ico.set_from_file(Some(&icon));
-                            } else {
-                                ico.set_icon_name(Some(&icon));
-                            }
-                        } else {
-                            ico.set_visible(false);
-                        }
+                        ico.set_icon(&item.icon, &None, &None);
                     });
 
                 // Custom Image Data
@@ -81,7 +74,7 @@ impl Tile {
                         .icon
                         .as_ref()
                         .and_then(|tmp| tmp.upgrade())
-                        .map(|icon| icon.set_visible(false));
+                        .map(|icon| icon.set_visible(item.icon.is_some()));
                 }
 
                 // Create attributes and enable action capability

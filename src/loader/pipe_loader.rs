@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{self, Read};
 use std::os::linux::fs::MetadataExt;
 
+use gtk4::gdk::Display;
+use gtk4::IconTheme;
 use serde::Deserialize;
 
 use crate::CONFIG;
@@ -64,6 +66,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
             parsed_data
         }
         None => {
+            let icon_theme = IconTheme::for_display(Display::default().as_ref().unwrap());
             let mut result = Vec::new();
             let mut start = 0;
             while start < buf.len() {
@@ -79,17 +82,34 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                 // Check if the chunk contains valid UTF-8
                 if let Ok(line) = std::str::from_utf8(chunk) {
                     // Treat it as a normal string (text line)
-                    let cleaned_line = line.replace('\0', "");
-                    let cleaned_line = if !cleaned_line.is_empty() {
-                        Some(cleaned_line.trim().to_string())
-                    } else {
-                        None
-                    };
+                    let mut raw_meta: Vec<&str> = line.split('\0').collect();
+                    let name = raw_meta.remove(0).to_string();
+                    let mut meta_data: HashMap<String, String> = raw_meta
+                        .into_iter()
+                        .filter_map(|s| {
+                            let mut parts = s.split('\x1f');
+                            match (parts.next(), parts.next()) {
+                                (Some(k), Some(v)) => Some((k.to_string(), v.to_string())),
+                                _ => None,
+                            }
+                        })
+                        .collect();
+
+                    let icons: Vec<String> = meta_data
+                        .remove("icon")
+                        .map(|i| {
+                            i.split(',')
+                                .filter(|name| icon_theme.has_icon(name))
+                                .map(str::to_string)
+                                .collect()
+                        })
+                        .unwrap_or_default();
+
                     result.push(PipeData {
-                        title: cleaned_line.clone(),
+                        title: Some(name.clone()),
                         description: None,
-                        result: cleaned_line,
-                        icon: None,
+                        result: Some(name),
+                        icon: icons.get(0).cloned(),
                         icon_size: None,
                         binary: None,
                         method: None,

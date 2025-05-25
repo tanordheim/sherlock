@@ -45,7 +45,6 @@ pub fn display_pipe(
     if let Some(viewport) = ui.result_viewport.upgrade() {
         viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
     }
-    // results.focus_first();
 
     stack_page.connect_realize({
         let search_bar = ui.search_bar.clone();
