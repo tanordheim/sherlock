@@ -93,6 +93,13 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     }
                 }
             }
+            "emoji_picker" => {
+                let _ = row.activate_action("win.emoji-page", None);
+                let _ = row.activate_action(
+                    "win.switch-page",
+                    Some(&String::from("search-page->emoji-page").to_variant()),
+                );
+            }
             "next" => {
                 let next_content = attrs
                     .get("next_content")

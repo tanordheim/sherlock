@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::actions::execute_from_attrs;
+use crate::launcher::emoji_picker::emojies;
 use crate::loader::util::JsonCache;
 use crate::CONFIG;
 
@@ -75,6 +76,7 @@ pub fn window(
     //Build main fame here that holds logic for stacking
     let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/window.ui");
     let stack: Stack = builder.object("stack").unwrap();
+    let stack_ref = stack.downgrade();
 
     // Setup action to close the window
     let action_close = ActionEntry::builder("close")
@@ -127,7 +129,7 @@ pub fn window(
         .build();
 
     // Setup action to switch to a specific stack page
-    let stack_clone = stack.downgrade().clone();
+    let stack_clone = stack_ref.clone();
     let page_clone = Rc::clone(&current_stack_page);
     let action_stack_switch = ActionEntry::builder("switch-page")
         .parameter_type(Some(&String::static_variant_type()))
@@ -140,6 +142,8 @@ pub fn window(
                 match (from, to) {
                     ("search-page", "error-page") => StackTransitionType::OverRightLeft,
                     ("error-page", "search-page") => StackTransitionType::OverRightLeft,
+                    ("search-page", "emoji-page") => StackTransitionType::OverLeftRight,
+                    ("emoji-page", "search-page") => StackTransitionType::OverLeftRight,
                     _ => StackTransitionType::None,
                 }
             }
@@ -154,7 +158,7 @@ pub fn window(
         .build();
 
     // Setup action to add a stackpage
-    let stack_clone = stack.clone();
+    let stack_clone = stack_ref.clone();
     let action_next_page = ActionEntry::builder("add-page")
         .parameter_type(Some(&String::static_variant_type()))
         .activate(move |_: &ApplicationWindow, _, parameter| {
@@ -169,15 +173,37 @@ pub fn window(
                         let buf = content.buffer();
                         buf.set_text(parameter.as_ref());
                     });
-                builder
-                    .object
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|obj| {
-                        stack_clone.add_named(&obj, Some("next-page"));
-                    });
-                stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
-                stack_clone.set_visible_child_name("next-page");
+                if let Some(stack_clone) = stack_clone.upgrade() {
+                    builder
+                        .object
+                        .as_ref()
+                        .and_then(|tmp| tmp.upgrade())
+                        .map(|obj| {
+                            stack_clone.add_named(&obj, Some("next-page"));
+                        });
+                    stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
+                    stack_clone.set_visible_child_name("next-page");
+                }
+            }
+        })
+        .build();
+
+    let emoji_action = ActionEntry::builder("emoji-page")
+        .activate({
+            let stack_clone = stack_ref.clone();
+            let current_stack_page = current_stack_page.clone();
+            move |_: &ApplicationWindow, _, _| {
+                // Either show user-specified content or show normal search
+                let (emoji_stack, _emoji_model) = match emojies(&current_stack_page) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        println!("{:?}", e);
+                        return;
+                    }
+                };
+                if let Some(stack) = stack_clone.upgrade() {
+                    stack.add_named(&emoji_stack, Some("emoji-page"));
+                }
             }
         })
         .build();
@@ -186,7 +212,12 @@ pub fn window(
     let win_ref = match backdrop {
         Some(backdrop) => {
             backdrop.add_action_entries([action_open]);
-            window.add_action_entries([action_close, action_stack_switch, action_next_page]);
+            window.add_action_entries([
+                action_close,
+                action_stack_switch,
+                action_next_page,
+                emoji_action,
+            ]);
             backdrop.downgrade()
         }
         _ => {
@@ -195,6 +226,7 @@ pub fn window(
                 action_open,
                 action_stack_switch,
                 action_next_page,
+                emoji_action,
             ]);
             window.downgrade()
         }

@@ -3,7 +3,6 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::{GtkApplicationExt, WidgetExt};
 use gtk4::Application;
-use launcher::emoji_picker::emojies;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};

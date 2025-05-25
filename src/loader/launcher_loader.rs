@@ -1,4 +1,3 @@
-use nix::NixPath;
 use serde::de::IntoDeserializer;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};

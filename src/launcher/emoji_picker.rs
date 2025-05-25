@@ -130,7 +130,7 @@ fn nav_event(
             });
         }
         move |_, key, _, modifiers| {
-            if stack_page.borrow().as_str() != "search-page" {
+            if stack_page.borrow().as_str() != "emoji-page" {
                 return false.into();
             }
             match key {
