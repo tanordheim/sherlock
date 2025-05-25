@@ -137,24 +137,6 @@ fn nav_event(
                 return false.into();
             }
             match key {
-                Key::Tab => {
-                    if let Some(view) = view.upgrade() {
-                        let first = view.selected_item().and_downcast::<EmojiObject>();
-                        if let Some(first) = first {
-                            if let Some(parent) =
-                                first.imp().parent.take().and_then(|p| p.upgrade())
-                            {
-                                view.set_model(None::<SingleSelection>.as_ref());
-                                view.set_factory(None::<SignalListItemFactory>.as_ref());
-                                println!(
-                                    "refcount after clearing {:?} - should be 1",
-                                    parent.ref_count()
-                                );
-                            }
-                        }
-                    }
-                    true.into()
-                }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
                     && custom_binds
