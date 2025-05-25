@@ -2,6 +2,7 @@ use serde::{
     de::{DeserializeOwned, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize,
 };
+use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
     env,
@@ -111,6 +112,34 @@ impl AppData {
             actions: vec![],
             terminal: false,
         }
+    }
+    pub fn from_raw_launcher(raw: &RawLauncher) -> Self {
+        let mut data = Self::new();
+        data.priority = raw.priority;
+        data.name = raw.name.as_deref().unwrap_or("").to_string();
+        data.icon = raw
+            .args
+            .get("icon")
+            .and_then(Value::as_str)
+            .map(|s| s.to_string());
+        data.icon_class = raw
+            .args
+            .get("icon_class")
+            .and_then(Value::as_str)
+            .map(|s| s.to_string());
+        data.tag_start = raw.tag_start.clone();
+        data.tag_end = raw.tag_end.clone();
+        data.actions = raw.actions.clone().unwrap_or(vec![]);
+        let search = format!(
+            "{};{}",
+            raw.name.as_deref().unwrap_or(""),
+            raw.args
+                .get("search_string")
+                .and_then(Value::as_str)
+                .unwrap_or("")
+        );
+        data.search_string = search;
+        data
     }
     pub fn with_priority(mut self, priority: f32) -> Self {
         self.priority = priority;

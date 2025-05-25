@@ -70,7 +70,14 @@ async fn main() {
             let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
         }
 
-        // Either show user-specified content or show normal search
+        // // Either show user-specified content or show normal search
+        // let (emoji_stack, _emoji_model) = match emojies(&current_stack_page){
+        //     Ok(r) => r,
+        //     Err(e) => {
+        //         println!("{:?}", e);
+        //         return;
+        //     }
+        // };
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
         let (search_stack, handler) = if pipe.is_empty() {

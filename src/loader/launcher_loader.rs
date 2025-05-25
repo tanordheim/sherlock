@@ -10,6 +10,7 @@ use crate::launcher::audio_launcher::AudioLauncherFunctions;
 use crate::launcher::bookmark_launcher::BookmarkLauncher;
 use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::category_launcher::CategoryLauncher;
+use crate::launcher::emoji_picker::EmojiPicker;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::weather_launcher::WeatherLauncher;
@@ -69,6 +70,7 @@ impl Loader {
                     "clipboard-execution" => parse_clipboard_launcher(&raw)?,
                     "command" => parse_command_launcher(&raw, &counts, max_decimals),
                     "debug" => parse_debug_launcher(&raw, &counts, max_decimals),
+                    "emoji_picker" => parse_emoji_launcher(&raw),
                     "teams_event" => parse_event_launcher(&raw),
                     "process" => parse_process_launcher(&raw),
                     "weather" => parse_weather_launcher(&raw),
@@ -259,6 +261,15 @@ fn parse_debug_launcher(
     let value = &raw.args["commands"];
     let commands = parse_appdata(value, prio, counts, max_decimals);
     LauncherType::Command(CommandLauncher { commands })
+}
+fn parse_emoji_launcher(raw: &RawLauncher) -> LauncherType {
+    let mut data: HashSet<AppData> = HashSet::with_capacity(1);
+    let mut app_data = AppData::from_raw_launcher(raw);
+    if app_data.icon.is_none() {
+        app_data.icon = Some(String::from("sherlock-emoji"))
+    }
+    data.insert(app_data);
+    LauncherType::Emoji(EmojiPicker { data })
 }
 fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
     let icon = raw

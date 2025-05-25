@@ -75,6 +75,7 @@ row:selected,
 scrolledwindow>viewport,
 scrolledwindow>viewport>*,
 listview,
+gridview,
 window {
     background: hsl(var(--background));
 }
@@ -370,11 +371,20 @@ row:selected .tile{
     opacity: 1;
     animation: ease-opacity 0.5s forwards;
 }
-
-
-
-
-
+  
+/* EMOJI */
+gridview child {
+    padding: 5px;
+    background: transparent;
+}
+gridview child box {
+    background: hsl(var(--foreground));
+    border-radius: 5px;
+    border: 1px solid transparent;
+}
+gridview child:selected box {
+    border: 1px solid hsl(var(--tag-color));
+}
 
 
 /* NEXT PAGE */

@@ -7,6 +7,7 @@ pub mod bulk_text_launcher;
 pub mod calc_launcher;
 pub mod category_launcher;
 pub mod clipboard_launcher;
+pub mod emoji_picker;
 pub mod event_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
@@ -27,6 +28,7 @@ use bulk_text_launcher::BulkTextLauncher;
 use calc_launcher::CalculatorLauncher;
 use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
+use emoji_picker::EmojiPicker;
 use event_launcher::EventLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::CommandLauncher;
@@ -42,6 +44,7 @@ pub enum LauncherType {
     Category(CategoryLauncher),
     Clipboard((ClipboardLauncher, CalculatorLauncher)),
     Command(CommandLauncher),
+    Emoji(EmojiPicker),
     Event(EventLauncher),
     MusicPlayer(MusicPlayerLauncher),
     Process(ProcessLauncher),
@@ -126,6 +129,7 @@ impl Launcher {
             LauncherType::Clipboard((clp, calc)) => Tile::clipboard_tile(self, &clp, &calc),
             LauncherType::Command(cmd) => Tile::app_tile(self, &cmd.commands),
             LauncherType::Event(evl) => Tile::event_tile(self, evl),
+            LauncherType::Emoji(emj) => Tile::app_tile(self, &emj.data),
             LauncherType::Process(proc) => Tile::process_tile(self, &proc),
             LauncherType::Web(web) => Tile::web_tile(self, &web),
 

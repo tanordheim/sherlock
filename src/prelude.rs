@@ -12,7 +12,8 @@ use gio::{
     ListStore,
 };
 use gtk4::{
-    prelude::WidgetExt, Box as GtkBox, Image, Label, ListScrollFlags, ListView, SingleSelection,
+    prelude::WidgetExt, Box as GtkBox, GridView, Image, Label, ListScrollFlags, ListView,
+    SingleSelection,
 };
 
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData};
@@ -128,11 +129,19 @@ pub trait SherlockNav {
         context_model: Option<&WeakRef<ListStore>>,
         current_mode: Option<Rc<RefCell<String>>>,
     ) -> Option<()>;
+    fn focus_offset(&self, context_model: Option<&WeakRef<ListStore>>, offset: i32) -> Option<()>;
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
 }
 impl SherlockNav for ListView {
+    fn focus_offset(
+        &self,
+        _context_model: Option<&WeakRef<ListStore>>,
+        _offset: i32,
+    ) -> Option<()> {
+        None
+    }
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
         let index = selection.selected();
@@ -251,5 +260,70 @@ impl SherlockNav for ListView {
             })
             .collect();
         Some(weaks)
+    }
+}
+impl SherlockNav for GridView {
+    fn focus_next(&self, _context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let index = selection.selected();
+        if index == u32::MAX {
+            return None;
+        }
+        let n_items = selection.n_items();
+        let new_index = index + 1;
+        if new_index < n_items {
+            selection.set_selected(new_index);
+            self.scroll_to(new_index, ListScrollFlags::NONE, None);
+        }
+        None
+    }
+    fn focus_prev(&self, _context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let index = selection.selected();
+        let n_items = selection.n_items();
+        let new_index = if index > 0 {
+            selection.set_selected(index - 1);
+            index - 1
+        } else {
+            index
+        };
+        if new_index != index {
+            if new_index < n_items {
+                self.scroll_to(new_index, ListScrollFlags::NONE, None);
+            }
+        }
+        None
+    }
+    fn focus_first(
+        &self,
+        _context_model: Option<&WeakRef<ListStore>>,
+        _current_mode: Option<Rc<RefCell<String>>>,
+    ) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let current_index = selection.selected();
+        let n_items = selection.n_items();
+        if n_items == 0 || current_index == 0 {
+            return None;
+        }
+        selection.set_selected(0);
+        self.scroll_to(0, ListScrollFlags::NONE, None);
+        Some(())
+    }
+    fn focus_offset(&self, _context_model: Option<&WeakRef<ListStore>>, offset: i32) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let current_index = selection.selected() as i32;
+        let n_items = selection.n_items() as i32;
+        let new_index = offset.checked_add(current_index)?.clamp(0, n_items - 1);
+        selection.set_selected(new_index as u32);
+        self.scroll_to(0, ListScrollFlags::NONE, None);
+        Some(())
+    }
+    fn execute_by_index(&self, _index: u32) {}
+    fn selected_item(&self) -> Option<glib::Object> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        selection.selected_item()
+    }
+    fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
+        None
     }
 }
