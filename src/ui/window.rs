@@ -217,6 +217,20 @@ pub fn window(
         })
         .build();
 
+    let stack_clone = stack_ref.clone();
+    let action_remove_page = ActionEntry::builder("rm-page")
+        .parameter_type(Some(&String::static_variant_type()))
+        .activate(move |_: &ApplicationWindow, _, parameter| {
+            if let Some(parameter) = parameter.and_then(|p| p.get::<String>()) {
+                if let Some(stack_clone) = stack_clone.upgrade() {
+                    if let Some(child) = stack_clone.child_by_name(&parameter){
+                        stack_clone.remove(&child);
+                    }
+                }
+            }
+        })
+        .build();
+
     let emoji_action = ActionEntry::builder("emoji-page")
         .activate({
             let stack_clone = stack_ref.clone();
@@ -237,6 +251,7 @@ pub fn window(
         })
         .build();
 
+
     window.set_child(Some(&stack));
     let win_ref = match backdrop {
         Some(backdrop) => {
@@ -246,6 +261,7 @@ pub fn window(
                 action_stack_switch,
                 action_next_page,
                 emoji_action,
+                action_remove_page,
             ]);
             backdrop.downgrade()
         }
@@ -256,6 +272,7 @@ pub fn window(
                 action_stack_switch,
                 action_next_page,
                 emoji_action,
+                action_remove_page,
             ]);
             window.downgrade()
         }

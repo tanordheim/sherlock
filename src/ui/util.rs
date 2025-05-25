@@ -11,8 +11,7 @@ use gio::glib::{self, WeakRef};
 use gio::ListStore;
 use gtk4::gdk::{Key, ModifierType};
 use gtk4::{
-    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Label, ListView, ScrolledWindow,
-    Spinner,
+    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Label, ListView, ScrolledWindow, Spinner
 };
 use serde::Deserialize;
 

@@ -20,6 +20,8 @@ use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 #[derive(Clone, Debug)]
 pub struct EmojiPicker {
+    pub rows: u32,
+    pub cols: u32,
     pub data: HashSet<AppData>,
 }
 
@@ -129,6 +131,7 @@ fn nav_event(
                 view.focus_offset(None, offset)
             });
         }
+        let search_bar = search_bar.clone();
         move |_, key, _, modifiers| {
             if stack_page.borrow().as_str() != "emoji-page" {
                 return false.into();
@@ -186,6 +189,25 @@ fn nav_event(
                     move_next(&view);
                     return true.into();
                 }
+                Key::BackSpace => {
+                    let empty = search_bar.upgrade().map_or(true, |s| s.text().is_empty());
+                    if empty{
+                        if let Some(view) = view.upgrade() {
+                            let _ = view.activate_action(
+                                "win.switch-page",
+                                Some(&String::from("emoji-page->search-page").to_variant()),
+                            );
+                            let _ = view.activate_action(
+                                "win.rm-page",
+                                Some(&String::from("emoji-page").to_variant()),
+                            );
+                        }
+                        return true.into();
+                    } else {
+                        return false.into();
+                    }
+
+                },
                 Key::Return => {
                     if let Some(upgr) = view.upgrade() {
                         if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
@@ -235,7 +257,7 @@ fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> 
 
     view.set_max_columns(10);
     view_port.set_child(Some(&view));
-
+    
     let ui = EmojiUI {
         model: model_ref.clone(),
         view: view.downgrade(),
