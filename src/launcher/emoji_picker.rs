@@ -1,4 +1,3 @@
-use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::WeakRef;
 use gio::ListStore;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
