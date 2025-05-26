@@ -19,6 +19,7 @@ use super::util::*;
 use crate::{
     g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow},
     prelude::{SherlockNav, SherlockSearch, ShortCut},
+    Sherlock,
 };
 use crate::{
     sherlock_error,
@@ -30,12 +31,19 @@ pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
     error_model: WeakRef<ListStore>,
+    sherlock: Rc<RefCell<Sherlock>>,
 ) -> Result<(Overlay, SearchHandler), SherlockError> {
     // Initialize the view to show all apps
     let (search_query, mode, stack_page, ui, handler, context) = construct_window(error_model)?;
     ui.result_viewport
         .upgrade()
         .map(|view| view.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic));
+
+    {
+        let mut sherlock = sherlock.borrow_mut();
+        sherlock.search_ui = Some(ui.clone());
+        sherlock.search_handler = Some(handler.clone());
+    }
 
     // Mode setup - used to decide which tiles should be shown
     let initial_mode = mode.borrow().clone();
@@ -343,14 +351,18 @@ fn construct_window(
 
     search_icon_holder.append(&overlay);
 
+    let all: GtkBox = builder.object("split-view").unwrap_or_default();
     let spinner: Spinner = builder.object("status-bar-spinner").unwrap_or_default();
     let preview_box: GtkBox = builder.object("preview_box").unwrap_or_default();
     let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
     let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
+    let mode_title_holder: GtkBox = builder.object("category-type-holder").unwrap_or_default();
     let mode_title: Label = builder.object("category-type-label").unwrap_or_default();
     let context_action_desc: Label = builder.object("context-menu-desc").unwrap_or_default();
     let context_action_first: Label = builder.object("context-menu-first").unwrap_or_default();
     let context_action_second: Label = builder.object("context-menu-second").unwrap_or_default();
+    let status_bar: GtkBox = builder.object("status-bar").unwrap_or_default();
+
     if let Some(context_str) = &custom_binds.context_str {
         context_action_first.set_text(&custom_binds.context_mod_str);
         context_action_second.set_text(context_str);
@@ -365,11 +377,14 @@ fn construct_window(
     }
 
     let ui = SearchUI {
+        all: all.downgrade(),
         result_viewport: result_viewport.downgrade(),
         results: results.downgrade(),
         preview_box: preview_box.downgrade(),
+        status_bar: status_bar.downgrade(),
         search_bar: search_bar.downgrade(),
         search_icon_holder: search_icon_holder.downgrade(),
+        mode_title_holder: mode_title_holder.downgrade(),
         mode_title: mode_title.downgrade(),
         spinner: spinner.downgrade(),
         filter: filter.downgrade(),
@@ -381,8 +396,7 @@ fn construct_window(
     };
     // disable status bar
     if !config.appearance.status_bar {
-        let n: Option<GtkBox> = builder.object("status-bar");
-        n.map(|n| n.set_visible(false));
+        status_bar.set_visible(false);
     }
     // enable or disable search bar icons
     ui.search_icon_holder
@@ -673,6 +687,10 @@ fn nav_event(
                             .and_downcast::<SherlockRow>()
                         {
                             row.emit_by_name::<()>("row-should-activate", &[]);
+                        } else {
+                            if let Some(current_text) = search_bar.upgrade().map(|s| s.text()) {
+                                println!("{}", current_text);
+                            }
                         }
                     }
                 }

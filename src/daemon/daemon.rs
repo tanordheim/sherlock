@@ -9,7 +9,7 @@ pub struct SherlockDaemon {
     socket: String,
 }
 impl SherlockDaemon {
-    pub async fn new(pipeline: async_channel::Sender<&str>) -> Self {
+    pub async fn new(pipeline: async_channel::Sender<String>) -> Self {
         let _ = std::fs::remove_file(SOCKET_PATH);
         let listener = UnixListener::bind(SOCKET_PATH).expect("Failed to bind socket");
         println!("Daemon listening on {}", SOCKET_PATH);
@@ -21,11 +21,14 @@ impl SherlockDaemon {
                     Ok(bytes_read) => {
                         if bytes_read > 0 {
                             let received_data = String::from_utf8_lossy(&buffer[..bytes_read]);
-                            match received_data.trim() {
+                            let received_data = received_data.trim();
+                            match received_data {
                                 "show" => {
-                                    let _ = pipeline.send("open-window").await;
+                                    let _ = pipeline.send(String::from("open-window")).await;
                                 }
-                                _ => println!("Received: {}", received_data),
+                                _ => {
+                                    let _ = pipeline.send(received_data.to_string()).await;
+                                }
                             }
                             let _ = stream.write_all(b"OK\n");
                         }

@@ -1,11 +1,14 @@
 // CRATE
 use gio::glib::MainContext;
 use gio::prelude::*;
-use gtk4::prelude::{GtkApplicationExt, WidgetExt};
+use gtk4::prelude::{BoxExt, EntryExt, GtkApplicationExt, WidgetExt};
 use gtk4::Application;
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
+use ui::util::{SearchHandler, SearchUI};
 use utils::config::SherlockFlags;
 
 // MODS
@@ -32,6 +35,48 @@ use utils::{
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
+struct Sherlock {
+    pub search_ui: Option<SearchUI>,
+    pub search_handler: Option<SearchHandler>,
+}
+impl Sherlock {
+    pub fn new() -> Self {
+        Self {
+            search_ui: None,
+            search_handler: None,
+        }
+    }
+    pub fn obfuscate(&self, visibility: bool) {
+        if let Some(search_bar) = self.search_ui.as_ref().and_then(|s| s.search_bar.upgrade()) {
+            search_bar.set_visibility(visibility);
+        }
+    }
+    pub fn clear_results(&self) -> Option<()> {
+        let handler = self.search_handler.as_ref()?;
+        if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
+            model.remove_all();
+        }
+        Some(())
+    }
+    pub fn show_raw(&self) -> Option<()> {
+        let ui = self.search_ui.as_ref()?;
+        let handler = self.search_handler.as_ref()?;
+        if let Some(title) = ui.mode_title_holder.upgrade() {
+            title.set_visible(false);
+        }
+        if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
+            model.remove_all();
+        }
+        if let Some(all) = ui.all.upgrade() {
+            all.set_visible(false);
+        }
+        if let Some(status) = ui.status_bar.upgrade() {
+            status.set_visible(false);
+        }
+        Some(())
+    }
+}
+
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
@@ -40,6 +85,7 @@ async fn main() {
         startup_loading();
     let t0 = Instant::now();
     application.connect_activate(move |app| {
+        let sherlock = Rc::new(RefCell::new(Sherlock::new()));
         let t1 = Instant::now();
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
@@ -74,7 +120,7 @@ async fn main() {
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
         let (search_stack, handler) = if pipe.is_empty() {
-            match ui::search::search(&window, &current_stack_page, error_model.clone()) {
+            match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
                 Ok(r) => r,
                 Err(e) => {
                     error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
@@ -156,12 +202,36 @@ async fn main() {
 
                 // Handle receiving using pipline
                 let open_win_clone = open_win.clone();
-                MainContext::default().spawn_local(async move {
-                    while let Ok(_msg) = receiver.recv().await {
-                        if let Some(window) = open_win_clone.upgrade() {
-                            let _ = gtk4::prelude::WidgetExt::activate_action(
-                                &window, "win.open", None,
-                            );
+                MainContext::default().spawn_local({
+                    let sherlock = Rc::clone(&sherlock);
+                    async move {
+                        while let Ok(msg) = receiver.recv().await {
+                            if let Some(window) = open_win_clone.upgrade() {
+                                match msg.as_str() {
+                                    "show" | "open-window" => {
+                                        let _ = gtk4::prelude::WidgetExt::activate_action(
+                                            &window, "win.open", None,
+                                        );
+                                    },
+                                    "obfuscate" => {
+                                        sherlock.borrow().obfuscate(false);
+                                    },
+                                    "deobfuscate" => {
+                                        sherlock.borrow().obfuscate(true);
+                                    },
+                                    "clear" => {
+                                        window.set_visible(true);
+                                        sherlock.borrow().clear_results();
+                                    },
+                                    "input_only" => {
+                                        window.set_visible(true);
+                                        sherlock.borrow().show_raw();
+                                    }
+                                    _ => {
+                                        println!("{:?}", msg);
+                                    }
+                                }
+                            }
                         }
                     }
                 });

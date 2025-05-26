@@ -242,6 +242,9 @@ impl SherlockNav for ListView {
     }
     fn selected_item(&self) -> Option<glib::Object> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
+        if selection.n_items() == 0 {
+            return None;
+        }
         selection.selected_item()
     }
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
