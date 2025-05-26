@@ -21,19 +21,19 @@ impl Loader {
                 })
                 .ok();
 
-            let xdg_paths = match env::var("XDG_DATA_DIRS").ok() {
+            // Add data dirs to icon paths
+            match env::var("XDG_DATA_DIRS").ok() {
                 Some(paths) => {
                     let app_dirs: HashSet<PathBuf> = paths
                         .split(":")
                         .map(|p| PathBuf::from(p).join("icons/"))
                         .collect();
-                    app_dirs
+                    app_dirs.into_iter().for_each(|path| {
+                        icon_theme.add_search_path(path);
+                    });
                 }
-                _ => HashSet::new(),
+                _ => {}
             };
-            xdg_paths.into_iter().for_each(|path|{
-                icon_theme.add_search_path(path);
-            });
 
             if let Some(h) = home_dir {
                 icon_paths

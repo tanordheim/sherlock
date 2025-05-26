@@ -359,6 +359,11 @@ fn construct_window(
         context_action_second.set_visible(false);
     }
 
+    if config.expand.enable {
+        result_viewport.set_max_content_height(config.appearance.height);
+        result_viewport.set_propagate_natural_height(true);
+    }
+
     let ui = SearchUI {
         result_viewport: result_viewport.downgrade(),
         results: results.downgrade(),

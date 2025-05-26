@@ -70,6 +70,14 @@ pub struct SherlockConfig {
     /// Internal settings for JSON piping (e.g., default return action)
     #[serde(default)]
     pub pipe: ConfigPipe,
+
+    /// Configures expand feature
+    #[serde(default)]
+    pub expand: ConfigExpand,
+
+    /// Configures backdrop feature
+    #[serde(default)]
+    pub backdrop: ConfigBackdrop,
 }
 impl SherlockConfig {
     pub fn default() -> Self {
@@ -82,6 +90,8 @@ impl SherlockConfig {
             binds: ConfigBinds::default(),
             files: ConfigFiles::default(),
             pipe: ConfigPipe { method: None },
+            expand: ConfigExpand::default(),
+            backdrop: ConfigBackdrop::default(),
         }
     }
     pub fn with_root(root: &PathBuf) -> Self {
@@ -94,6 +104,8 @@ impl SherlockConfig {
             binds: ConfigBinds::default(),
             files: ConfigFiles::with_root(root),
             pipe: ConfigPipe { method: None },
+            expand: ConfigExpand::default(),
+            backdrop: ConfigBackdrop::default(),
         }
     }
     /// # Arguments
@@ -473,12 +485,6 @@ pub struct ConfigAppearance {
     pub opacity: f64,
     #[serde(default = "default_modkey_ascii")]
     pub mod_key_ascii: Vec<String>,
-    #[serde(default)]
-    pub backdrop: bool,
-    #[serde(default = "default_backdrop_opacity")]
-    pub backdrop_opacity: f64,
-    #[serde(default = "default_backdrop_edge")]
-    pub backdrop_edge: String,
     #[serde(default = "default_search_icon")]
     pub search_bar_icon: String,
     #[serde(default = "default_search_icon_back")]
@@ -526,9 +532,6 @@ impl Default for ConfigAppearance {
             status_bar: true,
             opacity: 1.0,
             mod_key_ascii: default_modkey_ascii(),
-            backdrop: false,
-            backdrop_opacity: default_backdrop_opacity(),
-            backdrop_edge: default_backdrop_edge(),
             search_bar_icon: default_search_icon(),
             search_bar_icon_back: default_search_icon_back(),
             search_icon_size: default_icon_size(),
@@ -548,8 +551,11 @@ pub struct ConfigBehavior {
     pub animate: bool,
     #[serde(default)]
     pub field: Option<String>,
+    #[serde(default)]
     pub global_prefix: Option<String>,
+    #[serde(default)]
     pub global_flags: Option<String>,
+    #[serde(default)]
     pub sub_menu: Option<String>,
 }
 impl Default for ConfigBehavior {
@@ -635,6 +641,44 @@ pub struct ConfigBinds {
 pub struct ConfigPipe {
     #[serde(default)]
     pub method: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct ConfigExpand {
+    #[serde(default)]
+    pub enable: bool,
+    #[serde(default = "default_backdrop_edge")]
+    pub edge: String,
+    #[serde(default)]
+    pub margin: i32,
+}
+impl Default for ConfigExpand {
+    fn default() -> Self {
+        Self {
+            enable: false,
+            edge: default_backdrop_edge(),
+            margin: 0,
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct ConfigBackdrop {
+    #[serde(default)]
+    pub enable: bool,
+    #[serde(default = "default_backdrop_opacity")]
+    pub opacity: f64,
+    #[serde(default = "default_backdrop_edge")]
+    pub edge: String,
+}
+impl Default for ConfigBackdrop {
+    fn default() -> Self {
+        Self {
+            enable: false,
+            opacity: default_backdrop_opacity(),
+            edge: default_backdrop_edge(),
+        }
+    }
 }
 
 // ====================
