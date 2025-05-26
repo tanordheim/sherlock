@@ -311,13 +311,17 @@ pub struct ContextUI {
 }
 
 #[allow(dead_code)]
+#[derive(Clone)]
 pub struct SearchUI {
+    pub all: WeakRef<GtkBox>,
     pub result_viewport: WeakRef<ScrolledWindow>,
     pub results: WeakRef<ListView>,
     // will be later used for split view to display information about apps/commands
     pub preview_box: WeakRef<GtkBox>,
+    pub status_bar: WeakRef<GtkBox>,
     pub search_bar: WeakRef<Entry>,
     pub search_icon_holder: WeakRef<GtkBox>,
+    pub mode_title_holder: WeakRef<GtkBox>,
     pub mode_title: WeakRef<Label>,
     pub spinner: WeakRef<Spinner>,
     pub filter: WeakRef<CustomFilter>,

@@ -36,7 +36,7 @@
 
 
         <child>
-            <object class="GtkBox" id="split_view">
+            <object class="GtkBox" id="split-view">
                 <property name="orientation">horizontal</property>
                 <property name="hexpand">True</property>
                 <property name="vexpand">True</property>

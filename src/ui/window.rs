@@ -178,8 +178,8 @@ pub fn window(
                 match (from, to) {
                     ("search-page", "error-page") => StackTransitionType::OverRightLeft,
                     ("error-page", "search-page") => StackTransitionType::OverRightLeft,
-                    ("search-page", "emoji-page") => StackTransitionType::OverLeftRight,
-                    ("emoji-page", "search-page") => StackTransitionType::OverLeftRight,
+                    ("search-page", "emoji-page") => StackTransitionType::SlideLeft,
+                    ("emoji-page", "search-page") => StackTransitionType::SlideRight,
                     _ => StackTransitionType::None,
                 }
             }
