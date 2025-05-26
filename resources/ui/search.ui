@@ -39,6 +39,7 @@
             <object class="GtkBox" id="split_view">
                 <property name="orientation">horizontal</property>
                 <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
                 <child>
                     <object class="GtkScrolledWindow" id="scrolled-window">
                         <style>
@@ -51,10 +52,8 @@
                         <child>
                             <object class="GtkListView" id="result-frame">
                                 <property name="name">list_box</property>
-
                                 <child>
                                 </child>
-
                             </object>
                         </child>
                     </object>

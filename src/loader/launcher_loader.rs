@@ -269,7 +269,7 @@ fn parse_emoji_launcher(raw: &RawLauncher) -> LauncherType {
         app_data.icon = Some(String::from("sherlock-emoji"))
     }
     data.insert(app_data);
-    LauncherType::Emoji(EmojiPicker { 
+    LauncherType::Emoji(EmojiPicker {
         rows: 4,
         cols: 5,
         data,

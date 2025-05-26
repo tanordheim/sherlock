@@ -14,6 +14,7 @@ use std::rc::Rc;
 use crate::actions::execute_from_attrs;
 use crate::launcher::emoji_picker::emojies;
 use crate::loader::util::JsonCache;
+use crate::utils::config::SherlockConfig;
 use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
@@ -28,15 +29,14 @@ pub fn window(
     WeakRef<ApplicationWindow>,
 ) {
     // 617 with, 593 without notification bar
-    let (width, height, opacity) = CONFIG.get().map_or_else(
-        || (900, 593, 1.0),
-        |config| {
-            (
-                config.appearance.width,
-                config.appearance.height,
-                config.appearance.opacity,
-            )
-        },
+    let config = match CONFIG.get() {
+        Some(c) => c,
+        _ => &SherlockConfig::default(),
+    };
+    let (width, height, opacity) = (
+        config.appearance.width,
+        config.appearance.height,
+        config.appearance.opacity,
     );
 
     let current_stack_page = Rc::new(RefCell::new(String::from("search-page")));
@@ -44,15 +44,22 @@ pub fn window(
     let window: ApplicationWindow = ApplicationWindow::builder()
         .application(application)
         .default_width(width)
-        .default_height(height)
         .resizable(false)
         .decorated(false)
         .opacity(opacity.clamp(0.1, 1.0))
         .build();
+
     window.init_layer_shell();
     window.set_namespace("sherlock");
     window.set_layer(Layer::Overlay);
     window.set_keyboard_mode(gtk4_layer_shell::KeyboardMode::Exclusive);
+
+    if !config.expand.enable {
+        window.set_default_height(height);
+    } else {
+        window.set_anchor(gtk4_layer_shell::Edge::Top, true);
+        window.set_margin(gtk4_layer_shell::Edge::Top, config.expand.margin);
+    }
 
     let focus_controller = EventControllerFocus::new();
     focus_controller.connect_leave({
@@ -83,15 +90,15 @@ pub fn window(
 
     // Make backdrop if config key is set
     let backdrop = if let Some(c) = CONFIG.get() {
-        if c.appearance.backdrop {
-            let edge = match c.appearance.backdrop_edge.to_lowercase().as_str() {
+        if c.backdrop.enable {
+            let edge = match c.backdrop.edge.to_lowercase().as_str() {
                 "top" => Edge::Top,
                 "bottom" => Edge::Bottom,
                 "left" => Edge::Left,
                 "right" => Edge::Right,
                 _ => Edge::Top,
             };
-            make_backdrop(application, &window, c.appearance.backdrop_opacity, edge)
+            make_backdrop(application, &window, c.backdrop.opacity, edge)
         } else {
             None
         }
@@ -223,7 +230,7 @@ pub fn window(
         .activate(move |_: &ApplicationWindow, _, parameter| {
             if let Some(parameter) = parameter.and_then(|p| p.get::<String>()) {
                 if let Some(stack_clone) = stack_clone.upgrade() {
-                    if let Some(child) = stack_clone.child_by_name(&parameter){
+                    if let Some(child) = stack_clone.child_by_name(&parameter) {
                         stack_clone.remove(&child);
                     }
                 }
@@ -250,7 +257,6 @@ pub fn window(
             }
         })
         .build();
-
 
     window.set_child(Some(&stack));
     let win_ref = match backdrop {

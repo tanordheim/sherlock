@@ -172,7 +172,7 @@ fn nav_event(
                 }
                 Key::BackSpace => {
                     let empty = search_bar.upgrade().map_or(true, |s| s.text().is_empty());
-                    if empty{
+                    if empty {
                         if let Some(view) = view.upgrade() {
                             let _ = view.activate_action(
                                 "win.switch-page",
@@ -187,8 +187,7 @@ fn nav_event(
                     } else {
                         return false.into();
                     }
-
-                },
+                }
                 Key::Return => {
                     if let Some(upgr) = view.upgrade() {
                         if let Some(selection) = upgr.model().and_downcast::<SingleSelection>() {
@@ -238,7 +237,7 @@ fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> 
 
     view.set_max_columns(10);
     view_port.set_child(Some(&view));
-    
+
     let ui = EmojiUI {
         model: model_ref.clone(),
         view: view.downgrade(),
