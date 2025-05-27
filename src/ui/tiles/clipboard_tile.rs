@@ -137,7 +137,9 @@ impl Tile {
             if !is_valid {
                 if let Some(captures) = color_re.captures(&clipboard_content) {
                     // Groups: 2: RGB, 3: HSL, 4: HEX
-                    let rgb = if let Some(rgb) = captures.get(2) {
+                    let rgb = if clipboard_content.len() > 20 {
+                        None
+                    } else if let Some(rgb) = captures.get(2) {
                         if capabilities.contains("colors.rgb")
                             || capabilities.contains("colors.all")
                         {
