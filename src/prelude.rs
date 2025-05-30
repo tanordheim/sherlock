@@ -124,7 +124,11 @@ impl ShortCut for GtkBox {
 pub trait SherlockNav {
     fn focus_next(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
     fn focus_prev(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
-    fn focus_first(&self, context_model: Option<&WeakRef<ListStore>>) -> Option<()>;
+    fn focus_first(
+        &self,
+        context_model: Option<&WeakRef<ListStore>>,
+        current_mode: Option<Rc<RefCell<String>>>,
+    ) -> Option<()>;
     fn focus_offset(&self, context_model: Option<&WeakRef<ListStore>>, offset: i32) -> Option<()>;
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
@@ -293,7 +297,11 @@ impl SherlockNav for GridView {
         }
         None
     }
-    fn focus_first(&self, _context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
+    fn focus_first(
+        &self,
+        _context_model: Option<&WeakRef<ListStore>>,
+        _current_mode: Option<Rc<RefCell<String>>>,
+    ) -> Option<()> {
         let selection = self.model().and_downcast::<SingleSelection>()?;
         let current_index = selection.selected();
         let n_items = selection.n_items();

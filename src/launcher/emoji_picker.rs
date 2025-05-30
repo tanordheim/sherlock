@@ -333,7 +333,7 @@ fn change_event(
             filter
                 .upgrade()
                 .map(|filter| filter.changed(gtk4::FilterChange::Different));
-            view.upgrade().map(|view| view.focus_first(None));
+            view.upgrade().map(|view| view.focus_first(None, None));
         }
     });
     Some(())

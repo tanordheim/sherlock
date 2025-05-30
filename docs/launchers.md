@@ -1,6 +1,10 @@
 # Launchers
 
-Launchers are the backbone of Sherlock. Each of Sherlock's items – including applications, custom commands, or functional widgets like the weather – inherit from a Launcher. The `fallback.json` file can be thought of as something like Sherlock's "package manager", used to toggle specific features on and off or to customize their behavior.<br>
+Launchers are the backbone of Sherlock. Each of Sherlock's items – including
+applications, custom commands, or functional widgets like the weather – inherit
+from a Launcher. The `fallback.json` file can be thought of as something like
+Sherlock's "package manager", used to toggle specific features on and off or to
+customize their behavior.<br>
 
 The default location for the `fallback.json` file is in your Sherlock config
 directory (`/home/user/.config/sherlock/`). If the file does not exist, you'll
