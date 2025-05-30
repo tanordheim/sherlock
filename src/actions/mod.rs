@@ -60,7 +60,9 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
-                let _ = commandlaunch::command_launch(exec, keyword);
+                if let Err(error) = commandlaunch::command_launch(exec, keyword) {
+                    println!("{}", error);
+                }
                 increment(&exec);
                 if exit {
                     eval_close(row);
