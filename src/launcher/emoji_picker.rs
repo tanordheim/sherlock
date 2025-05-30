@@ -1,20 +1,52 @@
 use gio::glib::WeakRef;
 use gio::ListStore;
 use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
-use gtk4::{Box as GtkBox, GridView, ListView, SignalListItemFactory, SingleSelection};
+use gtk4::{
+    Box as GtkBox, GridView, Label, ScrolledWindow, SignalListItemFactory, SingleSelection,
+};
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
 
-use crate::g_subclasses::emoji_item::EmojiObject;
-use crate::g_subclasses::sherlock_row::SherlockRow;
+use crate::g_subclasses::emoji_item::{EmojiObject, EmojiRaw};
+use crate::sherlock_error;
+use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 pub struct EmojiPicker {
-    emojies: Vec<EmojiObject>
+    emojies: Vec<EmojiObject>,
 }
 impl EmojiPicker {
-    pub fn new()-> Self {
-        //load emojies here
-        Self { emojies: vec![] }
+    pub fn new() -> Result<Self, SherlockError> {
+        // Loads default fallback.json file and loads the launcher configurations within.
+        let data = gio::resources_lookup_data(
+            "/dev/skxxtz/sherlock/emojies.json",
+            gio::ResourceLookupFlags::NONE,
+        )
+        .map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::ResourceLookupError("emojies.json".to_string()),
+                e.to_string()
+            )
+        })?;
+        let string_data = std::str::from_utf8(&data)
+            .map_err(|e| {
+                sherlock_error!(
+                    SherlockErrorType::FileParseError(PathBuf::from("emojies.json")),
+                    e.to_string()
+                )
+            })?
+            .to_string();
+        let emojies: Vec<EmojiRaw> = serde_json::from_str(&string_data).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileParseError(PathBuf::from("emojies.json")),
+                e.to_string()
+            )
+        })?;
+        let emojies: Vec<EmojiObject> = emojies
+            .into_iter()
+            .map(|emj| EmojiObject::from(emj))
+            .collect();
+        Ok(Self { emojies })
     }
 }
 
@@ -23,14 +55,14 @@ pub struct EmojiUI {
     view: WeakRef<GridView>,
 }
 
-
-pub fn emojies(stack_page: &Rc<RefCell<String>>) -> (GtkBox, WeakRef<ListStore>) {
-    let emoji_picker = EmojiPicker::new();
-    let (stack,  ui) = construct(emoji_picker.emojies);
-
+pub fn emojies(
+    stack_page: &Rc<RefCell<String>>,
+) -> Result<(GtkBox, WeakRef<ListStore>), SherlockError> {
+    let emoji_picker = EmojiPicker::new()?;
+    let (stack, ui) = construct(emoji_picker.emojies);
 
     nav_event(&stack, ui.view.clone(), stack_page);
-    return (stack, ui.model.clone());
+    return Ok((stack, ui.model.clone()));
 }
 fn nav_event(stack: &GtkBox, result_holder: WeakRef<GridView>, stack_page: &Rc<RefCell<String>>) {
     // Wrap the event controller in an Rc<RefCell> for shared mutability
@@ -60,21 +92,20 @@ fn nav_event(stack: &GtkBox, result_holder: WeakRef<GridView>, stack_page: &Rc<R
 
 fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
     // Initialize the builder with the correct path
-    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/error_view.ui");
+    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
 
     // Get the required object references
     let vbox: GtkBox = builder.object("vbox").unwrap();
+    let view_port: ScrolledWindow = builder.object("scrolled-window").unwrap();
 
     // Setup model and factory
     let model = ListStore::new::<EmojiObject>();
+    emojies.iter().for_each(|emj| model.append(emj));
     let factory = make_factory();
     let selection = SingleSelection::new(Some(model.clone()));
     let view: GridView = GridView::new(Some(selection), Some(factory));
     view.set_focusable(false);
-
-    // breaking_error_tiles
-    //     .into_iter()
-    //     .for_each(|tile| model.append(&tile));
+    view_port.set_child(Some(&view));
 
     let ui = EmojiUI {
         model: model.downgrade(),
@@ -85,20 +116,45 @@ fn construct(emojies: Vec<EmojiObject>) -> (GtkBox, EmojiUI) {
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
+    factory.connect_setup(move |_factory, item| {
+        let list_item = item
+            .downcast_ref::<gtk4::ListItem>()
+            .expect("Should be a list item");
+        let box_ = GtkBox::new(gtk4::Orientation::Vertical, 10);
+        box_.set_halign(gtk4::Align::Start);
+
+        let emoji_label = Label::new(Some(""));
+        box_.append(&emoji_label);
+
+        let name_label = Label::new(Some(""));
+        box_.append(&name_label);
+
+        list_item.set_child(Some(&box_));
+    });
     factory.connect_bind(|_, item| {
         let item = item
             .downcast_ref::<gtk4::ListItem>()
             .expect("Item mut be a ListItem");
-        let row = item
+        let emoji_obj = item
             .item()
-            .clone()
-            .and_downcast::<SherlockRow>()
-            .expect("Row should be SherlockRow");
-        item.set_child(Some(&row));
+            .and_downcast::<EmojiObject>()
+            .expect("Inner should be an EmojiObject");
+        let box_ = item
+            .child()
+            .and_downcast::<GtkBox>()
+            .expect("The child should be a Box");
+
+        let emoji_label = box_
+            .first_child()
+            .and_downcast::<Label>()
+            .expect("First child should be a label");
+        let title_label = box_
+            .last_child()
+            .and_downcast::<Label>()
+            .expect("First child should be a label");
+
+        emoji_label.set_text(&emoji_obj.emoji());
+        title_label.set_text(&emoji_obj.title());
     });
     factory
-}
-struct ErrorUI {
-    model: WeakRef<ListStore>,
-    results: WeakRef<ListView>,
 }

@@ -3,6 +3,7 @@ use gio::glib::MainContext;
 use gio::prelude::*;
 use gtk4::prelude::{GtkApplicationExt, WidgetExt};
 use gtk4::Application;
+use launcher::emoji_picker::emojies;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
@@ -71,9 +72,16 @@ async fn main() {
         }
 
         // Either show user-specified content or show normal search
+        let (emoji_stack, _emoji_model) = match emojies(&current_stack_page){
+            Ok(r) => r,
+            Err(e) => {
+                println!("{:?}", e);
+                return;
+            }
+        };
         let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
         let pipe = Loader::load_pipe_args();
-        let (search_stack, handler) = if pipe.is_empty() {
+        let (_search_stack, handler) = if pipe.is_empty() {
             match ui::search::search(&window, &current_stack_page, error_model.clone()) {
                 Ok(r) => r,
                 Err(e) => {
@@ -95,7 +103,7 @@ async fn main() {
                 }
             }
         };
-        stack.add_named(&search_stack, Some("search-page"));
+        stack.add_named(&emoji_stack, Some("search-page"));
 
         // Notify the user about the value not having any effect to avoid confusion
         if let Some(c) = CONFIG.get() {

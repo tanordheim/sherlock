@@ -1,21 +1,21 @@
-use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
-use gtk4::subclass::prelude::*;
 use gtk4::glib;
+use gtk4::subclass::prelude::*;
+use serde::Deserialize;
 use std::cell::RefCell;
 use std::sync::OnceLock;
 
 /// ## Fields:
-#[derive(Default)]
+#[derive(Default, Deserialize)]
 pub struct EmojiObject {
-    pub name: RefCell<String>,
+    pub title: RefCell<String>,
     pub emoji: RefCell<String>,
 }
 
 // The central trait for subclassing a GObject
 #[glib::object_subclass]
 impl ObjectSubclass for EmojiObject {
-    const NAME: &'static str = "ContextAction";
+    const NAME: &'static str = "EmojiObject";
     type Type = super::EmojiObject;
     type ParentType = glib::Object;
 }
