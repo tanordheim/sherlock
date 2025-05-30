@@ -93,14 +93,14 @@ async fn main() {
             let opacity = c.appearance.opacity;
 
             if !(0.1..=1.0).contains(&opacity) {
-                non_breaking.push(SherlockError {
-                    error: SherlockErrorType::ConfigError(Some(format!(
+                non_breaking.push(sherlock_error!(
+                    SherlockErrorType::ConfigError(Some(format!(
                         "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
                         opacity,
                         opacity.clamp(0.1, 1.0)
                     ))),
-                    traceback: String::new(),
-                });
+                    ""
+                ));
             }
         }
 
@@ -202,10 +202,10 @@ fn startup_loading() -> (
     CONFIG
         .set(app_config.clone())
         .map_err(|_| {
-            startup_errors.push(SherlockError {
-                error: SherlockErrorType::ConfigError(None),
-                traceback: String::new(),
-            });
+            startup_errors.push(sherlock_error!(
+                SherlockErrorType::ConfigError(None),
+                ""
+            ));
         })
         .ok();
 

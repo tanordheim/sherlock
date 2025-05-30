@@ -4,21 +4,21 @@ use std::path::Path;
 
 use super::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
-use crate::CONFIG;
+use crate::{sherlock_error, CONFIG};
 
 impl Loader {
     pub fn load_css() -> Result<Vec<SherlockError>, SherlockError> {
         let mut non_breaking: Vec<SherlockError> = Vec::new();
         let provider = CssProvider::new();
 
-        let config = CONFIG.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
-        let display = Display::default().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::DisplayError,
-            traceback: "No display available".to_string(),
-        })?;
+        let config = CONFIG.get().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::ConfigError(None),
+            ""
+        ))?;
+        let display = Display::default().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::DisplayError,
+            "No display available"
+        ))?;
 
         // Load the base line css
         if config.appearance.use_base_css {
@@ -40,10 +40,10 @@ impl Loader {
                 gtk4::STYLE_PROVIDER_PRIORITY_USER,
             );
         } else {
-            non_breaking.push(SherlockError {
-                error: SherlockErrorType::FileExistError(config.files.css.clone()),
-                traceback: String::from("Using default css"),
-            });
+            non_breaking.push(sherlock_error!(
+                SherlockErrorType::FileExistError(config.files.css.clone()),
+                "Using default css"
+            ));
         }
 
         drop(provider);

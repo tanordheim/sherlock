@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 
 use crate::loader::util::{AppData, RawLauncher};
+use crate::sherlock_error;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::utils::files::home_dir;
 
@@ -37,27 +38,27 @@ struct BookmarkParser;
 impl BookmarkParser {
     fn brave(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/BraveSoftware/Brave-Browser/Default/Bookmarks");
-        let data = fs::read_to_string(&path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(path),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
+        let data = fs::read_to_string(&path).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileReadError(path),
+            &e.to_string()
+        ))?;
 
         ChromeParser::parse(raw, data)
     }
     fn thorium(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/thorium/Default/Bookmarks");
-        let data = fs::read_to_string(&path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(path),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
+        let data = fs::read_to_string(&path).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileReadError(path),
+            &e.to_string()
+        ))?;
         ChromeParser::parse(raw, data)
     }
     fn chrome(raw: &RawLauncher) -> Result<HashSet<AppData>, SherlockError> {
         let path = home_dir()?.join(".config/google-chrome/Default/Bookmarks");
-        let data = fs::read_to_string(&path).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(path),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
+        let data = fs::read_to_string(&path).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileReadError(path),
+            &e.to_string()
+        ))?;
         ChromeParser::parse(raw, data)
     }
 
@@ -76,10 +77,10 @@ impl BookmarkParser {
                 })
                 .next()
         }
-        let path = get_path().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::FileExistError(PathBuf::from("~/.zen/../places.sqlite")),
-            traceback: format!("{}:{}\nFile does not exist.", file!(), line!()),
-        })?;
+        let path = get_path().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::FileExistError(PathBuf::from("~/.zen/../places.sqlite")),
+            "File does not exist"
+        ))?;
         let parser = MozillaSqliteParser::new(path, "zen");
         parser.read(raw)
     }
@@ -98,12 +99,12 @@ impl BookmarkParser {
                 })
                 .next()
         }
-        let path = get_path().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::FileExistError(PathBuf::from(
+        let path = get_path().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::FileExistError(PathBuf::from(
                 "~/.mozilla/firefox//../places.sqlite",
             )),
-            traceback: format!("{}:{}\nFile does not exist.", file!(), line!()),
-        })?;
+            "File does not exist"
+        ))?;
         let parser = MozillaSqliteParser::new(path, "firefox");
         parser.read(raw)
     }
@@ -135,10 +136,10 @@ impl MozillaSqliteParser {
             AND p.url IS NOT NULL
             AND b.parent != 7;
             ";
-        let conn = Connection::open(&self.path).map_err(|e| SherlockError {
-            error: SherlockErrorType::SqlConnectionError(),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
+        let conn = Connection::open(&self.path).map_err(|e| sherlock_error!(
+            SherlockErrorType::SqlConnectionError(),
+            &e.to_string()
+        ))?;
 
         if let Ok(mut stmt) = conn.prepare(query) {
             let event_iter = stmt.query_map([], |row| {
@@ -218,10 +219,10 @@ impl ChromeParser {
 
         let mut bookmarks = HashSet::new();
         let file =
-            serde_json::from_str::<parser::ChromeFile>(&data).map_err(|e| SherlockError {
-                error: SherlockErrorType::FlagLoadError,
-                traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-            })?;
+            serde_json::from_str::<parser::ChromeFile>(&data).map_err(|e| sherlock_error!(
+                SherlockErrorType::FlagLoadError,
+                &e.to_string()
+            ))?;
 
         fn process_bookmark(
             raw: &RawLauncher,

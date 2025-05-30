@@ -13,7 +13,7 @@ use crate::utils::{
     errors::{SherlockError, SherlockErrorType},
     files::{read_file, read_lines},
 };
-use crate::CONFIG;
+use crate::{sherlock_error, CONFIG};
 use util::{AppData, SherlockAlias};
 
 impl Loader {
@@ -23,10 +23,10 @@ impl Loader {
         counts: &HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashSet<AppData>, SherlockError> {
-        let config = CONFIG.get().ok_or(SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: format!(""),
-        })?;
+        let config = CONFIG.get().ok_or(sherlock_error!(
+            SherlockErrorType::ConfigError(None),
+            ""
+        ))?;
 
         // Define required paths for application parsing
         let system_apps = get_applications_dir();
@@ -49,23 +49,23 @@ impl Loader {
                 .filter_map(|line| Pattern::new(&line.to_lowercase()).ok())
                 .collect(),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
-            Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(config.files.ignore.clone()),
-                traceback: e.to_string(),
-            })?,
+            Err(e) => Err(sherlock_error!(
+                SherlockErrorType::FileReadError(config.files.ignore.clone()),
+                &e.to_string()
+            ))?,
         };
 
         // Parse user-specified 'sherlock_alias.json' file
         let aliases: HashMap<String, SherlockAlias> = match File::open(&config.files.alias) {
-            Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileReadError(config.files.alias.clone()),
-                traceback: e.to_string(),
-            })?,
+            Ok(f) => simd_json::from_reader(f).map_err(|e| sherlock_error!(
+                SherlockErrorType::FileReadError(config.files.alias.clone()),
+                &e.to_string()
+            ))?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Default::default(),
-            Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(config.files.alias.clone()),
-                traceback: e.to_string(),
-            })?,
+            Err(e) => Err(sherlock_error!(
+                SherlockErrorType::FileReadError(config.files.alias.clone()),
+                &e.to_string()
+            ))?,
         };
 
         // Gather '.desktop' files
@@ -212,10 +212,10 @@ impl Loader {
         counts: &HashMap<String, f32>,
         decimals: i32,
     ) -> Result<HashSet<AppData>, SherlockError> {
-        let config = CONFIG.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
+        let config = CONFIG.get().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::ConfigError(None),
+            ""
+        ))?;
         // check if sherlock_alias was modified
         let alias_path = Path::new(&config.files.alias);
         let ignore_path = Path::new(&config.files.ignore);
@@ -280,10 +280,10 @@ pub fn parse_priority(priority: f32, count: f32, decimals: i32) -> f32 {
 fn get_regex_patterns() -> Result<(Regex, Regex, Regex, Regex, Regex, Regex), SherlockError> {
     fn construct_pattern(key: &str) -> Result<Regex, SherlockError> {
         let pattern = format!(r#"(?im)^{}\s*=\s*[\'\"]?(.*?)[\'\"]?\s*$"#, key);
-        Regex::new(&pattern).map_err(|e| SherlockError {
-            error: SherlockErrorType::RegexError(key.to_string()),
-            traceback: e.to_string(),
-        })
+        Regex::new(&pattern).map_err(|e| sherlock_error!(
+            SherlockErrorType::RegexError(key.to_string()),
+            &e.to_string()
+        ))
     }
     let name = construct_pattern("Name")?;
     let icon = construct_pattern("Icon")?;

@@ -34,15 +34,15 @@ use super::util::deserialize_named_appdata;
 use super::util::AppData;
 use super::util::RawLauncher;
 use super::Loader;
-use crate::CONFIG;
+use crate::{sherlock_error, CONFIG};
 
 impl Loader {
     #[sherlock_macro::timing("Loading launchers")]
     pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
-        let config = CONFIG.get().ok_or_else(|| SherlockError {
-            error: SherlockErrorType::ConfigError(None),
-            traceback: String::new(),
-        })?;
+        let config = CONFIG.get().ok_or_else(|| sherlock_error!(
+            SherlockErrorType::ConfigError(None),
+            ""
+        ))?;
 
         // Read fallback data here:
         let (raw_launchers, n) = parse_launcher_configs(&config.files.fallback)?;
@@ -340,21 +340,21 @@ fn parse_launcher_configs(
         // Tries to load the user-specified launchers. If it failes, it returns a non breaking
         // error.
         match File::open(&fallback_path) {
-            Ok(f) => simd_json::from_reader(f).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(fallback_path.clone()),
-                traceback: e.to_string(),
-            }),
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(SherlockError {
-                error: SherlockErrorType::FileExistError(fallback_path.clone()),
-                traceback: format!(
+            Ok(f) => simd_json::from_reader(f).map_err(|e| sherlock_error!(
+                SherlockErrorType::FileParseError(fallback_path.clone()),
+                e.to_string()
+            )),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(sherlock_error!(
+                SherlockErrorType::FileExistError(fallback_path.clone()),
+                format!(
                     "The file \"{}\" does not exist in the specified location.",
                     fallback_path.to_string_lossy()
-                ),
-            }),
-            Err(e) => Err(SherlockError {
-                error: SherlockErrorType::FileReadError(fallback_path.clone()),
-                traceback: e.to_string(),
-            }),
+                )
+            )),
+            Err(e) => Err(sherlock_error!(
+                SherlockErrorType::FileReadError(fallback_path.clone()),
+                e.to_string()
+            )),
         }
     }
 
@@ -364,20 +364,20 @@ fn parse_launcher_configs(
             "/dev/skxxtz/sherlock/fallback.json",
             gio::ResourceLookupFlags::NONE,
         )
-        .map_err(|e| SherlockError {
-            error: SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
-            traceback: format!("{}:{}\n{}", file!(), line!(), e.to_string()),
-        })?;
+        .map_err(|e| sherlock_error!(
+            SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
+            e.to_string()
+        ))?;
         let string_data = std::str::from_utf8(&data)
-            .map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
-                traceback: e.to_string(),
-            })?
+            .map_err(|e| sherlock_error!(
+                SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
+                e.to_string()
+            ))?
             .to_string();
-        serde_json::from_str(&string_data).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
-            traceback: e.to_string(),
-        })
+        serde_json::from_str(&string_data).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
+            e.to_string()
+        ))
     }
 
     let config = match load_user_fallback(fallback_path)

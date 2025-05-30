@@ -10,7 +10,7 @@ use super::{
     errors::{SherlockError, SherlockErrorType},
     files::{expand_path, home_dir},
 };
-use crate::{actions::util::parse_default_browser, loader::Loader};
+use crate::{actions::util::parse_default_browser, loader::Loader, sherlock_error};
 
 #[derive(Clone, Debug, Default)]
 pub struct SherlockFlags {
@@ -129,10 +129,10 @@ impl SherlockConfig {
         let write_file = |name: &str, content: &str| {
             let alias_path = path.join(name);
             if !alias_path.exists() {
-                if let Err(error) = fs::write(&alias_path, content).map_err(|e| SherlockError {
-                    error: SherlockErrorType::FileWriteError(alias_path),
-                    traceback: e.to_string(),
-                }) {
+                if let Err(error) = fs::write(&alias_path, content).map_err(|e| sherlock_error!(
+                    SherlockErrorType::FileWriteError(alias_path),
+                    e.to_string()
+                )) {
                     error_message(name, error);
                 } else {
                     created_message(name);
@@ -144,16 +144,16 @@ impl SherlockConfig {
 
         // build default config
         let config = SherlockConfig::with_root(&loc);
-        let toml_str = toml::to_string(&config).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileWriteError(path.clone()),
-            traceback: e.to_string(),
-        })?;
+        let toml_str = toml::to_string(&config).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileWriteError(path.clone()),
+            e.to_string()
+        ))?;
 
         // mkdir -p
-        fs::create_dir_all(&path).map_err(|e| SherlockError {
-            error: SherlockErrorType::DirCreateError(format!("{:?}", path)),
-            traceback: e.to_string(),
-        })?;
+        fs::create_dir_all(&path).map_err(|e| sherlock_error!(
+            SherlockErrorType::DirCreateError(format!("{:?}", path)),
+            e.to_string()
+        ))?;
         // create subdirs
         ensure_dir(&path.join("icons/"), "icons");
         ensure_dir(&path.join("scripts/"), "scripts");
@@ -183,19 +183,19 @@ impl SherlockConfig {
                 "/dev/skxxtz/sherlock/fallback.json",
                 gio::ResourceLookupFlags::NONE,
             )
-            .map_err(|e| SherlockError {
-                error: SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
-                traceback: e.to_string(),
-            })?;
+            .map_err(|e| sherlock_error!(
+                SherlockErrorType::ResourceLookupError("fallback.json".to_string()),
+                e.to_string()
+            ))?;
 
-            let json_str = std::str::from_utf8(&data).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
-                traceback: e.to_string(),
-            })?;
-            if let Err(error) = fs::write(&fallback_path, json_str).map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(fallback_path),
-                traceback: e.to_string(),
-            }) {
+            let json_str = std::str::from_utf8(&data).map_err(|e| sherlock_error!(
+                SherlockErrorType::FileParseError(PathBuf::from("fallback.json")),
+                e.to_string()
+            ))?;
+            if let Err(error) = fs::write(&fallback_path, json_str).map_err(|e| sherlock_error!(
+                SherlockErrorType::FileWriteError(fallback_path),
+                e.to_string()
+            )) {
                 error_message("fallback.json", error);
             } else {
                 created_message("fallback.json");
@@ -246,13 +246,13 @@ impl SherlockConfig {
                 _ => {}
             }
         } else {
-            return Err(SherlockError {
-                error: SherlockErrorType::FileParseError(path.clone()),
-                traceback: format!(
+            return Err(sherlock_error!(
+                SherlockErrorType::FileParseError(path.clone()),
+                format!(
                     "The file \"{}\" is not in a valid format.",
                     &path.to_string_lossy()
-                ),
-            });
+                )
+            ));
         }
 
         match fs::read_to_string(&path) {
@@ -260,23 +260,23 @@ impl SherlockConfig {
                 let config_res: Result<SherlockConfig, SherlockError> = match filetype.as_str() {
                     "json" => {
                         let mut bytes = config_str.into_bytes();
-                        simd_json::from_slice(&mut bytes).map_err(|e| SherlockError {
-                            error: SherlockErrorType::FileParseError(path.clone()),
-                            traceback: e.to_string(),
-                        })
+                        simd_json::from_slice(&mut bytes).map_err(|e| sherlock_error!(
+                            SherlockErrorType::FileParseError(path.clone()),
+                            e.to_string()
+                        ))
                     }
-                    "toml" => toml::de::from_str(&config_str).map_err(|e| SherlockError {
-                        error: SherlockErrorType::FileParseError(path.clone()),
-                        traceback: e.to_string(),
-                    }),
+                    "toml" => toml::de::from_str(&config_str).map_err(|e| sherlock_error!(
+                        SherlockErrorType::FileParseError(path.clone()),
+                        e.to_string()
+                    )),
                     _ => {
-                        return Err(SherlockError {
-                            error: SherlockErrorType::FileParseError(path.clone()),
-                            traceback: format!(
+                        return Err(sherlock_error!(
+                            SherlockErrorType::FileParseError(path.clone()),
+                            format!(
                                 "The file \"{}\" is not in a valid format.",
                                 &path.to_string_lossy()
-                            ),
-                        })
+                            )
+                        ))
                     }
                 };
                 match config_res {
@@ -294,20 +294,20 @@ impl SherlockConfig {
             }
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
-                    let error = SherlockError {
-                        error: SherlockErrorType::FileExistError(path),
-                        traceback: e.to_string(),
-                    };
+                    let error = sherlock_error!(
+                        SherlockErrorType::FileExistError(path),
+                        e.to_string()
+                    );
 
                     let mut config = SherlockConfig::default();
 
                     config = SherlockConfig::apply_flags(sherlock_flags, config);
                     Ok((config, vec![error]))
                 }
-                _ => Err(SherlockError {
-                    error: SherlockErrorType::FileReadError(path),
-                    traceback: e.to_string(),
-                })?,
+                _ => Err(sherlock_error!(
+                    SherlockErrorType::FileReadError(path),
+                    e.to_string()
+                ))?,
             },
         }
     }
@@ -732,10 +732,10 @@ pub fn get_terminal() -> Result<String, SherlockError> {
     if let Some(t) = terminal {
         Ok(t)
     } else {
-        Err(SherlockError{
-                error: SherlockErrorType::ConfigError(Some("Failed to get terminal".to_string())),
-                traceback: "Unable to locate or parse a valid terminal app. Ensure that the terminal app is correctly specified in the configuration file or environment variables.".to_string(),
-            })
+        Err(sherlock_error!(
+                SherlockErrorType::ConfigError(Some("Failed to get terminal".to_string())),
+                "Unable to locate or parse a valid terminal app. Ensure that the terminal app is correctly specified in the configuration file or environment variables."
+        ))
     }
 }
 fn is_terminal_installed(terminal: &str) -> bool {

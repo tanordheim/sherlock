@@ -17,7 +17,7 @@ use serde::Deserialize;
 use crate::actions::execute_from_attrs;
 use crate::loader::util::JsonCache;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
-use crate::CONFIG;
+use crate::{sherlock_error, CONFIG};
 
 use super::tiles::util::TextViewTileBuilder;
 
@@ -180,17 +180,17 @@ pub struct SherlockCounter {
 }
 impl SherlockCounter {
     fn new() -> Result<Self, SherlockError> {
-        let home = env::var("HOME").map_err(|e| SherlockError {
-            error: SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
-            traceback: e.to_string(),
-        })?;
+        let home = env::var("HOME").map_err(|e| sherlock_error!(
+            SherlockErrorType::EnvVarNotFoundError("HOME".to_string()),
+            e.to_string()
+        ))?;
         let home_dir = PathBuf::from(home);
         let path = home_dir.join(".sherlock/sherlock_count");
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).map_err(|e| SherlockError {
-                error: SherlockErrorType::DirCreateError(".sherlock".to_string()),
-                traceback: e.to_string(),
-            })?;
+            fs::create_dir_all(parent).map_err(|e| sherlock_error!(
+                SherlockErrorType::DirCreateError(".sherlock".to_string()),
+                e.to_string()
+            ))?;
         }
         Ok(Self { path })
     }
@@ -206,33 +206,33 @@ impl SherlockCounter {
                 return Ok(0);
             }
             Err(e) => {
-                return Err(SherlockError {
-                    error: SherlockErrorType::FileReadError(self.path.clone()),
-                    traceback: e.to_string(),
-                });
+                return Err(sherlock_error!(
+                    SherlockErrorType::FileReadError(self.path.clone()),
+                    e.to_string()
+                ));
             }
         };
         let mut buf = [0u8; 4];
 
-        file.read_exact(&mut buf).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileReadError(self.path.clone()),
-            traceback: e.to_string(),
-        })?;
+        file.read_exact(&mut buf).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileReadError(self.path.clone()),
+            e.to_string()
+        ))?;
         Ok(u32::from_le_bytes(buf))
     }
     fn write(&self, count: u32) -> Result<(), SherlockError> {
-        let file = File::create(self.path.clone()).map_err(|e| SherlockError {
-            error: SherlockErrorType::FileWriteError(self.path.clone()),
-            traceback: e.to_string(),
-        })?;
+        let file = File::create(self.path.clone()).map_err(|e| sherlock_error!(
+            SherlockErrorType::FileWriteError(self.path.clone()),
+            e.to_string()
+        ))?;
 
         let mut writer = BufWriter::new(file);
         writer
             .write_all(&count.to_le_bytes())
-            .map_err(|e| SherlockError {
-                error: SherlockErrorType::FileWriteError(self.path.clone()),
-                traceback: e.to_string(),
-            })?;
+            .map_err(|e| sherlock_error!(
+                SherlockErrorType::FileWriteError(self.path.clone()),
+                e.to_string()
+            ))?;
 
         Ok(())
     }
