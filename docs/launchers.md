@@ -10,20 +10,21 @@ Launchers are defined in the `fallback.json` file located in your config directo
 The launcher can be of the following types:<br>
 
 - **[Category Launcher](#category-launcher):** Groups your launchers.
-- **[App Launcher](#app-launcher):** Launches your apps. 
+- **[App Launcher](#app-launcher):** Launches your apps.
 - **[Bookmark Launcher](#bookmark-launcher):** Finds and launches your browser bookmarks.
-- **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default web browser. The used search engine is configurable and the most common search engines are included. 
+- **[Web Launcher](#web-launcher):** Opens the ``{keyword}`` in your default web browser. The used search engine is configurable and the most common search engines are included.
 - **[Calculator](#calculator):** Converts your input into a math equation and displays its result. On Return, it also copies the result into the clipboard.
 - **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the URL in the default web browser. Also displays hex and rgb colors.
 - **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **[Debug](#debug-launcher):** This launcher allows you to run debug commands from within Sherlock. For example clearing the cache or app count.
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
-- **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins. 
+- **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins.
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
 - **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
 
 ## Shared Launcher Attributes
+
 `[UI]` - used for UI <br>
 `[FC]` - used to specify behaviour <br>
 
@@ -47,11 +48,41 @@ The launcher can be of the following types:<br>
 | `on_return`     | `[FC]` | Specifies what to do if return is pressed on the tile. |
 | `spawn_focus`     | `[FC]` | Determines whether the tile should automatically gain focus when it appears as the first item in the list. |
 | `shortcut`     | `[FC]` | Determines whether the tile should have the shortcut indicator on the side. |
+| `actions`     | `[FC]` | Sets custom actions for launchers or – if applicable – its children. Examples: [Debug Launcher](#debug-launcher), Detailed: [Actions](#actions)|
 
+## Complex Attributes
+
+### actions
+
+Actions are a list/array of maps with the following strcuture:
+
+```json
+{
+    "name": "display name",
+    "exec": "should be executed",
+    "icon": "display icon",
+    "method": "some method"
+}
+```
+
+#### Available Methods
+
+- `category`: Uses the `exec` to open a new mode
+- `app_launcher`: Opens the `exec` as an app
+- `command`: Opens the `exec` as a command
+- `debug`: Matches the `exec` against
+  - `clear_cache`: To clear the application's cache
+  - `show_errors`: To switch to the error/warning screen
+  - `reset_counts`: To reset the execution counter
+
+---
+
+## Category Launcher
 
 <br>
 
 ## Category Launcher
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="category-launcher" width="100%" src="assets/CategoryTile.svg">
@@ -82,20 +113,25 @@ The launcher can be of the following types:<br>
     "home": true
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **commands**:<br>
 (required)<br>
+
 1. `name field`: the name you want to have displayed for the category
-2. `icon`: the icon-name for the icon to display 
+2. `icon`: the icon-name for the icon to display
 <br>
 
 (optional)<br>
+
 1. `icon_class`: Sets the css class for the icon to style it according to your theme
 2. `search_string`: the string to match to on search
 3. `exec`: the alias of the launcher you want to execute. If left empty, will not do anything
 <br>
 
 ## App Launcher
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="app-launcher" width="100%" src="assets/AppTile.svg">
@@ -113,9 +149,11 @@ The launcher can be of the following types:<br>
     "home": true
 }
 ```
+
 <br>
 
 ## Bookmark Launcher
+
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BookmarkTile.svg">
@@ -139,6 +177,7 @@ The launcher can be of the following types:<br>
 <br>
 
 ### Supported Browsers
+
 Currently these are the supported launchers. It is beneficiary to set the `browser` key in the `default_apps`section.
 
 | Browser   | Name in `config.toml`                                      |
@@ -152,6 +191,7 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
 <br>
 
 ## Web Launcher
+
 <div align="center">
   <picture>
     <img alt="web-launcher" width="100%" src="assets/BrowserTile.svg">
@@ -174,9 +214,12 @@ Currently these are the supported launchers. It is beneficiary to set the `brows
     "priority": 100
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **`search_engine`** (required):
 Can be either of the following:
+
 | Search Engine   | URL                                      |
 |-----------------|------------------------------------------|
 | **Google**      | `https://www.google.com/search?q={keyword}` |
@@ -197,6 +240,7 @@ Sets the icon-name the launcher should show.
 <br>
 
 ## Calculator
+
 <div align="center">
   <img alt="calc-launcher-math" width="100%" src="assets/CalcTile.svg">
   <br />
@@ -217,19 +261,24 @@ Sets the icon-name the launcher should show.
     "priority": 1
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **`capabilities`** (optional):<br>
-Specifies what the launcher should parse: 
-- **`calc.math`** - displays the solutions to mathematical problems 
-- **`calc.lengths`** - displays the solutions to length transformations 
-- **`calc.weights`** - displays the solutions to weight transformations 
-- **`calc.volumes`** - displays the solutions to volume transformations 
-- **`calc.temperatures`** - displays the solutions to temerature transformations 
+Specifies what the launcher should parse:
+
+- **`calc.math`** - displays the solutions to mathematical problems
+- **`calc.lengths`** - displays the solutions to length transformations
+- **`calc.weights`** - displays the solutions to weight transformations
+- **`calc.volumes`** - displays the solutions to volume transformations
+- **`calc.temperatures`** - displays the solutions to temerature transformations
+
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
 <br>
 
 ## Clipboard Launcher
+
 <div align="center">
   <img alt="clipboard-launcher-url" width="100%" src="assets/ClipboardLink.svg" />
   <br>
@@ -257,26 +306,32 @@ Specifies what the launcher should parse:
     "home": true
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **`capabilities`** (optional):<br>
-Specifies what the launcher should parse: 
+Specifies what the launcher should parse:
+
 - **`url`** - parses URLs to launch in the web browser
 - **`colors.hex`** - displays hex colors in Sherlock. Format supports #[a-fA-F0-9]{6,8}
 - **`colors.rgb`** - displays rgb colors in Sherlock. Format supports optional rgb prefix and optional parentheses.
 - **`colors.hsl`** - displays hsl colors in Sherlock. Format supports optional hsl prefix and optional parentheses.
-- **`calc.math`** - displays the solutions to mathematical problems 
-- **`calc.lengths`** - displays the solutions to length transformations 
-- **`calc.weights`** - displays the solutions to weight transformations 
-- **`calc.volumes`** - displays the solutions to volume transformations 
-- **`calc.temperatures`** - displays the solutions to temerature transformations 
-> **💡 Note:** 
+- **`calc.math`** - displays the solutions to mathematical problems
+- **`calc.lengths`** - displays the solutions to length transformations
+- **`calc.weights`** - displays the solutions to weight transformations
+- **`calc.volumes`** - displays the solutions to volume transformations
+- **`calc.temperatures`** - displays the solutions to temerature transformations
+
+> **💡 Note:**
 > You can also use
+>
 > - `colors.all` to use all available color formats
 > - `calc.units` to use all available unit transformations
 
 <br>
 
 ## Command Launcher
+
 ```json
 {
     "name": "Example Command",
@@ -304,11 +359,14 @@ Specifies what the launcher should parse:
     "priority": 5
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **commands** (required):<br>
 Has following fields of its own:
+
 1. `name field` / the name of the application (is the field where command name is the value currently)
-2. `icon` / the icon-name for the icon to display 
+2. `icon` / the icon-name for the icon to display
 3. `icon_class` / Sets the css class for the icon to style it according to your theme
 4. `exec` / the command to execute
 5. `search_string` / the string to match to on search
@@ -318,6 +376,7 @@ Has following fields of its own:
 <br>
 
 ## Debug Launcher
+
 ```json
 {
     "name": "Debug",
@@ -335,16 +394,33 @@ Has following fields of its own:
                 "exec": "reset_counts",
                 "search_string": "reset;clear;counts;appcounts"
             }
-        }
+        },
+        "actions": [
+            {
+                "name": "Clear Cache",
+                "icon": "sherlock-process",
+                "exec": "clear_cache",
+                "method": "debug"
+            },
+            {
+                "name": "Reset App Counts",
+                "icon": "sherlock-process",
+                "exec": "reset_counts",
+                "method": "debug"
+            }
+        ]
     },
     "priority": 0
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **commands** (required):<br>
 Has following fields of its own:
+
 1. `name field` / the name of the application (is the field where command name is the value currently)
-2. `icon` / the icon-name for the icon to display 
+2. `icon` / the icon-name for the icon to display
 3. `icon_class` / Sets the css class for the icon to style it according to your theme
 4. `exec` / the command to execute
 5. `search_string` / the string to match on search
@@ -352,12 +428,14 @@ Has following fields of its own:
 7. `tag_end` / specifies what will be displayed in the end tag
 
 ### Available Debug Commands
+
 - `clear_cache`: Clears the files within the location set as cache.
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
 
 <br>
 
 ## Bulk Text
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="bulk-text-launcher" width="100%" src="assets/BulkText.svg">
@@ -381,7 +459,9 @@ Has following fields of its own:
     "shortcut": false
 }
 ```
-### Arguments (args):
+
+### Arguments (args)
+
 **`icon`** (required):<br>
 Specifies the icon shown for the command.<br>
 
@@ -391,11 +471,12 @@ Specifies the program that should be run. **Note:** that its probably suitable t
 **`exec-args`** (optional):<br>
 Specifies the arguments to pass along to the `exec` program.<br>
 
-> The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki) 
+> The provided snippet works with the project [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki)
 
 <br>
 
 ## Teams Event
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="teams-event-launcher" width="100%" src="assets/TeamsTile.svg">
@@ -404,6 +485,7 @@ Specifies the arguments to pass along to the `exec` program.<br>
 <br>
 
 > **🚨 Warning:** Currently only supports Thunderbird calendar events
+
 ```json
 {
     "name": "Teams Event",
@@ -419,7 +501,8 @@ Specifies the arguments to pass along to the `exec` program.<br>
 }
 ```
 
-### Arguments (args):
+### Arguments (args)
+
 **`icon`** (optional):<br>
 Specifies the icon shown for the event.<br>
 
@@ -435,6 +518,7 @@ Specifies the second offset from the `date` parameter.<br>
 <br>
 
 ## Music Player
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="music-launcher" width="100%" src="assets/MprisTile.svg">
@@ -458,6 +542,7 @@ Specifies the second offset from the `date` parameter.<br>
 <br>
 
 ## Process Terminator
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="process-terminator-launcher" width="100%" src="assets/ProcessTerminator.svg">
@@ -479,6 +564,7 @@ Specifies the second offset from the `date` parameter.<br>
 <br>
 
 ## Weather Launcher
+
 <div align="center" style="text-align:center; border-radius:10px;">
   <picture>
     <img alt="weather-launcher" width="100%" src="assets/WeatherWidget.svg">
@@ -503,7 +589,7 @@ Specifies the second offset from the `date` parameter.<br>
 }
 ```
 
-### Arguments (args):
+### Arguments (args)
 
 **`location`** (required):<br>
 Specifies the location for which the weather should be gathered.<br>
