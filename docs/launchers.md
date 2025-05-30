@@ -1,4 +1,5 @@
 # Launchers
+
 Launchers are the backbone of Sherlock. Each of Sherlock's items – including applications, custom commands, or functional widgets like the weather – inherit from a Launcher. The `fallback.json` file can be thought of as something like Sherlock's "package manager", used to toggle specific features on and off or to customize their behavior.<br>
 
 The default location for the `fallback.json` file is in your Sherlock config
@@ -20,6 +21,7 @@ The launcher can be of the following types:<br>
 - **[Clipboard Launcher](#clipboard-launcher):** Checks if your clipboard currently holds a URL. On Return, it opens the URL in the default web browser. Also displays hex and rgb colors.
 - **[Command](#command-launcher):** This field can execute commands that do not rely on the ``{keyword}`` attribute (such as connecting to a specific wifi).
 - **[Debug](#debug-launcher):** This launcher allows you to run debug commands from within Sherlock. For example clearing the cache or app count.
+- **[Emoji](#emoji-picker):** This launcher allows you to search and pick emojis.
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins.
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
@@ -56,7 +58,9 @@ The launcher can be of the following types:<br>
 ## Complex Attributes
 
 ### actions
+
 Actions are used to define entries within Sherlock's context menu. They are defined as an array of actions, following a simple structure:
+
 ```json
 {
     "name": "display name",
@@ -65,13 +69,15 @@ Actions are used to define entries within Sherlock's context menu. They are defi
     "method": "some method"
 }
 ```
+
 **Arguments**:
+
 - `name`: Defines the name to be shown in the context menu
 - `icon`: Defines the icon to be shown in the context menu
 - `exec`: The argument to be processed by `method`. For instance, in case of `app_launcher`, this should be the app with its flags
 - `method`: The function to be executed whenever you activate this menu entry
 
-#### Available Methods 
+#### Available Methods
 
 - `category`: Uses the `exec` to open a new mode
 - `app_launcher`: Opens the `exec` as an app
@@ -440,6 +446,18 @@ Has following fields of its own:
 - `reset_counts`: Resets the execution counter – the counter responsible for sorting based on activity.
 
 <br>
+
+## Emoji Picker
+
+```json
+{
+    "name": "Emoji Picker",
+    "type": "emoji_picker",
+    "args": {},
+    "priority": 4,
+    "home": false
+}
+```
 
 ## Bulk Text
 
