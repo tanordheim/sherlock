@@ -1,5 +1,6 @@
 use std::os::unix::net::UnixStream;
 
+use crate::loader::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, SOCKET_PATH};
 use std::io::{Read, Write};
@@ -16,11 +17,10 @@ impl SherlockDaemon {
 
         for stream in listener.incoming() {
             if let Ok(mut stream) = stream {
-                let mut buffer = [0; 1024];
-                match stream.read(&mut buffer) {
+                match stream.read_sized() {
                     Ok(bytes_read) => {
-                        if bytes_read > 0 {
-                            let received_data = String::from_utf8_lossy(&buffer[..bytes_read]);
+                        if bytes_read.len() > 0 {
+                            let received_data = String::from_utf8_lossy(&bytes_read);
                             let received_data = received_data.trim();
                             match received_data {
                                 "show" => {
@@ -60,12 +60,13 @@ impl SherlockDaemon {
                 e.to_string()
             )
         })?;
-        stream.write_all(b"show").map_err(|e| {
-            sherlock_error!(
-                SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
-                e.to_string()
-            )
-        })?;
+
+        let pipe = Loader::load_pipe_args();
+        if pipe.is_empty() {
+            stream.write_sized(b"show")?;
+        } else {
+            stream.write_sized(pipe.as_slice())?;
+        }
 
         Ok(())
     }
@@ -74,5 +75,49 @@ impl SherlockDaemon {
 impl Drop for SherlockDaemon {
     fn drop(&mut self) {
         let _ = self.remove();
+    }
+}
+
+trait SizedMessage {
+    fn write_sized(&mut self, buf: &[u8]) -> Result<(), SherlockError>;
+    fn read_sized(&mut self) -> Result<Vec<u8>, SherlockError>;
+}
+impl SizedMessage for UnixStream {
+    fn write_sized(&mut self, buf: &[u8]) -> Result<(), SherlockError> {
+        let buf_len = buf.len() as u32;
+        self.write_all(&buf_len.to_be_bytes()).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+        self.write_all(buf).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+
+        Ok(())
+    }
+    fn read_sized(&mut self) -> Result<Vec<u8>, SherlockError> {
+        let mut buf_len = [0u8; 4];
+        self.read_exact(&mut buf_len).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+        let msg_len = u32::from_be_bytes(buf_len) as usize;
+
+        let mut buf = vec![0u8; msg_len];
+        self.read_exact(&mut buf).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketWriteError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+
+        Ok(buf)
     }
 }

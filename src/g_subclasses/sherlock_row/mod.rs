@@ -21,6 +21,20 @@ impl SherlockRow {
     pub fn new() -> Self {
         Object::builder().build()
     }
+    pub fn show(&self) {
+        let imp = self.imp();
+        let search = imp.search.borrow().to_string();
+        let prio = imp.priority.get();
+        let home = imp.home.get();
+        let spawn = imp.spawn_focus.get();
+        let alias = imp.alias.borrow().to_string();
+
+        println!("Search: {:?}", search);
+        println!("Prio: {:?}", prio);
+        println!("Home: {:?}", home);
+        println!("Spawn: {:?}", spawn);
+        println!("Alias: {:?}", alias);
+    }
     // setters
     pub fn set_spawn_focus(&self, focus: bool) {
         self.imp().spawn_focus.set(focus);

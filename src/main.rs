@@ -1,13 +1,14 @@
 // CRATE
 use gio::glib::MainContext;
 use gio::prelude::*;
-use gtk4::prelude::{BoxExt, EntryExt, GtkApplicationExt, WidgetExt};
+use gtk4::prelude::{EntryExt, GtkApplicationExt, WidgetExt};
 use gtk4::Application;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
+use ui::tiles::Tile;
 use ui::util::{SearchHandler, SearchUI};
 use utils::config::SherlockFlags;
 
@@ -63,6 +64,7 @@ impl Sherlock {
         let handler = self.search_handler.as_ref()?;
         if let Some(title) = ui.mode_title_holder.upgrade() {
             title.set_visible(false);
+            title.unparent();
         }
         if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
             model.remove_all();
@@ -73,6 +75,20 @@ impl Sherlock {
         if let Some(status) = ui.status_bar.upgrade() {
             status.set_visible(false);
         }
+        Some(())
+    }
+    pub fn display_pipe(&self, content: &str) -> Option<()> {
+        let handler = self.search_handler.as_ref()?;
+        let model = handler.model.as_ref().and_then(|s| s.upgrade())?;
+        handler.clear();
+
+        let buf = content.as_bytes().to_vec();
+        let parsed = deserialize_pipe(buf);
+        let data = Tile::pipe_data(&parsed, "print");
+        println!("{:?}", data.len());
+        data.into_iter().for_each(|elem| {
+            model.append(&elem);
+        });
         Some(())
     }
 }
@@ -228,7 +244,8 @@ async fn main() {
                                         sherlock.borrow().show_raw();
                                     }
                                     _ => {
-                                        println!("{:?}", msg);
+                                        window.set_visible(true);
+                                        sherlock.borrow().display_pipe(&msg);
                                     }
                                 }
                             }

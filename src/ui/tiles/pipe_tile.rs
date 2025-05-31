@@ -94,6 +94,8 @@ impl Tile {
                 let attrs = get_attrs_map(constructor);
 
                 builder.object.set_spawn_focus(true);
+                builder.object.set_home(true);
+                builder.object.set_priority(1.0);
                 builder.object.set_search(&search);
                 builder
                     .object
