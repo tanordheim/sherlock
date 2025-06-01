@@ -260,6 +260,7 @@ impl SearchHandler {
             model.remove_all();
         }
     }
+
     pub fn populate(&self) {
         // clear potentially stuck rows
         self.clear();
@@ -284,7 +285,7 @@ impl SearchHandler {
             let mut holder: HashMap<String, Option<String>> = HashMap::new();
             let rows: Vec<WeakRef<SherlockRow>> = launchers
                 .into_iter()
-                .map(|launcher| {
+                .map(|mut launcher| {
                     let patch = launcher.get_patch();
                     if let Some(alias) = &launcher.alias {
                         holder.insert(format!("{} ", alias), launcher.name);

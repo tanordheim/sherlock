@@ -12,6 +12,7 @@ use crate::launcher::calc_launcher::CalculatorLauncher;
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::emoji_picker::EmojiPicker;
 use crate::launcher::event_launcher::EventLauncher;
+use crate::launcher::file_launcher::FileLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::weather_launcher::WeatherLauncher;
 use crate::launcher::{
@@ -71,6 +72,7 @@ impl Loader {
                     "command" => parse_command_launcher(&raw, &counts, max_decimals),
                     "debug" => parse_debug_launcher(&raw, &counts, max_decimals),
                     "emoji_picker" => parse_emoji_launcher(&raw),
+                    "files" => parse_file_launcher(&raw),
                     "teams_event" => parse_event_launcher(&raw),
                     "process" => parse_process_launcher(&raw),
                     "weather" => parse_weather_launcher(&raw),
@@ -299,6 +301,31 @@ fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
         .unwrap_or("+15 minutes");
     let event = EventLauncher::get_event(date, event_start, event_end);
     LauncherType::Event(EventLauncher { event, icon })
+}
+fn parse_file_launcher(raw: &RawLauncher) -> LauncherType {
+    let mut data: HashSet<AppData> = HashSet::with_capacity(1);
+    let mut app_data = AppData::from_raw_launcher(raw);
+    if app_data.icon.is_none() {
+        app_data.icon = Some(String::from("files"))
+    }
+    data.insert(app_data);
+    let value = &raw.args["dirs"];
+    match value.as_array() {
+        Some(arr) => {
+            let dirs: HashSet<PathBuf> = arr
+                .into_iter()
+                .filter_map(|s| s.as_str())
+                .map(|s| PathBuf::from(s))
+                .filter(|p| p.exists() && p.is_dir())
+                .collect();
+            LauncherType::File(FileLauncher {
+                dirs,
+                data,
+                files: None,
+            })
+        }
+        _ => LauncherType::Empty,
+    }
 }
 fn parse_process_launcher(raw: &RawLauncher) -> LauncherType {
     let icon = raw

@@ -2579,6 +2579,7 @@ dependencies = [
  "simd-json",
  "tokio",
  "toml",
+ "walkdir",
  "wayland-protocols 0.32.6",
  "zbus",
 ]

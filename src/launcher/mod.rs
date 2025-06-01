@@ -9,6 +9,7 @@ pub mod category_launcher;
 pub mod clipboard_launcher;
 pub mod emoji_picker;
 pub mod event_launcher;
+pub mod file_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
 mod utils;
@@ -30,6 +31,7 @@ use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
 use emoji_picker::EmojiPicker;
 use event_launcher::EventLauncher;
+use file_launcher::FileLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::CommandLauncher;
 use weather_launcher::{WeatherData, WeatherLauncher};
@@ -46,6 +48,7 @@ pub enum LauncherType {
     Command(CommandLauncher),
     Emoji(EmojiPicker),
     Event(EventLauncher),
+    File(FileLauncher),
     MusicPlayer(MusicPlayerLauncher),
     Process(ProcessLauncher),
     Weather(WeatherLauncher),
@@ -120,7 +123,7 @@ impl Launcher {
 
 impl Launcher {
     // TODO: tile method recreates already stored data...
-    pub fn get_patch(&self) -> Vec<SherlockRow> {
+    pub fn get_patch(&mut self) -> Vec<SherlockRow> {
         match &self.launcher_type {
             LauncherType::App(app) => Tile::app_tile(self, &app.apps),
             LauncherType::Bookmark(bmk) => Tile::app_tile(self, &bmk.bookmarks),
@@ -130,6 +133,7 @@ impl Launcher {
             LauncherType::Command(cmd) => Tile::app_tile(self, &cmd.commands),
             LauncherType::Event(evl) => Tile::event_tile(self, evl),
             LauncherType::Emoji(emj) => Tile::app_tile(self, &emj.data),
+            LauncherType::File(f) => Tile::app_tile(self, &f.data),
             LauncherType::Process(proc) => Tile::process_tile(self, &proc),
             LauncherType::Web(web) => Tile::web_tile(self, &web),
 
