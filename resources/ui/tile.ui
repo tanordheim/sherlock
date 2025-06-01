@@ -5,7 +5,7 @@
         <property name="hexpand">true</property> 
 
         <child>
-            <object class="GtkBox" id="app-icon-holder">
+            <object class="GtkBox" id="icon-holder">
                 <property name="valign">center</property>
                 <property name="name">icon-holder</property>
                 <child>

@@ -1,8 +1,9 @@
 use std::{fmt::Debug, path::PathBuf};
 
-use gtk4::prelude::WidgetExt;
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
+use gtk4::prelude::{BoxExt, WidgetExt};
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, ui::tiles::util::TileBuilder};
+use crate::{g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile};
 
 #[macro_export]
 macro_rules! sherlock_error {
@@ -23,34 +24,24 @@ impl SherlockError {
         }
     }
     pub fn tile(&self, tile_type: &str) -> SherlockRow {
-        let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/error_tile.ui");
+        let tile = ErrorTile::new();
+        let imp = tile.imp();
+        let object = SherlockRow::new();
+        object.append(&tile);
 
         if let Some((class, icon)) = match tile_type {
             "ERROR" => Some(("error", "🚨")),
             "WARNING" => Some(("warning", "⚠️")),
             _ => None,
         } {
-            builder.object.set_css_classes(&["error-tile", class]);
+            object.set_css_classes(&["error-tile", class]);
             let (name, message) = self.error.get_message();
-            builder
-                .title
-                .as_ref()
-                .and_then(|tmp| tmp.upgrade())
-                .map(|title| {
-                    title.set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str())
-                });
-            builder
-                .content_title
-                .as_ref()
-                .and_then(|tmp| tmp.upgrade())
-                .map(|title| title.set_text(&message));
-            builder
-                .content_body
-                .as_ref()
-                .and_then(|tmp| tmp.upgrade())
-                .map(|body| body.set_text(self.traceback.trim()));
+            imp.title
+                .set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str());
+            imp.content_title.set_text(&message);
+            imp.content_body.set_text(self.traceback.trim());
         }
-        builder.object
+        object
     }
 }
 

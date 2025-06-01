@@ -5,13 +5,14 @@ use crate::actions::get_attrs_map;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::loader::pipe_loader::PipeData;
 use crate::prelude::IconComp;
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gdk_pixbuf::Pixbuf;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::BoxExt;
 use gtk4::prelude::WidgetExt;
 use gtk4::Image;
 
-use super::util::TileBuilder;
+use super::app_tile::AppTile;
 use super::Tile;
 
 impl Tile {
@@ -25,34 +26,23 @@ impl Tile {
                 item.description.as_deref().unwrap_or("")
             );
             if search.as_str() != ";" || item.binary.is_some() {
-                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                let tile = AppTile::new();
+                let imp = tile.imp();
+                let object = SherlockRow::new();
+                object.append(&tile);
 
+                // Set texts
                 if let Some(title) = &item.title {
-                    builder
-                        .title
-                        .as_ref()
-                        .and_then(|tmp| tmp.upgrade())
-                        .map(|t| t.set_text(&title));
+                    imp.title.set_text(&title);
                 }
-                builder
-                    .category
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|category| {
-                        if let Some(desc) = &item.description {
-                            category.set_text(&desc);
-                        } else {
-                            category.set_visible(false);
-                        }
-                    });
+                if let Some(name) = &item.description {
+                    imp.category.set_text(&name);
+                } else {
+                    imp.category.set_visible(false);
+                }
 
-                builder
-                    .icon
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|ico| {
-                        ico.set_icon(&item.icon, &None, &None);
-                    });
+                // Set icon
+                imp.icon.set_icon(&item.icon, &None, &None);
 
                 // Custom Image Data
                 if let Some(bin) = item.binary.clone() {
@@ -60,21 +50,14 @@ impl Tile {
                     if let Some(pixbuf) = Pixbuf::from_read(cursor).ok() {
                         let texture = gtk4::gdk::Texture::for_pixbuf(&pixbuf);
                         let image = Image::from_paintable(Some(&texture));
-                        builder
-                            .icon_holder
-                            .as_ref()
-                            .and_then(|tmp| tmp.upgrade())
-                            .map(|holder| holder.append(&image));
+                        imp.icon_holder.append(&image);
                         if let Some(size) = &item.icon_size {
                             image.set_pixel_size(*size);
                         }
                     }
                 } else {
-                    builder
-                        .icon
-                        .as_ref()
-                        .and_then(|tmp| tmp.upgrade())
-                        .map(|icon| icon.set_visible(item.icon.is_some()));
+                    let opacity: f64 = if item.icon.is_some() { 1.0 } else { 0.0 };
+                    imp.icon.set_opacity(opacity);
                 }
 
                 // Create attributes and enable action capability
@@ -93,18 +76,16 @@ impl Tile {
                 ]);
                 let attrs = get_attrs_map(constructor);
 
-                builder.object.set_spawn_focus(true);
-                builder.object.set_home(true);
-                builder.object.set_priority(1.0);
-                builder.object.set_search(&search);
-                builder
-                    .object
-                    .connect_local("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                        execute_from_attrs(&row, &attrs);
-                        None
-                    });
-                results.push(builder.object);
+                object.set_spawn_focus(true);
+                object.set_home(true);
+                object.set_priority(1.0);
+                object.set_search(&search);
+                object.connect_local("row-should-activate", false, move |row| {
+                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    execute_from_attrs(&row, &attrs);
+                    None
+                });
+                results.push(object);
             }
         }
         return results;

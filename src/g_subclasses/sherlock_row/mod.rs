@@ -19,7 +19,9 @@ glib::wrapper! {
 
 impl SherlockRow {
     pub fn new() -> Self {
-        Object::builder().build()
+        let myself: Self = Object::builder().build();
+        myself.add_css_class("tile");
+        myself
     }
     pub fn show(&self) {
         let imp = self.imp();

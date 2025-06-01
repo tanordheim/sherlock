@@ -121,6 +121,9 @@ mod imp {
         #[template_child(id = "icon-name")]
         pub icon: TemplateChild<Image>,
 
+        #[template_child(id = "icon-holder")]
+        pub icon_holder: TemplateChild<GtkBox>,
+
         #[template_child(id = "app-name-tag-start")]
         pub tag_start: TemplateChild<Label>,
 
