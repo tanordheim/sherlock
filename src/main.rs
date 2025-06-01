@@ -156,7 +156,7 @@ async fn main() {
                     } else {
                         let parsed = deserialize_pipe(pipe);
                         if let Some(c) = CONFIG.get() {
-                            let method: &str = c.pipe.method.as_deref().unwrap_or("print");
+                            let method: &str = c.runtime.method.as_deref().unwrap_or("print");
                             ui::user::display_pipe(&window, parsed, method, error_model)
                         } else {
                             return;

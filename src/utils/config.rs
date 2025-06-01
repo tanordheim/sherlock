@@ -26,6 +26,7 @@ pub struct SherlockFlags {
     pub method: Option<String>,
     pub field: Option<String>,
     pub sub_menu: Option<String>,
+    pub multi: bool,
 }
 /// Configuration sections:
 ///
@@ -69,7 +70,7 @@ pub struct SherlockConfig {
 
     /// Internal settings for JSON piping (e.g., default return action)
     #[serde(default)]
-    pub pipe: ConfigPipe,
+    pub runtime: Runtime,
 
     /// Configures expand feature
     #[serde(default)]
@@ -89,7 +90,10 @@ impl SherlockConfig {
             behavior: ConfigBehavior::default(),
             binds: ConfigBinds::default(),
             files: ConfigFiles::default(),
-            pipe: ConfigPipe { method: None },
+            runtime: Runtime {
+                method: None,
+                multi: false,
+            },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
         }
@@ -103,7 +107,10 @@ impl SherlockConfig {
             behavior: ConfigBehavior::default(),
             binds: ConfigBinds::default(),
             files: ConfigFiles::with_root(root),
-            pipe: ConfigPipe { method: None },
+            runtime: Runtime {
+                method: None,
+                multi: false,
+            },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
         }
@@ -385,7 +392,8 @@ impl SherlockConfig {
             &home,
         );
         config.behavior.sub_menu = sherlock_flags.sub_menu.clone();
-        config.pipe.method = sherlock_flags.method.clone();
+        config.runtime.method = sherlock_flags.method.clone();
+        config.runtime.multi = sherlock_flags.multi;
         config.behavior.field = sherlock_flags.field.clone();
 
         if sherlock_flags.daemonize {
@@ -638,9 +646,12 @@ pub struct ConfigBinds {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ConfigPipe {
+pub struct Runtime {
     #[serde(default)]
     pub method: Option<String>,
+
+    #[serde(default)]
+    pub multi: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

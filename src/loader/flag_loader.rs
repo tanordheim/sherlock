@@ -66,6 +66,7 @@ impl SherlockFlags {
             sub_menu: extract_flag_value("--sub-menu"),
             method: extract_flag_value("--method"),
             field: extract_flag_value("--field"),
+            multi: check_flag_existance("--multi"),
         })
     }
 }

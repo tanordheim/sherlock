@@ -1,14 +1,17 @@
 use std::{cell::RefCell, rc::Rc};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::{glib::WeakRef, ListStore};
+use gio::{
+    glib::{Object, WeakRef},
+    ListStore,
+};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
     ApplicationWindow, Box as GtkBox, Builder, CustomFilter, CustomSorter, Entry,
-    EventControllerKey, FilterListModel, Image, Justification, ListView, Overlay,
-    SignalListItemFactory, SingleSelection, SortListModel,
+    EventControllerKey, FilterListModel, Image, Justification, ListView, MultiSelection, Overlay,
+    SelectionModel, SignalListItemFactory, SingleSelection, SortListModel,
 };
 use levenshtein::levenshtein;
 
@@ -28,7 +31,7 @@ struct PipeUI {
     results: WeakRef<ListView>,
     search_bar: WeakRef<Entry>,
     search_icon_holder: WeakRef<GtkBox>,
-    selection: WeakRef<SingleSelection>,
+    selection: WeakRef<SelectionModel>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
     binds: ConfKeys,
@@ -170,7 +173,11 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
         }
     });
 
-    let selection = SingleSelection::new(Some(sorted_model));
+    let selection: SelectionModel = match CONFIG.get().map(|c| c.runtime.multi) {
+        Some(true) => MultiSelection::new(Some(sorted_model)).upcast(),
+        _ => SingleSelection::new(Some(sorted_model)).upcast(),
+    };
+
     results.set_model(Some(&selection));
 
     let tiles = Tile::pipe_data(&pipe_content, &method);
@@ -268,7 +275,7 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
     })
 }
 fn nav_event(
-    selection: WeakRef<SingleSelection>,
+    selection: WeakRef<SelectionModel>,
     results: WeakRef<ListView>,
     search_bar: WeakRef<Entry>,
     custom_binds: ConfKeys,
@@ -323,8 +330,30 @@ fn nav_event(
                 }
                 gdk::Key::Return => {
                     if let Some(upgr) = selection.upgrade() {
-                        if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
-                            row.emit_by_name::<()>("row-should-activate", &[]);
+                        match CONFIG.get().map(|s| s.runtime.multi) {
+                            Some(true) => {
+                                if let Some(items) = upgr
+                                    .downcast::<MultiSelection>()
+                                    .ok()
+                                    .and_then(|s| s.selected_items())
+                                {
+                                    items
+                                        .into_iter()
+                                        .filter_map(|r| r.downcast::<SherlockRow>().ok())
+                                        .for_each(|row| {
+                                            row.emit_by_name::<()>("row-should-activate", &[])
+                                        });
+                                }
+                            }
+                            _ => {
+                                if let Ok(sel) = upgr.downcast::<SingleSelection>() {
+                                    if let Some(row) =
+                                        sel.selected_item().and_downcast::<SherlockRow>()
+                                    {
+                                        row.emit_by_name::<()>("row-should-activate", &[]);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -402,4 +431,18 @@ fn change_event(
         }
     });
     Some(())
+}
+
+trait SelectionHelpers {
+    fn selected_items(&self) -> Option<Vec<Object>>;
+}
+impl SelectionHelpers for MultiSelection {
+    fn selected_items(&self) -> Option<Vec<Object>> {
+        let model = self.model()?;
+        let items: Vec<Object> = (0..self.n_items())
+            .filter(|&i| self.is_selected(i))
+            .filter_map(|i| model.item(i))
+            .collect();
+        Some(items)
+    }
 }
