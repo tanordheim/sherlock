@@ -4,9 +4,9 @@ use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
     glib::{
         self,
-        object::{Cast, CastNone, ObjectExt},
+        object::{Cast, CastNone, IsA, ObjectExt},
         variant::ToVariant,
-        WeakRef,
+        Object, WeakRef,
     },
     prelude::ListModelExt,
     ListStore,
@@ -134,6 +134,8 @@ pub trait SherlockNav {
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
+    fn mark_active(&self) -> Option<()>;
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>>;
 }
 impl SherlockNav for ListView {
     fn focus_offset(
@@ -265,6 +267,22 @@ impl SherlockNav for ListView {
             .collect();
         Some(weaks)
     }
+    fn mark_active(&self) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let current = selection.selected_item().and_downcast::<SherlockRow>()?;
+        current.set_active(!current.imp().active.get());
+        Some(())
+    }
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let actives: Vec<T> = (0..selection.n_items())
+            .filter_map(|i| selection.item(i).and_downcast::<SherlockRow>())
+            .filter(|r| r.active())
+            .map(|r| r.upcast::<Object>())
+            .filter_map(|r| r.downcast::<T>().ok())
+            .collect();
+        Some(actives)
+    }
 }
 impl SherlockNav for GridView {
     fn focus_next(&self, _context_model: Option<&WeakRef<ListStore>>) -> Option<()> {
@@ -328,6 +346,12 @@ impl SherlockNav for GridView {
         selection.selected_item()
     }
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
+        None
+    }
+    fn mark_active(&self) -> Option<()> {
+        None
+    }
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>> {
         None
     }
 }

@@ -3,7 +3,7 @@ mod imp;
 use std::{cell::Ref, future::Future, pin::Pin};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::glib::{object::ObjectExt, SignalHandlerId, WeakRef};
+use gio::glib::{object::ObjectExt, GString, SignalHandlerId, WeakRef};
 use glib::Object;
 use gtk4::{glib, prelude::WidgetExt};
 
@@ -43,6 +43,16 @@ impl SherlockRow {
     }
     pub fn set_shortcut(&self, shortcut: bool) {
         self.imp().shortcut.set(shortcut);
+    }
+    pub fn set_active(&self, active: bool) {
+        self.imp().active.set(active);
+        let class_name = GString::from("multi-active");
+        let class_exists = self.css_classes().contains(&class_name);
+        if class_exists && !active {
+            self.remove_css_class("multi-active");
+        } else if !class_exists && active {
+            self.add_css_class("multi-active");
+        }
     }
     pub fn set_search(&self, search: &str) {
         *self.imp().search.borrow_mut() = search.to_lowercase();
@@ -141,6 +151,9 @@ impl SherlockRow {
     }
     pub fn actions(&self) -> Ref<Vec<ApplicationAction>> {
         self.imp().actions.borrow()
+    }
+    pub fn active(&self) -> bool {
+        self.imp().active.get()
     }
     pub fn num_actions(&self) -> usize {
         self.imp().num_actions.get()

@@ -194,6 +194,7 @@ image {
     padding: 0px 10px;
     margin-bottom: 5px;
     border-radius: 4px;
+    border: 1px solid transparent;
 }
 
 .tile:hover *,
@@ -274,8 +275,12 @@ image {
 row:selected .tile {
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);
-    outline: none;
-    border: none;
+}
+row:selected .tile.multi-active,
+.tile.multi-active {
+    background: hsla(var(--foreground), 1);
+    background-color: hsla(var(--foreground), 1);
+    border: 1px solid hsla(var(--text), 1);
 }
 
 .tile:selected .tag,

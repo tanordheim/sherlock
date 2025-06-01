@@ -15,6 +15,7 @@ use crate::loader::util::ApplicationAction;
 /// ## Fields:
 /// * **spawn_focus**: Whether the tile should receive focus when Sherlock starts.
 /// * **shortcut**: Whether the tile can display `modkey + number` shortcuts.
+/// * **active**: Whether the row should be shown as active in multi selection
 /// * **gesture**: State to hold and replace double-click gestures.
 /// * **shortcut_holder**: A `GtkBox` widget that holds the `modkey + number` shortcut indicators.
 /// * **priority**: Determines the tile's ordering within the `GtkListView`.
@@ -35,6 +36,9 @@ pub struct SherlockRow {
 
     /// Whether the tile can display `modkey + number` shortcuts  
     pub shortcut: Cell<bool>,
+
+    /// Whether the row should be shown as active in multi selection
+    pub active: Cell<bool>,
 
     /// State to hold and replace double-click gestures
     pub gesture: OnceCell<GestureClick>,
