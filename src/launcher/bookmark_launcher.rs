@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use rusqlite::Connection;
 use std::collections::HashSet;
 use std::fs;
@@ -170,22 +171,25 @@ impl MozillaSqliteParser {
         }
         Ok(res)
     }
-    fn should_update_cache(path: &PathBuf) -> bool {
-        if !path.exists() {
+    fn should_update_cache(dest: &PathBuf, source: &PathBuf) -> bool {
+        if !dest.exists() {
             return true;
         }
 
-        if let Ok(metadata) = fs::metadata(path) {
-            if let Ok(mod_time) = metadata.modified() {
-                if let Ok(age) = SystemTime::now().duration_since(mod_time) {
-                    return age.as_secs() > 1 * 24 * 60 * 60; // older than 2 days
-                }
-            }
+        let source_mod = fs::metadata(source)
+            .ok()
+            .and_then(|meta| meta.modified().ok());
+        let dest_mod = fs::metadata(dest)
+            .ok()
+            .and_then(|meta| meta.modified().ok());
+
+        if let (Some(source), Some(dest)) = (source_mod, dest_mod) {
+            return source > dest;
         }
         true
     }
     fn copy_if_needed(src: &PathBuf, dst: &PathBuf) {
-        if Self::should_update_cache(dst) {
+        if Self::should_update_cache(dst, src) {
             if let Some(parent) = dst.parent() {
                 let _ = fs::create_dir_all(parent);
             }

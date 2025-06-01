@@ -20,6 +20,7 @@
     <gresource prefix="/org/gtk/libgtk/icons/">
         <file alias="google.svg">icons/google.svg</file>
         <file alias="sherlock-process.svg">icons/sherlock-process.svg</file>
+        <file alias="sherlock-back.svg">icons/sherlock-back.svg</file>
         <file alias="sherlock-pin.svg">icons/sherlock-pin.svg</file>
         <file alias="sherlock-devtools.svg">icons/sherlock-devtools.svg</file>
         <file alias="sherlock-bookmark.svg">icons/sherlock-bookmark.svg</file>
