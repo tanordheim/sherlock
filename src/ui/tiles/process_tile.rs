@@ -1,14 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 
 use crate::actions::{execute_from_attrs, get_attrs_map};
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::launcher::process_launcher::ProcessLauncher;
 use crate::launcher::Launcher;
+use crate::prelude::IconComp;
 
-use super::util::TileBuilder;
+use super::app_tile::AppTile;
 use super::Tile;
 
 impl Tile {
@@ -16,43 +18,28 @@ impl Tile {
         proc.processes
             .iter()
             .map(|(key, value)| {
-                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                let tile = AppTile::new();
+                let imp = tile.imp();
+                let object = SherlockRow::new();
+                object.append(&tile);
 
-                builder
-                    .category
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|category| {
-                        if let Some(name) = &launcher.name {
-                            category.set_text(name);
-                        } else {
-                            category.set_visible(false);
-                        }
-                    });
-                builder
-                    .title
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|title| title.set_markup(&value));
+                // Title and category
+                if let Some(name) = &launcher.name {
+                    imp.category.set_text(name);
+                } else {
+                    imp.category.set_visible(false);
+                }
+                imp.title.set_markup(&value);
 
-                builder
-                    .icon
-                    .as_ref()
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|icon| {
-                        if proc.icon.starts_with("/") {
-                            icon.set_from_file(Some(&proc.icon));
-                        } else {
-                            icon.set_icon_name(Some(&proc.icon));
-                        }
-                    });
+                // Icon stuff
+                imp.icon.set_icon(&Some(proc.icon.clone()), &None, &None);
 
                 // parent and child process ids
                 let (ppid, cpid) = key;
                 let parent = ppid.to_string();
                 let child = cpid.to_string();
 
-                let row_weak = builder.object.downgrade();
+                let row_weak = object.downgrade();
                 let update_closure = {
                     // Construct attrs and enable action capabilities
                     let row = row_weak.clone();
@@ -83,14 +70,14 @@ impl Tile {
                     }
                 };
 
-                builder.object.set_update(update_closure);
-                builder.object.with_launcher(&launcher);
-                builder.object.set_search(&value);
+                object.set_update(update_closure);
+                object.with_launcher(&launcher);
+                object.set_search(&value);
                 if launcher.shortcut {
-                    builder.object.set_shortcut_holder(builder.shortcut_holder);
+                    object.set_shortcut_holder(Some(imp.shortcut_holder.downgrade()));
                 }
 
-                builder.object
+                object
             })
             .collect()
     }

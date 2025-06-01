@@ -1,3 +1,4 @@
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -9,7 +10,7 @@ use crate::launcher::Launcher;
 use crate::loader::util::AppData;
 use crate::prelude::IconComp;
 
-use super::util::{update_tag, TileBuilder};
+use super::util::update_tag;
 use super::Tile;
 
 impl Tile {
@@ -17,23 +18,26 @@ impl Tile {
         commands
             .into_iter()
             .map(|value| {
-                let builder = TileBuilder::new("/dev/skxxtz/sherlock/ui/tile.ui");
+                // Append content to the sherlock row
+                let tile = AppTile::new();
+                let imp = tile.imp();
+                let object = SherlockRow::new();
+                object.append(&tile);
+                object.set_css_classes(&vec!["tile"]);
 
                 // Icon stuff
-                builder
-                    .icon
-                    .and_then(|tmp| tmp.upgrade())
-                    .map(|icon| icon.set_icon(&value.icon, &value.icon_class, &launcher.icon));
+                imp.icon
+                    .set_icon(&value.icon, &value.icon_class, &launcher.icon);
 
                 let update_closure = {
                     // Construct attrs and enable action capabilities
-                    let tag_start = builder.tag_start.clone();
-                    let tag_end = builder.tag_end.clone();
+                    let tag_start = imp.tag_start.downgrade();
+                    let tag_end = imp.tag_end.downgrade();
                     let tag_start_content = launcher.tag_start.clone();
                     let tag_end_content = launcher.tag_end.clone();
-                    let title = builder.title.clone();
-                    let category = builder.category.clone();
-                    let row_weak = builder.object.downgrade();
+                    let title = imp.title.downgrade();
+                    let category = imp.category.downgrade();
+                    let row_weak = object.downgrade();
 
                     let launcher = launcher.clone();
                     let attrs = get_attrs_map(vec![
@@ -52,21 +56,14 @@ impl Tile {
                         let tile_name = name.replace("{keyword}", keyword);
 
                         // update first tag
-                        if let Some(tag_start) = &tag_start {
-                            update_tag(&tag_start, &tag_start_content, keyword);
-                        }
+                        update_tag(&tag_start, &tag_start_content, keyword);
 
                         // update second tag
-                        if let Some(tag_end) = &tag_end {
-                            update_tag(&tag_end, &tag_end_content, keyword);
-                        }
+                        update_tag(&tag_end, &tag_end_content, keyword);
 
-                        title
-                            .as_ref()
-                            .and_then(|tmp| tmp.upgrade())
-                            .map(|title| title.set_text(&tile_name));
+                        title.upgrade().map(|title| title.set_text(&tile_name));
 
-                        category.as_ref().and_then(|tmp| tmp.upgrade()).map(|cat| {
+                        category.upgrade().map(|cat| {
                             if let Some(name) = &launcher.name {
                                 cat.set_text(name);
                             } else {
@@ -93,15 +90,77 @@ impl Tile {
                     }
                 };
 
-                builder.object.set_update(update_closure);
-                builder.object.with_launcher(launcher);
-                builder.object.with_appdata(&value);
-                builder.object.add_actions(&launcher.add_actions);
+                object.set_update(update_closure);
+                object.with_launcher(launcher);
+                object.with_appdata(&value);
+                object.add_actions(&launcher.add_actions);
                 if launcher.shortcut {
-                    builder.object.set_shortcut_holder(builder.shortcut_holder);
+                    object.set_shortcut_holder(Some(imp.shortcut_holder.downgrade()));
                 }
-                builder.object
+                object
             })
             .collect()
+    }
+}
+
+mod imp {
+    use gtk4::glib;
+    use gtk4::subclass::prelude::*;
+    use gtk4::CompositeTemplate;
+    use gtk4::{Box as GtkBox, Image, Label};
+
+    #[derive(CompositeTemplate, Default)]
+    #[template(resource = "/dev/skxxtz/sherlock/ui/tile.ui")]
+    pub struct AppTile {
+        #[template_child(id = "app-name")]
+        pub title: TemplateChild<Label>,
+
+        #[template_child(id = "launcher-type")]
+        pub category: TemplateChild<Label>,
+
+        #[template_child(id = "icon-name")]
+        pub icon: TemplateChild<Image>,
+
+        #[template_child(id = "app-name-tag-start")]
+        pub tag_start: TemplateChild<Label>,
+
+        #[template_child(id = "app-name-tag-end")]
+        pub tag_end: TemplateChild<Label>,
+
+        #[template_child(id = "shortcut-holder")]
+        pub shortcut_holder: TemplateChild<GtkBox>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for AppTile {
+        const NAME: &'static str = "AppTile";
+        type Type = super::AppTile;
+        type ParentType = GtkBox;
+
+        fn class_init(klass: &mut Self::Class) {
+            Self::bind_template(klass);
+        }
+
+        fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
+            obj.init_template();
+        }
+    }
+
+    impl ObjectImpl for AppTile {}
+    impl WidgetImpl for AppTile {}
+    impl BoxImpl for AppTile {}
+}
+
+use gtk4::glib;
+
+glib::wrapper! {
+    pub struct AppTile(ObjectSubclass<imp::AppTile>)
+        @extends gtk4::Widget, gtk4::Box,
+        @implements gtk4::Buildable;
+}
+
+impl AppTile {
+    pub fn new() -> Self {
+        glib::Object::new::<Self>()
     }
 }

@@ -65,8 +65,6 @@ pub struct TileBuilder {
     pub icon_holder: Option<WeakRef<Box>>,
     pub title: Option<WeakRef<Label>>,
     pub category: Option<WeakRef<Label>>,
-    pub tag_start: Option<WeakRef<Label>>,
-    pub tag_end: Option<WeakRef<Label>>,
     pub shortcut_holder: Option<WeakRef<Box>>,
 
     // Specific to 'bulk_text_tile'
@@ -88,12 +86,6 @@ impl TileBuilder {
             .map(|w| w.downgrade());
         let icon_holder = builder
             .object::<Box>("app-icon-holder")
-            .map(|w| w.downgrade());
-        let tag_start = builder
-            .object::<Label>("app-name-tag-start")
-            .map(|w| w.downgrade());
-        let tag_end = builder
-            .object::<Label>("app-name-tag-end")
             .map(|w| w.downgrade());
 
         // Append content to the sherlock row
@@ -134,8 +126,6 @@ impl TileBuilder {
             icon_holder,
             title,
             category,
-            tag_start,
-            tag_end,
             shortcut_holder,
 
             content_body,

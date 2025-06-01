@@ -64,21 +64,22 @@ impl SherlockSearch for PipeData {
 }
 /// Apply icon by name or by path if applicable
 pub trait IconComp {
-    fn set_icon(
+    fn set_icon<T: AsRef<str>>(
         &self,
-        icon_name: &Option<String>,
+        icon_name: &Option<T>,
         icon_class: &Option<String>,
-        fallback: &Option<String>,
+        fallback: &Option<T>,
     );
 }
 impl IconComp for Image {
-    fn set_icon(
+    fn set_icon<T: AsRef<str>>(
         &self,
-        icon_name: &Option<String>,
+        icon_name: &Option<T>,
         icon_class: &Option<String>,
-        fallback: &Option<String>,
+        fallback: &Option<T>,
     ) {
         if let Some(icon_name) = icon_name.as_ref().or_else(|| fallback.as_ref()) {
+            let icon_name = icon_name.as_ref();
             if icon_name.starts_with("/") {
                 self.set_from_file(Some(icon_name));
             } else {
