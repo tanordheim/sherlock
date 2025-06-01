@@ -2,7 +2,7 @@ use std::os::unix::net::UnixStream;
 
 use crate::loader::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
-use crate::{sherlock_error, SOCKET_PATH};
+use crate::{sher_log, sherlock_error, SOCKET_PATH};
 use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 
@@ -13,6 +13,7 @@ impl SherlockDaemon {
     pub async fn new(pipeline: async_channel::Sender<String>) -> Self {
         let _ = std::fs::remove_file(SOCKET_PATH);
         let listener = UnixListener::bind(SOCKET_PATH).expect("Failed to bind socket");
+        sher_log!(format!("Daemon listening on {}", SOCKET_PATH));
         println!("Daemon listening on {}", SOCKET_PATH);
 
         for stream in listener.incoming() {
