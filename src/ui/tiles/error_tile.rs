@@ -47,7 +47,7 @@ mod imp {
     use gtk4::{Box as GtkBox, Label};
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/dev/skxxtz/sherlock/ui/tile.ui")]
+    #[template(resource = "/dev/skxxtz/sherlock/ui/error_tile.ui")]
     pub struct ErrorTile {
         #[template_child(id = "app-name")]
         pub title: TemplateChild<Label>,
