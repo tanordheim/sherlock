@@ -1,9 +1,7 @@
-use chrono::{DateTime, Utc};
 use rusqlite::Connection;
 use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
-use std::time::SystemTime;
 
 use crate::loader::util::{AppData, RawLauncher};
 use crate::sherlock_error;
