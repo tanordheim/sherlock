@@ -44,6 +44,7 @@ impl Tile {
             let mut attrs = get_attrs_map(vec![
                 ("method", Some(&launcher.method)),
                 ("engine", Some(&web.engine)),
+                ("exit", Some(&launcher.exit.to_string())),
             ]);
             if let Some(next) = launcher.next_content.as_deref() {
                 attrs.insert(String::from("next_content"), next.to_string());

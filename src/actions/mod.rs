@@ -24,9 +24,10 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
         .collect();
 
     if let Some(method) = attrs.get("method") {
-        let exit = attrs.get("exit").map_or(true, |s| s == "true");
+        let mut exit = attrs.get("exit").map_or(true, |s| s == "true");
         match method.as_str() {
             "categories" => {
+                exit = false;
                 attrs.get("exec").map(|mode| {
                     let _ = row.activate_action("win.switch-mode", Some(&mode.to_variant()));
                     let _ = row.activate_action("win.clear-search", None);
@@ -37,9 +38,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 let term = attrs.get("term").map_or(false, |s| s.as_str() == "true");
                 applaunch::applaunch(exec, term);
                 increment(&exec);
-                if exit {
-                    eval_close(row);
-                }
             }
             "web_launcher" | "bookmarks" => {
                 let engine = attrs.get("engine").map_or("plain", |s| s.as_str());
@@ -53,9 +51,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     ""
                 };
                 let _ = websearch::websearch(engine, query);
-                if exit {
-                    eval_close(row);
-                }
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
@@ -64,9 +59,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     println!("{}", error);
                 }
                 increment(&exec);
-                if exit {
-                    eval_close(row);
-                }
             }
             "copy" => {
                 if let Some(field) = attrs.get("field") {
@@ -76,9 +68,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 } else if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
                 }
-                if exit {
-                    eval_close(row);
-                }
             }
             "print" => {
                 if let Some(field) = attrs.get("field") {
@@ -87,9 +76,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     }
                 } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
-                }
-                if exit {
-                    eval_close(row);
                 }
             }
             "teams_event" => {
@@ -108,6 +94,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 }
             }
             "emoji_picker" => {
+                exit = false;
                 let _ = row.activate_action("win.emoji-page", None);
                 let _ = row.activate_action(
                     "win.switch-page",
@@ -115,6 +102,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 );
             }
             "next" => {
+                exit = false;
                 let next_content = attrs
                     .get("next_content")
                     .map_or("No next_content provided...", |s| s.trim());
@@ -133,9 +121,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                     .and_then(|p| p.parse::<i32>().ok())
                     .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
                     .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
-                if exit {
-                    eval_close(row);
-                }
             }
             "debug" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
@@ -146,20 +131,15 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                             Some(&String::from("search-page->error-page").to_variant()),
                         );
                         increment("debug.show_errors");
+                        exit = false;
                     }
                     "clear_cache" => {
                         let _result = clear_cached_files();
                         increment("debug.clear_cache");
-                        if exit {
-                            eval_close(row);
-                        }
                     }
                     "reset_counts" => {
                         let _result = reset_app_counter();
                         increment("debug.reset_counts");
-                        if exit {
-                            eval_close(row);
-                        }
                     }
                     _ => {}
                 }
@@ -173,10 +153,11 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
                 } else {
                     println!("Return method \"{}\" not recognized", method);
                 }
-                if exit {
-                    eval_close(row);
-                }
             }
+        }
+
+        if exit {
+            eval_close(row);
         }
     }
 }

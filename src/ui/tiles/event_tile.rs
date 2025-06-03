@@ -46,6 +46,7 @@ impl Tile {
             ("method", Some(&launcher.method)),
             ("meeting_url", Some(&event.meeting_url)),
             ("next_content", launcher.next_content.as_deref()),
+            ("exit", Some(&launcher.exit.to_string())),
         ]);
 
         builder.object.add_css_class("event-tile");

@@ -193,8 +193,8 @@ image {
     min-height: 50px;
     padding: 0px 10px;
     margin-bottom: 5px;
-    border-radius: 4px;
     border: 1px solid transparent;
+    border-radius: 4px;
 }
 
 .tile:hover *,
@@ -592,6 +592,7 @@ gridview child:selected box {
     padding: 0px 20px 0px 10px;
     background: darkgray;
     margin-bottom: 10px;
+    border-radius: 7px;
 }
 
 .tile.weather-tile #content-holder {

@@ -33,6 +33,8 @@ pub struct RawLauncher {
     pub priority: f32,
 
     #[serde(default = "default_true")]
+    pub exit: bool,
+    #[serde(default = "default_true")]
     pub shortcut: bool,
     #[serde(default = "default_true")]
     pub spawn_focus: bool,

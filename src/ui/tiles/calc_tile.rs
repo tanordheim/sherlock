@@ -36,6 +36,7 @@ impl Tile {
             let capability_clone = Rc::clone(&capability_rc);
             let equation_holder = imp.equation_holder.downgrade();
             let result_holder = imp.result_holder.downgrade();
+            let exit = launcher.exit.clone();
 
             move |search_query: &str| -> bool {
                 let mut result: Option<(String, String)> = None;
@@ -84,6 +85,7 @@ impl Tile {
                     let attrs = get_attrs_map(vec![
                         ("method", Some(&method_clone)),
                         ("result", Some(&num)),
+                        ("exit", Some(&exit.to_string())),
                     ]);
 
                     object_weak.upgrade().map(|row| {

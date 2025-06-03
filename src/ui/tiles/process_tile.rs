@@ -48,6 +48,7 @@ impl Tile {
                         ("result", Some(&value)),
                         ("parent-pid", Some(&parent)),
                         ("child-pid", Some(&child)),
+                        ("exit", Some(&launcher.exit.to_string())),
                     ]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     move |keyword: &str| -> bool {

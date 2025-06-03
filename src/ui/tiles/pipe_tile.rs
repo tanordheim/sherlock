@@ -63,6 +63,7 @@ impl Tile {
                 // Create attributes and enable action capability
                 let method = item.method.as_deref().unwrap_or(method);
                 let result = item.result.as_deref().or(item.title.as_deref());
+                let exit = item.exit.to_string();
                 let mut constructor: Vec<(&str, Option<&str>)> =
                     item.hidden.as_ref().map_or_else(Vec::new, |a| {
                         a.iter()
@@ -73,6 +74,7 @@ impl Tile {
                     ("method", Some(method)),
                     ("result", result),
                     ("field", item.field.as_deref()),
+                    ("exit", Some(&exit)),
                 ]);
                 let attrs = get_attrs_map(constructor);
 

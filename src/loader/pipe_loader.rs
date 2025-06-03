@@ -115,6 +115,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         method: None,
                         field: config.behavior.field.clone(),
                         hidden: None,
+                        exit: true,
                     });
                 } else {
                     // If it's not valid UTF-8, treat it as binary data
@@ -128,6 +129,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         field: config.behavior.field.clone(),
                         method: None,
                         hidden: None,
+                        exit: true,
                     });
                 }
 
@@ -150,4 +152,5 @@ pub struct PipeData {
     pub method: Option<String>,
     pub field: Option<String>,
     pub hidden: Option<HashMap<String, String>>,
+    pub exit: bool,
 }

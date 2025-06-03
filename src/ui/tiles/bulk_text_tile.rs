@@ -37,7 +37,10 @@ impl Tile {
         let row_weak = object.downgrade();
         let launcher_clone = launcher.clone();
         let async_update_closure: Box<dyn Fn(&str) -> Pin<Box<dyn futures::Future<Output = ()>>>> = {
-            let attrs = get_attrs_map(vec![("method", Some(&launcher.method))]);
+            let attrs = get_attrs_map(vec![
+                ("method", Some(&launcher.method)),
+                ("exit", Some(&launcher.exit.to_string())),
+            ]);
             let content_title = imp.content_title.downgrade();
             let content_body = imp.content_body.downgrade();
 

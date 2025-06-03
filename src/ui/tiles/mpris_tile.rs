@@ -60,11 +60,14 @@ impl Tile {
         holder.set_margin_bottom(10);
 
         // Add attrs and implement double click capabilities
-        let attrs: HashMap<String, String> =
-            vec![("method", &launcher.method), ("player", &mpris.player)]
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect();
+        let attrs: HashMap<String, String> = vec![
+            ("method", &launcher.method),
+            ("player", &mpris.player),
+            ("exit", &launcher.exit.to_string()),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
 
         // Make shortcut holder
         if launcher.shortcut {

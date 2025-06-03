@@ -44,6 +44,7 @@ impl Tile {
                         ("method", Some(&launcher.method)),
                         ("exec", value.exec.as_deref()),
                         ("term", Some(&value.terminal.to_string())),
+                        ("exit", Some(&launcher.exit.to_string())),
                     ]);
                     let attrs_rc = Rc::new(RefCell::new(attrs));
                     let name = value.name.clone();
