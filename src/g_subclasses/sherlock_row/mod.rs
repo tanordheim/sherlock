@@ -180,6 +180,9 @@ impl SherlockRow {
             self.set_actions(actions.clone());
             self.set_num_actions(actions.len());
         }
+        if !launcher.exit {
+            self.add_css_class("exec-inplace");
+        }
     }
     pub fn with_appdata(&self, data: &AppData) {
         self.set_search(&data.search_string);
