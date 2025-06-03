@@ -64,7 +64,7 @@ impl EmojiObject {
             move |_attrs| {
                 let attrs = get_attrs_map(vec![("method", Some("copy")), ("result", Some(&emoji))]);
                 let parent = parent.borrow().clone().and_then(|tmp| tmp.upgrade())?;
-                execute_from_attrs(&parent, &attrs);
+                execute_from_attrs(&parent, &attrs, None);
                 None
             }
         });

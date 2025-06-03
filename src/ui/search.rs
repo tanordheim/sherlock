@@ -10,15 +10,16 @@ use gtk4::{
 use gtk4::{glib, ApplicationWindow, Entry};
 use gtk4::{Box as GtkBox, Label, ScrolledWindow};
 use levenshtein::levenshtein;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
 use super::context::make_context;
 use super::util::*;
 use crate::{
-    g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow},
+    g_subclasses::sherlock_row::SherlockRow,
     prelude::{SherlockNav, SherlockSearch, ShortCut},
+    ui::key_actions::KeyActions,
     Sherlock,
 };
 use crate::{
@@ -523,82 +524,26 @@ fn nav_event(
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
         let current_mode = Rc::clone(current_mode);
-        fn move_prev(
-            results: &WeakRef<ListView>,
-            context_model: &WeakRef<ListStore>,
-        ) -> Option<()> {
-            let results = results.upgrade()?;
-            results.focus_prev(Some(context_model));
-            None
-        }
-        fn move_next(
-            results: &WeakRef<ListView>,
-            context_model: &WeakRef<ListStore>,
-        ) -> Option<()> {
-            let results = results.upgrade()?;
-            results.focus_next(Some(context_model));
-            None
-        }
-        fn move_next_context(model: &WeakRef<ListView>) -> Option<()> {
-            let model = model.upgrade()?;
-            let _ = model.focus_next(None);
-            None
-        }
-        fn move_prev_context(model: &WeakRef<ListView>) -> Option<()> {
-            let model = model.upgrade()?;
-            let _ = model.focus_prev(None);
-            None
-        }
-        fn open_context(
-            results: &WeakRef<ListView>,
-            context_view: &WeakRef<ListView>,
-            context_model: &WeakRef<ListStore>,
-            context_open: &Cell<bool>,
-        ) -> Option<()> {
-            // Early return if context is already opened
-            if context_open.get() {
-                close_context(context_model, context_open)?;
-            }
-            let results = results.upgrade()?;
-            let row = results.selected_item().and_downcast::<SherlockRow>()?;
-            let context = context_model.upgrade()?;
-
-            context.remove_all();
-            if row.num_actions() > 0 {
-                for action in row.actions().iter() {
-                    context.append(&ContextAction::new("", &action, row.terminal()))
-                }
-                let context_selection = context_view.upgrade()?;
-                context_selection.focus_first(None, None);
-                context_open.set(true);
-            }
-            None
-        }
-        fn close_context(
-            context_model: &WeakRef<ListStore>,
-            context_open: &Cell<bool>,
-        ) -> Option<()> {
-            // Early return if context is closed
-            if !context_open.get() {
-                return None;
-            }
-            let context = context_model.upgrade()?;
-            context.remove_all();
-            context_open.set(false);
-            None
-        }
+        let key_actions = KeyActions::new(results, search_bar, context);
         move |_, key, i, modifiers| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
             };
             match key {
+                k if Some(k) == custom_binds.exec_inplace
+                    && custom_binds
+                        .exec_inplace_mod
+                        .map_or(true, |m| modifiers.contains(m)) =>
+                {
+                    key_actions.on_return(key_actions.context.open.get(), Some(true));
+                }
                 // Context menu opening
                 k if Some(k) == custom_binds.context
                     && custom_binds
                         .context_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    open_context(&results, &context.view, &context.model, &context.open);
+                    key_actions.open_context();
                 }
                 // Custom previous key
                 k if Some(k) == custom_binds.prev
@@ -606,12 +551,7 @@ fn nav_event(
                         .prev_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    if context.open.get() {
-                        move_prev_context(&context.view);
-                    } else {
-                        move_prev(&results, &context.model);
-                    }
-                    return true.into();
+                    key_actions.on_prev();
                 }
                 // Custom next key
                 k if Some(k) == custom_binds.next
@@ -619,42 +559,27 @@ fn nav_event(
                         .next_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    if context.open.get() {
-                        move_next_context(&context.view);
-                    } else {
-                        move_next(&results, &context.model);
-                    }
-                    return true.into();
+                    key_actions.on_next();
                 }
-                gdk::Key::Up => {
-                    if context.open.get() {
-                        move_prev_context(&context.view);
-                    } else {
-                        move_prev(&results, &context.model);
-                    }
-                    return true.into();
-                }
-                gdk::Key::Down => {
-                    if context.open.get() {
-                        move_next_context(&context.view);
-                    } else {
-                        move_next(&results, &context.model);
-                    }
-                    return true.into();
-                }
+                gdk::Key::Up => key_actions.on_prev(),
+                gdk::Key::Down => key_actions.on_next(),
                 gdk::Key::BackSpace => {
-                    let mut ctext = search_bar
+                    let mut ctext = key_actions
+                        .search_bar
                         .upgrade()
                         .map_or(String::new(), |entry| entry.text().to_string());
                     if custom_binds
                         .shortcut_modifier
                         .map_or(false, |modifier| modifiers.contains(modifier))
                     {
-                        search_bar.upgrade().map(|entry| entry.set_text(""));
+                        key_actions
+                            .search_bar
+                            .upgrade()
+                            .map(|entry| entry.set_text(""));
                         ctext.clear();
                     }
                     if ctext.is_empty() && current_mode.borrow().as_str() != "all" {
-                        let _ = search_bar.upgrade().map(|entry| {
+                        let _ = key_actions.search_bar.upgrade().map(|entry| {
                             let _ =
                                 entry.activate_action("win.switch-mode", Some(&"all".to_variant()));
                             // apply filter and sorter
@@ -667,37 +592,18 @@ fn nav_event(
                         });
                     }
                     // Focus first item and check for overflow
-                    results.upgrade().map(|results| {
-                        results.focus_first(Some(&context.model), Some(current_mode.clone()))
+                    key_actions.results.upgrade().map(|results| {
+                        results.focus_first(
+                            Some(&key_actions.context.model),
+                            Some(current_mode.clone()),
+                        )
                     });
                 }
                 gdk::Key::Return => {
-                    if context.open.get() {
-                        // Activate action
-                        if let Some(upgr) = context.view.upgrade() {
-                            if let Some(row) = upgr.selected_item().and_downcast::<ContextAction>()
-                            {
-                                row.emit_by_name::<()>("context-action-should-activate", &[]);
-                            }
-                        }
-                    } else {
-                        // Activate apptile
-                        if let Some(row) = results
-                            .upgrade()
-                            .and_then(|r| r.selected_item())
-                            .and_downcast::<SherlockRow>()
-                        {
-                            row.emit_by_name::<()>("row-should-activate", &[]);
-                        } else {
-                            if let Some(current_text) = search_bar.upgrade().map(|s| s.text()) {
-                                println!("{}", current_text);
-                            }
-                        }
-                    }
+                    key_actions.on_return(key_actions.context.open.get(), None);
                 }
-                Key::Escape if context.open.get() => {
-                    close_context(&context.model, &context.open);
-                    return true.into();
+                Key::Escape if key_actions.context.open.get() => {
+                    key_actions.close_context();
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
                     if custom_binds
@@ -708,8 +614,10 @@ fn nav_event(
                             .name()
                             .and_then(|name| name.parse::<u32>().ok().map(|v| v - 1))
                         {
-                            results.upgrade().map(|r| r.execute_by_index(index));
-                            return true.into();
+                            key_actions
+                                .results
+                                .upgrade()
+                                .map(|r| r.execute_by_index(index));
                         }
                     }
                 }
@@ -718,16 +626,14 @@ fn nav_event(
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
                     if custom_binds.prev_mod == shift && custom_binds.prev == tab {
-                        move_prev(&results, &context.model);
-                        return true.into();
+                        key_actions.on_prev();
                     } else if custom_binds.next_mod == shift && custom_binds.next == tab {
-                        move_next(&results, &context.model);
-                        return true.into();
+                        key_actions.on_next();
                     }
                 }
-                _ => (),
+                _ => return false.into(),
             }
-            false.into()
+            true.into()
         }
     });
 

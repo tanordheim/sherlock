@@ -1,9 +1,9 @@
 use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
-use gio::glib::{SignalHandlerId, WeakRef};
+use gio::glib::{SignalHandlerId, Type, Value, WeakRef};
 use gtk4::prelude::{BoxExt, GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
-use gtk4::{glib, GestureClick, Image, Label};
+use gtk4::{glib, prelude::*, GestureClick, Image, Label};
 use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::sync::OnceLock;
@@ -68,7 +68,8 @@ impl ObjectImpl for ContextAction {
             gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
-                        obj.emit_by_name::<()>("context-action-should-activate", &[]);
+                        let null_bool = Value::from_type(Type::BOOL);
+                        obj.emit_by_name::<()>("context-action-should-activate", &[&null_bool]);
                     }
                 }
             });
@@ -80,7 +81,11 @@ impl ObjectImpl for ContextAction {
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
         // Signal used to activate actions connected to the SherlockRow
-        SIGNALS.get_or_init(|| vec![Signal::builder("context-action-should-activate").build()])
+        SIGNALS.get_or_init(|| {
+            vec![Signal::builder("context-action-should-activate")
+                .param_types([bool::static_type()])
+                .build()]
+        })
     }
 }
 

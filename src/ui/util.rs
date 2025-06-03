@@ -30,6 +30,9 @@ pub struct ConfKeys {
     // Previous
     pub prev: Option<Key>,
     pub prev_mod: Option<ModifierType>,
+    // Inplace execution
+    pub exec_inplace: Option<Key>,
+    pub exec_inplace_mod: Option<ModifierType>,
     // ContextMenu
     pub context: Option<Key>,
     pub context_mod: Option<ModifierType>,
@@ -50,6 +53,10 @@ impl ConfKeys {
                 Some(next) => ConfKeys::eval_bind_combination(next),
                 _ => (None, (None, None)),
             };
+            let (exec_inplace_mod, inplace) = match &c.binds.exec_inplace {
+                Some(inplace) => ConfKeys::eval_bind_combination(inplace),
+                _ => (None, (None, None)),
+            };
             let (context_mod, context) = match &c.binds.context {
                 Some(context) => ConfKeys::eval_bind_combination(context),
                 _ => (None, (None, None)),
@@ -60,11 +67,14 @@ impl ConfKeys {
             };
             let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
             let context_mod_str = ConfKeys::get_mod_str(&context_mod);
+            println!("{:?} - {:?}", inplace, exec_inplace_mod);
             return ConfKeys {
                 next: next.0,
                 next_mod,
                 prev: prev.0,
                 prev_mod,
+                exec_inplace: inplace.0,
+                exec_inplace_mod,
                 context: context.0,
                 context_mod,
                 context_str: context.1,
@@ -81,6 +91,8 @@ impl ConfKeys {
             next_mod: None,
             prev: None,
             prev_mod: None,
+            exec_inplace: None,
+            exec_inplace_mod: None,
             context: None,
             context_mod: None,
             context_mod_str: String::new(),
@@ -110,6 +122,7 @@ impl ConfKeys {
             "pgdown" => (Some(Key::Page_Down), Some(String::from("⇟"))),
             "end" => (Some(Key::End), Some(String::from("End"))),
             "home" => (Some(Key::Home), Some(String::from("Home"))),
+            "return" => (Some(Key::Return), Some(String::from("↩"))),
             // Alphabet
             k if k.len() == 1 && k.chars().all(|c| c.is_ascii_alphabetic()) => {
                 (Key::from_name(k), Some(k.to_uppercase()))

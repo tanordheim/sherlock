@@ -643,6 +643,8 @@ pub struct ConfigBinds {
     pub context: Option<String>,
     #[serde(default)]
     pub modifier: Option<String>,
+    #[serde(default)]
+    pub exec_inplace: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]

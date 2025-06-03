@@ -16,7 +16,11 @@ pub mod teamslaunch;
 pub mod util;
 pub mod websearch;
 
-pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, String>) {
+pub fn execute_from_attrs<T: IsA<Widget>>(
+    row: &T,
+    attrs: &HashMap<String, String>,
+    do_exit: Option<bool>,
+) {
     //construct HashMap
     let attrs: HashMap<String, String> = attrs
         .into_iter()
@@ -25,6 +29,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
 
     if let Some(method) = attrs.get("method") {
         let mut exit = attrs.get("exit").map_or(true, |s| s == "true");
+
         match method.as_str() {
             "categories" => {
                 exit = false;
@@ -156,6 +161,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(row: &T, attrs: &HashMap<String, Strin
             }
         }
 
+        exit = do_exit.unwrap_or(exit);
         if exit {
             eval_close(row);
         }

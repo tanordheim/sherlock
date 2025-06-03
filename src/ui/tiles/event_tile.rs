@@ -53,9 +53,10 @@ impl Tile {
         builder.object.with_launcher(launcher);
         builder
             .object
-            .connect_local("row-should-activate", false, move |row| {
-                let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                execute_from_attrs(&row, &attrs);
+            .connect_local("row-should-activate", false, move |args| {
+                let row = args.first().map(|f| f.get::<SherlockRow>().ok())??;
+                let param: Option<bool> = args.get(1).and_then(|v| v.get::<bool>().ok());
+                execute_from_attrs(&row, &attrs, param);
                 None
             });
 

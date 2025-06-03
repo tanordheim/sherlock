@@ -153,7 +153,7 @@ pub fn window(
                     .for_each(|action| {
                         let attrs: HashMap<String, String> =
                             HashMap::from([(String::from("method"), action.action)]);
-                        execute_from_attrs(window, &attrs);
+                        execute_from_attrs(window, &attrs, None);
                     });
                 match c.behavior.daemonize {
                     true => {

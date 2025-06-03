@@ -66,10 +66,12 @@ impl Tile {
                             attrs.insert(String::from("keyword"), keyword.to_string());
                             row.upgrade().map(|row| {
                                 let signal_id =
-                                    row.connect_local("row-should-activate", false, move |row| {
+                                    row.connect_local("row-should-activate", false, move |args| {
                                         let row =
-                                            row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                        execute_from_attrs(&row, &attrs);
+                                            args.first().map(|f| f.get::<SherlockRow>().ok())??;
+                                        let param: Option<bool> =
+                                            args.get(1).and_then(|v| v.get::<bool>().ok());
+                                        execute_from_attrs(&row, &attrs, param);
                                         None
                                     });
                                 row.set_signal_id(signal_id);

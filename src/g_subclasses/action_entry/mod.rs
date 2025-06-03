@@ -52,7 +52,7 @@ impl ContextAction {
                         ("term", Some(&terminal.to_string())),
                         ("exit", Some(&exit.to_string())),
                     ]);
-                    execute_from_attrs(&row, &attrs);
+                    execute_from_attrs(&row, &attrs, None);
                     // To reload ui according to mode
                     let _ = row.activate_action("win.update-items", Some(&false.to_variant()));
                     None

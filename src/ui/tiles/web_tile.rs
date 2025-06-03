@@ -67,14 +67,15 @@ impl Tile {
                 // update attributes to activate correct action
                 let keyword_clone = keyword.to_string();
                 row_weak.upgrade().map(|row| {
-                    let signal_id = row.connect_local("row-should-activate", false, move |row| {
-                        let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    let signal_id = row.connect_local("row-should-activate", false, move |args| {
+                        let row = args.first().map(|f| f.get::<SherlockRow>().ok())??;
+                        let param: Option<bool> = args.get(1).and_then(|v| v.get::<bool>().ok());
                         {
                             let mut attrs = attrs_clone.borrow_mut();
                             attrs.insert("keyword".to_string(), keyword_clone.clone());
                             attrs.insert("result".to_string(), keyword_clone.clone());
                         }
-                        execute_from_attrs(&row, &attrs_clone.borrow());
+                        execute_from_attrs(&row, &attrs_clone.borrow(), param);
                         None
                     });
                     row.set_signal_id(signal_id);

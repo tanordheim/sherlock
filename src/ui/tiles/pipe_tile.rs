@@ -82,9 +82,10 @@ impl Tile {
                 object.set_home(true);
                 object.set_priority(1.0);
                 object.set_search(&search);
-                object.connect_local("row-should-activate", false, move |row| {
-                    let row = row.first().map(|f| f.get::<SherlockRow>().ok())??;
-                    execute_from_attrs(&row, &attrs);
+                object.connect_local("row-should-activate", false, move |args| {
+                    let row = args.first().map(|f| f.get::<SherlockRow>().ok())??;
+                    let param: Option<bool> = args.get(1).and_then(|v| v.get::<bool>().ok());
+                    execute_from_attrs(&row, &attrs, param);
                     None
                 });
                 results.push(object);
