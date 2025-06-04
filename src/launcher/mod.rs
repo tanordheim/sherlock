@@ -25,7 +25,7 @@ use crate::{
 use app_launcher::AppLauncher;
 use audio_launcher::MusicPlayerLauncher;
 use bookmark_launcher::BookmarkLauncher;
-use bulk_text_launcher::BulkTextLauncher;
+use bulk_text_launcher::{AsyncCommandResponse, BulkTextLauncher};
 use calc_launcher::CalculatorLauncher;
 use category_launcher::CategoryLauncher;
 use clipboard_launcher::ClipboardLauncher;
@@ -181,7 +181,7 @@ impl Launcher {
             _ => None,
         }
     }
-    pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {
+    pub async fn get_result(&self, keyword: &str) -> Option<AsyncCommandResponse> {
         match &self.launcher_type {
             LauncherType::BulkText(bulk_text) => bulk_text.get_result(keyword).await,
             _ => None,

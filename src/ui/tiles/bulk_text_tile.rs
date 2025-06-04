@@ -55,13 +55,18 @@ impl Tile {
                 Box::pin(async move {
                     content_title.upgrade().map(|t| t.set_text(&keyword));
 
-                    if let Some((title, body, next_content)) = &launcher.get_result(&keyword).await
-                    {
-                        content_title.upgrade().map(|t| t.set_text(&title));
+                    if let Some(response) = &launcher.get_result(&keyword).await {
+                        if let Some(title) = &response.title {
+                            content_title.upgrade().map(|t| t.set_text(&title));
+                        }
+                        if let Some(content) = &response.content {
+                            content_body.upgrade().map(|b| b.set_markup(&content));
+                        }
+                        row.upgrade().map(|row| {
+                            row.add_actions(&response.actions);
+                        });
 
-                        content_body.upgrade().map(|b| b.set_text(&body));
-
-                        if let Some(next_content) = next_content {
+                        if let Some(next_content) = &response.next_content {
                             attrs.insert(String::from("next_content"), next_content.to_string());
                             attrs.insert(String::from("keyword"), keyword.to_string());
                             row.upgrade().map(|row| {

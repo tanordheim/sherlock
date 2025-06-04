@@ -5,6 +5,8 @@ use tokio::io::{AsyncReadExt, BufReader};
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
 
+use crate::loader::util::ApplicationAction;
+
 #[derive(Clone, Debug)]
 pub struct BulkTextLauncher {
     pub icon: String,
@@ -13,10 +15,11 @@ pub struct BulkTextLauncher {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct AsyncCommandResponse {
-    title: Option<String>,
-    content: Option<String>,
-    next_content: Option<String>,
+pub struct AsyncCommandResponse {
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub next_content: Option<String>,
+    pub actions: Option<Vec<ApplicationAction>>,
 }
 impl AsyncCommandResponse {
     fn new() -> Self {
@@ -24,12 +27,13 @@ impl AsyncCommandResponse {
             title: None,
             content: None,
             next_content: None,
+            actions: None,
         }
     }
 }
 
 impl BulkTextLauncher {
-    pub async fn get_result(&self, keyword: &str) -> Option<(String, String, Option<String>)> {
+    pub async fn get_result(&self, keyword: &str) -> Option<AsyncCommandResponse> {
         if self.args.contains("{keyword}") && keyword.trim().is_empty() {
             return None;
         };
@@ -37,6 +41,7 @@ impl BulkTextLauncher {
         let a = self.args.replace("{keyword}", &keyword);
         let args = a.split(" ");
 
+        // build execution command
         let home = home_dir()?;
         let exec = self.exec.clone();
         let relative_exec = exec.strip_prefix("~/").unwrap_or(&exec);
@@ -54,11 +59,10 @@ impl BulkTextLauncher {
         let mut child = match cmd.spawn() {
             Ok(child) => child,
             Err(e) => {
-                return Some((
-                    "Failed to execute script.".to_string(),
-                    format!("Error: {}", e),
-                    None,
-                ));
+                let mut response = AsyncCommandResponse::new();
+                response.title = Some(String::from("Failed to execute script."));
+                response.content = Some(format!("Error: {}", e));
+                return Some(response);
             }
         };
 
@@ -87,32 +91,31 @@ impl BulkTextLauncher {
                     let mut output = stdout.into_bytes();
                     let response: AsyncCommandResponse =
                         simd_json::from_slice(&mut output).unwrap_or(AsyncCommandResponse::new());
-                    let title = response.title.unwrap_or(keyword.to_string());
-                    let content = response.content.unwrap_or_default();
-                    Some((title, content, response.next_content))
+                    // let title = response.title.unwrap_or(keyword.to_string());
+                    // let content = response.content.unwrap_or_default();
+                    Some(response)
                 } else {
-                    Some((
-                        "Script executed but returned an error.".to_string(),
-                        format!("Status: {:?}", status),
-                        None,
-                    ))
+                    let mut response = AsyncCommandResponse::new();
+                    response.title = Some(String::from("Script returned an error."));
+                    response.content = Some(format!("Status: {:?}", status));
+                    return Some(response);
                 }
             }
             Ok((Err(_), _, _)) => {
                 let _ = child.kill().await; // Kill the process if it fails
-                Some((
-                    "Failed to execute script.".to_string(),
-                    "Error occurred while running the process.".to_string(),
-                    None,
-                ))
+                let mut response = AsyncCommandResponse::new();
+                response.title = Some(String::from("Failed to execute script."));
+                response.content = Some(String::from(
+                    "Error occurred while running the process: {:?}",
+                ));
+                Some(response)
             }
             Err(_) => {
                 let _ = child.kill().await; // Kill the process on timeout
-                Some((
-                    "Failed to execute script.".to_string(),
-                    "Timeout exceeded.".to_string(),
-                    None,
-                ))
+                let mut response = AsyncCommandResponse::new();
+                response.title = Some(String::from("Failed to execute script."));
+                response.content = Some(String::from("Timeout exceeded."));
+                Some(response)
             }
         }
     }
