@@ -1,10 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::{
-    glib::WeakRef,
-    ListStore,
-};
+use gio::{glib::WeakRef, ListStore};
 use gtk4::{
     self,
     gdk::{self, Key, ModifierType},

@@ -537,17 +537,25 @@ fn nav_event(
 
             match key {
                 // Inplace execution of commands
-                _ if matches(binds.exec_inplace, binds.exec_inplace_mod) => key_actions.on_return(key_actions.context.open.get(), Some(false)),
+                _ if matches(binds.exec_inplace, binds.exec_inplace_mod) => {
+                    key_actions.on_return(key_actions.context.open.get(), Some(false))
+                }
 
                 // Context menu opening
-                _ if matches(binds.context, binds.context_mod) => {key_actions.open_context();},
+                _ if matches(binds.context, binds.context_mod) => {
+                    key_actions.open_context();
+                }
 
                 // Custom previous key
-                _ if matches(binds.prev, binds.prev_mod) => {key_actions.on_prev();},
+                _ if matches(binds.prev, binds.prev_mod) => {
+                    key_actions.on_prev();
+                }
                 Key::Up => key_actions.on_prev(),
 
                 // Custom next key
-                _ if matches(binds.next, binds.next_mod) => {key_actions.on_next();},
+                _ if matches(binds.next, binds.next_mod) => {
+                    key_actions.on_next();
+                }
                 Key::Down => key_actions.on_next(),
 
                 Key::BackSpace => {

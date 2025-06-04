@@ -74,7 +74,7 @@ impl Tile {
                                         let param: Option<bool> = match param {
                                             1 => Some(false),
                                             2 => Some(true),
-                                            _ => None
+                                            _ => None,
                                         };
                                         execute_from_attrs(&row, &attrs, param);
                                         None

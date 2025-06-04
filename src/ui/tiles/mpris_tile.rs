@@ -137,12 +137,11 @@ impl Tile {
         object.set_async_update(async_update_closure);
         let signal_id = object.connect_local("row-should-activate", false, move |args| {
             let row = args.first().map(|f| f.get::<SherlockRow>().ok())??;
-            let param: u8 =
-                args.get(1).and_then(|v| v.get::<u8>().ok())?;
+            let param: u8 = args.get(1).and_then(|v| v.get::<u8>().ok())?;
             let param: Option<bool> = match param {
                 1 => Some(false),
                 2 => Some(true),
-                _ => None
+                _ => None,
             };
             execute_from_attrs(&row, &attrs, param);
             // To reload ui according to mode
