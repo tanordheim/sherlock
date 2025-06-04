@@ -535,7 +535,7 @@ fn nav_event(
                         .exec_inplace_mod
                         .map_or(true, |m| modifiers.contains(m)) =>
                 {
-                    key_actions.on_return(key_actions.context.open.get(), Some(true));
+                    key_actions.on_return(key_actions.context.open.get(), Some(false));
                 }
                 // Context menu opening
                 k if Some(k) == custom_binds.context

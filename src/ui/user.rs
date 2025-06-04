@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
-    glib::{Type, Value, WeakRef},
+    glib::WeakRef,
     ListStore,
 };
 use gtk4::{
@@ -330,9 +330,9 @@ fn nav_event(
                         .upgrade()
                         .and_then(|r| r.get_actives::<SherlockRow>())
                     {
-                        actives.into_iter().for_each(|r| {
-                            let null_bool = Value::from_type(Type::BOOL);
-                            r.emit_by_name::<()>("row-should-activate", &[&null_bool]);
+                        actives.into_iter().for_each(|row| {
+                            let exit: u8 = 0;
+                            row.emit_by_name::<()>("row-should-activate", &[&exit]);
                         });
                     }
                 }
@@ -340,8 +340,8 @@ fn nav_event(
                     if let Some(upgr) = selection.upgrade() {
                         if let Ok(sel) = upgr.downcast::<SingleSelection>() {
                             if let Some(row) = sel.selected_item().and_downcast::<SherlockRow>() {
-                                let null_bool = Value::from_type(Type::BOOL);
-                                row.emit_by_name::<()>("row-should-activate", &[&null_bool]);
+                                let exit: u8 = 0;
+                                row.emit_by_name::<()>("row-should-activate", &[&exit]);
                             }
                         }
                     }

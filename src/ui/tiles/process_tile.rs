@@ -62,8 +62,13 @@ impl Tile {
                                 row.connect_local("row-should-activate", false, move |args| {
                                     let row =
                                         args.first().map(|f| f.get::<SherlockRow>().ok())??;
-                                    let param: Option<bool> =
-                                        args.get(1).and_then(|v| v.get::<bool>().ok());
+                                    let param: u8 =
+                                        args.get(1).and_then(|v| v.get::<u8>().ok())?;
+                                    let param: Option<bool> = match param {
+                                        1 => Some(false),
+                                        2 => Some(true),
+                                        _ => None
+                                    };
                                     execute_from_attrs(&row, &attrs.borrow(), param);
                                     None
                                 });

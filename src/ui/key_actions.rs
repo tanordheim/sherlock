@@ -1,7 +1,6 @@
 use gio::glib::{
     object::{CastNone, ObjectExt},
-    value::ToValue,
-    Type, Value, WeakRef,
+    WeakRef,
 };
 use gtk4::{prelude::EditableExt, Entry, ListView};
 
@@ -26,7 +25,7 @@ impl KeyActions {
         }
     }
     pub fn on_return(&self, context_open: bool, close: Option<bool>) {
-        let exit = close.map_or(Value::from(Type::BOOL), |v| v.to_value());
+        let exit: u8 = close.map_or(0, |v| if v { 2 } else { 1 });
         if context_open {
             // Activate action
             if let Some(upgr) = self.context.view.upgrade() {

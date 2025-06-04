@@ -1,6 +1,6 @@
 use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
-use gio::glib::{SignalHandlerId, Type, Value, WeakRef};
+use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::prelude::*;
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
@@ -111,8 +111,8 @@ impl ObjectImpl for SherlockRow {
             gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
-                        let null_bool = Value::from_type(Type::BOOL);
-                        obj.emit_by_name::<()>("row-should-activate", &[&null_bool]);
+                        let exit: u8 = 0;
+                        obj.emit_by_name::<()>("row-should-activate", &[&exit]);
                     }
                 }
             });
@@ -126,7 +126,7 @@ impl ObjectImpl for SherlockRow {
         // Signal used to activate actions connected to the SherlockRow
         SIGNALS.get_or_init(|| {
             vec![Signal::builder("row-should-activate")
-                .param_types([bool::static_type()])
+                .param_types([u8::static_type()])
                 .build()]
         })
     }

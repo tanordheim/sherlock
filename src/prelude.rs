@@ -6,7 +6,7 @@ use gio::{
         self,
         object::{Cast, CastNone, IsA, ObjectExt},
         variant::ToVariant,
-        Object, Type, Value, WeakRef,
+        Object, WeakRef,
     },
     prelude::ListModelExt,
     ListStore,
@@ -240,8 +240,8 @@ impl SherlockNav for ListView {
             for item in index..selection.n_items() {
                 if let Some(row) = selection.item(item).and_downcast::<SherlockRow>() {
                     if row.imp().shortcut.get() {
-                        let null_bool = Value::from_type(Type::BOOL);
-                        row.emit_by_name::<()>("row-should-activate", &[&null_bool]);
+                        let exit: u8 = 0;
+                        row.emit_by_name::<()>("row-should-activate", &[&exit]);
                         break;
                     }
                 }
