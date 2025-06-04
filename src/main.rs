@@ -1,3 +1,4 @@
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 // CRATE
 use gio::glib::{MainContext, WeakRef};
 use gio::prelude::*;
@@ -8,8 +9,9 @@ use std::rc::Rc;
 use std::sync::OnceLock;
 use std::time::Instant;
 use std::{env, process, thread};
+use ui::search::SearchUiObj;
 use ui::tiles::Tile;
-use ui::util::{SearchHandler, SearchUI};
+use ui::util::SearchHandler;
 use utils::config::SherlockFlags;
 
 // MODS
@@ -38,7 +40,7 @@ const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
 struct Sherlock {
     pub window: Option<WeakRef<ApplicationWindow>>,
-    pub search_ui: Option<SearchUI>,
+    pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
 }
 impl Sherlock {
@@ -50,8 +52,9 @@ impl Sherlock {
         }
     }
     pub fn obfuscate(&self, visibility: bool) {
-        if let Some(search_bar) = self.search_ui.as_ref().and_then(|s| s.search_bar.upgrade()) {
-            search_bar.set_visibility(visibility);
+        if let Some(ui) = self.search_ui.as_ref().and_then(|ui| ui.upgrade()) {
+            let imp = ui.imp();
+            imp.search_bar.set_visibility(visibility);
         }
     }
     pub fn clear_results(&self) -> Option<()> {
@@ -62,21 +65,16 @@ impl Sherlock {
         Some(())
     }
     pub fn show_raw(&self) -> Option<()> {
-        let ui = self.search_ui.as_ref()?;
+        let ui = self.search_ui.as_ref().and_then(|ui| ui.upgrade())?;
+        let imp = ui.imp();
         let handler = self.search_handler.as_ref()?;
-        if let Some(title) = ui.mode_title_holder.upgrade() {
-            title.set_visible(false);
-            title.unparent();
-        }
         if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
             model.remove_all();
         }
-        if let Some(all) = ui.all.upgrade() {
-            all.set_visible(false);
-        }
-        if let Some(status) = ui.status_bar.upgrade() {
-            status.set_visible(false);
-        }
+        imp.mode_title.set_visible(false);
+        imp.mode_title.unparent();
+        imp.all.set_visible(false);
+        imp.status_bar.set_visible(false);
         Some(())
     }
     pub fn display_pipe(&self, content: &str) -> Option<()> {

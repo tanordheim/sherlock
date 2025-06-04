@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-    <object class="GtkBox" id="vbox">
+    <template class="SearchUI" parent="GtkBox">
         <property name="orientation">vertical</property>
 
         <child>
@@ -9,6 +9,32 @@
                 <child>
                     <object class="GtkBox" id="search-icon-holder">
                         <property name="name">search-icon-holder</property>
+                        <child>
+                            <object class="GtkOverlay" id="search-icon-overlay">
+
+                                <child>
+                                    <object class="GtkImage" id="search-icon">
+                                        <property name="name">search-icon</property>
+                                        <property name="valign">center</property>
+                                        <property name="halign">end</property>
+                                        <property name="pixel-size">22</property>
+                                        <property name="icon-name">system-search-symbolic</property>
+                                    </object>
+                                </child>
+
+                                <child type="overlay">
+                                    <object class="GtkImage" id="search-icon-back">
+                                        <property name="name">search-icon-back</property>
+                                        <property name="valign">center</property>
+                                        <property name="halign">end</property>
+                                        <property name="pixel-size">22</property>
+                                        <property name="icon-name">sherlock-back</property>
+                                    </object>
+                                </child>
+                            
+                            </object>
+
+                        </child>
                     </object>
                 </child>
                 <child>
@@ -127,7 +153,7 @@
         </child>
 
 
-    </object>
+    </template>
 
 </interface>
 

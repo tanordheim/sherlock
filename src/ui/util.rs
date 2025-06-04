@@ -249,14 +249,26 @@ pub struct SearchHandler {
     pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
     pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
     pub error_model: WeakRef<ListStore>,
+    pub filter: WeakRef<CustomFilter>,
+    pub sorter: WeakRef<CustomSorter>,
+    pub binds: ConfKeys,
 }
 impl SearchHandler {
-    pub fn new(model: WeakRef<ListStore>, error_model: WeakRef<ListStore>) -> Self {
+    pub fn new(
+        model: WeakRef<ListStore>,
+        error_model: WeakRef<ListStore>,
+        filter: WeakRef<CustomFilter>,
+        sorter: WeakRef<CustomSorter>,
+        binds: ConfKeys,
+    ) -> Self {
         Self {
             model: Some(model),
             modes: Rc::new(RefCell::new(HashMap::new())),
             task: Rc::new(RefCell::new(None)),
             error_model,
+            filter,
+            sorter,
+            binds,
         }
     }
     pub fn empty(error_model: WeakRef<ListStore>) -> Self {
@@ -265,6 +277,9 @@ impl SearchHandler {
             modes: Rc::new(RefCell::new(HashMap::new())),
             task: Rc::new(RefCell::new(None)),
             error_model,
+            filter: WeakRef::new(),
+            sorter: WeakRef::new(),
+            binds: ConfKeys::new(),
         }
     }
     pub fn clear(&self) {

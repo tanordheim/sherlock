@@ -3,6 +3,7 @@ use gio::glib::{
     WeakRef,
 };
 use gtk4::{prelude::EditableExt, Entry, ListView};
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     g_subclasses::{action_entry::ContextAction, sherlock_row::SherlockRow},
@@ -81,8 +82,25 @@ impl KeyActions {
             context_selection.focus_first(None, None);
             self.context.open.set(true);
         }
-        None
+        Some(())
     }
+    pub fn close_context(&self) -> Option<()> {
+        // Early return if context is closed
+        if !self.context.open.get() {
+            return None;
+        }
+        let context = self.context.model.upgrade()?;
+        context.remove_all();
+        self.context.open.set(false);
+        Some(())
+    }
+    pub fn focus_first(&self, current_mode: Rc<RefCell<String>>) -> Option<()> {
+        let results = self.results.upgrade()?;
+        results.focus_first(Some(&self.context.model), Some(current_mode));
+        Some(())
+    }
+
+    // ---- PRIVATES ----
     fn move_prev(&self) -> Option<()> {
         let results = self.results.upgrade()?;
         results.focus_prev(Some(&self.context.model));
@@ -101,16 +119,6 @@ impl KeyActions {
     fn move_prev_context(&self) -> Option<()> {
         let model = self.context.view.upgrade()?;
         let _ = model.focus_prev(None);
-        None
-    }
-    pub fn close_context(&self) -> Option<()> {
-        // Early return if context is closed
-        if !self.context.open.get() {
-            return None;
-        }
-        let context = self.context.model.upgrade()?;
-        context.remove_all();
-        self.context.open.set(false);
         None
     }
 }
