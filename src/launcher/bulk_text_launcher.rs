@@ -30,6 +30,16 @@ impl AsyncCommandResponse {
             actions: None,
         }
     }
+    pub fn split_params(
+        self,
+    ) -> (
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<Vec<ApplicationAction>>,
+    ) {
+        (self.title, self.content, self.next_content, self.actions)
+    }
 }
 
 impl BulkTextLauncher {
@@ -91,8 +101,6 @@ impl BulkTextLauncher {
                     let mut output = stdout.into_bytes();
                     let response: AsyncCommandResponse =
                         simd_json::from_slice(&mut output).unwrap_or(AsyncCommandResponse::new());
-                    // let title = response.title.unwrap_or(keyword.to_string());
-                    // let content = response.content.unwrap_or_default();
                     Some(response)
                 } else {
                     let mut response = AsyncCommandResponse::new();

@@ -99,12 +99,16 @@ impl SherlockRow {
         self.imp().keyword_aware.set(state);
     }
     pub fn set_actions(&self, actions: Vec<ApplicationAction>) {
+        self.imp().num_actions.set(actions.len());
         *self.imp().actions.borrow_mut() = actions;
     }
     pub fn add_actions(&self, actions: &Option<Vec<ApplicationAction>>) {
         if let Some(actions) = actions {
             self.imp().actions.borrow_mut().extend(actions.clone());
         }
+        self.imp()
+            .num_actions
+            .set(self.imp().actions.borrow().len());
     }
     pub fn set_num_actions(&self, num: usize) {
         self.imp().num_actions.set(num);
@@ -178,7 +182,6 @@ impl SherlockRow {
         }
         if let Some(actions) = &launcher.actions {
             self.set_actions(actions.clone());
-            self.set_num_actions(actions.len());
         }
         if !launcher.exit {
             self.add_css_class("exec-inplace");
@@ -189,7 +192,6 @@ impl SherlockRow {
         self.set_priority(data.priority);
         if !data.actions.is_empty() {
             self.set_actions(data.actions.clone());
-            self.set_num_actions(data.actions.len());
         }
         self.set_terminal(data.terminal);
     }
