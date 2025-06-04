@@ -72,6 +72,8 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     }
                 } else if let Some(result) = attrs.get("result") {
                     let _ = util::copy_to_clipboard(result.as_str());
+                } else if let Some(exec) = attrs.get("exec") {
+                    let _ = util::copy_to_clipboard(exec.as_str());
                 }
             }
             "print" => {
@@ -81,6 +83,8 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     }
                 } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
+                } else if let Some(exec) = attrs.get("exec"){
+                    print!("{}", exec);
                 }
             }
             "teams_event" => {
