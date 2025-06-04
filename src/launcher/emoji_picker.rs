@@ -1,9 +1,10 @@
-use gio::glib::WeakRef;
+use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
+use gio::glib::{self, WeakRef};
 use gio::ListStore;
-use gtk4::{self, gdk::Key, prelude::*, Builder, EventControllerKey};
+use gtk4::{self, gdk::Key, prelude::*, EventControllerKey};
 use gtk4::{
     Box as GtkBox, CustomFilter, CustomSorter, Entry, FilterListModel, GridView, Label, Ordering,
-    ScrolledWindow, SignalListItemFactory, SingleSelection, SortListModel,
+    SignalListItemFactory, SingleSelection, SortListModel,
 };
 use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
@@ -14,7 +15,7 @@ use crate::g_subclasses::emoji_item::{EmojiObject, EmojiRaw};
 use crate::loader::util::AppData;
 use crate::prelude::{SherlockNav, SherlockSearch};
 use crate::sherlock_error;
-use crate::ui::util::ConfKeys;
+use crate::ui::util::{ConfKeys, SearchHandler};
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 
 #[derive(Clone, Debug)]
@@ -59,21 +60,15 @@ impl EmojiPicker {
     }
 }
 
-pub struct EmojiUI {
-    model: WeakRef<ListStore>,
-    view: WeakRef<GridView>,
-    search_bar: WeakRef<Entry>,
-    sorter: WeakRef<CustomSorter>,
-    filter: WeakRef<CustomFilter>,
-}
-
 pub fn emojies(
     stack_page: &Rc<RefCell<String>>,
-) -> Result<(GtkBox, WeakRef<ListStore>), SherlockError> {
-    let (search_query, stack, ui) = construct()?;
+) -> Result<(GridSearchUi, WeakRef<ListStore>), SherlockError> {
+    let (search_query, ui, handler) = construct()?;
+    let imp = ui.imp();
 
-    stack.connect_realize({
-        let search_bar = ui.search_bar.clone();
+    let search_bar = imp.search_bar.downgrade();
+    ui.connect_realize({
+        let search_bar = search_bar.clone();
         move |_| {
             // Focus search bar as soon as it's visible
             search_bar
@@ -83,20 +78,18 @@ pub fn emojies(
     });
 
     let custom_binds = ConfKeys::new();
-    nav_event(
-        ui.search_bar.clone(),
-        ui.view.clone(),
-        stack_page,
-        custom_binds,
-    );
+    let view = imp.results.downgrade();
+    nav_event(search_bar.clone(), view.clone(), stack_page, custom_binds);
     change_event(
-        ui.search_bar.clone(),
+        search_bar.clone(),
         &search_query,
-        ui.sorter.clone(),
-        ui.filter.clone(),
-        ui.view.clone(),
+        handler.sorter.clone(),
+        handler.filter.clone(),
+        view.clone(),
     );
-    return Ok((stack, ui.model.clone()));
+
+    let model = handler.model.unwrap();
+    return Ok((ui, model.clone()));
 }
 fn nav_event(
     search_bar: WeakRef<Entry>,
@@ -209,16 +202,12 @@ fn nav_event(
         .map(|entry| entry.add_controller(event_controller));
 }
 
-fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> {
+fn construct() -> Result<(Rc<RefCell<String>>, GridSearchUi, SearchHandler), SherlockError> {
     let emojies = EmojiPicker::load()?;
     let search_text = Rc::new(RefCell::new(String::new()));
     // Initialize the builder with the correct path
-    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
-
-    // Get the required object references
-    let vbox: GtkBox = builder.object("vbox").unwrap();
-    let view_port: ScrolledWindow = builder.object("scrolled-window").unwrap();
-    let search_bar: Entry = builder.object("search-bar").unwrap();
+    let ui = GridSearchUi::new();
+    let imp = ui.imp();
 
     // Setup model and factory
     let model = ListStore::new::<EmojiObject>();
@@ -231,22 +220,21 @@ fn construct() -> Result<(Rc<RefCell<String>>, GtkBox, EmojiUI), SherlockError> 
 
     let factory = make_factory();
     let selection = SingleSelection::new(Some(sorted_model));
-    let view: GridView = GridView::new(Some(selection), Some(factory));
+    imp.results.set_model(Some(&selection));
+    imp.results.set_factory(Some(&factory));
 
     model.extend_from_slice(&emojies);
 
-    view.set_max_columns(10);
-    view_port.set_child(Some(&view));
+    imp.results.set_max_columns(10);
 
-    let ui = EmojiUI {
-        model: model_ref.clone(),
-        view: view.downgrade(),
-        search_bar: search_bar.downgrade(),
-        sorter: sorter.downgrade(),
-        filter: filter.downgrade(),
-    };
-
-    Ok((search_text, vbox, ui))
+    let handler = SearchHandler::new(
+        model_ref,
+        WeakRef::new(),
+        filter.downgrade(),
+        sorter.downgrade(),
+        ConfKeys::new(),
+    );
+    Ok((search_text, ui, handler))
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -382,4 +370,95 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
             priority_a.total_cmp(&priority_b).into()
         }
     })
+}
+
+mod imp {
+    use gtk4::subclass::prelude::*;
+    use gtk4::{glib, Entry, Image, ScrolledWindow, Spinner};
+    use gtk4::{Box as GtkBox, Label};
+    use gtk4::{CompositeTemplate, GridView};
+
+    #[derive(CompositeTemplate, Default)]
+    #[template(resource = "/dev/skxxtz/sherlock/ui/grid_search.ui")]
+    pub struct GridSearchUi {
+        #[template_child(id = "split-view")]
+        pub all: TemplateChild<GtkBox>,
+
+        #[template_child(id = "status-bar-spinner")]
+        pub spinner: TemplateChild<Spinner>,
+
+        #[template_child(id = "preview_box")]
+        pub preview_box: TemplateChild<GtkBox>,
+
+        #[template_child(id = "search-bar")]
+        pub search_bar: TemplateChild<Entry>,
+
+        #[template_child(id = "scrolled-window")]
+        pub result_viewport: TemplateChild<ScrolledWindow>,
+
+        #[template_child(id = "category-type-holder")]
+        pub mode_title_holder: TemplateChild<GtkBox>,
+
+        #[template_child(id = "category-type-label")]
+        pub mode_title: TemplateChild<Label>,
+
+        #[template_child(id = "context-menu-desc")]
+        pub context_action_desc: TemplateChild<Label>,
+
+        #[template_child(id = "context-menu-first")]
+        pub context_action_first: TemplateChild<Label>,
+
+        #[template_child(id = "context-menu-second")]
+        pub context_action_second: TemplateChild<Label>,
+
+        #[template_child(id = "status-bar")]
+        pub status_bar: TemplateChild<GtkBox>,
+
+        #[template_child(id = "search-icon-holder")]
+        pub search_icon_holder: TemplateChild<GtkBox>,
+
+        #[template_child(id = "search-icon")]
+        pub search_icon: TemplateChild<Image>,
+
+        #[template_child(id = "search-icon-back")]
+        pub search_icon_back: TemplateChild<Image>,
+
+        #[template_child(id = "result-frame")]
+        pub results: TemplateChild<GridView>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for GridSearchUi {
+        const NAME: &'static str = "GridSearchUI";
+        type Type = super::GridSearchUi;
+        type ParentType = GtkBox;
+
+        fn class_init(klass: &mut Self::Class) {
+            Self::bind_template(klass);
+        }
+
+        fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
+            obj.init_template();
+        }
+    }
+
+    impl ObjectImpl for GridSearchUi {}
+    impl WidgetImpl for GridSearchUi {}
+    impl BoxImpl for GridSearchUi {}
+}
+
+glib::wrapper! {
+    pub struct GridSearchUi(ObjectSubclass<imp::GridSearchUi>)
+        @extends gtk4::Widget, gtk4::Box,
+        @implements gtk4::Buildable;
+}
+
+impl GridSearchUi {
+    pub fn new() -> Self {
+        let ui = glib::Object::new::<Self>();
+        let imp = ui.imp();
+        imp.search_icon_holder.add_css_class("search");
+        imp.results.set_focusable(false);
+        ui
+    }
 }
