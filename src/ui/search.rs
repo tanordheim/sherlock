@@ -513,7 +513,7 @@ fn nav_event(
     search_bar: WeakRef<Entry>,
     filter: WeakRef<CustomFilter>,
     sorter: WeakRef<CustomSorter>,
-    custom_binds: ConfKeys,
+    binds: ConfKeys,
     stack_page: &Rc<RefCell<String>>,
     current_mode: &Rc<RefCell<String>>,
     context: ContextUI,
@@ -525,52 +525,39 @@ fn nav_event(
         let search_bar = search_bar.clone();
         let current_mode = Rc::clone(current_mode);
         let key_actions = KeyActions::new(results, search_bar, context);
-        move |_, key, i, modifiers| {
+        move |_, key, i, mods| {
             if stack_page.borrow().as_str() != "search-page" {
                 return false.into();
             };
+            let matches = |comp: Option<Key>, comp_mod: Option<ModifierType>| {
+                let key_matches = Some(key) == comp;
+                let mod_matches = comp_mod.map_or(false, |m| mods.contains(m));
+                key_matches && mod_matches
+            };
+
             match key {
-                k if Some(k) == custom_binds.exec_inplace
-                    && custom_binds
-                        .exec_inplace_mod
-                        .map_or(true, |m| modifiers.contains(m)) =>
-                {
-                    key_actions.on_return(key_actions.context.open.get(), Some(false));
-                }
+                // Inplace execution of commands
+                _ if matches(binds.exec_inplace, binds.exec_inplace_mod) => key_actions.on_return(key_actions.context.open.get(), Some(false)),
+
                 // Context menu opening
-                k if Some(k) == custom_binds.context
-                    && custom_binds
-                        .context_mod
-                        .map_or(true, |m| modifiers.contains(m)) =>
-                {
-                    key_actions.open_context();
-                }
+                _ if matches(binds.context, binds.context_mod) => {key_actions.open_context();},
+
                 // Custom previous key
-                k if Some(k) == custom_binds.prev
-                    && custom_binds
-                        .prev_mod
-                        .map_or(true, |m| modifiers.contains(m)) =>
-                {
-                    key_actions.on_prev();
-                }
+                _ if matches(binds.prev, binds.prev_mod) => {key_actions.on_prev();},
+                Key::Up => key_actions.on_prev(),
+
                 // Custom next key
-                k if Some(k) == custom_binds.next
-                    && custom_binds
-                        .next_mod
-                        .map_or(true, |m| modifiers.contains(m)) =>
-                {
-                    key_actions.on_next();
-                }
-                gdk::Key::Up => key_actions.on_prev(),
-                gdk::Key::Down => key_actions.on_next(),
-                gdk::Key::BackSpace => {
+                _ if matches(binds.next, binds.next_mod) => {key_actions.on_next();},
+                Key::Down => key_actions.on_next(),
+
+                Key::BackSpace => {
                     let mut ctext = key_actions
                         .search_bar
                         .upgrade()
                         .map_or(String::new(), |entry| entry.text().to_string());
-                    if custom_binds
+                    if binds
                         .shortcut_modifier
-                        .map_or(false, |modifier| modifiers.contains(modifier))
+                        .map_or(false, |modifier| mods.contains(modifier))
                     {
                         key_actions
                             .search_bar
@@ -599,16 +586,16 @@ fn nav_event(
                         )
                     });
                 }
-                gdk::Key::Return => {
+                Key::Return => {
                     key_actions.on_return(key_actions.context.open.get(), None);
                 }
                 Key::Escape if key_actions.context.open.get() => {
                     key_actions.close_context();
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
-                    if custom_binds
+                    if binds
                         .shortcut_modifier
-                        .map_or(false, |modifier| modifiers.contains(modifier))
+                        .map_or(false, |modifier| mods.contains(modifier))
                     {
                         if let Some(index) = key
                             .name()
@@ -622,12 +609,12 @@ fn nav_event(
                     }
                 }
                 // Pain - solution for shift-tab since gtk handles it as an individual event
-                _ if i == 23 && modifiers.contains(ModifierType::SHIFT_MASK) => {
+                _ if i == 23 && mods.contains(ModifierType::SHIFT_MASK) => {
                     let shift = Some(ModifierType::SHIFT_MASK);
                     let tab = Some(Key::Tab);
-                    if custom_binds.prev_mod == shift && custom_binds.prev == tab {
+                    if binds.prev_mod == shift && binds.prev == tab {
                         key_actions.on_prev();
-                    } else if custom_binds.next_mod == shift && custom_binds.next == tab {
+                    } else if binds.next_mod == shift && binds.next == tab {
                         key_actions.on_next();
                     }
                 }
