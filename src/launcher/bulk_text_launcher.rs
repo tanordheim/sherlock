@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::env::home_dir;
 use std::process::Stdio;
 use tokio::io::{AsyncReadExt, BufReader};
 use tokio::process::Command;
@@ -35,7 +36,15 @@ impl BulkTextLauncher {
 
         let a = self.args.replace("{keyword}", &keyword);
         let args = a.split(" ");
-        let mut cmd = Command::new(&self.exec);
+
+        let home = home_dir()?;
+        let exec = self.exec.clone();
+        let relative_exec = exec.strip_prefix("~/").unwrap_or(&exec);
+        let absolute_exec = home.join(relative_exec);
+        let exec_str = absolute_exec.to_str()?;
+
+        let mut cmd = Command::new(exec_str);
+
         cmd.args(args);
         cmd.stdin(Stdio::null())
             .stdout(Stdio::piped())
