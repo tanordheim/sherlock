@@ -78,11 +78,7 @@ pub fn display_raw<T: AsRef<str>>(
             }
         });
     let handler = SearchHandler::empty(error_model);
-    let row = builder
-        .object
-        .as_ref()
-        .and_then(|tmp| tmp.upgrade())
-        .unwrap_or_default();
+    let row = builder.object.unwrap_or_default();
 
     let overlay = Overlay::new();
     overlay.set_child(Some(&row));

@@ -211,13 +211,9 @@ pub fn window(
                         buf.set_text(parameter.as_ref());
                     });
                 if let Some(stack_clone) = stack_clone.upgrade() {
-                    builder
-                        .object
-                        .as_ref()
-                        .and_then(|tmp| tmp.upgrade())
-                        .map(|obj| {
-                            stack_clone.add_named(&obj, Some("next-page"));
-                        });
+                    builder.object.as_ref().map(|obj| {
+                        stack_clone.add_named(obj, Some("next-page"));
+                    });
                     stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
                     stack_clone.set_visible_child_name("next-page");
                 }

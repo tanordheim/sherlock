@@ -4,13 +4,13 @@ use gtk4::{prelude::*, Box, Builder, Image, Label, Overlay, Spinner, TextView};
 
 #[derive(Default)]
 pub struct TextViewTileBuilder {
-    pub object: Option<WeakRef<Box>>,
+    pub object: Option<Box>,
     pub content: Option<WeakRef<TextView>>,
 }
 impl TextViewTileBuilder {
     pub fn new(resource: &str) -> Self {
         let builder = Builder::from_resource(resource);
-        let object = builder.object::<Box>("next_tile").map(|w| w.downgrade());
+        let object = builder.object::<Box>("next_tile");
         let content = builder.object::<TextView>("content").map(|w| w.downgrade());
         TextViewTileBuilder { object, content }
     }
