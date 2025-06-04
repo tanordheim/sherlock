@@ -1,6 +1,7 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::*;
+use simd_json::prelude::ArrayTrait;
 use std::pin::Pin;
 use std::vec;
 
@@ -63,9 +64,13 @@ impl Tile {
                         if let Some(content) = content {
                             content_body.upgrade().map(|b| b.set_markup(&content));
                         }
-                        if let Some(actions) = actions {
+
+                        if let Some(action) = actions {
                             row.upgrade().map(|row| {
-                                row.set_actions(actions);
+                                let open = !action.is_empty();
+                                let _ = row
+                                    .activate_action("win.context-mode", Some(&open.to_variant()));
+                                row.set_actions(action);
                             });
                         }
 
