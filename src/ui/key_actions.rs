@@ -95,12 +95,12 @@ impl KeyActions {
         None
     }
     fn move_next_context(&self) -> Option<()> {
-        let model = self.results.upgrade()?;
+        let model = self.context.view.upgrade()?;
         let _ = model.focus_next(None);
         None
     }
     fn move_prev_context(&self) -> Option<()> {
-        let model = self.results.upgrade()?;
+        let model = self.context.view.upgrade()?;
         let _ = model.focus_prev(None);
         None
     }
