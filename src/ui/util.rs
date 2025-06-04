@@ -67,7 +67,6 @@ impl ConfKeys {
             };
             let shortcut_modifier_str = ConfKeys::get_mod_str(&shortcut_modifier);
             let context_mod_str = ConfKeys::get_mod_str(&context_mod);
-            println!("{:?} - {:?}", inplace, exec_inplace_mod);
             return ConfKeys {
                 next: next.0,
                 next_mod,
