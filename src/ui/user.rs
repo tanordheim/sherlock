@@ -6,33 +6,20 @@ use gtk4::{
     self,
     gdk::{self, Key, ModifierType},
     prelude::*,
-    ApplicationWindow, Box as GtkBox, Builder, CustomFilter, CustomSorter, Entry,
-    EventControllerKey, FilterListModel, Image, Justification, ListView, Overlay,
-    SignalListItemFactory, SingleSelection, SortListModel,
+    ApplicationWindow, CustomFilter, CustomSorter, Entry, EventControllerKey, FilterListModel,
+    Justification, ListView, Overlay, SignalListItemFactory, SingleSelection, SortListModel,
 };
 use levenshtein::levenshtein;
 
-use super::util::*;
+use super::{search::SearchUiObj, util::*};
 use crate::{
     g_subclasses::sherlock_row::SherlockRow,
     prelude::{SherlockNav, SherlockSearch, ShortCut},
     CONFIG,
 };
-use gtk4::ScrolledWindow;
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
 use crate::loader::pipe_loader::PipeData;
-
-struct PipeUI {
-    result_viewport: WeakRef<ScrolledWindow>,
-    results: WeakRef<ListView>,
-    search_bar: WeakRef<Entry>,
-    search_icon_holder: WeakRef<GtkBox>,
-    selection: WeakRef<SingleSelection>,
-    filter: WeakRef<CustomFilter>,
-    sorter: WeakRef<CustomSorter>,
-    binds: ConfKeys,
-}
 
 pub fn display_pipe(
     _window: &ApplicationWindow,
@@ -40,14 +27,17 @@ pub fn display_pipe(
     method: &str,
     error_model: WeakRef<ListStore>,
 ) -> (Overlay, SearchHandler) {
-    let (search_text, stack_page, ui) = construct(pipe_content, method);
+    let (search_text, stack_page, ui, handler) = construct(pipe_content, method);
+    let imp = ui.imp();
 
-    if let Some(viewport) = ui.result_viewport.upgrade() {
-        viewport.set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
-    }
+    imp.result_viewport
+        .set_policy(gtk4::PolicyType::Automatic, gtk4::PolicyType::Automatic);
+
+    let search_bar = imp.search_bar.downgrade();
+    let results = imp.results.downgrade();
 
     stack_page.connect_realize({
-        let search_bar = ui.search_bar.clone();
+        let search_bar = search_bar.clone();
         move |_| {
             if let Some(entry) = search_bar.upgrade() {
                 entry.grab_focus();
@@ -56,18 +46,13 @@ pub fn display_pipe(
     });
 
     change_event(
-        ui.search_bar.clone(),
-        ui.results.clone(),
-        ui.filter.clone(),
-        ui.sorter.clone(),
+        search_bar.clone(),
+        results.clone(),
+        handler.filter.clone(),
+        handler.sorter.clone(),
         &search_text,
     );
-    nav_event(
-        ui.selection.clone(),
-        ui.results.clone(),
-        ui.search_bar.clone(),
-        ui.binds,
-    );
+    nav_event(results.clone(), search_bar.clone(), handler.binds);
 
     let handler = SearchHandler::empty(error_model);
     return (stack_page, handler);
@@ -103,40 +88,22 @@ pub fn display_raw<T: AsRef<str>>(
     overlay.set_child(Some(&row));
     (overlay, handler)
 }
-fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>, Overlay, PipeUI) {
+fn construct(
+    pipe_content: Vec<PipeData>,
+    method: &str,
+) -> (Rc<RefCell<String>>, Overlay, SearchUiObj, SearchHandler) {
     // Collect Modes
     let custom_binds = ConfKeys::new();
     let search_text = Rc::new(RefCell::new(String::new()));
 
     // Initialize the builder with the correct path
-    let builder = Builder::from_resource("/dev/skxxtz/sherlock/ui/search.ui");
-
-    // Get the required object references
-    let vbox: GtkBox = builder.object("vbox").unwrap();
-    let results: ListView = builder.object("result-frame").unwrap();
-    results.set_focusable(false);
-
-    let search_icon_holder: GtkBox = builder.object("search-icon-holder").unwrap_or_default();
-    search_icon_holder.add_css_class("search");
-    // Create the search icon
-    let search_icon = Image::new();
-    search_icon.set_icon_name(Some("system-search-symbolic"));
-    search_icon.set_widget_name("search-icon");
-    search_icon.set_halign(gtk4::Align::End);
-    // Create the back arrow
-    let search_icon_back = Image::new();
-    search_icon_back.set_icon_name(Some("go-previous-symbolic"));
-    search_icon_back.set_widget_name("search-icon-back");
-    search_icon_back.set_halign(gtk4::Align::End);
-    // Set search icons
-    let overlay = Overlay::new();
-    overlay.set_child(Some(&search_icon));
-    overlay.add_overlay(&search_icon_back);
+    let ui = SearchUiObj::new();
+    let imp = ui.imp();
 
     // Setup model and factory
     let model = ListStore::new::<SherlockRow>();
     let factory = make_factory();
-    results.set_factory(Some(&factory));
+    imp.results.set_factory(Some(&factory));
 
     // Setup selection
     let sorter = make_sorter(&search_text);
@@ -171,54 +138,42 @@ fn construct(pipe_content: Vec<PipeData>, method: &str) -> (Rc<RefCell<String>>,
     });
 
     let selection = SingleSelection::new(Some(sorted_model));
-    results.set_model(Some(&selection));
+    imp.results.set_model(Some(&selection));
 
     let tiles = Tile::pipe_data(&pipe_content, &method);
 
     for item in tiles.iter() {
         model.append(item);
     }
-    results.set_model(Some(&selection));
-    results.set_factory(Some(&factory));
-
-    results.focus_first(None, None);
+    imp.results.set_model(Some(&selection));
+    imp.results.set_factory(Some(&factory));
+    imp.results.focus_first(None, None);
 
     // Disable status-bar
     CONFIG.get().map(|c| {
         if !c.appearance.status_bar {
-            let n: Option<GtkBox> = builder.object("status-bar");
-            n.map(|n| n.set_visible(false));
+            imp.status_bar.set_visible(false);
         }
     });
 
-    search_icon_holder.append(&overlay);
-
-    let search_bar: Entry = builder.object("search-bar").unwrap_or_default();
-    let result_viewport: ScrolledWindow = builder.object("scrolled-window").unwrap_or_default();
-    let ui = PipeUI {
-        result_viewport: result_viewport.downgrade(),
-        results: results.downgrade(),
-        search_bar: search_bar.downgrade(),
-        search_icon_holder: search_icon_holder.downgrade(),
-        selection: selection.downgrade(),
-        filter: filter.downgrade(),
-        sorter: sorter.downgrade(),
-        binds: custom_binds,
-    };
     CONFIG.get().map(|c| {
-        ui.result_viewport.upgrade().map(|viewport| {
-            viewport.set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
-        });
-        ui.search_icon_holder
-            .upgrade()
-            .map(|holder| holder.set_visible(c.appearance.search_icon));
-        search_icon.set_pixel_size(c.appearance.icon_size);
-        search_icon_back.set_pixel_size(c.appearance.icon_size);
+        imp.result_viewport
+            .set_size_request((c.appearance.width as f32 * 0.4) as i32, 10);
+        imp.search_icon_holder.set_visible(c.appearance.search_icon);
+        imp.search_icon.set_pixel_size(c.appearance.icon_size);
+        imp.search_icon_back.set_pixel_size(c.appearance.icon_size);
     });
 
+    let handler = SearchHandler::new(
+        model.downgrade(),
+        WeakRef::new(),
+        filter.downgrade(),
+        sorter.downgrade(),
+        ConfKeys::new(),
+    );
     let main_overlay = Overlay::new();
-    main_overlay.set_child(Some(&vbox));
-    (search_text, main_overlay, ui)
+    main_overlay.set_child(Some(&ui));
+    (search_text, main_overlay, ui, handler)
 }
 fn make_factory() -> SignalListItemFactory {
     let factory = SignalListItemFactory::new();
@@ -267,12 +222,7 @@ fn make_sorter(search_text: &Rc<RefCell<String>>) -> CustomSorter {
         }
     })
 }
-fn nav_event(
-    selection: WeakRef<SingleSelection>,
-    results: WeakRef<ListView>,
-    search_bar: WeakRef<Entry>,
-    custom_binds: ConfKeys,
-) {
+fn nav_event(results: WeakRef<ListView>, search_bar: WeakRef<Entry>, custom_binds: ConfKeys) {
     let event_controller = EventControllerKey::new();
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed({
@@ -334,12 +284,11 @@ fn nav_event(
                     }
                 }
                 gdk::Key::Return => {
-                    if let Some(upgr) = selection.upgrade() {
-                        if let Ok(sel) = upgr.downcast::<SingleSelection>() {
-                            if let Some(row) = sel.selected_item().and_downcast::<SherlockRow>() {
-                                let exit: u8 = 0;
-                                row.emit_by_name::<()>("row-should-activate", &[&exit]);
-                            }
+                    // Activate action
+                    if let Some(upgr) = results.upgrade() {
+                        if let Some(row) = upgr.selected_item().and_downcast::<SherlockRow>() {
+                            let exit: u8 = 0;
+                            row.emit_by_name::<()>("row-should-activate", &[&exit]);
                         }
                     }
                 }
