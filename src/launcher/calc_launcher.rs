@@ -1,9 +1,13 @@
 use crate::{
     sherlock_error,
-    utils::errors::{SherlockError, SherlockErrorType},
+    utils::{
+        errors::{SherlockError, SherlockErrorType},
+        files::home_dir,
+    },
     CONFIG,
 };
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use simd_json::{
     base::{ValueAsArray, ValueAsScalar},
     derived::ValueObjectAccess,
@@ -11,9 +15,11 @@ use simd_json::{
 };
 use std::{
     collections::{HashMap, HashSet},
+    fs::{create_dir_all, File},
+    path::Path,
     sync::OnceLock,
+    time::{Duration, SystemTime},
 };
-use tokio::runtime::Handle;
 
 #[derive(Clone, Debug)]
 pub struct CalculatorLauncher {
@@ -124,11 +130,7 @@ impl Measurements {
             "volumes" => Volume::match_unit(unit),
             "currencies" => {
                 if Currency::unit_exists(unit) {
-                    if let Some(curr) = CURRENCIES.get_or_init(|| Currency::new()) {
-                        curr.match_unit(unit)
-                    } else {
-                        None
-                    }
+                    CURRENCIES.get()?.as_ref().and_then(|c| c.match_unit(unit))
                 } else {
                     None
                 }
@@ -248,7 +250,7 @@ impl Volume {
 
 pub static CURRENCIES: OnceLock<Option<Currency>> = OnceLock::new();
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Currency {
     usd: f32, // US Dollar
     eur: f32, // Euro
@@ -267,12 +269,6 @@ pub struct Currency {
     krw: f32, // South Korean Won
 }
 impl Currency {
-    pub fn new() -> Option<Currency> {
-        tokio::task::block_in_place(|| {
-            let handle = Handle::current();
-            handle.block_on(async { Self::get_exchange().await.ok() })
-        })
-    }
     pub fn from_map(mut map: HashMap<String, f32>) -> Option<Self> {
         Some(Self {
             usd: 1.0,
@@ -324,7 +320,52 @@ impl Currency {
         allowed.contains(&unit.to_lowercase().as_str())
     }
 
-    pub async fn get_exchange() -> Result<Currency, SherlockError> {
+    fn load_cached<P: AsRef<Path>>(loc: P, update_interval: u64) -> Option<Currency> {
+        let absolute = loc.as_ref();
+        if absolute.is_file() {
+            let mtime = absolute.metadata().ok()?.modified().ok()?;
+            let time_since = SystemTime::now().duration_since(mtime).ok()?;
+            // then was cached
+            if time_since < Duration::from_secs(60 * update_interval) {
+                File::open(&absolute)
+                    .ok()
+                    .and_then(|file| simd_json::from_reader(file).ok())?
+            }
+        }
+        None
+    }
+    fn cache<P: AsRef<Path>>(&self, loc: P) -> Result<(), SherlockError> {
+        let absolute = loc.as_ref();
+        if !absolute.is_file() {
+            if let Some(parents) = absolute.parent() {
+                create_dir_all(parents).map_err(|e| {
+                    sherlock_error!(
+                        SherlockErrorType::DirCreateError(String::from(
+                            "~/.cache/sherlock/currency/"
+                        )),
+                        e.to_string()
+                    )
+                })?;
+            }
+        }
+        let content = simd_json::to_string(self)
+            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError(), e.to_string()))?;
+        std::fs::write(absolute, content).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::FileWriteError(absolute.to_path_buf()),
+                e.to_string()
+            )
+        })
+    }
+
+    pub async fn get_exchange(update_interval: u64) -> Result<Currency, SherlockError> {
+        let home = home_dir()?;
+        let absolute = home.join(".cache/sherlock/currency/currency.json");
+        match Currency::load_cached(&absolute, update_interval) {
+            Some(curr) => return Ok(curr),
+            _ => {}
+        };
+
         let url = "https://scanner.tradingview.com/forex/scan?label-product=related-symbols";
 
         let json_body = r#"{
@@ -400,11 +441,15 @@ impl Currency {
                 HashMap::new()
             };
 
-        Currency::from_map(currencies).ok_or_else(|| {
-            sherlock_error!(
+        match Currency::from_map(currencies) {
+            Some(curr) => {
+                curr.cache(absolute)?;
+                Ok(curr)
+            }
+            _ => Err(sherlock_error!(
                 SherlockErrorType::DeserializationError(),
                 String::from("Failed to deserialize currency map into 'Currency' object.")
-            )
-        })
+            )),
+        }
     }
 }

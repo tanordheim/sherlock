@@ -210,8 +210,13 @@ fn parse_calculator(raw: &RawLauncher) -> LauncherType {
     };
 
     // initialize currencies
-    tokio::spawn(async {
-        let result = Currency::get_exchange().await.ok();
+    let update_interval = raw
+        .args
+        .get("currency_update_interval")
+        .and_then(|interval| interval.as_u64())
+        .unwrap_or(60 * 60 * 24);
+    tokio::spawn(async move {
+        let result = Currency::get_exchange(update_interval).await.ok();
         let _result = CURRENCIES.set(result);
     });
 
@@ -242,10 +247,15 @@ fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockE
     if clipboard_content.is_empty() {
         Ok(LauncherType::Empty)
     } else {
-        if capabilities.is_none(){
+        if capabilities.is_none() {
             // initialize currencies
-            tokio::spawn(async {
-                let result = Currency::get_exchange().await.ok();
+            let update_interval = raw
+                .args
+                .get("currency_update_interval")
+                .and_then(|interval| interval.as_u64())
+                .unwrap_or(60 * 60 * 24);
+            tokio::spawn(async move {
+                let result = Currency::get_exchange(update_interval).await.ok();
                 let _result = CURRENCIES.set(result);
             });
         }
