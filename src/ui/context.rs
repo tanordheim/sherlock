@@ -6,8 +6,8 @@ use gio::{
     ListStore,
 };
 use gtk4::{
-    prelude::ListItemExt,
-    ListView, Revealer, ScrolledWindow, SignalListItemFactory, SingleSelection,
+    prelude::ListItemExt, ListView, Revealer, ScrolledWindow, SignalListItemFactory,
+    SingleSelection,
 };
 
 use crate::{g_subclasses::action_entry::ContextAction, CONFIG};

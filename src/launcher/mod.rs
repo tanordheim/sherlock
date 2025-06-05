@@ -12,6 +12,7 @@ pub mod event_launcher;
 pub mod file_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
+pub mod theme_picker;
 mod utils;
 pub mod weather_launcher;
 pub mod web_launcher;
@@ -34,6 +35,7 @@ use event_launcher::EventLauncher;
 use file_launcher::FileLauncher;
 use process_launcher::ProcessLauncher;
 use system_cmd_launcher::CommandLauncher;
+use theme_picker::ThemePicker;
 use weather_launcher::{WeatherData, WeatherLauncher};
 use web_launcher::WebLauncher;
 
@@ -51,6 +53,7 @@ pub enum LauncherType {
     File(FileLauncher),
     MusicPlayer(MusicPlayerLauncher),
     Process(ProcessLauncher),
+    Theme(ThemePicker),
     Weather(WeatherLauncher),
     Web(WebLauncher),
     Empty,

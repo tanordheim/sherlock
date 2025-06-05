@@ -2,6 +2,7 @@ use serde::de::IntoDeserializer;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
+use std::env::home_dir;
 use std::fs::File;
 use std::path::PathBuf;
 
@@ -14,6 +15,7 @@ use crate::launcher::emoji_picker::EmojiPicker;
 use crate::launcher::event_launcher::EventLauncher;
 use crate::launcher::file_launcher::FileLauncher;
 use crate::launcher::process_launcher::ProcessLauncher;
+use crate::launcher::theme_picker::ThemePicker;
 use crate::launcher::weather_launcher::WeatherLauncher;
 use crate::launcher::{
     app_launcher, bulk_text_launcher, clipboard_launcher, system_cmd_launcher, web_launcher,
@@ -74,6 +76,7 @@ impl Loader {
                     "emoji_picker" => parse_emoji_launcher(&raw),
                     "files" => parse_file_launcher(&raw),
                     "teams_event" => parse_event_launcher(&raw),
+                    "theme_picker" => parse_theme_launcher(&raw),
                     "process" => parse_process_launcher(&raw),
                     "weather" => parse_weather_launcher(&raw),
                     "web_launcher" => parse_web_launcher(&raw),
@@ -301,6 +304,51 @@ fn parse_event_launcher(raw: &RawLauncher) -> LauncherType {
         .unwrap_or("+15 minutes");
     let event = EventLauncher::get_event(date, event_start, event_end);
     LauncherType::Event(EventLauncher { event, icon })
+}
+fn parse_theme_launcher(raw: &RawLauncher) -> LauncherType {
+    let relative = raw
+        .args
+        .get("location")
+        .and_then(Value::as_str)
+        .unwrap_or("~/.config/sherlock/themes/");
+    let relative = relative.strip_prefix("~/").unwrap_or(relative);
+    let home = match home_dir() {
+        Some(dir) => dir,
+        _ => return LauncherType::Empty,
+    };
+    let absolute = home.join(relative);
+    if !absolute.is_dir() {
+        return LauncherType::Empty;
+    }
+    let themes: HashMap<String, PathBuf> = absolute
+        .read_dir()
+        .ok()
+        .map(|entries| {
+            entries
+                .filter_map(Result::ok)
+                .map(|entry| entry.path())
+                .filter(|path| path.is_file() || path.is_symlink())
+                .filter_map(|path| {
+                    if path.extension()?.to_str()? == "css" {
+                        let name = path.file_name()?.to_str()?.to_string();
+                        Some((name, path))
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if themes.is_empty() {
+        return LauncherType::Empty;
+    }
+
+    println!("{:?}", themes);
+    LauncherType::Theme(ThemePicker {
+        location: absolute.clone(),
+        themes,
+    })
 }
 fn parse_file_launcher(raw: &RawLauncher) -> LauncherType {
     let mut data: HashSet<AppData> = HashSet::with_capacity(1);

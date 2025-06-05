@@ -660,7 +660,7 @@ pub struct Runtime {
     pub multi: bool,
 
     #[serde(default)]
-    pub photo_mode: bool
+    pub photo_mode: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
