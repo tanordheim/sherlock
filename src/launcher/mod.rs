@@ -139,6 +139,7 @@ impl Launcher {
             LauncherType::Event(evl) => Tile::event_tile(self, evl),
             LauncherType::Emoji(emj) => Tile::app_tile(self, &emj.data),
             LauncherType::File(f) => Tile::app_tile(self, &f.data),
+            LauncherType::Theme(thm) => Tile::app_tile(self, &thm.themes),
             LauncherType::Process(proc) => Tile::process_tile(self, &proc),
             LauncherType::Web(web) => Tile::web_tile(self, &web),
 

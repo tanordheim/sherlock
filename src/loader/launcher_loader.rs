@@ -317,38 +317,7 @@ fn parse_theme_launcher(raw: &RawLauncher) -> LauncherType {
         _ => return LauncherType::Empty,
     };
     let absolute = home.join(relative);
-    if !absolute.is_dir() {
-        return LauncherType::Empty;
-    }
-    let themes: HashMap<String, PathBuf> = absolute
-        .read_dir()
-        .ok()
-        .map(|entries| {
-            entries
-                .filter_map(Result::ok)
-                .map(|entry| entry.path())
-                .filter(|path| path.is_file() || path.is_symlink())
-                .filter_map(|path| {
-                    if path.extension()?.to_str()? == "css" {
-                        let name = path.file_name()?.to_str()?.to_string();
-                        Some((name, path))
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-
-    if themes.is_empty() {
-        return LauncherType::Empty;
-    }
-
-    println!("{:?}", themes);
-    LauncherType::Theme(ThemePicker {
-        location: absolute.clone(),
-        themes,
-    })
+    ThemePicker::new(absolute, raw.priority)
 }
 fn parse_file_launcher(raw: &RawLauncher) -> LauncherType {
     let mut data: HashSet<AppData> = HashSet::with_capacity(1);

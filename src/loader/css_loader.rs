@@ -1,8 +1,10 @@
 use gtk4::gdk::Display;
 use gtk4::CssProvider;
-use std::path::Path;
+use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
 
 use super::Loader;
+use crate::launcher::theme_picker::ThemePicker;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, CONFIG};
 
@@ -29,9 +31,14 @@ impl Loader {
         }
 
         // Load the user css
+        let theme = match ThemePicker::get_cached() {
+            Ok(loc) => read_to_string(loc).map(|s| PathBuf::from(s.trim())).ok(),
+            _ => None,
+        }
+        .unwrap_or(config.files.css.clone());
         if Path::new(&config.files.css).exists() {
             let usr_provider = CssProvider::new();
-            usr_provider.load_from_path(&config.files.css);
+            usr_provider.load_from_path(&theme);
             gtk4::style_context_add_provider_for_display(
                 &display,
                 &usr_provider,

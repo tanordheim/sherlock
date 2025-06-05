@@ -6,7 +6,10 @@ use teamslaunch::teamslaunch;
 use util::{clear_cached_files, reset_app_counter};
 
 use crate::{
-    launcher::{audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher},
+    launcher::{
+        audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher,
+        theme_picker::ThemePicker,
+    },
     loader::util::CounterReader,
 };
 
@@ -109,6 +112,13 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     "win.switch-page",
                     Some(&String::from("search-page->emoji-page").to_variant()),
                 );
+            }
+            "theme_picker" => {
+                if let Some(theme) = attrs.get("result").or(attrs.get("exec")) {
+                    let _ = ThemePicker::select_theme(theme);
+                } else {
+                    exit = false;
+                }
             }
             "next" => {
                 exit = false;
