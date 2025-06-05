@@ -36,7 +36,7 @@ impl Loader {
             _ => None,
         }
         .unwrap_or(config.files.css.clone());
-        if Path::new(&config.files.css).exists() {
+        if Path::new(&theme).exists() {
             let usr_provider = CssProvider::new();
             usr_provider.load_from_path(&theme);
             gtk4::style_context_add_provider_for_display(

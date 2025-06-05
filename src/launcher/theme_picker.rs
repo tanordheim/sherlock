@@ -38,7 +38,7 @@ impl ThemePicker {
                             data.exec = path.to_str().map(|s| s.to_string());
                             data.search_string = name;
                             data.priority = prio;
-                            data.icon = Some(String::from("sherlock-theme"));
+                            data.icon = Some(String::from("sherlock-devtools"));
                             Some(data)
                         } else {
                             None
