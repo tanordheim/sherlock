@@ -83,7 +83,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     }
                 } else if let Some(result) = attrs.get("result") {
                     print!("{}", result);
-                } else if let Some(exec) = attrs.get("exec"){
+                } else if let Some(exec) = attrs.get("exec") {
                     print!("{}", exec);
                 }
             }

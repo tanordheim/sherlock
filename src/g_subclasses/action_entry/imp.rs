@@ -46,16 +46,26 @@ impl ObjectImpl for ContextAction {
         self.icon.set(icon.downgrade()).unwrap();
 
         // Modkey label
-        let modkey = Label::new(None);
-        modkey.set_halign(gtk4::Align::Start);
-        modkey.set_valign(gtk4::Align::Center);
+        let modkey = Label::builder()
+            .halign(gtk4::Align::Start)
+            .valign(gtk4::Align::Center)
+            .wrap(false)
+            .single_line_mode(true)
+            .ellipsize(gtk4::pango::EllipsizeMode::End)
+            .vexpand(true)
+            .build();
         obj.append(&modkey);
         self.modkey.set(modkey.downgrade()).unwrap();
 
         // Title label
-        let title = Label::new(None);
-        title.set_halign(gtk4::Align::Start);
-        title.set_valign(gtk4::Align::Center);
+        let title = Label::builder()
+            .halign(gtk4::Align::Start)
+            .valign(gtk4::Align::Center)
+            .wrap(false)
+            .single_line_mode(true)
+            .ellipsize(gtk4::pango::EllipsizeMode::End)
+            .vexpand(true)
+            .build();
         obj.append(&title);
         self.title.set(title.downgrade()).unwrap();
 
