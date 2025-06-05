@@ -28,6 +28,7 @@ The launcher can be of the following types:<br>
 - **[Emoji](#emoji-picker):** This launcher allows you to search and pick emojis.
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins.
+- **[Theme Picker](#theme-picjer):** This launcher shows available themes and sets them as your default.
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
 - **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
@@ -543,6 +544,27 @@ Specifies the offset from the `date` parameter.<br>
 
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
+
+<br>
+
+## Theme Picker
+
+```json
+{
+    "name": "Theme Picker",
+    "type": "theme_picker",
+    "args": {
+        "location": "~/.config/sherlock/themes/"
+    },
+    "priority": 4,
+    "home": true
+}
+```
+
+### Arguments (args)
+
+**`location`** (optional):<br>
+Specifies your theme directory. Defaults to `~/.config/sherlock/themes/`.
 
 <br>
 
