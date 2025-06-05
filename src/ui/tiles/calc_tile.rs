@@ -15,10 +15,7 @@ use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 impl Tile {
     pub fn calc_tile(launcher: &Launcher, calc_launcher: &CalculatorLauncher) -> Vec<SherlockRow> {
-        let capabilities: HashSet<String> = match &calc_launcher.capabilities {
-            Some(c) => c.iter().map(|s| s.to_string()).collect(),
-            _ => HashSet::from([String::from("calc.math"), String::from("calc.units")]),
-        };
+        let capabilities: HashSet<String> = calc_launcher.capabilities.clone();
         let capability_rc = Rc::new(RefCell::new(capabilities));
 
         let tile = CalcTile::new();
@@ -74,6 +71,12 @@ impl Tile {
                     && result.is_none()
                 {
                     result = Calculator::temperature(&search_query)
+                }
+
+                if (capabilities.contains("calc.currencies") || capabilities.contains("calc.units"))
+                    && result.is_none()
+                {
+                    result = Calculator::measurement(&search_query, "currencies")
                 }
                 if let Some((num, result_text)) = result {
                     equation_holder

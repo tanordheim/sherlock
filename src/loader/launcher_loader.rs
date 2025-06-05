@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use crate::actions::util::{parse_default_browser, read_from_clipboard};
 use crate::launcher::audio_launcher::AudioLauncherFunctions;
 use crate::launcher::bookmark_launcher::BookmarkLauncher;
-use crate::launcher::calc_launcher::CalculatorLauncher;
+use crate::launcher::calc_launcher::{CalculatorLauncher, Currency, CURRENCIES};
 use crate::launcher::category_launcher::CategoryLauncher;
 use crate::launcher::emoji_picker::EmojiPicker;
 use crate::launcher::event_launcher::EventLauncher;
@@ -201,16 +201,20 @@ fn parse_bulk_text_launcher(raw: &RawLauncher) -> LauncherType {
     })
 }
 fn parse_calculator(raw: &RawLauncher) -> LauncherType {
-    let capabilities: Option<HashSet<String>> = match raw.args.get("capabilities") {
-        Some(Value::Array(arr)) => {
-            let strings: HashSet<String> = arr
-                .iter()
-                .filter_map(|v| v.as_str().map(str::to_string))
-                .collect();
-            Some(strings)
-        }
-        _ => None,
+    let capabilities: HashSet<String> = match raw.args.get("capabilities") {
+        Some(Value::Array(arr)) => arr
+            .iter()
+            .filter_map(|v| v.as_str().map(str::to_string))
+            .collect(),
+        _ => HashSet::from([String::from("calc.math"), String::from("calc.units")]),
     };
+
+    // initialize currencies
+    tokio::spawn(async {
+        let result = Currency::get_exchange().await.ok();
+        let _result = CURRENCIES.set(result);
+    });
+
     LauncherType::Calc(CalculatorLauncher { capabilities })
 }
 fn parse_category_launcher(
@@ -243,7 +247,12 @@ fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockE
                 clipboard_content,
                 capabilities: capabilities.clone(),
             },
-            CalculatorLauncher { capabilities },
+            CalculatorLauncher {
+                capabilities: capabilities.unwrap_or(HashSet::from([
+                    String::from("calc.math"),
+                    String::from("calc.units"),
+                ])),
+            },
         )))
     }
 }

@@ -96,6 +96,10 @@ pub enum SherlockErrorType {
 
     // Sqlite
     SqlConnectionError(),
+
+    // (De-) Serialization
+    SerializationError(),
+    DeserializationError(),
 }
 impl std::fmt::Display for SherlockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -189,6 +193,14 @@ impl SherlockErrorType {
             // Sqlite
             SherlockErrorType::SqlConnectionError() => {
                 format!("Failed to estblish database connection.")
+            }
+
+            // (De-) Serialization
+            SherlockErrorType::SerializationError() => {
+                format!("Failed to serialize content.")
+            }
+            SherlockErrorType::DeserializationError() => {
+                format!("Failed to deserialize content.")
             }
         };
         (variant_name(self), message)

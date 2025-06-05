@@ -442,7 +442,7 @@ pub struct ConfigUnits {
     #[serde(default = "default_temperatures")]
     pub temperatures: String,
     #[serde(default = "default_currency")]
-    pub _currency: String,
+    pub currency: String,
 }
 impl Default for ConfigUnits {
     fn default() -> Self {
@@ -451,7 +451,7 @@ impl Default for ConfigUnits {
             weights: default_weights(),
             volumes: default_volumes(),
             temperatures: default_temperatures(),
-            _currency: default_currency(),
+            currency: default_currency(),
         }
     }
 }

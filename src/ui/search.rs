@@ -577,6 +577,8 @@ fn nav_event(
                                 .upgrade()
                                 .map(|r| r.execute_by_index(index));
                         }
+                    } else {
+                        return false.into();
                     }
                 }
                 // Pain - solution for shift-tab since gtk handles it as an individual event
