@@ -51,7 +51,6 @@ impl ThemePicker {
         if themes.is_empty() {
             return LauncherType::Empty;
         }
-        println!("themes: {:?}", themes);
 
         LauncherType::Theme(ThemePicker {
             location: absolute.to_path_buf(),
