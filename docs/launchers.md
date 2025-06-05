@@ -286,10 +286,11 @@ Sets the icon-name the launcher should show.
 Specifies what the launcher should parse:
 
 - **`calc.math`** - displays the solutions to mathematical problems
-- **`calc.lengths`** - displays the solutions to length transformations
-- **`calc.weights`** - displays the solutions to weight transformations
-- **`calc.volumes`** - displays the solutions to volume transformations
-- **`calc.temperatures`** - displays the solutions to temerature transformations
+- **`calc.lengths` (unit)** - displays the solutions to length transformations
+- **`calc.weights` (unit)** - displays the solutions to weight transformations
+- **`calc.volumes` (unit)** - displays the solutions to volume transformations
+- **`calc.temperatures` (unit)** - displays the solutions to temerature transformations
+- **`calc.currencies` (unit)** - displays the solutions to currency transformations
 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
@@ -335,10 +336,11 @@ Specifies what the launcher should parse:
 - **`colors.rgb`** - displays rgb colors in Sherlock. Format supports optional rgb prefix and optional parentheses.
 - **`colors.hsl`** - displays hsl colors in Sherlock. Format supports optional hsl prefix and optional parentheses.
 - **`calc.math`** - displays the solutions to mathematical problems
-- **`calc.lengths`** - displays the solutions to length transformations
-- **`calc.weights`** - displays the solutions to weight transformations
-- **`calc.volumes`** - displays the solutions to volume transformations
-- **`calc.temperatures`** - displays the solutions to temerature transformations
+- **`calc.lengths` (unit)** - displays the solutions to length transformations
+- **`calc.weights` (unit)** - displays the solutions to weight transformations
+- **`calc.volumes` (unit)** - displays the solutions to volume transformations
+- **`calc.temperatures` (unit)** - displays the solutions to temerature transformations
+- **`calc.currencies` (unit)** - displays the solutions to currency transformations
 
 > **💡 Note:**
 > You can also use
