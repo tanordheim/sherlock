@@ -62,16 +62,18 @@ pub fn window(
         window.set_margin(gtk4_layer_shell::Edge::Top, config.expand.margin);
     }
 
-    let focus_controller = EventControllerFocus::new();
-    focus_controller.connect_leave({
-        let window_ref = window.downgrade();
-        move |_| {
-            if let Some(window) = window_ref.upgrade() {
-                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+    if !config.runtime.photo_mode {
+        let focus_controller = EventControllerFocus::new();
+        focus_controller.connect_leave({
+            let window_ref = window.downgrade();
+            move |_| {
+                if let Some(window) = window_ref.upgrade() {
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+                }
             }
-        }
-    });
-    window.add_controller(focus_controller);
+        });
+        window.add_controller(focus_controller);
+    }
 
     // Handle the key press event
     let key_controller = EventControllerKey::new();

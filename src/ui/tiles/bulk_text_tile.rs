@@ -1,7 +1,6 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::glib::object::ObjectExt;
 use gtk4::prelude::*;
-use simd_json::prelude::ArrayTrait;
 use std::pin::Pin;
 use std::vec;
 

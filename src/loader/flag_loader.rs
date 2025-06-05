@@ -67,6 +67,7 @@ impl SherlockFlags {
             method: extract_flag_value("--method"),
             field: extract_flag_value("--field"),
             multi: check_flag_existance("--multi"),
+            photo_mode: check_flag_existance("--photo"),
         })
     }
 }

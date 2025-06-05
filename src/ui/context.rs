@@ -6,7 +6,7 @@ use gio::{
     ListStore,
 };
 use gtk4::{
-    prelude::{ListItemExt, WidgetExt},
+    prelude::ListItemExt,
     ListView, Revealer, ScrolledWindow, SignalListItemFactory, SingleSelection,
 };
 
