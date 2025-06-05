@@ -242,6 +242,13 @@ fn parse_clipboard_launcher(raw: &RawLauncher) -> Result<LauncherType, SherlockE
     if clipboard_content.is_empty() {
         Ok(LauncherType::Empty)
     } else {
+        if capabilities.is_none(){
+            // initialize currencies
+            tokio::spawn(async {
+                let result = Currency::get_exchange().await.ok();
+                let _result = CURRENCIES.set(result);
+            });
+        }
         Ok(LauncherType::Clipboard((
             ClipboardLauncher {
                 clipboard_content,
