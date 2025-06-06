@@ -254,7 +254,6 @@ pub struct SearchHandler {
     pub filter: WeakRef<CustomFilter>,
     pub sorter: WeakRef<CustomSorter>,
     pub binds: ConfKeys,
-    pub mode: Rc<RefCell<String>>,
 }
 impl SearchHandler {
     pub fn new(
@@ -272,7 +271,6 @@ impl SearchHandler {
             filter,
             sorter,
             binds,
-            mode: Rc::new(RefCell::new(String::new())),
         }
     }
     pub fn clear(&self) {
