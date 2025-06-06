@@ -58,25 +58,31 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 } else {
                     ""
                 };
-                let _ = websearch::websearch(engine, query);
+                if let Err(error) = websearch::websearch(engine, query) {
+                    exit = false;
+                    let _result = error.insert();
+                }
             }
             "command" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 if let Err(error) = commandlaunch::command_launch(exec, keyword) {
-                    println!("{}", error);
+                    exit = false;
+                    let _result = error.insert();
+                } else {
+                    increment(&exec);
                 }
-                increment(&exec);
             }
             "copy" => {
                 if let Some(field) = attrs.get("field") {
                     if let Some(output) = attrs.get(field) {
                         let _ = util::copy_to_clipboard(output.as_str());
                     }
-                } else if let Some(result) = attrs.get("result") {
-                    let _ = util::copy_to_clipboard(result.as_str());
-                } else if let Some(exec) = attrs.get("exec") {
-                    let _ = util::copy_to_clipboard(exec.as_str());
+                } else if let Some(output) = attrs.get("result").or(attrs.get("exec")) {
+                    if let Err(err) = util::copy_to_clipboard(output.as_str()) {
+                        exit = false;
+                        let _result = err.insert();
+                    }
                 }
             }
             "print" => {
@@ -84,10 +90,8 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     if let Some(output) = attrs.get(field) {
                         print!("{}", output);
                     }
-                } else if let Some(result) = attrs.get("result") {
-                    print!("{}", result);
-                } else if let Some(exec) = attrs.get("exec") {
-                    print!("{}", exec);
+                } else if let Some(output) = attrs.get("result").or(attrs.get("exec")) {
+                    print!("{}", output);
                 }
             }
             "teams_event" => {
@@ -115,7 +119,10 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
             }
             "theme_picker" => {
                 if let Some(theme) = attrs.get("result").or(attrs.get("exec")) {
-                    let _ = ThemePicker::select_theme(theme);
+                    if let Err(error) = ThemePicker::select_theme(theme) {
+                        exit = false;
+                        let _result = error.insert();
+                    }
                 } else {
                     exit = false;
                 }
@@ -130,35 +137,49 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     .activate_action("win.add-page", Some(&next_content.to_string().to_variant()));
             }
             "play-pause" | "audio_sink" => {
-                attrs
-                    .get("player")
-                    .map(|player| MusicPlayerLauncher::playpause(player));
+                if let Some(player) = attrs.get("player") {
+                    if let Err(error) = MusicPlayerLauncher::playpause(player) {
+                        exit = false;
+                        let _result = error.insert();
+                    }
+                }
             }
             "kill-process" => {
-                let _ = attrs
+                if let Some((ppid, cpid)) = attrs
                     .get("parent-pid")
                     .and_then(|p| p.parse::<i32>().ok())
                     .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
-                    .map(|(ppid, cpid)| ProcessLauncher::kill((ppid, cpid)));
+                {
+                    if let Err(error) = ProcessLauncher::kill((ppid, cpid)) {
+                        let _result = error.insert();
+                    }
+                };
             }
             "debug" => {
                 let exec = attrs.get("exec").map_or("", |s| s.as_str());
                 match exec {
                     "show_errors" => {
-                        let _result = row.activate_action(
+                        exit = false;
+                        if let Ok(_) = row.activate_action(
                             "win.switch-page",
                             Some(&String::from("search-page->error-page").to_variant()),
-                        );
-                        increment("debug.show_errors");
-                        exit = false;
+                        ) {
+                            increment("debug.show_errors");
+                        }
                     }
                     "clear_cache" => {
-                        let _result = clear_cached_files();
-                        increment("debug.clear_cache");
+                        if let Err(error) = clear_cached_files() {
+                            let _result = error.insert();
+                        } else {
+                            increment("debug.clear_cache");
+                        }
                     }
                     "reset_counts" => {
-                        let _result = reset_app_counter();
-                        increment("debug.reset_counts");
+                        if let Err(error) = reset_app_counter() {
+                            let _result = error.insert();
+                        } else {
+                            increment("debug.reset_counts");
+                        }
                     }
                     _ => {}
                 }
