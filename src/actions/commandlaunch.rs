@@ -54,16 +54,21 @@ pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<()
     })?;
 
     tokio::spawn(async move {
-        match child.wait_with_output() {
+        let result = match child.wait_with_output() {
             Ok(output) => {
                 if output.status.success() {
                     sher_log!(format!("Command succeeded: {}", raw_command));
+                    Ok(())
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);
                     sher_log!(format!(
                         "Command failed: {}\nStderr: {}",
                         raw_command, stderr
                     ));
+                    Err(sherlock_error!(
+                        SherlockErrorType::CommandExecutionError(raw_command.to_string()),
+                        stderr.to_string()
+                    ))
                 }
             }
             Err(e) => {
@@ -71,7 +76,14 @@ pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<()
                     "Failed to wait for command: {}\nError: {}",
                     raw_command, e
                 ));
+                Err(sherlock_error!(
+                    SherlockErrorType::CommandExecutionError(raw_command.to_string()),
+                    e.to_string()
+                ))
             }
+        };
+        if let Err(err) = result {
+            let _result = err.insert();
         }
     });
     Ok(())
