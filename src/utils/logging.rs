@@ -23,18 +23,19 @@ pub fn write_log<T: AsRef<str>>(message: T, file: &str, line: u32) {
     let message = message.as_ref();
     let now = Local::now().format("%Y-%m-%d %H:%M:%S");
     let mut log_file = LOG_FILE.lock().expect("Failed to lock LOG_FILE..");
-
-    writeln!(log_file, "[{}] {}:{} - {}", now, file, line, message)
-        .expect("Failed to write to log file");
+    message
+        .split("\n")
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .for_each(|msg| {
+            writeln!(log_file, "[{}] {}:{} - {}", now, file, line, msg)
+                .expect("Failed to write to log file");
+        });
 }
 
 #[macro_export]
 macro_rules! sher_log {
     ($message:expr) => {{
-        if let Ok(logging_enabled) = std::env::var("LOGGING") {
-            if logging_enabled == "true" {
-                $crate::utils::logging::write_log($message, file!(), line!())
-            }
-        }
+        $crate::utils::logging::write_log($message, file!(), line!())
     }};
 }
