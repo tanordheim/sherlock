@@ -1,6 +1,3 @@
-use api::api::SherlockModes;
-use api::server::SherlockServer;
-// CRATE
 use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
 use gtk4::{glib, Application};
@@ -11,7 +8,6 @@ use std::time::Instant;
 use std::{env, process};
 use utils::config::SherlockFlags;
 
-// MODS
 mod actions;
 mod api;
 mod application;
@@ -23,7 +19,8 @@ pub mod prelude;
 mod ui;
 mod utils;
 
-// IMPORTS
+use api::api::SherlockModes;
+use api::server::SherlockServer;
 use application::lock::{self, LockFile};
 use loader::Loader;
 use utils::{
@@ -131,7 +128,7 @@ async fn main() {
                         SherlockModes::Pipe(pipe)
                     }
                 };
-                sherlock.borrow_mut().switch_mode(mode);
+                sherlock.borrow_mut().switch_mode(&mode);
             }
         });
 

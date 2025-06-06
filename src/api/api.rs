@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
@@ -9,21 +9,17 @@ use gtk4::{
     prelude::{EntryExt, GtkWindowExt, WidgetExt},
     ApplicationWindow, Stack,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    actions::execute_from_attrs,
-    loader::{
+    actions::execute_from_attrs, loader::{
         pipe_loader::{deserialize_pipe, PipedData, PipedElements},
         util::JsonCache,
-    },
-    prelude::StackHelpers,
-    ui::{
+    }, prelude::StackHelpers, sher_log, ui::{
         search::SearchUiObj,
         tiles::Tile,
         util::{display_raw, SearchHandler, SherlockAction, SherlockCounter},
-    },
-    utils::errors::SherlockError,
-    CONFIG,
+    }, utils::errors::SherlockError, CONFIG
 };
 
 use super::call::ApiCall;
@@ -73,6 +69,7 @@ impl SherlockAPI {
             ApiCall::ClearAwaiting => self.clear_queue(),
             ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
             ApiCall::DisplayRaw(pipe) => self.display_raw(pipe),
+            ApiCall::SwitchMode(mode) => self.switch_mode(mode)
         }
     }
     pub fn open(&self) -> Option<()> {
@@ -149,6 +146,7 @@ impl SherlockAPI {
             data.clean();
             if let Some(settings) = data.settings.take() {
                 for api_call in settings {
+                    sher_log!(format!("Applying setting: {}", api_call));
                     let _re = self.match_action(&api_call);
                 }
             }
@@ -196,7 +194,7 @@ impl SherlockAPI {
         handler.populate();
         Some(())
     }
-    pub fn switch_mode(&mut self, mode: SherlockModes) -> Option<()> {
+    pub fn switch_mode(&mut self, mode: &SherlockModes) -> Option<()> {
         match mode {
             SherlockModes::Search => {
                 self.search_view()?;
@@ -218,9 +216,20 @@ impl SherlockAPI {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum SherlockModes {
     Search,
     DisplayRaw(String),
     Pipe(String),
     Error,
+}
+impl Display for SherlockModes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Search => write!(f, "SearchView"),
+            Self::Error => write!(f, "ErrorView"),
+            Self::Pipe(_) => write!(f, "PipeView"),
+            Self::DisplayRaw(_) => write!(f, "RawView"),
+        }
+    }
 }

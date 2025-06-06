@@ -2,10 +2,7 @@ use gio::glib::MainContext;
 use std::{cell::RefCell, os::unix::net::UnixStream, rc::Rc, thread};
 
 use crate::{
-    daemon::daemon::{SherlockDaemon, SizedMessage},
-    sherlock_error,
-    utils::errors::{SherlockError, SherlockErrorType},
-    SOCKET_PATH,
+    daemon::daemon::{SherlockDaemon, SizedMessage}, sher_log, sherlock_error, utils::errors::{SherlockError, SherlockErrorType}, SOCKET_PATH
 };
 
 use super::{api::SherlockAPI, call::ApiCall};
@@ -26,9 +23,10 @@ impl SherlockServer {
             async move {
                 while let Ok(msg) = receiver.recv().await {
                     if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg) {
+                        println!("{:?}", cmd);
                         api.borrow_mut().apply_action(cmd);
                     } else {
-                        println!("could not deseriallize: {}", msg);
+                        sher_log!(format!("Failed to deserialize api call(s): {}", msg));
                     }
                 }
             }
