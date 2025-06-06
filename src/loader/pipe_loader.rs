@@ -32,7 +32,8 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Option<Vec<PipedElements>> {
     let mut data: Option<PipedData> = simd_json::from_slice(&mut buf).ok();
     if let Some(settings) = data.as_mut().and_then(|d| d.settings.take()) {
         if let Some(obfuscate) = settings.obfuscate {
-            let _ = SherlockServer::send(format!(r#""obfuscate": {}"#, obfuscate));
+            let re = SherlockServer::send(format!(r#""obfuscate": {}"#, obfuscate));
+            println!("{:?}", re);
         }
     }
 

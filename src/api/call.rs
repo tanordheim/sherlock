@@ -9,4 +9,5 @@ pub enum ApiCall {
     Obfuscate(bool),
     SherlockError(SherlockError),
     DisplayPipe(String),
+    ClearAwaiting,
 }

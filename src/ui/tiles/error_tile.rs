@@ -6,15 +6,16 @@ use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::utils::errors::SherlockError;
 
 impl Tile {
-    pub fn error_tile(
+    pub fn error_tile<T: AsRef<SherlockError>>(
         index: i32,
-        errors: &Vec<SherlockError>,
+        errors: &Vec<T>,
         icon: &str,
         tile_type: &str,
     ) -> (i32, Vec<SherlockRow>) {
         let widgets: Vec<SherlockRow> = errors
-            .iter()
+            .into_iter()
             .map(|e| {
+                let err = e.as_ref();
                 let tile = ErrorTile::new();
                 let imp = tile.imp();
                 let object = SherlockRow::new();
@@ -27,11 +28,11 @@ impl Tile {
                 } {
                     object.set_css_classes(&["error-tile", class]);
                 }
-                let (name, message) = e.error.get_message();
+                let (name, message) = err.error.get_message();
                 imp.title
                     .set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str());
                 imp.content_title.set_text(&message);
-                imp.content_body.set_text(&e.traceback.trim());
+                imp.content_body.set_text(&err.traceback.trim());
                 object
             })
             .collect();

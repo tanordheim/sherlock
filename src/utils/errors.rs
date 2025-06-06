@@ -228,3 +228,8 @@ impl SherlockErrorType {
         (variant_name(self), message)
     }
 }
+impl AsRef<SherlockError> for SherlockError {
+    fn as_ref(&self) -> &SherlockError {
+        self
+    }
+}

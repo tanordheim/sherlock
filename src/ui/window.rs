@@ -8,17 +8,13 @@ use gtk4::{
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::actions::execute_from_attrs;
 use crate::launcher::emoji_picker::emojies;
-use crate::loader::util::JsonCache;
 use crate::utils::config::SherlockConfig;
 use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
-use super::util::{SherlockAction, SherlockCounter};
 
 #[sherlock_macro::timing("Window frame creation")]
 pub fn window(
@@ -139,31 +135,7 @@ pub fn window(
     // Setup action to open the window
     let action_open = ActionEntry::builder("open")
         .activate(move |window: &ApplicationWindow, _, _| {
-            // Increment Sherlock Execution counter
-            let start_count = SherlockCounter::new()
-                .and_then(|counter| counter.increment())
-                .unwrap_or(0);
-
-            if let Some(c) = CONFIG.get() {
-                // parse sherlock actions
-                let actions: Vec<SherlockAction> =
-                    JsonCache::read(&c.files.actions).unwrap_or_default();
-                // activate sherlock actions
-                actions
-                    .into_iter()
-                    .filter(|action| start_count % action.on == 0)
-                    .for_each(|action| {
-                        let attrs: HashMap<String, String> =
-                            HashMap::from([(String::from("method"), action.action)]);
-                        execute_from_attrs(window, &attrs, None);
-                    });
-                match c.behavior.daemonize {
-                    true => {
-                        window.present();
-                    }
-                    false => window.present(),
-                }
-            };
+            window.present();
         })
         .build();
 

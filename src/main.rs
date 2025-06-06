@@ -1,7 +1,7 @@
 use api::server::SherlockServer;
 // CRATE
 use gio::prelude::*;
-use gtk4::prelude::{GtkApplicationExt, WidgetExt};
+use gtk4::prelude::GtkApplicationExt;
 use gtk4::{glib, Application};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -111,7 +111,6 @@ async fn main() {
                 // Notify the user about the value not having any effect to avoid confusion
                 if let Some(c) = CONFIG.get() {
                     let opacity = c.appearance.opacity;
-
                     if !(0.1..=1.0).contains(&opacity) {
                         non_breaking.push(sherlock_error!(
                                 SherlockErrorType::ConfigError(Some(format!(
@@ -147,23 +146,18 @@ async fn main() {
         });
 
         // Logic for handling the daemonization
-        if let Some(c) = CONFIG.get() {
-            if c.behavior.daemonize {
-                // Used to cache render
-                if let Some(window) = open_win.upgrade() {
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
-                }
-                if let Some(win) = sherlock.borrow().window.as_ref().and_then(|win| win.upgrade()){
-                    win.connect_show({
-                        move |_window|{
-                        }
-                    });
-                }
-
+        if app_config.behavior.daemonize {
+            // Used to cache render
+            if let Some(window) = open_win.upgrade() {
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
             }
         }
+
+        // Spawn api listener
         let _server = SherlockServer::listen(sherlock);
+
+        // Print Timing
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
                 println!("Window creation took {:?}", t1.elapsed());
