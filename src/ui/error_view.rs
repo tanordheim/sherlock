@@ -8,13 +8,20 @@ use std::rc::Rc;
 use crate::g_subclasses::sherlock_row::SherlockRow;
 use crate::ui::tiles::Tile;
 use crate::utils::errors::SherlockError;
+use crate::SherlockAPI;
 
 pub fn errors(
     errors: &Vec<SherlockError>,
     non_breaking: &Vec<SherlockError>,
     stack_page: &Rc<RefCell<String>>,
+    sherlock: Rc<RefCell<SherlockAPI>>,
 ) -> (GtkBox, WeakRef<ListStore>) {
     let (stack, ui) = construct(errors, non_breaking);
+
+    {
+        let mut sherlock = sherlock.borrow_mut();
+        sherlock.errors = Some(ui.model.clone());
+    }
 
     nav_event(&stack, ui.results.clone(), stack_page);
     return (stack, ui.model.clone());
