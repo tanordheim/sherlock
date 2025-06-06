@@ -1,8 +1,15 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{glib::WeakRef, ListStore};
-use gtk4::{prelude::{EntryExt, WidgetExt}, ApplicationWindow};
+use gtk4::{
+    prelude::{EntryExt, WidgetExt},
+    ApplicationWindow,
+};
 
-use crate::{loader::pipe_loader::deserialize_pipe, ui::{search::SearchUiObj, tiles::Tile, util::SearchHandler}, utils::errors::SherlockError};
+use crate::{
+    loader::pipe_loader::deserialize_pipe,
+    ui::{search::SearchUiObj, tiles::Tile, util::SearchHandler},
+    utils::errors::SherlockError,
+};
 
 pub struct SherlockAPI {
     pub window: Option<WeakRef<ApplicationWindow>>,

@@ -5,7 +5,8 @@ use gtk4::prelude::{BoxExt, WidgetExt};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    api::call::ApiCall, daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile, SOCKET_PATH
+    api::call::ApiCall, daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow,
+    ui::tiles::error_tile::ErrorTile, SOCKET_PATH,
 };
 
 #[macro_export]
@@ -146,9 +147,7 @@ impl SherlockErrorType {
         }
         let message = match self {
             // Debug
-            SherlockErrorType::DebugError(msg) => {
-                msg.to_string()
-            },
+            SherlockErrorType::DebugError(msg) => msg.to_string(),
             // Environment
             SherlockErrorType::EnvVarNotFoundError(var) => {
                 format!("Failed to unpack environment variable \"{}\"", var)

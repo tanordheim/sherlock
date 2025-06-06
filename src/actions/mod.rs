@@ -10,7 +10,9 @@ use crate::{
         audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher,
         theme_picker::ThemePicker,
     },
-    loader::util::CounterReader, sherlock_error, utils::errors::SherlockErrorType,
+    loader::util::CounterReader,
+    sherlock_error,
+    utils::errors::SherlockErrorType,
 };
 
 pub mod applaunch;
@@ -180,7 +182,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                         } else {
                             increment("debug.reset_counts");
                         }
-                    },
+                    }
                     "test_error" => {
                         exit = false;
                         let err = sherlock_error!(

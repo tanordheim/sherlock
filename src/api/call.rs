@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::utils::errors::SherlockError;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum ApiCall {

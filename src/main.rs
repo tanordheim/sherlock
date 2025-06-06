@@ -34,7 +34,6 @@ use utils::{
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
-
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
@@ -170,7 +169,6 @@ async fn main() {
     application.run();
     drop(lock);
 }
-
 
 #[sherlock_macro::timing("\nContent loading")]
 fn startup_loading() -> (
