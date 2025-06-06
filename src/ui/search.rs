@@ -9,9 +9,9 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use levenshtein::levenshtein;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::{cell::RefCell, rc::Weak};
 
 use super::context::make_context;
 use super::util::*;

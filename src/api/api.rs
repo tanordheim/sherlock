@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
@@ -16,11 +16,11 @@ use crate::{
         pipe_loader::{deserialize_pipe, PipedData, PipedElements},
         util::JsonCache,
     },
-    prelude::{SherlockNav, StackHelpers},
+    prelude::StackHelpers,
     ui::{
         search::SearchUiObj,
         tiles::Tile,
-        util::{display_raw, ContextUI, SearchHandler, SherlockAction, SherlockCounter},
+        util::{display_raw, SearchHandler, SherlockAction, SherlockCounter},
     },
     utils::errors::SherlockError,
     CONFIG,
@@ -34,7 +34,6 @@ pub struct SherlockAPI {
     pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
     pub errors: Option<WeakRef<ListStore>>,
-    pub context: Option<ContextUI>,
     pub awaiting: Vec<ApiCall>,
 }
 impl SherlockAPI {
@@ -45,7 +44,6 @@ impl SherlockAPI {
             search_ui: None,
             search_handler: None,
             errors: None,
-            context: None,
             awaiting: vec![],
         }
     }
@@ -196,7 +194,6 @@ impl SherlockAPI {
     fn search_view(&self) -> Option<()> {
         let handler = self.search_handler.as_ref()?;
         handler.populate();
-        println!("populated");
         Some(())
     }
     pub fn switch_mode(&mut self, mode: SherlockModes) -> Option<()> {
