@@ -16,7 +16,7 @@ use gtk4::{
     SingleSelection,
 };
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData};
+use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipedElements};
 
 /// Custom string matching
 pub trait SherlockSearch {
@@ -39,7 +39,7 @@ impl SherlockSearch for String {
         concat_str.contains(&lowercase)
     }
 }
-impl SherlockSearch for PipeData {
+impl SherlockSearch for PipedElements {
     fn fuzzy_match<T>(&self, substring: T) -> bool
     where
         T: AsRef<str>,

@@ -58,9 +58,8 @@ impl SherlockAPI {
         handler.clear();
 
         let buf = content.as_bytes().to_vec();
-        let parsed = deserialize_pipe(buf);
+        let parsed = deserialize_pipe(buf)?;
         let data = Tile::pipe_data(&parsed, "print");
-        println!("{:?}", data.len());
         data.into_iter().for_each(|elem| {
             model.append(&elem);
         });

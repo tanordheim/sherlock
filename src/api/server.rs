@@ -1,8 +1,13 @@
 use gio::glib::MainContext;
 use gtk4::prelude::WidgetExt;
-use std::{cell::RefCell, rc::Rc, thread};
+use std::{cell::RefCell, os::unix::net::UnixStream, rc::Rc, thread};
 
-use crate::daemon::daemon::SherlockDaemon;
+use crate::{
+    daemon::daemon::{SherlockDaemon, SizedMessage},
+    sherlock_error,
+    utils::errors::{SherlockError, SherlockErrorType},
+    SOCKET_PATH,
+};
 
 use super::{api::SherlockAPI, call::ApiCall};
 
@@ -44,9 +49,9 @@ impl SherlockServer {
                                     window.set_visible(true);
                                     api.borrow().show_raw();
                                 }
-                                ApiCall::DisplayPipe(content) => {
+                                ApiCall::DisplayPipe(mut content) => {
                                     window.set_visible(true);
-                                    api.borrow().display_pipe(&content);
+                                    api.borrow().display_pipe(&mut content);
                                 }
                             }
                         } else {
@@ -56,5 +61,15 @@ impl SherlockServer {
                 }
             }
         });
+    }
+    pub fn send<T: AsRef<[u8]>>(message: T) -> Result<(), SherlockError> {
+        let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+        stream.write_sized(message.as_ref())?;
+        Ok(())
     }
 }

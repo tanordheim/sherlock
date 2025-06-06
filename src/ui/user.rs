@@ -19,11 +19,11 @@ use crate::{
 };
 
 use super::tiles::{util::TextViewTileBuilder, Tile};
-use crate::loader::pipe_loader::PipeData;
+use crate::loader::pipe_loader::PipedElements;
 
 pub fn display_pipe(
     _window: &ApplicationWindow,
-    pipe_content: Vec<PipeData>,
+    pipe_content: Vec<PipedElements>,
     method: &str,
     error_model: WeakRef<ListStore>,
 ) -> (Overlay, SearchHandler) {
@@ -85,7 +85,7 @@ pub fn display_raw<T: AsRef<str>>(
     (overlay, handler)
 }
 fn construct(
-    pipe_content: Vec<PipeData>,
+    pipe_content: Vec<PipedElements>,
     method: &str,
 ) -> (Rc<RefCell<String>>, Overlay, SearchUiObj, SearchHandler) {
     // Collect Modes

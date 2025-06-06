@@ -3,7 +3,7 @@ use std::io::Cursor;
 use crate::actions::execute_from_attrs;
 use crate::actions::get_attrs_map;
 use crate::g_subclasses::sherlock_row::SherlockRow;
-use crate::loader::pipe_loader::PipeData;
+use crate::loader::pipe_loader::PipedElements;
 use crate::prelude::IconComp;
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gdk_pixbuf::Pixbuf;
@@ -16,7 +16,7 @@ use super::app_tile::AppTile;
 use super::Tile;
 
 impl Tile {
-    pub fn pipe_data(lines: &Vec<PipeData>, method: &str) -> Vec<SherlockRow> {
+    pub fn pipe_data(lines: &Vec<PipedElements>, method: &str) -> Vec<SherlockRow> {
         let mut results: Vec<SherlockRow> = Vec::with_capacity(lines.len());
 
         for item in lines {

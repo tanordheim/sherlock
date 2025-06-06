@@ -76,29 +76,33 @@ async fn main() {
 
         glib::MainContext::default().spawn_local({
             let sherlock = Rc::clone(&sherlock);
+            let method = app_config.runtime.method.clone();
             async move {
                 // Either show user-specified content or show normal search
                 let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page, Rc::clone(&sherlock));
                 let pipe = Loader::load_pipe_args();
-                let (search_stack, _handler) = if pipe.is_empty() {
-                    match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
-                        Ok(r) => r,
-                        Err(e) => {
-                            error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
-                            return
-                        }
-                    }
-                } else {
-                    if sherlock_flags.display_raw {
-                        let pipe = String::from_utf8_lossy(&pipe);
-                        ui::user::display_raw(pipe, sherlock_flags.center_raw, error_model)
-                    } else {
-                        let parsed = deserialize_pipe(pipe);
-                        if let Some(c) = CONFIG.get() {
-                            let method: &str = c.runtime.method.as_deref().unwrap_or("print");
-                            ui::user::display_pipe(&window, parsed, method, error_model)
+                let (search_stack, _handler) = {
+                    let piped = if !pipe.is_empty() {
+                        if sherlock_flags.display_raw {
+                            let pipe = String::from_utf8_lossy(&pipe);
+                            Some(ui::user::display_raw(pipe, sherlock_flags.center_raw, error_model.clone()))
                         } else {
-                            return;
+                            deserialize_pipe(pipe).map(|parsed| {
+                                let method: &str = method.as_deref().unwrap_or("print");
+                                ui::user::display_pipe(&window, parsed, method, error_model.clone())
+                            })
+                        }
+                    } else { None };
+                    match piped {
+                        Some(p) => p,
+                        None => {
+                            match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
+                                Ok(r) => r,
+                                Err(e) => {
+                                    error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
+                                    return
+                                }
+                            }
                         }
                     }
                 };

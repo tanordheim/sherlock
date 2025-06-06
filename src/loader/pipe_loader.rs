@@ -7,6 +7,7 @@ use gtk4::gdk::Display;
 use gtk4::IconTheme;
 use serde::Deserialize;
 
+use crate::api::server::SherlockServer;
 use crate::CONFIG;
 
 use super::Loader;
@@ -27,15 +28,17 @@ impl Loader {
     }
 }
 
-pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
-    let data: Option<Vec<PipeData>> = simd_json::from_slice(&mut buf).ok();
+pub fn deserialize_pipe(mut buf: Vec<u8>) -> Option<Vec<PipedElements>> {
+    let mut data: Option<PipedData> = simd_json::from_slice(&mut buf).ok();
+    if let Some(settings) = data.as_mut().and_then(|d| d.settings.take()) {
+        if let Some(obfuscate) = settings.obfuscate {
+            let _ = SherlockServer::send(format!(r#""obfuscate": {}"#, obfuscate));
+        }
+    }
 
-    let config = match CONFIG.get() {
-        Some(c) => c,
-        None => return vec![],
-    };
+    let config = CONFIG.get()?;
 
-    match data {
+    match data.as_mut().and_then(|d| d.elements.take()) {
         Some(mut parsed_data) => {
             for i in parsed_data.iter_mut() {
                 if i.field.is_none() {
@@ -63,9 +66,9 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                     i.result = Some(cleaned);
                 }
             }
-            parsed_data
+            Some(parsed_data)
         }
-        None => {
+        None if data.is_none() => {
             let icon_theme = IconTheme::for_display(Display::default().as_ref().unwrap());
             let mut result = Vec::new();
             let mut start = 0;
@@ -105,7 +108,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                         })
                         .unwrap_or_default();
 
-                    result.push(PipeData {
+                    result.push(PipedElements {
                         title: Some(name.clone()),
                         description: None,
                         result: Some(name),
@@ -119,7 +122,7 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                     });
                 } else {
                     // If it's not valid UTF-8, treat it as binary data
-                    result.push(PipeData {
+                    result.push(PipedElements {
                         title: None,
                         description: None,
                         result: None,
@@ -136,13 +139,14 @@ pub fn deserialize_pipe(mut buf: Vec<u8>) -> Vec<PipeData> {
                 start = end;
             }
 
-            result
+            Some(result)
         }
+        _ => None,
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct PipeData {
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+pub struct PipedElements {
     pub title: Option<String>,
     pub description: Option<String>,
     pub icon: Option<String>,
@@ -153,4 +157,15 @@ pub struct PipeData {
     pub field: Option<String>,
     pub hidden: Option<HashMap<String, String>>,
     pub exit: bool,
+}
+
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+pub struct PipedSettings {
+    pub obfuscate: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Clone, PartialEq)]
+pub struct PipedData {
+    pub settings: Option<PipedSettings>,
+    pub elements: Option<Vec<PipedElements>>,
 }
