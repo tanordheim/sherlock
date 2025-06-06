@@ -4,9 +4,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::loader::util::{AppData, RawLauncher};
-use crate::sherlock_error;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::utils::files::home_dir;
+use crate::{sher_log, sherlock_error};
 
 #[derive(Clone, Debug)]
 pub struct BookmarkLauncher {
@@ -26,8 +26,18 @@ impl BookmarkLauncher {
             }
             "thorium" | "/usr/bin/thorium-browser %u" => BookmarkParser::thorium(raw),
             _ => {
-                println!("{:?}", browser);
-                Ok(HashSet::new())
+                sher_log!(format!(
+                    r#"Failed to gather bookmarks for browser: "{}""#,
+                    browser
+                ));
+                Err(sherlock_error!(
+                    SherlockErrorType::UnsupportedBrowser(browser.to_string()),
+                    format!("The browser \"<i>{}</i>\" is either not supported or not recognized.\n\
+                        Check the \
+                        <span foreground=\"#247BA0\"><u><a href=\"https://github.com/Skxxtz/sherlock/blob/main/docs/launchers.md#bookmark-launcher\">documentation</a></u></span> \
+                        for more information.\n\
+                        ", browser)
+                ))
             }
         }
     }
