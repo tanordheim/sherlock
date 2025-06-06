@@ -99,12 +99,12 @@ async fn main() {
                     let opacity = c.appearance.opacity;
                     if !(0.1..=1.0).contains(&opacity) {
                         non_breaking.push(sherlock_error!(
-                                SherlockErrorType::ConfigError(Some(format!(
-                                            "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
-                                            opacity,
-                                            opacity.clamp(0.1, 1.0)
-                                ))),
-                                ""
+                            SherlockErrorType::ConfigError(Some(format!(
+                                "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
+                                opacity,
+                                opacity.clamp(0.1, 1.0)
+                            ))),
+                            ""
                         ));
                     }
                 }
