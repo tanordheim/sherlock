@@ -16,11 +16,7 @@ use std::rc::Rc;
 use super::context::make_context;
 use super::util::*;
 use crate::{
-    g_subclasses::sherlock_row::SherlockRow,
-    prelude::{IconComp, SherlockNav, SherlockSearch, ShortCut},
-    ui::key_actions::KeyActions,
-    utils::config::{default_search_icon, default_search_icon_back},
-    SherlockAPI,
+    api::api::SherlockAPI, g_subclasses::sherlock_row::SherlockRow, prelude::{IconComp, SherlockNav, SherlockSearch, ShortCut}, ui::key_actions::KeyActions, utils::config::{default_search_icon, default_search_icon_back}
 };
 use crate::{
     sherlock_error,
@@ -52,19 +48,23 @@ pub fn search(
 
     // Initial setup on show
     stack_page.connect_realize({
-        let search_bar = imp.search_bar.downgrade();
         let results = imp.results.downgrade();
         let context_model = context.model.clone();
         let current_mode = Rc::clone(&mode);
+        move |_| {
+            // Show or hide context menu shortcuts whenever stack shows
+            results
+                .upgrade()
+                .map(|r| r.focus_first(Some(&context_model), Some(current_mode.clone())));
+        }
+    });
+    stack_page.connect_map({
+        let search_bar = imp.search_bar.downgrade();
         move |_| {
             // Focus search bar as soon as it's visible
             search_bar
                 .upgrade()
                 .map(|search_bar| search_bar.grab_focus());
-            // Show or hide context menu shortcuts whenever stack shows
-            results
-                .upgrade()
-                .map(|r| r.focus_first(Some(&context_model), Some(current_mode.clone())));
         }
     });
 

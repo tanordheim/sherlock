@@ -5,7 +5,7 @@ use gtk4::prelude::{BoxExt, WidgetExt};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile, ApiCall, SOCKET_PATH
+    api::call::ApiCall, daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile, SOCKET_PATH
 };
 
 #[macro_export]
@@ -65,6 +65,8 @@ impl SherlockError {
 #[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SherlockErrorType {
+    // Debug
+    DebugError(String),
     // Environment
     EnvVarNotFoundError(String),
 
@@ -143,6 +145,10 @@ impl SherlockErrorType {
             format!("Failed to {} socket at location \"{}\"", action, socket)
         }
         let message = match self {
+            // Debug
+            SherlockErrorType::DebugError(msg) => {
+                msg.to_string()
+            },
             // Environment
             SherlockErrorType::EnvVarNotFoundError(var) => {
                 format!("Failed to unpack environment variable \"{}\"", var)

@@ -1,7 +1,5 @@
 use std::process::{Command, Stdio};
 
-use regex::Regex;
-
 use crate::{sher_log, CONFIG};
 use crate::{
     sherlock_error,
@@ -89,18 +87,4 @@ pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<()
         }
     });
     Ok(())
-}
-fn remove_unescaped_quotes(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    let mut chars = s.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '"' {
-            // If previous character was not a backslash, skip this quote
-            if !result.ends_with('\\') {
-                continue;
-            }
-        }
-        result.push(c);
-    }
-    result
 }

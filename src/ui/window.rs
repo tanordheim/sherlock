@@ -179,8 +179,8 @@ pub fn window(
 
             fn parse_transition(from: &str, to: &str) -> StackTransitionType {
                 match (from, to) {
-                    ("search-page", "error-page") => StackTransitionType::OverRightLeft,
-                    ("error-page", "search-page") => StackTransitionType::OverRightLeft,
+                    ("search-page", "error-page") => StackTransitionType::SlideRight,
+                    ("error-page", "search-page") => StackTransitionType::SlideLeft,
                     ("search-page", "emoji-page") => StackTransitionType::SlideLeft,
                     ("emoji-page", "search-page") => StackTransitionType::SlideRight,
                     _ => StackTransitionType::None,
@@ -190,7 +190,6 @@ pub fn window(
                 stack_clone.upgrade().map(|stack| {
                     stack.set_transition_type(parse_transition(&from, &to));
                     if let Some(child) = stack.child_by_name(&to){
-                        println!("exists: {:?}", child);
                         stack.set_visible_child(&child);
                         *page_clone.borrow_mut() = to.to_string();
                     }

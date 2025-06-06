@@ -14,7 +14,6 @@ impl SherlockDaemon {
         let _ = std::fs::remove_file(SOCKET_PATH);
         let listener = UnixListener::bind(SOCKET_PATH).expect("Failed to bind socket");
         sher_log!(format!("Daemon listening on {}", SOCKET_PATH));
-        println!("Daemon listening on {}", SOCKET_PATH);
 
         for stream in listener.incoming() {
             if let Ok(mut stream) = stream {
