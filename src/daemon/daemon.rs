@@ -24,7 +24,7 @@ impl SherlockDaemon {
                             let received_data = String::from_utf8_lossy(&bytes_read);
                             let received_data = received_data.trim();
                             match received_data {
-                                "show" => {
+                                "Show" => {
                                     let _ = pipeline.send(String::from("open-window")).await;
                                 }
                                 _ => {
@@ -64,7 +64,7 @@ impl SherlockDaemon {
 
         let pipe = Loader::load_pipe_args();
         if pipe.is_empty() {
-            stream.write_sized(b"show")?;
+            stream.write_sized(b"Show")?;
         } else {
             stream.write_sized(pipe.as_slice())?;
         }
@@ -79,7 +79,7 @@ impl Drop for SherlockDaemon {
     }
 }
 
-trait SizedMessage {
+pub trait SizedMessage {
     fn write_sized(&mut self, buf: &[u8]) -> Result<(), SherlockError>;
     fn read_sized(&mut self) -> Result<Vec<u8>, SherlockError>;
 }

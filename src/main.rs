@@ -1,9 +1,10 @@
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 // CRATE
 use gio::glib::{MainContext, WeakRef};
-use gio::prelude::*;
+use gio::{prelude::*, ListStore};
 use gtk4::prelude::{EntryExt, GtkApplicationExt, WidgetExt};
 use gtk4::{glib, Application, ApplicationWindow};
+use serde::Deserialize;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
@@ -38,17 +39,19 @@ use utils::{
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
-struct Sherlock {
+struct SherlockAPI {
     pub window: Option<WeakRef<ApplicationWindow>>,
     pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
+    pub errors: Option<WeakRef<ListStore>>,
 }
-impl Sherlock {
+impl SherlockAPI {
     pub fn new() -> Self {
         Self {
             window: None,
             search_ui: None,
             search_handler: None,
+            errors: None,
         }
     }
     pub fn obfuscate(&self, visibility: bool) {
@@ -91,6 +94,12 @@ impl Sherlock {
         });
         Some(())
     }
+    pub fn insert_msg(&self, error: SherlockError) -> Option<()> {
+        let model = self.errors.as_ref().and_then(|tmp| tmp.upgrade())?;
+        let (_, tiles) = Tile::error_tile(0, &vec![error], "⚠️", "WARNING");
+        model.append(tiles.first()?);
+        Some(())
+    }
 }
 
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
@@ -101,7 +110,7 @@ async fn main() {
         startup_loading();
     let t0 = Instant::now();
     application.connect_activate(move |app| {
-        let sherlock = Rc::new(RefCell::new(Sherlock::new()));
+        let sherlock = Rc::new(RefCell::new(SherlockAPI::new()));
         let t1 = Instant::now();
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
@@ -137,7 +146,7 @@ async fn main() {
             let sherlock = Rc::clone(&sherlock);
             async move {
                 // Either show user-specified content or show normal search
-                let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
+                let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page, Rc::clone(&sherlock));
                 let pipe = Loader::load_pipe_args();
                 let (search_stack, _handler) = if pipe.is_empty() {
                     match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
@@ -231,30 +240,33 @@ async fn main() {
                     async move {
                         while let Ok(msg) = receiver.recv().await {
                             if let Some(window) = open_win_clone.upgrade() {
-                                match msg.as_str() {
-                                    "show" | "open-window" => {
-                                        let _ = gtk4::prelude::WidgetExt::activate_action(
-                                            &window, "win.open", None,
-                                        );
-                                    },
-                                    "obfuscate" => {
-                                        sherlock.borrow().obfuscate(false);
-                                    },
-                                    "deobfuscate" => {
-                                        sherlock.borrow().obfuscate(true);
-                                    },
-                                    "clear" => {
-                                        window.set_visible(true);
-                                        sherlock.borrow().clear_results();
-                                    },
-                                    "input_only" => {
-                                        window.set_visible(true);
-                                        sherlock.borrow().show_raw();
+                                if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg){
+                                    match cmd {
+                                        ApiCall::Show => {
+                                            let _ = gtk4::prelude::WidgetExt::activate_action(
+                                                &window, "win.open", None,
+                                            );
+                                        },
+                                        ApiCall::Obfuscate(visibility) => {
+                                            sherlock.borrow().obfuscate(visibility)
+                                        },
+                                        ApiCall::SherlockError(error) => {
+                                            sherlock.borrow().insert_msg(error);
+                                        },
+                                        ApiCall::Clear => {
+                                            window.set_visible(true);
+                                            sherlock.borrow().clear_results();
+                                        },
+                                        ApiCall::InputOnly => {
+                                            window.set_visible(true);
+                                            sherlock.borrow().show_raw();
+                                        },
+                                        ApiCall::DisplayPipe(content) => {
+                                            window.set_visible(true);
+                                            sherlock.borrow().display_pipe(&content);
+                                        }
                                     }
-                                    _ => {
-                                        window.set_visible(true);
-                                        sherlock.borrow().display_pipe(&msg);
-                                    }
+
                                 }
                             }
                         }
@@ -270,6 +282,16 @@ async fn main() {
     });
     application.run();
     drop(lock);
+}
+
+#[derive(Debug, Deserialize)]
+pub enum ApiCall {
+    Show,
+    Clear,
+    InputOnly,
+    Obfuscate(bool),
+    SherlockError(SherlockError),
+    DisplayPipe(String),
 }
 
 #[sherlock_macro::timing("\nContent loading")]

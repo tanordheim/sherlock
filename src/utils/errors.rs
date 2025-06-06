@@ -1,9 +1,13 @@
-use std::{fmt::Debug, path::PathBuf};
+use std::{fmt::Debug, os::unix::net::UnixStream, path::PathBuf};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gtk4::prelude::{BoxExt, WidgetExt};
+use serde::{Deserialize, Serialize};
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile};
+use crate::{
+    daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow,
+    ui::tiles::error_tile::ErrorTile, SOCKET_PATH,
+};
 
 #[macro_export]
 macro_rules! sherlock_error {
@@ -11,7 +15,7 @@ macro_rules! sherlock_error {
         $crate::SherlockError::new($errtype, $source, file!(), line!())
     };
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SherlockError {
     pub error: SherlockErrorType,
     pub traceback: String,
@@ -43,10 +47,23 @@ impl SherlockError {
         }
         object
     }
+    pub fn insert(&self) -> Result<(), SherlockError> {
+        let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+        let msg = serde_json::to_string(self).map_err(|e| {
+            sherlock_error!(SherlockErrorType::DeserializationError(), e.to_string())
+        })?;
+        stream.write_sized(msg.as_bytes())?;
+        Ok(())
+    }
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SherlockErrorType {
     // Environment
     EnvVarNotFoundError(String),
