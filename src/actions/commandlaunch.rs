@@ -3,7 +3,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::CONFIG;
+use crate::{sher_log, CONFIG};
 use crate::{
     sherlock_error,
     utils::errors::{SherlockError, SherlockErrorType},
@@ -34,6 +34,7 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
 
 fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
     let raw_command = format!("{}{}{}", prefix, cmd, flags).replace('"', "");
+    sher_log!(format!(r#"Trying to execute command "{}""#, raw_command));
 
     let mut command = Command::new("sh");
     command.arg("-c").arg(raw_command);
@@ -50,11 +51,14 @@ fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), Sh
     }
 
     command.spawn().map_err(|e| {
+        sher_log!(format!("Status: Err\n{}", e));
         sherlock_error!(
             SherlockErrorType::CommandExecutionError(cmd.to_string()),
             e.to_string()
         )
     })?;
 
+
+    sher_log!("Status: Ok");
     Ok(())
 }
