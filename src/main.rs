@@ -4,7 +4,7 @@ use gio::glib::{MainContext, WeakRef};
 use gio::{prelude::*, ListStore};
 use gtk4::prelude::{EntryExt, GtkApplicationExt, WidgetExt};
 use gtk4::{glib, Application, ApplicationWindow};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
@@ -97,6 +97,7 @@ impl SherlockAPI {
     pub fn insert_msg(&self, error: SherlockError) -> Option<()> {
         let model = self.errors.as_ref().and_then(|tmp| tmp.upgrade())?;
         let (_, tiles) = Tile::error_tile(0, &vec![error], "⚠️", "WARNING");
+        println!("{:?}", tiles);
         model.append(tiles.first()?);
         Some(())
     }
@@ -266,7 +267,8 @@ async fn main() {
                                             sherlock.borrow().display_pipe(&content);
                                         }
                                     }
-
+                                } else {
+                                    println!("{}", msg);
                                 }
                             }
                         }
@@ -284,7 +286,7 @@ async fn main() {
     drop(lock);
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub enum ApiCall {
     Show,
     Clear,

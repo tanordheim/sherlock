@@ -5,8 +5,7 @@ use gtk4::prelude::{BoxExt, WidgetExt};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow,
-    ui::tiles::error_tile::ErrorTile, SOCKET_PATH,
+    daemon::daemon::SizedMessage, g_subclasses::sherlock_row::SherlockRow, ui::tiles::error_tile::ErrorTile, ApiCall, SOCKET_PATH
 };
 
 #[macro_export]
@@ -47,14 +46,15 @@ impl SherlockError {
         }
         object
     }
-    pub fn insert(&self) -> Result<(), SherlockError> {
+    pub fn insert(self) -> Result<(), SherlockError> {
         let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
                 e.to_string()
             )
         })?;
-        let msg = serde_json::to_string(self).map_err(|e| {
+        let err = ApiCall::SherlockError(self);
+        let msg = serde_json::to_string(&err).map_err(|e| {
             sherlock_error!(SherlockErrorType::DeserializationError(), e.to_string())
         })?;
         stream.write_sized(msg.as_bytes())?;

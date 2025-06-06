@@ -23,14 +23,7 @@ impl SherlockDaemon {
                         if bytes_read.len() > 0 {
                             let received_data = String::from_utf8_lossy(&bytes_read);
                             let received_data = received_data.trim();
-                            match received_data {
-                                "Show" => {
-                                    let _ = pipeline.send(String::from("open-window")).await;
-                                }
-                                _ => {
-                                    let _ = pipeline.send(received_data.to_string()).await;
-                                }
-                            }
+                            let _ = pipeline.send(received_data.to_string()).await;
                             let _ = stream.write_all(b"OK\n");
                         }
                     }
@@ -64,7 +57,7 @@ impl SherlockDaemon {
 
         let pipe = Loader::load_pipe_args();
         if pipe.is_empty() {
-            stream.write_sized(b"Show")?;
+            stream.write_sized(br#""Show""#)?;
         } else {
             stream.write_sized(pipe.as_slice())?;
         }

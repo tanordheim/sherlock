@@ -189,9 +189,12 @@ pub fn window(
             if let Some((from, to)) = parameter.split_once("->") {
                 stack_clone.upgrade().map(|stack| {
                     stack.set_transition_type(parse_transition(&from, &to));
-                    stack.set_visible_child_name(&to);
+                    if let Some(child) = stack.child_by_name(&to){
+                        println!("exists: {:?}", child);
+                        stack.set_visible_child(&child);
+                        *page_clone.borrow_mut() = to.to_string();
+                    }
                 });
-                *page_clone.borrow_mut() = to.to_string();
             }
         })
         .build();
