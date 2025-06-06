@@ -20,7 +20,7 @@ use crate::{
     prelude::{IconComp, SherlockNav, SherlockSearch, ShortCut},
     ui::key_actions::KeyActions,
     utils::config::{default_search_icon, default_search_icon_back},
-    Sherlock,
+    SherlockAPI,
 };
 use crate::{
     sherlock_error,
@@ -33,7 +33,7 @@ pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,
     error_model: WeakRef<ListStore>,
-    sherlock: Rc<RefCell<Sherlock>>,
+    sherlock: Rc<RefCell<SherlockAPI>>,
 ) -> Result<(Overlay, SearchHandler), SherlockError> {
     // Initialize the view to show all apps
     let (search_query, mode, stack_page, ui, handler, context) = construct_window(error_model)?;
