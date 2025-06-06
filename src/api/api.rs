@@ -1,10 +1,13 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
-use gio::{glib::WeakRef, ListStore};
+use gio::{
+    glib::{variant::ToVariant, WeakRef},
+    ListStore,
+};
 use gtk4::{
     prelude::{EntryExt, GtkWindowExt, WidgetExt},
-    ApplicationWindow,
+    ApplicationWindow, Stack,
 };
 
 use crate::{
@@ -13,10 +16,11 @@ use crate::{
         pipe_loader::{deserialize_pipe, PipedData, PipedElements},
         util::JsonCache,
     },
+    prelude::{SherlockNav, StackHelpers},
     ui::{
         search::SearchUiObj,
         tiles::Tile,
-        util::{SearchHandler, SherlockAction, SherlockCounter},
+        util::{display_raw, ContextUI, SearchHandler, SherlockAction, SherlockCounter},
     },
     utils::errors::SherlockError,
     CONFIG,
@@ -26,18 +30,22 @@ use super::call::ApiCall;
 
 pub struct SherlockAPI {
     pub window: Option<WeakRef<ApplicationWindow>>,
+    pub stack: Option<WeakRef<Stack>>,
     pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
     pub errors: Option<WeakRef<ListStore>>,
+    pub context: Option<ContextUI>,
     pub awaiting: Vec<ApiCall>,
 }
 impl SherlockAPI {
     pub fn new() -> Self {
         Self {
             window: None,
+            stack: None,
             search_ui: None,
             search_handler: None,
             errors: None,
+            context: None,
             awaiting: vec![],
         }
     }
@@ -66,6 +74,7 @@ impl SherlockAPI {
             ApiCall::Show => self.open(),
             ApiCall::ClearAwaiting => self.clear_queue(),
             ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
+            ApiCall::DisplayRaw(pipe) => self.display_raw(pipe),
         }
     }
     pub fn open(&self) -> Option<()> {
@@ -139,18 +148,82 @@ impl SherlockAPI {
         let mut buf = msg.as_ref().to_vec();
         let data: Option<PipedData> = simd_json::from_slice(&mut buf).ok();
         let elements = if let Some(mut data) = data {
+            data.clean();
             if let Some(settings) = data.settings.take() {
                 for api_call in settings {
                     let _re = self.match_action(&api_call);
                 }
             }
-            let mut elements = data.elements.take()?;
-            elements.iter_mut().for_each(|element| element.clean());
-            elements
+            data.elements.take()?
         } else {
             deserialize_pipe(buf)?
         };
         self.display_pipe(elements);
         Some(())
     }
+    fn display_raw<T: AsRef<str>>(&mut self, msg: T) -> Option<()> {
+        let config = CONFIG.get()?;
+        let stack = self.stack.as_ref().and_then(|tmp| tmp.upgrade())?;
+        let message = msg.as_ref();
+
+        let page = display_raw(message, config.runtime.center);
+        stack.add_named(&page, Some("display-raw"));
+        Some(())
+    }
+    fn switch_page<T: AsRef<str>>(&self, page: T) -> Option<()> {
+        let stack = self.stack.as_ref().and_then(|tmp| tmp.upgrade())?;
+
+        let page = page.as_ref();
+        let current = stack.visible_child_name()?.to_string();
+        let from_to = format!("{}->{}", current, page);
+
+        let _ = stack.activate_action("win.switch-page", Some(&from_to.to_variant()));
+
+        let retain = vec![
+            String::from("seach-page"),
+            String::from("error-page"),
+            page.to_string(),
+        ];
+        let all = stack.get_page_names();
+        all.into_iter()
+            .filter(|name| !retain.contains(&name))
+            .filter_map(|name| stack.child_by_name(&name))
+            .for_each(|child| stack.remove(&child));
+
+        Some(())
+    }
+
+    fn search_view(&self) -> Option<()> {
+        let handler = self.search_handler.as_ref()?;
+        handler.populate();
+        println!("populated");
+        Some(())
+    }
+    pub fn switch_mode(&mut self, mode: SherlockModes) -> Option<()> {
+        match mode {
+            SherlockModes::Search => {
+                self.search_view()?;
+                self.switch_page("search-page");
+            }
+            SherlockModes::Pipe(pipe) => {
+                self.load_pipe_elements(pipe)?;
+                self.switch_page("search-page");
+            }
+            SherlockModes::DisplayRaw(pipe) => {
+                self.display_raw(pipe)?;
+                self.switch_page("display-raw");
+            }
+            SherlockModes::Error => {
+                self.switch_page("error-page");
+            }
+        }
+        Some(())
+    }
+}
+
+pub enum SherlockModes {
+    Search,
+    DisplayRaw(String),
+    Pipe(String),
+    Error,
 }

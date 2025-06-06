@@ -10,4 +10,5 @@ pub enum ApiCall {
     SherlockError(SherlockError),
     ClearAwaiting,
     Pipe(String),
+    DisplayRaw(String),
 }

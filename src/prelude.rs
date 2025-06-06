@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc, time::SystemTime};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
@@ -13,7 +13,7 @@ use gio::{
 };
 use gtk4::{
     prelude::WidgetExt, Box as GtkBox, GridView, Image, Label, ListScrollFlags, ListView,
-    SingleSelection,
+    SingleSelection, Stack, StackPage,
 };
 
 use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipedElements};
@@ -354,5 +354,24 @@ impl SherlockNav for GridView {
     }
     fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>> {
         None
+    }
+}
+
+pub trait PathHelpers {
+    fn modtime(&self) -> Option<SystemTime>;
+}
+
+pub trait StackHelpers {
+    fn get_page_names(&self) -> Vec<String>;
+}
+impl StackHelpers for Stack {
+    fn get_page_names(&self) -> Vec<String> {
+        let selection = self.pages();
+        let pages: Vec<String> = (0..selection.n_items())
+            .filter_map(|i| selection.item(i).and_downcast::<StackPage>())
+            .filter_map(|item| item.name())
+            .map(|name| name.to_string())
+            .collect();
+        pages
     }
 }

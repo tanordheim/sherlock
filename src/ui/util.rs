@@ -11,8 +11,8 @@ use gio::glib::{self, WeakRef};
 use gio::ListStore;
 use gtk4::gdk::{Key, ModifierType};
 use gtk4::{
-    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Label, ListView, ScrolledWindow,
-    Spinner,
+    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Justification, Label, ListView,
+    ScrolledWindow, Spinner,
 };
 use serde::Deserialize;
 
@@ -21,6 +21,8 @@ use crate::loader::Loader;
 use crate::utils::config::default_modkey_ascii;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, CONFIG};
+
+use super::tiles::util::TextViewTileBuilder;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
@@ -252,6 +254,7 @@ pub struct SearchHandler {
     pub filter: WeakRef<CustomFilter>,
     pub sorter: WeakRef<CustomSorter>,
     pub binds: ConfKeys,
+    pub mode: Rc<RefCell<String>>,
 }
 impl SearchHandler {
     pub fn new(
@@ -269,17 +272,7 @@ impl SearchHandler {
             filter,
             sorter,
             binds,
-        }
-    }
-    pub fn empty(error_model: WeakRef<ListStore>) -> Self {
-        Self {
-            model: None,
-            modes: Rc::new(RefCell::new(HashMap::new())),
-            task: Rc::new(RefCell::new(None)),
-            error_model,
-            filter: WeakRef::new(),
-            sorter: WeakRef::new(),
-            binds: ConfKeys::new(),
+            mode: Rc::new(RefCell::new(String::new())),
         }
     }
     pub fn clear(&self) {
@@ -310,7 +303,7 @@ impl SearchHandler {
 
         if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
             let mut holder: HashMap<String, Option<String>> = HashMap::new();
-            let rows: Vec<WeakRef<SherlockRow>> = launchers
+            let rows: Vec<SherlockRow> = launchers
                 .into_iter()
                 .map(|mut launcher| {
                     let patch = launcher.get_patch();
@@ -320,12 +313,11 @@ impl SearchHandler {
                     patch
                 })
                 .flatten()
-                .map(|row| {
-                    model.append(&row);
-                    row.downgrade()
-                })
                 .collect();
-            update_async(rows, &self.task, String::new());
+            model.splice(0, model.n_items(), &rows);
+            let weaks: Vec<WeakRef<SherlockRow>> =
+                rows.into_iter().map(|row| row.downgrade()).collect();
+            update_async(weaks, &self.task, String::new());
             *self.modes.borrow_mut() = holder;
         }
     }
@@ -398,4 +390,24 @@ pub fn update_async(
         }
     });
     *current_task.borrow_mut() = Some(task);
+}
+
+pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> GtkBox {
+    let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+    builder
+        .content
+        .as_ref()
+        .and_then(|tmp| tmp.upgrade())
+        .map(|ctx| {
+            let buffer = ctx.buffer();
+            ctx.add_css_class("raw_text");
+            ctx.set_monospace(true);
+            let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
+            buffer.set_text(&sanitized);
+            if center {
+                ctx.set_justification(Justification::Center);
+            }
+        });
+    let row = builder.object.unwrap_or_default();
+    row
 }

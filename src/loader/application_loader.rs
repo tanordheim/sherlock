@@ -12,6 +12,7 @@ use std::time::SystemTime;
 
 use super::util::ApplicationAction;
 use super::{util, Loader};
+use crate::prelude::PathHelpers;
 use crate::utils::{
     errors::{SherlockError, SherlockErrorType},
     files::read_lines,
@@ -391,9 +392,6 @@ fn test_get_applications_dir() {
     assert_eq!(res, expected_app_dirs);
 }
 
-trait PathHelpers {
-    fn modtime(&self) -> Option<SystemTime>;
-}
 impl PathHelpers for Path {
     fn modtime(&self) -> Option<SystemTime> {
         self.metadata().ok().and_then(|m| m.modified().ok())

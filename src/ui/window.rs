@@ -155,6 +155,7 @@ pub fn window(
                     ("error-page", "search-page") => StackTransitionType::SlideLeft,
                     ("search-page", "emoji-page") => StackTransitionType::SlideLeft,
                     ("emoji-page", "search-page") => StackTransitionType::SlideRight,
+                    ("search-page", "display-raw") => StackTransitionType::SlideRight,
                     _ => StackTransitionType::None,
                 }
             }

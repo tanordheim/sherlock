@@ -1,3 +1,4 @@
+use api::api::SherlockModes;
 use api::server::SherlockServer;
 // CRATE
 use gio::prelude::*;
@@ -24,7 +25,6 @@ mod utils;
 
 // IMPORTS
 use application::lock::{self, LockFile};
-use loader::pipe_loader::deserialize_pipe;
 use loader::Loader;
 use utils::{
     config::SherlockConfig,
@@ -64,7 +64,11 @@ async fn main() {
 
         // Main logic for the Search-View
         let (window, stack, current_stack_page, open_win) = ui::window::window(app);
-        sherlock.borrow_mut().window = Some(window.downgrade());
+        {
+            let mut sherlock = sherlock.borrow_mut();
+            sherlock.window = Some(window.downgrade());
+            sherlock.stack = Some(stack.downgrade());
+        }
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W"]);
@@ -76,37 +80,19 @@ async fn main() {
 
         glib::MainContext::default().spawn_local({
             let sherlock = Rc::clone(&sherlock);
-            let method = app_config.runtime.method.clone();
             async move {
                 // Either show user-specified content or show normal search
                 let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page, Rc::clone(&sherlock));
-                let pipe = Loader::load_pipe_args();
-                let (search_stack, _handler) = {
-                    let piped = if !pipe.is_empty() {
-                        if sherlock_flags.display_raw {
-                            let pipe = String::from_utf8_lossy(&pipe);
-                            Some(ui::user::display_raw(pipe, sherlock_flags.center_raw, error_model.clone()))
-                        } else {
-                            deserialize_pipe(pipe).map(|parsed| {
-                                let method: &str = method.as_deref().unwrap_or("print");
-                                ui::user::display_pipe(&window, parsed, method, error_model.clone())
-                            })
-                        }
-                    } else { None };
-                    match piped {
-                        Some(p) => p,
-                        None => {
-                            match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
-                                Ok(r) => r,
-                                Err(e) => {
-                                    error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
-                                    return
-                                }
-                            }
-                        }
+                let (search_frame, _handler) = match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
+                        return
                     }
                 };
-                stack.add_named(&search_stack, Some("search-page"));
+                stack.add_named(&search_frame, Some("search-page"));
+                stack.add_named(&error_stack, Some("error-page"));
+
 
                 // Notify the user about the value not having any effect to avoid confusion
                 if let Some(c) = CONFIG.get() {
@@ -123,25 +109,29 @@ async fn main() {
                     }
                 }
 
+                // Mode switching
                 // Logic for the Error-View
-                stack.add_named(&error_stack, Some("error-page"));
-                if !app_config.debug.try_suppress_errors {
+                let error_view_active = if !app_config.debug.try_suppress_errors {
                     let show_errors = !error_list.is_empty();
                     let show_warnings = !app_config.debug.try_suppress_warnings && !non_breaking.is_empty();
-                    if show_errors || show_warnings {
-                        let _ = gtk4::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.switch-page",
-                            Some(&String::from("->error-page").to_variant()),
-                        );
+                    show_errors || show_warnings
+                } else {
+                    false
+                };
+                let pipe = Loader::load_pipe_args();
+                let mode = if error_view_active {
+                    SherlockModes::Error
+                } else if pipe.is_empty() {
+                    SherlockModes::Search
+                } else {
+                    let pipe = String::from_utf8_lossy(&pipe).to_string();
+                    if sherlock_flags.display_raw {
+                        SherlockModes::DisplayRaw(pipe)
                     } else {
-                        let _ = gtk4::prelude::WidgetExt::activate_action(
-                            &window,
-                            "win.switch-page",
-                            Some(&String::from("->search-page").to_variant()),
-                        );
+                        SherlockModes::Pipe(pipe)
                     }
-                }
+                };
+                sherlock.borrow_mut().switch_mode(mode);
             }
         });
 

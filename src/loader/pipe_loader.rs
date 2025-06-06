@@ -147,3 +147,19 @@ pub struct PipedData {
     pub settings: Option<Vec<ApiCall>>,
     pub elements: Option<Vec<PipedElements>>,
 }
+impl PipedData {
+    pub fn clean(&mut self) -> Option<()> {
+        let config = CONFIG.get()?;
+
+        if let Some(elements) = self.elements.as_mut() {
+            for item in elements.iter_mut() {
+                item.clean();
+                if item.method.is_none() {
+                    item.method = config.runtime.method.clone();
+                }
+            }
+        }
+
+        Some(())
+    }
+}

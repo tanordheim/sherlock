@@ -94,6 +94,7 @@ impl SherlockConfig {
             runtime: Runtime {
                 method: None,
                 multi: false,
+                center: false,
                 photo_mode: false,
             },
             expand: ConfigExpand::default(),
@@ -112,6 +113,7 @@ impl SherlockConfig {
             runtime: Runtime {
                 method: None,
                 multi: false,
+                center: false,
                 photo_mode: false,
             },
             expand: ConfigExpand::default(),
@@ -396,6 +398,7 @@ impl SherlockConfig {
         );
         config.behavior.sub_menu = sherlock_flags.sub_menu.clone();
         config.runtime.method = sherlock_flags.method.clone();
+        config.runtime.center = sherlock_flags.center_raw.clone();
         config.runtime.multi = sherlock_flags.multi;
         config.runtime.photo_mode = sherlock_flags.photo_mode;
         config.behavior.field = sherlock_flags.field.clone();
@@ -658,6 +661,9 @@ pub struct Runtime {
 
     #[serde(default)]
     pub multi: bool,
+
+    #[serde(default)]
+    pub center: bool,
 
     #[serde(default)]
     pub photo_mode: bool,

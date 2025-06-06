@@ -9,9 +9,9 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use levenshtein::levenshtein;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::{cell::RefCell, rc::Weak};
 
 use super::context::make_context;
 use super::util::*;
@@ -51,17 +51,6 @@ pub fn search(
     let initial_mode = mode.borrow().clone();
 
     // Initial setup on show
-    stack_page.connect_realize({
-        let results = imp.results.downgrade();
-        let context_model = context.model.clone();
-        let current_mode = Rc::clone(&mode);
-        move |_| {
-            // Show or hide context menu shortcuts whenever stack shows
-            results
-                .upgrade()
-                .map(|r| r.focus_first(Some(&context_model), Some(current_mode.clone())));
-        }
-    });
     stack_page.connect_map({
         let search_bar = imp.search_bar.downgrade();
         move |_| {
@@ -71,6 +60,22 @@ pub fn search(
                 .map(|search_bar| search_bar.grab_focus());
         }
     });
+    if let Some(model) = handler.model.as_ref().and_then(|tmp| tmp.upgrade()) {
+        model.connect_items_changed({
+            let results = imp.results.downgrade();
+            let context_model = context.model.clone();
+            let current_mode = Rc::clone(&mode);
+            move |_self, _position, _removed, added| {
+                if added == 0 {
+                    return;
+                }
+                // Show or hide context menu shortcuts whenever stack shows
+                results
+                    .upgrade()
+                    .map(|r| r.focus_first(Some(&context_model), Some(current_mode.clone())));
+            }
+        });
+    }
 
     nav_event(
         imp.results.downgrade(),
@@ -339,8 +344,6 @@ fn construct_window(
     let selection = SingleSelection::new(Some(sorted_model));
     imp.results.set_model(Some(&selection));
 
-    // Add tiles to the view and create modes
-
     imp.results.set_model(Some(&selection));
     imp.results.set_factory(Some(&factory));
 
@@ -360,7 +363,6 @@ fn construct_window(
         sorter.downgrade(),
         custom_binds,
     );
-    handler.populate();
 
     if config.expand.enable {
         imp.result_viewport
