@@ -28,13 +28,13 @@ impl SherlockServer {
                     if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg) {
                         api.borrow_mut().apply_action(cmd);
                     } else {
-                        println!("{}", msg);
+                        println!("could not deseriallize: {}", msg);
                     }
                 }
             }
         });
     }
-    pub fn send<T: AsRef<[u8]>>(message: T) -> Result<(), SherlockError> {
+    pub fn _send<T: AsRef<[u8]>>(message: T) -> Result<(), SherlockError> {
         let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
@@ -42,6 +42,18 @@ impl SherlockServer {
             )
         })?;
         stream.write_sized(message.as_ref())?;
+        Ok(())
+    }
+    pub fn _send_action(api_call: ApiCall) -> Result<(), SherlockError> {
+        let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
+            sherlock_error!(
+                SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
+                e.to_string()
+            )
+        })?;
+        let msg = simd_json::to_string(&api_call)
+            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError(), e.to_string()))?;
+        stream.write_sized(msg.as_bytes())?;
         Ok(())
     }
 }

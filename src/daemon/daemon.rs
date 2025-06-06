@@ -1,5 +1,6 @@
 use std::os::unix::net::UnixStream;
 
+use crate::api::call::ApiCall;
 use crate::loader::Loader;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sher_log, sherlock_error, SOCKET_PATH};
@@ -58,7 +59,12 @@ impl SherlockDaemon {
         if pipe.is_empty() {
             stream.write_sized(br#""Show""#)?;
         } else {
-            stream.write_sized(pipe.as_slice())?;
+            let buf = String::from_utf8_lossy(&pipe);
+            let pipe = ApiCall::Pipe(buf.to_string());
+            let msg = simd_json::to_string(&pipe).map_err(|e| {
+                sherlock_error!(SherlockErrorType::SerializationError(), e.to_string())
+            })?;
+            stream.write_sized(msg.as_bytes())?;
         }
 
         Ok(())

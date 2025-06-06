@@ -13,6 +13,7 @@ use crate::{
     loader::util::CounterReader,
     sherlock_error,
     utils::errors::SherlockErrorType,
+    CONFIG,
 };
 
 pub mod applaunch;
@@ -76,7 +77,10 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 }
             }
             "copy" => {
-                if let Some(field) = attrs.get("field") {
+                let field = attrs
+                    .get("field")
+                    .or(CONFIG.get().and_then(|c| c.behavior.field.as_ref()));
+                if let Some(field) = field {
                     if let Some(output) = attrs.get(field) {
                         let _ = util::copy_to_clipboard(output.as_str());
                     }

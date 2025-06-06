@@ -9,7 +9,10 @@ use gtk4::{
 
 use crate::{
     actions::execute_from_attrs,
-    loader::{pipe_loader::deserialize_pipe, util::JsonCache},
+    loader::{
+        pipe_loader::{deserialize_pipe, PipedData, PipedElements},
+        util::JsonCache,
+    },
     ui::{
         search::SearchUiObj,
         tiles::Tile,
@@ -58,11 +61,11 @@ impl SherlockAPI {
         match api_call {
             ApiCall::Obfuscate(vis) => self.obfuscate(*vis),
             ApiCall::Clear => self.clear_results(),
-            ApiCall::DisplayPipe(pipe) => self.display_pipe(pipe),
             ApiCall::SherlockError(err) => self.insert_msg(err),
             ApiCall::InputOnly => self.show_raw(),
             ApiCall::Show => self.open(),
             ApiCall::ClearAwaiting => self.clear_queue(),
+            ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
         }
     }
     pub fn open(&self) -> Option<()> {
@@ -91,7 +94,7 @@ impl SherlockAPI {
     pub fn obfuscate(&self, vis: bool) -> Option<()> {
         let ui = self.search_ui.as_ref().and_then(|ui| ui.upgrade())?;
         let imp = ui.imp();
-        imp.search_bar.set_visibility(vis);
+        imp.search_bar.set_visibility(vis == false);
         Some(())
     }
     pub fn clear_results(&self) -> Option<()> {
@@ -114,14 +117,12 @@ impl SherlockAPI {
         imp.status_bar.set_visible(false);
         Some(())
     }
-    pub fn display_pipe(&self, content: &str) -> Option<()> {
+    pub fn display_pipe(&self, content: Vec<PipedElements>) -> Option<()> {
         let handler = self.search_handler.as_ref()?;
         let model = handler.model.as_ref().and_then(|s| s.upgrade())?;
         handler.clear();
 
-        let buf = content.as_bytes().to_vec();
-        let parsed = deserialize_pipe(buf)?;
-        let data = Tile::pipe_data(&parsed, "print");
+        let data = Tile::pipe_data(&content, "print");
         data.into_iter().for_each(|elem| {
             model.append(&elem);
         });
@@ -131,6 +132,25 @@ impl SherlockAPI {
         let model = self.errors.as_ref().and_then(|tmp| tmp.upgrade())?;
         let (_, tiles) = Tile::error_tile(0, &vec![error], "⚠️", "WARNING");
         model.append(tiles.first()?);
+        Some(())
+    }
+
+    fn load_pipe_elements<T: AsRef<[u8]>>(&mut self, msg: T) -> Option<()> {
+        let mut buf = msg.as_ref().to_vec();
+        let data: Option<PipedData> = simd_json::from_slice(&mut buf).ok();
+        let elements = if let Some(mut data) = data {
+            if let Some(settings) = data.settings.take() {
+                for api_call in settings {
+                    let _re = self.match_action(&api_call);
+                }
+            }
+            let mut elements = data.elements.take()?;
+            elements.iter_mut().for_each(|element| element.clean());
+            elements
+        } else {
+            deserialize_pipe(buf)?
+        };
+        self.display_pipe(elements);
         Some(())
     }
 }
