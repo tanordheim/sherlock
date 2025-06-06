@@ -1,7 +1,4 @@
-use std::{
-    os::unix::process::CommandExt,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 use crate::{sher_log, CONFIG};
 use crate::{
@@ -32,33 +29,50 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
     Ok(())
 }
 
-fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
+pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
     let raw_command = format!("{}{}{}", prefix, cmd, flags).replace('"', "");
-    sher_log!(format!(r#"Trying to execute command "{}""#, raw_command));
+    sher_log!(format!(r#"Spawning command "{}""#, raw_command));
 
     let mut command = Command::new("sh");
-    command.arg("-c").arg(raw_command);
+    command.arg("-c").arg(raw_command.clone());
 
-    unsafe {
-        command
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .pre_exec(|| {
-                nix::unistd::setsid().ok();
-                Ok(())
-            });
-    }
+    command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
-    command.spawn().map_err(|e| {
-        sher_log!(format!("Status: Err\n{}", e));
+    // Move command string into task
+    let child = command.spawn().map_err(|e| {
+        sher_log!(format!(
+            "Failed to spawn command: {}\nError: {}",
+            raw_command, e
+        ));
         sherlock_error!(
             SherlockErrorType::CommandExecutionError(cmd.to_string()),
             e.to_string()
         )
     })?;
 
-
-    sher_log!("Status: Ok");
+    tokio::spawn(async move {
+        match child.wait_with_output() {
+            Ok(output) => {
+                if output.status.success() {
+                    sher_log!(format!("Command succeeded: {}", raw_command));
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    sher_log!(format!(
+                        "Command failed: {}\nStderr: {}",
+                        raw_command, stderr
+                    ));
+                }
+            }
+            Err(e) => {
+                sher_log!(format!(
+                    "Failed to wait for command: {}\nError: {}",
+                    raw_command, e
+                ));
+            }
+        }
+    });
     Ok(())
 }
