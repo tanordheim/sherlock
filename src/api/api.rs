@@ -10,6 +10,7 @@ use gtk4::{
     ApplicationWindow, Stack,
 };
 use serde::{Deserialize, Serialize};
+use simd_json::prelude::ArrayTrait;
 
 use crate::{
     actions::execute_from_attrs,
@@ -54,6 +55,11 @@ impl SherlockAPI {
         self.clear_queue();
         if self.match_action(&api_call).is_none() {
             self.awaiting.push(api_call);
+        }
+        if !self.awaiting.is_empty(){
+            self.awaiting.iter().for_each(|wait|{
+                sher_log!(format!("Action {} stays in queue", wait));
+            });
         }
     }
     pub fn clear_queue(&mut self) -> Option<()> {
@@ -151,16 +157,20 @@ impl SherlockAPI {
         let elements = if let Some(mut data) = data {
             data.clean();
             if let Some(settings) = data.settings.take() {
-                for api_call in settings {
-                    sher_log!(format!("Applying setting: {}", api_call));
-                    let _re = self.match_action(&api_call);
-                }
+                let retained: Vec<ApiCall> = settings.into_iter().filter(|setting| {
+                    sher_log!(format!("Applying setting: {}", setting));
+                    self.match_action(setting).is_none()
+                }).collect();
+                self.awaiting.extend(retained);
             }
-            data.elements.take()?
+            data.elements.take()
         } else {
-            deserialize_pipe(buf)?
+            let elems = deserialize_pipe(buf)?;
+            Some(elems)
         };
-        self.display_pipe(elements);
+        if let Some(elems) = elements {
+            self.display_pipe(elems);
+        }
         Some(())
     }
     fn display_raw<T: AsRef<str>>(&mut self, msg: T) -> Option<()> {
@@ -182,7 +192,7 @@ impl SherlockAPI {
         let _ = stack.activate_action("win.switch-page", Some(&from_to.to_variant()));
 
         let retain = vec![
-            String::from("seach-page"),
+            String::from("search-page"),
             String::from("error-page"),
             page.to_string(),
         ];

@@ -26,7 +26,7 @@ impl Display for ApiCall {
             Self::InputOnly => write!(f, "setting.InputOnly"),
             Self::Obfuscate(val) => write!(f, "setting.Obfuscate:{}", val),
             // Actions
-            Self::Show => write!(f, "action.Search"),
+            Self::Show => write!(f, "action.Show"),
             Self::Clear => write!(f, "action.Clear"),
             Self::SherlockError(err) => write!(f, "action.InsertError:{}", err),
             Self::ClearAwaiting => write!(f, "action.ClearAwaiting"),

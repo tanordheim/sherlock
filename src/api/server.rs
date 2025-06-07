@@ -1,4 +1,3 @@
-use chrono::format;
 use gio::glib::MainContext;
 use std::{cell::RefCell, os::unix::net::UnixStream, rc::Rc, thread};
 
