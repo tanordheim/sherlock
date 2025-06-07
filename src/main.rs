@@ -222,7 +222,7 @@ fn startup_loading() -> (
 
     // Initialize application
     let application = Application::builder()
-        // .application_id("dev.skxxtz.sherlock")
+        .application_id("dev.skxxtz.sherlock")
         .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
 
