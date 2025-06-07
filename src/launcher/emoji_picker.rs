@@ -233,6 +233,7 @@ fn construct() -> Result<(Rc<RefCell<String>>, GridSearchUi, SearchHandler), She
         filter.downgrade(),
         sorter.downgrade(),
         ConfKeys::new(),
+        Cell::new(true),
     );
     Ok((search_text, ui, handler))
 }

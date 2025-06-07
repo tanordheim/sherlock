@@ -1,7 +1,7 @@
 use api::call::ApiCall;
-use gio::{prelude::*, Cancellable};
+use gio::prelude::*;
 use gtk4::prelude::GtkApplicationExt;
-use gtk4::{glib, Application, ApplicationWindow};
+use gtk4::{glib, Application};
 use loader::pipe_loader::PipedData;
 use std::cell::RefCell;
 use std::rc::Rc;

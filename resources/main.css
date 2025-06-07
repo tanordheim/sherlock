@@ -208,43 +208,44 @@ image {
     animation: fadeInUp 0.2s ease-out forwards;
 }
 
-.tile.animate:nth-child(1) {
+row:nth-child(1) .tile.animate{
     animation-delay: 0.05s;
 }
 
-.tile.animate:nth-child(2) {
+row:nth-child(2) .tile.animate{
     animation-delay: 0.1s;
 }
 
-.tile.animate:nth-child(3) {
+
+row:nth-child(3) .tile.animate{
     animation-delay: 0.15s;
 }
 
-.tile.animate:nth-child(4) {
+row:nth-child(4) .tile.animate{
     animation-delay: 0.2s;
 }
 
-.tile.animate:nth-child(5) {
+row:nth-child(5) .tile.animate{
     animation-delay: 0.25s;
 }
 
-.tile.animate:nth-child(6) {
+row:nth-child(6) .tile.animate{
     animation-delay: 0.3s;
 }
 
-.tile.animate:nth-child(7) {
+row:nth-child(7) .tile.animate{
     animation-delay: 0.35s;
 }
 
-.tile.animate:nth-child(8) {
+row:nth-child(8) .tile.animate{
     animation-delay: 0.4s;
 }
 
-.tile.animate:nth-child(9) {
+row:nth-child(9) .tile.animate{
     animation-delay: 0.45s;
 }
 
-.tile.animate:nth-child(10) {
+row:nth-child(10) .tile.animate{
     animation-delay: 0.5s;
 }
 

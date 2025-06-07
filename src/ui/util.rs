@@ -254,6 +254,7 @@ pub struct SearchHandler {
     pub filter: WeakRef<CustomFilter>,
     pub sorter: WeakRef<CustomSorter>,
     pub binds: ConfKeys,
+    pub first_iter: Cell<bool>,
 }
 impl SearchHandler {
     pub fn new(
@@ -262,6 +263,7 @@ impl SearchHandler {
         filter: WeakRef<CustomFilter>,
         sorter: WeakRef<CustomSorter>,
         binds: ConfKeys,
+        first_iter: Cell<bool>,
     ) -> Self {
         Self {
             model: Some(model),
@@ -271,6 +273,7 @@ impl SearchHandler {
             filter,
             sorter,
             binds,
+            first_iter,
         }
     }
     pub fn clear(&self) {
@@ -282,6 +285,7 @@ impl SearchHandler {
     pub fn populate(&self) {
         // clear potentially stuck rows
         self.clear();
+        self.first_iter.set(true);
 
         // load launchers
         let (launchers, n) = match Loader::load_launchers().map_err(|e| e.tile("ERROR")) {

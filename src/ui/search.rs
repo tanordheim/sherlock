@@ -9,7 +9,7 @@ use gtk4::{
 };
 use gtk4::{glib, ApplicationWindow, Entry};
 use levenshtein::levenshtein;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
@@ -65,7 +65,7 @@ pub fn search(
             let results = imp.results.downgrade();
             let context_model = context.model.clone();
             let current_mode = Rc::clone(&mode);
-            move |_self, _position, _removed, added| {
+            move |_myself, _position, _removed, added| {
                 if added == 0 {
                     return;
                 }
@@ -316,16 +316,27 @@ fn construct_window(
     let sorted_model = SortListModel::new(Some(filter_model), Some(sorter.clone()));
 
     // Set and update `modkey + num` shortcut ui
+    let first_iter = Cell::new(true);
     sorted_model.connect_items_changed({
         let mod_str = custom_binds.shortcut_modifier_str.clone();
+        let search_text = Rc::clone(&search_text);
+        let first_iter = Cell::clone(&first_iter);
         move |myself, _, removed, added| {
             // Early exit if nothing changed
             if added == 0 && removed == 0 {
                 return;
             }
             let mut added_index = 0;
+            let apply_css = search_text.borrow().trim().is_empty()
+                && config.behavior.animate
+                && first_iter.get();
             for i in 0..myself.n_items() {
                 if let Some(item) = myself.item(i).and_downcast::<SherlockRow>() {
+                    if apply_css {
+                        item.add_css_class("animate");
+                    } else {
+                        item.remove_css_class("animate");
+                    }
                     if item.imp().shortcut.get() {
                         if let Some(shortcut_holder) = item.shortcut_holder() {
                             if added_index < 5 {
@@ -338,6 +349,7 @@ fn construct_window(
                     }
                 }
             }
+            first_iter.set(false);
         }
     });
 
@@ -362,6 +374,7 @@ fn construct_window(
         filter.downgrade(),
         sorter.downgrade(),
         custom_binds,
+        first_iter,
     );
 
     if config.expand.enable {
