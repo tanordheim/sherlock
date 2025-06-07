@@ -27,7 +27,7 @@ impl SherlockServer {
                 while let Ok(msg) = receiver.recv().await {
                     if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg) {
                         sher_log!(format!("Incoming api request: {}", cmd));
-                        api.borrow_mut().apply_action(cmd);
+                        api.borrow_mut().request(cmd);
                     } else {
                         sher_log!(format!("Failed to deserialize api call(s): {}", msg));
                     }

@@ -15,7 +15,7 @@ use simd_json::prelude::ArrayTrait;
 use crate::{
     actions::execute_from_attrs,
     loader::{
-        pipe_loader::{deserialize_pipe, PipedData, PipedElements},
+        pipe_loader::{PipedData, PipedElements},
         util::JsonCache,
     },
     prelude::StackHelpers,
@@ -37,7 +37,7 @@ pub struct SherlockAPI {
     pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
     pub errors: Option<WeakRef<ListStore>>,
-    pub awaiting: Vec<ApiCall>,
+    pub queue: Vec<ApiCall>,
 }
 impl SherlockAPI {
     pub fn new() -> Self {
@@ -47,27 +47,31 @@ impl SherlockAPI {
             search_ui: None,
             search_handler: None,
             errors: None,
-            awaiting: vec![],
+            queue: vec![],
         }
     }
 
-    pub fn apply_action(&mut self, api_call: ApiCall) {
-        self.clear_queue();
+    pub fn request(&mut self, api_call: ApiCall) {
+        self.flush();
         if self.match_action(&api_call).is_none() {
-            self.awaiting.push(api_call);
+            self.queue.push(api_call);
         }
-        if !self.awaiting.is_empty(){
-            self.awaiting.iter().for_each(|wait|{
+        if !self.queue.is_empty() {
+            self.queue.iter().for_each(|wait| {
                 sher_log!(format!("Action {} stays in queue", wait));
             });
         }
     }
-    pub fn clear_queue(&mut self) -> Option<()> {
-        let mut awaiting = std::mem::take(&mut self.awaiting);
-        self.awaiting = awaiting
+    pub fn flush(&mut self) -> Option<()> {
+        let mut queue = std::mem::take(&mut self.queue);
+        self.queue = queue
             .drain(..)
-            .filter(|api_call| self.match_action(api_call).is_some())
+            .filter(|api_call| self.match_action(api_call).is_none())
             .collect();
+        Some(())
+    }
+    pub fn await_request(&mut self, request: ApiCall) -> Option<()> {
+        self.queue.push(request);
         Some(())
     }
 
@@ -78,7 +82,7 @@ impl SherlockAPI {
             ApiCall::SherlockError(err) => self.insert_msg(err),
             ApiCall::InputOnly => self.show_raw(),
             ApiCall::Show => self.open(),
-            ApiCall::ClearAwaiting => self.clear_queue(),
+            ApiCall::ClearAwaiting => self.flush(),
             ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
             ApiCall::DisplayRaw(pipe) => self.display_raw(pipe),
             ApiCall::SwitchMode(mode) => self.switch_mode(mode),
@@ -152,24 +156,16 @@ impl SherlockAPI {
     }
 
     fn load_pipe_elements<T: AsRef<[u8]>>(&mut self, msg: T) -> Option<()> {
-        let mut buf = msg.as_ref().to_vec();
-        let data: Option<PipedData> = simd_json::from_slice(&mut buf).ok();
-        let elements = if let Some(mut data) = data {
-            data.clean();
-            if let Some(settings) = data.settings.take() {
-                let retained: Vec<ApiCall> = settings.into_iter().filter(|setting| {
-                    sher_log!(format!("Applying setting: {}", setting));
-                    self.match_action(setting).is_none()
-                }).collect();
-                self.awaiting.extend(retained);
-            }
-            data.elements.take()
+        let elements = if let Some(elements) = PipedData::elements(&msg) {
+            Some(elements)
+        } else if let Some(elements) = PipedData::deserialize_pipe(&msg) {
+            Some(elements)
         } else {
-            let elems = deserialize_pipe(buf)?;
-            Some(elems)
+            None
         };
-        if let Some(elems) = elements {
-            self.display_pipe(elems);
+        if let Some(elements) = elements {
+            self.display_pipe(elements);
+            self.switch_page("search-page");
         }
         Some(())
     }
@@ -218,7 +214,6 @@ impl SherlockAPI {
             }
             SherlockModes::Pipe(pipe) => {
                 self.load_pipe_elements(pipe)?;
-                self.switch_page("search-page");
             }
             SherlockModes::DisplayRaw(pipe) => {
                 self.display_raw(pipe)?;

@@ -1,6 +1,8 @@
-use gio::prelude::*;
+use api::call::ApiCall;
+use gio::{prelude::*, Cancellable};
 use gtk4::prelude::GtkApplicationExt;
-use gtk4::{glib, Application};
+use gtk4::{glib, Application, ApplicationWindow};
+use loader::pipe_loader::PipedData;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::OnceLock;
@@ -116,19 +118,34 @@ async fn main() {
                     false
                 };
                 let pipe = Loader::load_pipe_args();
-                let mode = if error_view_active {
-                    SherlockModes::Error
-                } else if pipe.is_empty() {
-                    SherlockModes::Search
-                } else {
-                    let pipe = String::from_utf8_lossy(&pipe).to_string();
+                let mut mode: Option<SherlockModes> = None;
+                if !pipe.is_empty() {
                     if sherlock_flags.display_raw {
-                        SherlockModes::DisplayRaw(pipe)
-                    } else {
-                        SherlockModes::Pipe(pipe)
+                        let pipe = String::from_utf8_lossy(&pipe).to_string();
+                        mode = Some(SherlockModes::DisplayRaw(pipe));
+                    } else if let Some(mut data) = PipedData::new(&pipe){
+                        if let Some(settings) = data.settings.take(){
+                            let mut sherlock = sherlock.borrow_mut();
+                            settings.into_iter().for_each(|request| {
+                                sherlock.await_request(request);
+                            });
+                        }
+                        mode = data.elements.take().map(|elements| SherlockModes::Pipe(elements));
                     }
                 };
-                sherlock.borrow_mut().switch_mode(&mode);
+                if mode.is_none() {
+                    if error_view_active {
+                        mode = Some(SherlockModes::Error)
+                    } else {
+                        mode = Some(SherlockModes::Search)
+                    };
+                }
+                if let Some(mode) = mode {
+                    let request = ApiCall::SwitchMode(mode);
+                    let mut sherlock = sherlock.borrow_mut();
+                    sherlock.await_request(request);
+                    sherlock.flush();
+                }
             }
         });
 
@@ -205,7 +222,7 @@ fn startup_loading() -> (
 
     // Initialize application
     let application = Application::builder()
-        .application_id("dev.skxxtz.sherlock")
+        // .application_id("dev.skxxtz.sherlock")
         .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
 
