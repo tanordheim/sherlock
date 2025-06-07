@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use gio::glib::{object::IsA, variant::ToVariant};
 use gtk4::{prelude::WidgetExt, Widget};
+use std::fs::File;
 use teamslaunch::teamslaunch;
 use util::{clear_cached_files, reset_app_counter};
 
@@ -12,7 +13,7 @@ use crate::{
     },
     loader::util::CounterReader,
     sherlock_error,
-    utils::errors::SherlockErrorType,
+    utils::{errors::SherlockErrorType, files::home_dir},
     CONFIG,
 };
 
@@ -185,6 +186,22 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                             let _result = error.insert();
                         } else {
                             increment("debug.reset_counts");
+                        }
+                    }
+                    "reset_log" => {
+                        if let Ok(home) = home_dir() {
+                            let file = home.join(".sherlock/sherlock.log");
+                            if file.is_file() {
+                                if let Err(err) = File::create(&file).map_err(|e| {
+                                    sherlock_error!(
+                                        SherlockErrorType::FileWriteError(file.clone()),
+                                        e.to_string()
+                                    )
+                                }) {
+                                    exit = false;
+                                    let _result = err.insert();
+                                }
+                            }
                         }
                     }
                     "test_error" => {
