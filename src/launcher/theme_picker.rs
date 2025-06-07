@@ -22,7 +22,7 @@ impl ThemePicker {
         if !absolute.is_dir() {
             return LauncherType::Empty;
         }
-        let themes: HashSet<AppData> = absolute
+        let mut themes: HashSet<AppData> = absolute
             .read_dir()
             .ok()
             .map(|entries| {
@@ -33,13 +33,7 @@ impl ThemePicker {
                     .filter_map(|path| {
                         if path.extension()?.to_str()? == "css" {
                             let name = path.file_name()?.to_str()?.to_string();
-                            let mut data = AppData::new();
-                            data.name = name.clone();
-                            data.exec = path.to_str().map(|s| s.to_string());
-                            data.search_string = name;
-                            data.priority = prio;
-                            data.icon = Some(String::from("sherlock-devtools"));
-                            Some(data)
+                            Some(AppData::new_for_theme(name, path.to_str(), prio))
                         } else {
                             None
                         }
@@ -47,6 +41,7 @@ impl ThemePicker {
                     .collect()
             })
             .unwrap_or_default();
+        themes.insert(AppData::new_for_theme("Unset", Some(""), prio));
 
         if themes.is_empty() {
             return LauncherType::Empty;

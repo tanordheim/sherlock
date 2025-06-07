@@ -115,6 +115,27 @@ impl AppData {
             terminal: false,
         }
     }
+    pub fn new_for_theme<T: AsRef<str>, S: AsRef<str>>(
+        name: T,
+        path: Option<S>,
+        priority: f32,
+    ) -> Self {
+        let name = name.as_ref().to_string();
+        let path = path.map(|s| s.as_ref().to_string());
+        Self {
+            name: name.to_string(),
+            exec: path,
+            search_string: name,
+            priority,
+            icon: Some(String::from("sherlock-devtools")),
+            icon_class: None,
+            tag_start: None,
+            tag_end: None,
+            desktop_file: None,
+            actions: vec![],
+            terminal: false,
+        }
+    }
     pub fn from_raw_launcher(raw: &RawLauncher) -> Self {
         let mut data = Self::new();
         data.priority = raw.priority;
