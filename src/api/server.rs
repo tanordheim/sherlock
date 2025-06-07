@@ -1,3 +1,4 @@
+use chrono::format;
 use gio::glib::MainContext;
 use std::{cell::RefCell, os::unix::net::UnixStream, rc::Rc, thread};
 
@@ -26,6 +27,7 @@ impl SherlockServer {
             async move {
                 while let Ok(msg) = receiver.recv().await {
                     if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg) {
+                        sher_log!(format!("Incoming api request: {}", cmd));
                         api.borrow_mut().apply_action(cmd);
                     } else {
                         sher_log!(format!("Failed to deserialize api call(s): {}", msg));
