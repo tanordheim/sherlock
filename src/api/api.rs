@@ -12,14 +12,20 @@ use gtk4::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    actions::execute_from_attrs, loader::{
+    actions::execute_from_attrs,
+    loader::{
         pipe_loader::{deserialize_pipe, PipedData, PipedElements},
         util::JsonCache,
-    }, prelude::StackHelpers, sher_log, ui::{
+    },
+    prelude::StackHelpers,
+    sher_log,
+    ui::{
         search::SearchUiObj,
         tiles::Tile,
         util::{display_raw, SearchHandler, SherlockAction, SherlockCounter},
-    }, utils::errors::SherlockError, CONFIG
+    },
+    utils::errors::SherlockError,
+    CONFIG,
 };
 
 use super::call::ApiCall;
@@ -69,7 +75,7 @@ impl SherlockAPI {
             ApiCall::ClearAwaiting => self.clear_queue(),
             ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
             ApiCall::DisplayRaw(pipe) => self.display_raw(pipe),
-            ApiCall::SwitchMode(mode) => self.switch_mode(mode)
+            ApiCall::SwitchMode(mode) => self.switch_mode(mode),
         }
     }
     pub fn open(&self) -> Option<()> {

@@ -16,7 +16,7 @@ use std::rc::Rc;
 use super::context::make_context;
 use super::util::*;
 use crate::{
-    api::api::SherlockAPI,
+    api::{api::SherlockAPI, call::ApiCall, server::SherlockServer},
     g_subclasses::sherlock_row::SherlockRow,
     prelude::{IconComp, SherlockNav, SherlockSearch, ShortCut},
     ui::key_actions::KeyActions,
@@ -568,6 +568,10 @@ fn nav_event(
                 }
                 Key::Escape if key_actions.context.open.get() => {
                     key_actions.close_context();
+                }
+                Key::F11 => {
+                    let api_call = ApiCall::SwitchMode(crate::api::api::SherlockModes::Error);
+                    let _ = SherlockServer::send_action(api_call);
                 }
                 _ if key.to_unicode().and_then(|c| c.to_digit(10)).is_some() => {
                     if binds
