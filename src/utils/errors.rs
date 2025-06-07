@@ -120,6 +120,9 @@ pub enum SherlockErrorType {
     // (De-) Serialization
     SerializationError(),
     DeserializationError(),
+
+    // Apps
+    UnsupportedBrowser(String),
 }
 impl std::fmt::Display for SherlockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -223,6 +226,11 @@ impl SherlockErrorType {
             }
             SherlockErrorType::DeserializationError() => {
                 format!("Failed to deserialize content.")
+            }
+
+            // Apps
+            SherlockErrorType::UnsupportedBrowser(browser) => {
+                format!(r#"Unsupported Broser: {}"#, browser)
             }
         };
         (variant_name(self), message)
