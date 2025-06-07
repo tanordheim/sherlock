@@ -117,33 +117,36 @@ async fn main() {
                 } else {
                     false
                 };
-                let pipe = Loader::load_pipe_args();
-                let mut mode: Option<SherlockModes> = None;
-                if !pipe.is_empty() {
-                    if sherlock_flags.display_raw {
-                        let pipe = String::from_utf8_lossy(&pipe).to_string();
-                        mode = Some(SherlockModes::DisplayRaw(pipe));
-                    } else if let Some(mut data) = PipedData::new(&pipe){
-                        if let Some(settings) = data.settings.take(){
-                            let mut sherlock = sherlock.borrow_mut();
-                            settings.into_iter().for_each(|request| {
-                                sherlock.await_request(request);
-                            });
-                        }
-                        mode = data.elements.take().map(|elements| SherlockModes::Pipe(elements));
-                    }
-                };
-                if mode.is_none() {
-                    if error_view_active {
-                        mode = Some(SherlockModes::Error)
-                    } else {
-                        mode = Some(SherlockModes::Search)
-                    };
-                }
-                if let Some(mode) = mode {
-                    let request = ApiCall::SwitchMode(mode);
+                {
                     let mut sherlock = sherlock.borrow_mut();
-                    sherlock.await_request(request);
+                    let pipe = Loader::load_pipe_args();
+                    let mut mode: Option<SherlockModes> = None;
+                    if !pipe.is_empty() {
+                        if sherlock_flags.display_raw {
+                            let pipe = String::from_utf8_lossy(&pipe).to_string();
+                            mode = Some(SherlockModes::DisplayRaw(pipe));
+                        } else if let Some(mut data) = PipedData::new(&pipe){
+                            if let Some(settings) = data.settings.take(){
+                                settings.into_iter().for_each(|request| {
+                                    sherlock.await_request(request);
+                                });
+                            }
+                            mode = data.elements.take().map(|elements| SherlockModes::Pipe(elements));
+                        }
+                    };
+                    if let Some(mode) = mode {
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    } else {
+                        let mode = SherlockModes::Search;
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    }
+                    if error_view_active {
+                        let mode = SherlockModes::Error;
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    }
                     sherlock.flush();
                 }
             }
