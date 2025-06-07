@@ -32,7 +32,7 @@ impl Tile {
                 imp.title
                     .set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str());
                 imp.content_title.set_text(&message);
-                imp.content_body.set_text(&err.traceback.trim());
+                imp.content_body.set_markup(&err.traceback.trim());
                 object
             })
             .collect();
