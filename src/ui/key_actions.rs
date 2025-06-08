@@ -25,14 +25,19 @@ impl KeyActions {
             context,
         }
     }
-    pub fn on_multi_return(&self){
+    pub fn on_multi_return(&self) {
         // no context menu yet
-        if self.context.open.get() { 
-            return
+        if self.context.open.get() {
+            return;
         }
-        if let Some(actives) = self.results.upgrade().and_then(|r| r.get_actives::<SherlockRow>()) {
-            let exit: u8 = 0;
-            actives.into_iter().for_each(|row| {
+        if let Some(actives) = self
+            .results
+            .upgrade()
+            .and_then(|r| r.get_actives::<SherlockRow>())
+        {
+            let len = actives.len();
+            actives.into_iter().enumerate().for_each(|(i, row)| {
+                let exit: u8 = if i < len - 1 { 1 } else { 0 };
                 row.emit_by_name::<()>("row-should-activate", &[&exit]);
             });
         }

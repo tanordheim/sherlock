@@ -6,7 +6,7 @@ use teamslaunch::teamslaunch;
 use util::{clear_cached_files, reset_app_counter};
 
 use crate::{
-    daemon::daemon::{close_response, print_reponse},
+    daemon::daemon::print_reponse,
     launcher::{
         audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher,
         theme_picker::ThemePicker,
@@ -230,7 +230,6 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
 
         exit = do_exit.unwrap_or(exit);
         if exit {
-            let _result = close_response();
             eval_close(row);
         }
     }
