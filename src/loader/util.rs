@@ -4,12 +4,7 @@ use serde::{
 };
 use serde_json::Value;
 use std::{
-    collections::{HashMap, HashSet},
-    env,
-    fmt::Debug,
-    fs::{self, File},
-    hash::{Hash, Hasher},
-    path::PathBuf,
+    collections::{BTreeSet, HashMap, HashSet}, env, fmt::Debug, fs::{self, File}, hash::{Hash, Hasher}, path::PathBuf
 };
 
 use crate::{
@@ -278,20 +273,23 @@ impl CounterReader {
         Ok(CounterReader { path })
     }
     pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
-        let mut content: HashMap<String, f32> = JsonCache::read(&self.path)?;
-        let num_items = content.len() as f32;
-        let max_item = content
+        let mut content: HashMap<String, u32> = JsonCache::read(&self.path)?;
+        let unique_values: HashMap<u32, u32> = content
             .values()
-            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(std::cmp::Ordering::Equal));
+            .copied()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (v, (i + 1) as u32))
+            .collect();
 
-        if let Some(&max_val) = max_item {
-            for val in content.values_mut() {
-                if *val != 0.0 {
-                    *val = ((*val / max_val) * num_items).round();
-                }
+        content.iter_mut().for_each(|(_, v)| {
+            if let Some(new) = unique_values.get(v){
+                *v = new.clone();
             }
-        }
-        *content.entry(key.to_string()).or_insert(0.0) += 1.0;
+        });
+
+        *content.entry(key.to_string()).or_insert(0) += 1;
         JsonCache::write(&self.path, &content)?;
         Ok(())
     }
@@ -320,13 +318,7 @@ impl JsonCache {
         let home = home_dir()?;
         let path = expand_path(path, &home);
 
-        let file = if path.exists() {
-            File::open(&path)
-        } else {
-            println!("{:?}", path);
-            File::create(&path)
-        }
-        .map_err(|e| {
+        let file = File::open(&path).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
                 e.to_string()
