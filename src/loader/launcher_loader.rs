@@ -52,7 +52,7 @@ impl Loader {
 
         // Read cached counter file
         let counter_reader = CounterReader::new()?;
-        let counts: HashMap<String, f32> = JsonCache::read(&counter_reader.path)?;
+        let counts: HashMap<String, f32> = JsonCache::read(&counter_reader.path).unwrap_or_default();
         let max_decimals = counts
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
@@ -104,10 +104,10 @@ impl Loader {
         let mut non_breaking: Vec<SherlockError> =
             errs.into_iter().filter_map(Result::err).collect();
         if counts.is_empty() {
-            let counts: HashMap<String, f32> = launchers
+            let counts: HashMap<String, u32> = launchers
                 .iter()
                 .filter_map(|launcher| launcher.get_execs())
-                .flat_map(|exec_set| exec_set.into_iter().map(|exec| (exec, 0.0)))
+                .flat_map(|exec_set| exec_set.into_iter().map(|exec| (exec, 0)))
                 .collect();
             if let Err(e) = JsonCache::write(&counter_reader.path, &counts) {
                 non_breaking.push(e)

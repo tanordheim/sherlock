@@ -329,7 +329,9 @@ impl JsonCache {
                 e.to_string()
             )
         })?;
-        let res: Result<T, simd_json::Error> = simd_json::from_reader(file);
-        Ok(res.unwrap_or_default())
+        simd_json::from_reader(file).map_err(|e| sherlock_error!(
+            SherlockErrorType::DeserializationError,
+            e.to_string()
+        ))
     }
 }
