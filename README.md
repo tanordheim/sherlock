@@ -128,9 +128,9 @@ Make sure you have the necessary dependencies installed:
 - `gtk4` - [Gtk4 Documentation](https://docs.gtk.org/gtk4/)
 - `gtk-4-layer-shell` - [Gtk4 Layer Shell](https://github.com/wmww/gtk4-layer-shell)
 - `dbus` - (Used to get currently playing song)
-- `openssl` - (Used for retrieving Spotify album art)
-- `libssl-dev`
 - `libsqlite3-dev`
+- `librsvg`
+- `gdk-pixbuf2`
 
 1. **Clone the repository**:
 
