@@ -506,6 +506,7 @@ fn nav_event(
 ) {
     let event_controller = EventControllerKey::new();
     let stack_page = Rc::clone(stack_page);
+    let multi = CONFIG.get().map_or(false, |c| c.runtime.multi);
     event_controller.set_propagation_phase(gtk4::PropagationPhase::Capture);
     event_controller.connect_key_pressed({
         let search_bar = search_bar.clone();
@@ -576,11 +577,20 @@ fn nav_event(
                     key_actions.focus_first(current_mode.clone());
                     return false.into();
                 }
-                Key::Return => {
+                Key::Return if multi => {
+                    key_actions.on_multi_return();
+                }
+                Key::Return | Key::KP_Enter => {
                     key_actions.on_return(key_actions.context.open.get(), None);
                 }
                 Key::Escape if key_actions.context.open.get() => {
                     key_actions.close_context();
+                }
+                Key::Tab if multi && mods.is_empty() => {
+                    key_actions.mark_active();
+                }
+                Key::Tab => {
+                    return true.into();
                 }
                 Key::F11 => {
                     let api_call = ApiCall::SwitchMode(crate::api::api::SherlockModes::Error);

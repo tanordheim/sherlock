@@ -25,6 +25,18 @@ impl KeyActions {
             context,
         }
     }
+    pub fn on_multi_return(&self){
+        // no context menu yet
+        if self.context.open.get() { 
+            return
+        }
+        if let Some(actives) = self.results.upgrade().and_then(|r| r.get_actives::<SherlockRow>()) {
+            let exit: u8 = 0;
+            actives.into_iter().for_each(|row| {
+                row.emit_by_name::<()>("row-should-activate", &[&exit]);
+            });
+        }
+    }
     pub fn on_return(&self, context_open: bool, close: Option<bool>) {
         let exit: u8 = close.map_or(0, |v| if v { 2 } else { 1 });
         if context_open {
@@ -48,6 +60,11 @@ impl KeyActions {
                     println!("{}", current_text);
                 }
             }
+        }
+    }
+    pub fn mark_active(&self) {
+        if let Some(results) = self.results.upgrade() {
+            results.mark_active();
         }
     }
     pub fn on_prev(&self) {
