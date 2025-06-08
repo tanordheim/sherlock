@@ -81,7 +81,7 @@ async fn main() {
 
         // Print messages if icon parsers aren't installed
         let types: HashSet<String> = gdk_pixbuf::Pixbuf::formats().into_iter().filter_map(|f| f.name()).map(|s|s.to_string()).collect();
-        if types.contains("svg") {
+        if !types.contains("svg") {
             non_breaking.push(sherlock_error!(
                 SherlockErrorType::MissingIconParser(String::from("svg")),
                 format!("Icon parser for svg not found.\n\
@@ -89,7 +89,7 @@ async fn main() {
                 Please ensure that \"librsvg\" is installed correctly.")
             ));
         }
-        if types.contains("png") {
+        if !types.contains("png") {
             non_breaking.push(sherlock_error!(
                 SherlockErrorType::MissingIconParser(String::from("png")),
                 format!("Icon parser for png not found.\n\
