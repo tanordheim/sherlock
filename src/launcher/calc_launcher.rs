@@ -349,7 +349,7 @@ impl Currency {
             }
         }
         let content = simd_json::to_string(self)
-            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError(), e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError, e.to_string()))?;
         std::fs::write(absolute, content).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileWriteError(absolute.to_path_buf()),
@@ -415,15 +415,15 @@ impl Currency {
                 )
             })?;
 
-        let body = res.text().await.map_err(|e| {
-            sherlock_error!(SherlockErrorType::DeserializationError(), e.to_string())
-        })?;
+        let body = res
+            .text()
+            .await
+            .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))?;
 
         // simd-json requires &mut str
         let mut buf = body.into_bytes();
-        let parsed: simd_json::OwnedValue = simd_json::to_owned_value(&mut buf).map_err(|e| {
-            sherlock_error!(SherlockErrorType::DeserializationError(), e.to_string())
-        })?;
+        let parsed: simd_json::OwnedValue = simd_json::to_owned_value(&mut buf)
+            .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))?;
 
         let currencies: HashMap<String, f32> =
             if let Some(array) = parsed.get("data").and_then(OwnedValue::as_array) {
@@ -447,7 +447,7 @@ impl Currency {
                 Ok(curr)
             }
             _ => Err(sherlock_error!(
-                SherlockErrorType::DeserializationError(),
+                SherlockErrorType::DeserializationError,
                 String::from("Failed to deserialize currency map into 'Currency' object.")
             )),
         }

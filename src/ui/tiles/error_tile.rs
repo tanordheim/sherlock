@@ -31,7 +31,7 @@ impl Tile {
                 let (name, message) = err.error.get_message();
                 imp.title
                     .set_text(format!("{:5}{}:  {}", icon, tile_type, name).as_str());
-                imp.content_title.set_text(&message);
+                imp.content_title.set_markup(&message);
                 imp.content_body.set_markup(&err.traceback.trim());
                 object
             })

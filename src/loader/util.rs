@@ -4,7 +4,12 @@ use serde::{
 };
 use serde_json::Value;
 use std::{
-    collections::{BTreeSet, HashMap, HashSet}, env, fmt::Debug, fs::{self, File}, hash::{Hash, Hasher}, path::PathBuf
+    collections::{BTreeSet, HashMap, HashSet},
+    env,
+    fmt::Debug,
+    fs::{self, File},
+    hash::{Hash, Hasher},
+    path::PathBuf,
 };
 
 use crate::{
@@ -284,7 +289,7 @@ impl CounterReader {
             .collect();
 
         content.iter_mut().for_each(|(_, v)| {
-            if let Some(new) = unique_values.get(v){
+            if let Some(new) = unique_values.get(v) {
                 *v = new.clone();
             }
         });

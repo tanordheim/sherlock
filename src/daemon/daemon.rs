@@ -68,7 +68,7 @@ impl SherlockDaemon {
             // tell sherlock to use this socket
             let request = ApiCall::Socket(Some(addr));
             let request_json = simd_json::to_string(&request).map_err(|e| {
-                sherlock_error!(SherlockErrorType::SerializationError(), e.to_string())
+                sherlock_error!(SherlockErrorType::SerializationError, e.to_string())
             })?;
             stream.write_sized(request_json.as_bytes())?;
 

@@ -71,7 +71,7 @@ impl SherlockServer {
             )
         })?;
         let msg = simd_json::to_string(&api_call)
-            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError(), e.to_string()))?;
+            .map_err(|e| sherlock_error!(SherlockErrorType::SerializationError, e.to_string()))?;
         stream.write_sized(msg.as_bytes())?;
         Ok(())
     }

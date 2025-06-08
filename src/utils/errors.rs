@@ -55,9 +55,8 @@ impl SherlockError {
             )
         })?;
         let err = ApiCall::SherlockError(self);
-        let msg = serde_json::to_string(&err).map_err(|e| {
-            sherlock_error!(SherlockErrorType::DeserializationError(), e.to_string())
-        })?;
+        let msg = serde_json::to_string(&err)
+            .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))?;
         stream.write_sized(msg.as_bytes())?;
         Ok(())
     }
@@ -118,11 +117,14 @@ pub enum SherlockErrorType {
     SqlConnectionError(),
 
     // (De-) Serialization
-    SerializationError(),
-    DeserializationError(),
+    SerializationError,
+    DeserializationError,
 
     // Apps
     UnsupportedBrowser(String),
+
+    // Icons
+    MissingIconParser(String),
 }
 impl std::fmt::Display for SherlockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -221,16 +223,21 @@ impl SherlockErrorType {
             }
 
             // (De-) Serialization
-            SherlockErrorType::SerializationError() => {
+            SherlockErrorType::SerializationError => {
                 format!("Failed to serialize content.")
             }
-            SherlockErrorType::DeserializationError() => {
+            SherlockErrorType::DeserializationError => {
                 format!("Failed to deserialize content.")
             }
 
             // Apps
             SherlockErrorType::UnsupportedBrowser(browser) => {
                 format!(r#"Unsupported Broser: {}"#, browser)
+            }
+
+            // Icon Parsers
+            SherlockErrorType::MissingIconParser(parser) => {
+                format!(r#"Missing Icon Parser for <i>"{}"</i>"#, parser)
             }
         };
         (variant_name(self), message)
