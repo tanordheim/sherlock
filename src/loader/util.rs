@@ -279,6 +279,18 @@ impl CounterReader {
     }
     pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
         let mut content: HashMap<String, f32> = JsonCache::read(&self.path)?;
+        let num_items = content.len() as f32;
+        let max_item = content
+            .values()
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(std::cmp::Ordering::Equal));
+
+        if let Some(&max_val) = max_item {
+            for val in content.values_mut() {
+                if *val != 0.0 {
+                    *val = ((*val / max_val) * num_items).round();
+                }
+            }
+        }
         *content.entry(key.to_string()).or_insert(0.0) += 1.0;
         JsonCache::write(&self.path, &content)?;
         Ok(())

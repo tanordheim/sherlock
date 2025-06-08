@@ -144,7 +144,7 @@ fn parse_app_launcher(
     let apps: HashSet<AppData> = CONFIG.get().map_or_else(
         || HashSet::new(),
         |config| {
-            let prio = raw.priority as f32;
+            let prio = raw.priority;
             match config.behavior.caching {
                 true => Loader::load_applications(prio, counts, max_decimals).unwrap_or_default(),
                 false => Loader::load_applications_from_disk(None, prio, counts, max_decimals)
