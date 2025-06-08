@@ -78,23 +78,28 @@ impl PipedData {
     pub fn new<T: AsRef<[u8]>>(msg: T) -> Option<Self> {
         let mut buf = msg.as_ref().to_vec();
 
-        let mut json: OwnedValue = simd_json::from_slice(&mut buf).ok()?;
-        let obj = json.try_as_object_mut().ok()?;
-
-        // Extract Settings
-        let settings = if let Some(settings_val) = obj.remove("settings") {
-            simd_json::serde::from_owned_value::<Vec<ApiCall>>(settings_val).ok()
+        let json: Option<OwnedValue> = simd_json::from_slice(&mut buf).ok();
+        if let Some(mut json) = json {
+            let obj = json.try_as_object_mut().ok()?;
+            // Extract Settings
+            let settings = if let Some(settings_val) = obj.remove("settings") {
+                simd_json::serde::from_owned_value::<Vec<ApiCall>>(settings_val).ok()
+            } else {
+                None
+            };
+            let elements = if !obj.is_empty() {
+                simd_json::to_string(&json).ok()
+            } else {
+                None
+            };
+            Some(Self { settings, elements })
         } else {
-            None
-        };
-
-        let elements = if !obj.is_empty() {
-            simd_json::to_string(&json).ok()
-        } else {
-            None
-        };
-
-        Some(Self { settings, elements })
+            let elements = String::from_utf8_lossy(&buf).to_string();
+            Some(Self {
+                settings: None,
+                elements: Some(elements),
+            })
+        }
     }
     pub fn elements<T: AsRef<[u8]>>(msg: T) -> Option<Vec<PipedElements>> {
         let mut buf = msg.as_ref().to_vec();

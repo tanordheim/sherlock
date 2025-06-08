@@ -96,6 +96,7 @@ impl SherlockConfig {
                 multi: false,
                 center: false,
                 photo_mode: false,
+                display_raw: false,
             },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
@@ -115,6 +116,7 @@ impl SherlockConfig {
                 multi: false,
                 center: false,
                 photo_mode: false,
+                display_raw: false,
             },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
@@ -400,6 +402,7 @@ impl SherlockConfig {
         config.runtime.method = sherlock_flags.method.clone();
         config.runtime.center = sherlock_flags.center_raw.clone();
         config.runtime.multi = sherlock_flags.multi;
+        config.runtime.display_raw = sherlock_flags.display_raw;
         config.runtime.photo_mode = sherlock_flags.photo_mode;
         config.behavior.field = sherlock_flags.field.clone();
 
@@ -667,6 +670,9 @@ pub struct Runtime {
 
     #[serde(default)]
     pub photo_mode: bool,
+
+    #[serde(default)]
+    pub display_raw: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

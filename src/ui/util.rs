@@ -174,6 +174,7 @@ impl ConfKeys {
 pub struct SherlockAction {
     pub on: u32,
     pub action: String,
+    pub exec: Option<String>,
 }
 pub struct SherlockCounter {
     path: PathBuf,

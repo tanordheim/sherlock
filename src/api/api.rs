@@ -1,19 +1,20 @@
-use std::{collections::HashMap, fmt::Display};
+use std::{fmt::Display, sync::RwLock};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
-    glib::{variant::ToVariant, WeakRef},
+    glib::{object::ObjectExt, variant::ToVariant, WeakRef},
     ListStore,
 };
 use gtk4::{
     prelude::{EntryExt, GtkWindowExt, WidgetExt},
-    ApplicationWindow, Stack,
+    Application, ApplicationWindow, Stack,
 };
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use simd_json::prelude::ArrayTrait;
 
 use crate::{
-    actions::execute_from_attrs,
+    actions::{execute_from_attrs, get_attrs_map},
     loader::{
         pipe_loader::{PipedData, PipedElements},
         util::JsonCache,
@@ -21,6 +22,7 @@ use crate::{
     prelude::StackHelpers,
     sher_log,
     ui::{
+        input_window::InputWindow,
         search::SearchUiObj,
         tiles::Tile,
         util::{display_raw, SearchHandler, SherlockAction, SherlockCounter},
@@ -31,7 +33,10 @@ use crate::{
 
 use super::call::ApiCall;
 
+pub static RESPONSE_SOCKET: Lazy<RwLock<Option<String>>> = Lazy::new(|| RwLock::new(None));
+
 pub struct SherlockAPI {
+    pub app: WeakRef<Application>,
     pub window: Option<WeakRef<ApplicationWindow>>,
     pub stack: Option<WeakRef<Stack>>,
     pub search_ui: Option<WeakRef<SearchUiObj>>,
@@ -40,8 +45,9 @@ pub struct SherlockAPI {
     pub queue: Vec<ApiCall>,
 }
 impl SherlockAPI {
-    pub fn new() -> Self {
+    pub fn new(app: &Application) -> Self {
         Self {
+            app: app.downgrade(),
             window: None,
             stack: None,
             search_ui: None,
@@ -51,7 +57,8 @@ impl SherlockAPI {
         }
     }
 
-    pub fn request(&mut self, api_call: ApiCall) {
+    /// Best use await_request() followed by flush() instead
+    pub fn _request(&mut self, api_call: ApiCall) {
         self.flush();
         if self.match_action(&api_call).is_none() {
             self.queue.push(api_call);
@@ -86,6 +93,7 @@ impl SherlockAPI {
             ApiCall::Pipe(pipe) => self.load_pipe_elements(pipe),
             ApiCall::DisplayRaw(pipe) => self.display_raw(pipe),
             ApiCall::SwitchMode(mode) => self.switch_mode(mode),
+            ApiCall::Socket(socket) => self.create_socket(socket.as_deref()),
         }
     }
     pub fn open(&self) -> Option<()> {
@@ -104,8 +112,10 @@ impl SherlockAPI {
             .into_iter()
             .filter(|action| start_count % action.on == 0)
             .for_each(|action| {
-                let attrs: HashMap<String, String> =
-                    HashMap::from([(String::from("method"), action.action)]);
+                let attrs = get_attrs_map(vec![
+                    ("method", Some(&action.action)),
+                    ("exec", action.exec.as_deref()),
+                ]);
                 execute_from_attrs(&window, &attrs, None);
             });
         window.present();
@@ -115,6 +125,12 @@ impl SherlockAPI {
         let ui = self.search_ui.as_ref().and_then(|ui| ui.upgrade())?;
         let imp = ui.imp();
         imp.search_bar.set_visibility(vis == false);
+        Some(())
+    }
+    pub fn create_socket<T: AsRef<str>>(&self, socket: Option<T>) -> Option<()> {
+        let addr = socket.map(|s| s.as_ref().to_string());
+        let mut response = RESPONSE_SOCKET.write().unwrap();
+        *response = addr;
         Some(())
     }
     pub fn clear_results(&self) -> Option<()> {
@@ -206,6 +222,14 @@ impl SherlockAPI {
         handler.populate();
         Some(())
     }
+
+    fn spawn_input(&self, obfuscate: bool) -> Option<()> {
+        let app = self.app.upgrade()?;
+        let win = InputWindow::new(obfuscate);
+        win.set_application(Some(&app));
+        win.present();
+        Some(())
+    }
     pub fn switch_mode(&mut self, mode: &SherlockModes) -> Option<()> {
         match mode {
             SherlockModes::Search => {
@@ -222,6 +246,9 @@ impl SherlockAPI {
             SherlockModes::Error => {
                 self.switch_page("error-page");
             }
+            SherlockModes::Input(obfuscate) => {
+                self.spawn_input(*obfuscate);
+            }
         }
         Some(())
     }
@@ -230,9 +257,10 @@ impl SherlockAPI {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum SherlockModes {
     Search,
+    Error,
     DisplayRaw(String),
     Pipe(String),
-    Error,
+    Input(bool),
 }
 impl Display for SherlockModes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -241,6 +269,7 @@ impl Display for SherlockModes {
             Self::Error => write!(f, "ErrorView"),
             Self::Pipe(_) => write!(f, "PipeView"),
             Self::DisplayRaw(_) => write!(f, "RawView"),
+            Self::Input(obf) => write!(f, "Input:Obfuscated?{}", obf),
         }
     }
 }

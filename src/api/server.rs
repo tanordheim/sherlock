@@ -3,9 +3,10 @@ use std::{cell::RefCell, os::unix::net::UnixStream, rc::Rc, thread};
 
 use crate::{
     daemon::daemon::{SherlockDaemon, SizedMessage},
+    loader::pipe_loader::PipedData,
     sher_log, sherlock_error,
     utils::errors::{SherlockError, SherlockErrorType},
-    SOCKET_PATH,
+    CONFIG, SOCKET_PATH,
 };
 
 use super::{api::SherlockAPI, call::ApiCall};
@@ -27,10 +28,27 @@ impl SherlockServer {
                 while let Ok(msg) = receiver.recv().await {
                     if let Ok(cmd) = serde_json::from_str::<ApiCall>(&msg) {
                         sher_log!(format!("Incoming api request: {}", cmd));
-                        api.borrow_mut().request(cmd);
+                        api.borrow_mut().await_request(cmd);
+                    } else if let Some(mut data) = PipedData::new(&msg) {
+                        if let Some(settings) = data.settings.take() {
+                            let mut api = api.borrow_mut();
+                            settings.into_iter().for_each(|request| {
+                                api.await_request(request);
+                            });
+                        }
+                        if let Some(elements) = data.elements.take() {
+                            let raw = CONFIG.get().map_or(false, |c| c.runtime.display_raw);
+                            let request = if raw {
+                                ApiCall::DisplayRaw(elements)
+                            } else {
+                                ApiCall::Pipe(elements)
+                            };
+                            api.borrow_mut().await_request(request);
+                        }
                     } else {
                         sher_log!(format!("Failed to deserialize api call(s): {}", msg));
                     }
+                    api.borrow_mut().flush();
                 }
             }
         });

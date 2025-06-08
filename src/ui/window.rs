@@ -10,6 +10,7 @@ use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::daemon::daemon::close_response;
 use crate::launcher::emoji_picker::emojies;
 use crate::utils::config::SherlockConfig;
 use crate::CONFIG;
@@ -116,6 +117,10 @@ pub fn window(
             if !window.is_visible() {
                 return;
             }
+
+            // Send close message to possible instance
+            let _result = close_response();
+
             if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
                     true => {

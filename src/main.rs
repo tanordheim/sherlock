@@ -31,6 +31,7 @@ use utils::{
 };
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
+const SOCKET_DIR: &str = "/tmp/";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
 
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
@@ -41,7 +42,7 @@ async fn main() {
         startup_loading();
     let t0 = Instant::now();
     application.connect_activate(move |app| {
-        let sherlock = Rc::new(RefCell::new(api::api::SherlockAPI::new()));
+        let sherlock = Rc::new(RefCell::new(api::api::SherlockAPI::new(app)));
         let t1 = Instant::now();
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
@@ -188,8 +189,7 @@ fn startup_loading() -> (
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
-        eprintln!("{}", e);
+    let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|_| {
         process::exit(1);
     });
 

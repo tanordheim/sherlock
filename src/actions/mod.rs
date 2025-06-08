@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-
 use gio::glib::{object::IsA, variant::ToVariant};
 use gtk4::{prelude::WidgetExt, Widget};
+use std::collections::HashMap;
 use std::fs::File;
 use teamslaunch::teamslaunch;
 use util::{clear_cached_files, reset_app_counter};
 
 use crate::{
+    daemon::daemon::{close_response, print_reponse},
     launcher::{
         audio_launcher::MusicPlayerLauncher, process_launcher::ProcessLauncher,
         theme_picker::ThemePicker,
@@ -95,10 +95,10 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
             "print" => {
                 if let Some(field) = attrs.get("field") {
                     if let Some(output) = attrs.get(field) {
-                        print!("{}", output);
+                        let _result = print_reponse(output);
                     }
                 } else if let Some(output) = attrs.get("result").or(attrs.get("exec")) {
-                    print!("{}", output);
+                    let _result = print_reponse(output);
                 }
             }
             "teams_event" => {
@@ -220,15 +220,17 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
             }
             _ => {
                 if let Some(out) = attrs.get("result") {
-                    print!("{}", out);
+                    let _result = print_reponse(out);
                 } else {
-                    println!("Return method \"{}\" not recognized", method);
+                    let out = format!("Return method \"{}\" not recognized", method);
+                    let _result = print_reponse(out);
                 }
             }
         }
 
         exit = do_exit.unwrap_or(exit);
         if exit {
+            let _result = close_response();
             eval_close(row);
         }
     }

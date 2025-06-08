@@ -11,6 +11,7 @@ pub enum ApiCall {
     InputOnly,
     Obfuscate(bool),
     // Actions
+    Socket(Option<String>),
     Show,
     Clear,
     SherlockError(SherlockError),
@@ -27,6 +28,7 @@ impl Display for ApiCall {
             Self::Obfuscate(val) => write!(f, "setting.Obfuscate:{}", val),
             // Actions
             Self::Show => write!(f, "action.Show"),
+            Self::Socket(socket) => write!(f, "action.Socket:{:?}", socket),
             Self::Clear => write!(f, "action.Clear"),
             Self::SherlockError(err) => write!(f, "action.InsertError:{}", err),
             Self::ClearAwaiting => write!(f, "action.ClearAwaiting"),
