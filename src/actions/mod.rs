@@ -35,7 +35,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
         .collect();
 
     if let Some(method) = attrs.get("method") {
-        let mut exit = attrs.get("exit").map_or(true, |s| s == "true");
+        let mut exit = do_exit.unwrap_or(attrs.get("exit").map_or(true, |s| s == "true"));
 
         match method.as_str() {
             "categories" => {
@@ -126,7 +126,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
             }
             "theme_picker" => {
                 if let Some(theme) = attrs.get("result").or(attrs.get("exec")) {
-                    if let Err(error) = ThemePicker::select_theme(theme) {
+                    if let Err(error) = ThemePicker::select_theme(theme, exit) {
                         exit = false;
                         let _result = error.insert(false);
                     }

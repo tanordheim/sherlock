@@ -178,7 +178,7 @@ async fn main() {
                 }
 
                 // Load CSS Stylesheet
-                if let Err(error) = Loader::load_css() {
+                if let Err(error) = Loader::load_css(true) {
                     let _result = error.insert(false);
                 }
             }

@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use tokio::fs::create_dir_all;
 
 use crate::loader::util::AppData;
+use crate::loader::Loader;
 use crate::sherlock_error;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::utils::files::home_dir;
@@ -52,7 +53,7 @@ impl ThemePicker {
             themes,
         })
     }
-    pub fn select_theme<T>(theme: T) -> Result<(), SherlockError>
+    pub fn select_theme<T>(theme: T, exit: bool) -> Result<(), SherlockError>
     where
         T: AsRef<[u8]>,
     {
@@ -63,6 +64,12 @@ impl ThemePicker {
                 e.to_string()
             )
         })?;
+        println!("{:?}", exit);
+        if !exit {
+            if let Err(error) = Loader::load_css(false) {
+                let _result = error.insert(false);
+            }
+        }
         Ok(())
     }
 
