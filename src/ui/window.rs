@@ -137,13 +137,6 @@ pub fn window(
         })
         .build();
 
-    // Setup action to open the window
-    let action_open = ActionEntry::builder("open")
-        .activate(move |window: &ApplicationWindow, _, _| {
-            window.present();
-        })
-        .build();
-
     // Setup action to switch to a specific stack page
     let stack_clone = stack_ref.clone();
     let page_clone = Rc::clone(&current_stack_page);
@@ -238,30 +231,15 @@ pub fn window(
         .build();
 
     window.set_child(Some(&stack));
-    let win_ref = match backdrop {
-        Some(backdrop) => {
-            backdrop.add_action_entries([action_open]);
-            window.add_action_entries([
-                action_close,
-                action_stack_switch,
-                action_next_page,
-                emoji_action,
-                action_remove_page,
-            ]);
-            backdrop.downgrade()
-        }
-        _ => {
-            window.add_action_entries([
-                action_close,
-                action_open,
-                action_stack_switch,
-                action_next_page,
-                emoji_action,
-                action_remove_page,
-            ]);
-            window.downgrade()
-        }
-    };
+    window.add_action_entries([
+        action_close,
+        action_stack_switch,
+        action_next_page,
+        emoji_action,
+        action_remove_page,
+    ]);
+    let win_ref = backdrop.as_ref().unwrap_or(&window).downgrade();
+
     return (window, stack, current_stack_page, win_ref);
 }
 
