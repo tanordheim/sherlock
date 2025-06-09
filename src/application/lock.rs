@@ -6,7 +6,7 @@ use procfs::process::Process;
 
 use crate::daemon::daemon::SherlockDaemon;
 
-#[sherlock_macro::timing("Ensuring single instance")]
+#[sherlock_macro::timing(name = "Ensuring single instance", level = "setup")]
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
     let path = PathBuf::from(lock_file);
     if path.exists() {

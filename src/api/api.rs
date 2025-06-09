@@ -88,7 +88,8 @@ impl SherlockAPI {
         match api_call {
             ApiCall::Obfuscate(vis) => self.obfuscate(*vis),
             ApiCall::Clear => self.clear_results(),
-            ApiCall::SherlockError(err) => self.insert_msg(err),
+            ApiCall::SherlockError(err) => self.insert_msg(err, true),
+            ApiCall::SherlockWarning(err) => self.insert_msg(err, false),
             ApiCall::InputOnly => self.show_raw(),
             ApiCall::Show => self.open(),
             ApiCall::ClearAwaiting => self.flush(),
@@ -168,9 +169,14 @@ impl SherlockAPI {
         });
         Some(())
     }
-    pub fn insert_msg(&self, error: &SherlockError) -> Option<()> {
+    pub fn insert_msg(&self, error: &SherlockError, is_error: bool) -> Option<()> {
+        let (icon, msg) = if is_error {
+            ("", "")
+        } else {
+            ("⚠️", "WARNING")
+        };
         let model = self.errors.as_ref().and_then(|tmp| tmp.upgrade())?;
-        let (_, tiles) = Tile::error_tile(0, &vec![error], "⚠️", "WARNING");
+        let (_, tiles) = Tile::error_tile(0, &vec![error], icon, msg);
         model.append(tiles.first()?);
         Some(())
     }

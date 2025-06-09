@@ -9,8 +9,8 @@ use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, CONFIG};
 
 impl Loader {
-    pub fn load_css() -> Result<Vec<SherlockError>, SherlockError> {
-        let mut non_breaking: Vec<SherlockError> = Vec::new();
+    #[sherlock_macro::timing(name = "Loading CSS", level = "setup")]
+    pub fn load_css() -> Result<(), SherlockError> {
         let provider = CssProvider::new();
 
         let config = CONFIG
@@ -45,13 +45,14 @@ impl Loader {
                 gtk4::STYLE_PROVIDER_PRIORITY_USER,
             );
         } else {
-            non_breaking.push(sherlock_error!(
+            let _result = sherlock_error!(
                 SherlockErrorType::FileExistError(config.files.css.clone()),
                 "Using default css"
-            ));
+            )
+            .insert(false);
         }
 
         drop(provider);
-        Ok(non_breaking)
+        Ok(())
     }
 }

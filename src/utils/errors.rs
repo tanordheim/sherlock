@@ -52,14 +52,18 @@ impl SherlockError {
         }
         object
     }
-    pub fn insert(self) -> Result<(), SherlockError> {
+    pub fn insert(self, is_error: bool) -> Result<(), SherlockError> {
         let mut stream = UnixStream::connect(SOCKET_PATH).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::SocketConnectError(SOCKET_PATH.to_string()),
                 e.to_string()
             )
         })?;
-        let err = ApiCall::SherlockError(self);
+        let err = if is_error {
+            ApiCall::SherlockError(self)
+        } else {
+            ApiCall::SherlockWarning(self)
+        };
         let msg = serde_json::to_string(&err)
             .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))?;
         stream.write_sized(msg.as_bytes())?;

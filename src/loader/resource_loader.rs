@@ -7,7 +7,7 @@ use crate::{
 };
 
 impl Loader {
-    #[sherlock_macro::timing("Loading resources")]
+    #[sherlock_macro::timing(name = "Loading resources", level = "setup")]
     pub fn load_resources() -> Result<(), SherlockError> {
         let res_bytes = include_bytes!("../../resources.gresources");
         let resource = gio::Resource::from_data(&glib::Bytes::from_static(res_bytes))

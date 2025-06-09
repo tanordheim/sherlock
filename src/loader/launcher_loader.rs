@@ -41,7 +41,7 @@ use super::Loader;
 use crate::{sherlock_error, CONFIG};
 
 impl Loader {
-    #[sherlock_macro::timing("Loading launchers")]
+    #[sherlock_macro::timing(name = "Loading launchers")]
     pub fn load_launchers() -> Result<(Vec<Launcher>, Vec<SherlockError>), SherlockError> {
         let config = CONFIG
             .get()
@@ -177,7 +177,7 @@ fn parse_bookmarks_launcher(raw: &RawLauncher) -> LauncherType {
                 return LauncherType::Bookmark(BookmarkLauncher { bookmarks });
             }
             Err(err) => {
-                let _result = err.insert();
+                let _result = err.insert(false);
             }
         }
     }

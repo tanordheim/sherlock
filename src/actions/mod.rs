@@ -64,7 +64,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 };
                 if let Err(error) = websearch::websearch(engine, query) {
                     exit = false;
-                    let _result = error.insert();
+                    let _result = error.insert(false);
                 }
             }
             "command" => {
@@ -72,7 +72,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 let keyword = attrs.get("keyword").map_or("", |s| s.as_str());
                 if let Err(error) = commandlaunch::command_launch(exec, keyword) {
                     exit = false;
-                    let _result = error.insert();
+                    let _result = error.insert(false);
                 } else {
                     increment(&exec);
                 }
@@ -88,7 +88,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 } else if let Some(output) = attrs.get("result").or(attrs.get("exec")) {
                     if let Err(err) = util::copy_to_clipboard(output.as_str()) {
                         exit = false;
-                        let _result = err.insert();
+                        let _result = err.insert(false);
                     }
                 }
             }
@@ -128,7 +128,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 if let Some(theme) = attrs.get("result").or(attrs.get("exec")) {
                     if let Err(error) = ThemePicker::select_theme(theme) {
                         exit = false;
-                        let _result = error.insert();
+                        let _result = error.insert(false);
                     }
                 } else {
                     exit = false;
@@ -147,7 +147,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                 if let Some(player) = attrs.get("player") {
                     if let Err(error) = MusicPlayerLauncher::playpause(player) {
                         exit = false;
-                        let _result = error.insert();
+                        let _result = error.insert(false);
                     }
                 }
             }
@@ -158,7 +158,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     .zip(attrs.get("child-pid").and_then(|c| c.parse::<i32>().ok()))
                 {
                     if let Err(error) = ProcessLauncher::kill((ppid, cpid)) {
-                        let _result = error.insert();
+                        let _result = error.insert(false);
                     }
                 };
             }
@@ -176,14 +176,14 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                     }
                     "clear_cache" => {
                         if let Err(error) = clear_cached_files() {
-                            let _result = error.insert();
+                            let _result = error.insert(false);
                         } else {
                             increment("debug.clear_cache");
                         }
                     }
                     "reset_counts" => {
                         if let Err(error) = reset_app_counter() {
-                            let _result = error.insert();
+                            let _result = error.insert(false);
                         } else {
                             increment("debug.reset_counts");
                         }
@@ -199,7 +199,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                                     )
                                 }) {
                                     exit = false;
-                                    let _result = err.insert();
+                                    let _result = err.insert(false);
                                 }
                             }
                         }
@@ -210,7 +210,7 @@ pub fn execute_from_attrs<T: IsA<Widget>>(
                             SherlockErrorType::DebugError(String::from("Test Error")),
                             format!("This is a test error message, it can be disregarded.")
                         );
-                        let _result = err.insert();
+                        let _result = err.insert(false);
                     }
                     _ => {}
                 }

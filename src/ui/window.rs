@@ -17,7 +17,7 @@ use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
 
-#[sherlock_macro::timing("Window frame creation")]
+#[sherlock_macro::timing(name = "Window frame creation")]
 pub fn window(
     application: &Application,
 ) -> (

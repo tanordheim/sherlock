@@ -1,6 +1,6 @@
 use api::call::ApiCall;
 use gio::prelude::*;
-use gtk4::prelude::{GtkApplicationExt};
+use gtk4::prelude::{GtkApplicationExt, WidgetExt};
 use gtk4::{glib, Application};
 use loader::pipe_loader::PipedData;
 use std::cell::RefCell;
@@ -39,29 +39,21 @@ static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
-    let (application, startup_errors, non_breaking, sherlock_flags, app_config, lock) =
-        startup_loading();
     let t0 = Instant::now();
+    let (application, startup_errors, non_breaking, sherlock_flags, app_config, lock) =
+        startup_loading().await;
+    let t01 = Instant::now();
     application.connect_activate(move |app| {
         let sherlock = Rc::new(RefCell::new(api::api::SherlockAPI::new(app)));
         let t1 = Instant::now();
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
-                println!("Activation took {:?}", t0.elapsed());
+                println!("GTK Activation took {:?}", t01.elapsed());
             }
         }
-        let mut error_list = startup_errors.clone();
-        let mut non_breaking = non_breaking.clone();
+        let errors = startup_errors.clone();
+        let mut warnings = non_breaking.clone();
 
-        // Load custom icons from icon path specified in 'config.toml'
-        let n = Loader::load_icon_theme();
-        non_breaking.extend(n);
-
-        // Load CSS Stylesheet
-        let n = Loader::load_css()
-            .map_err(|e| error_list.push(e))
-            .unwrap_or_default();
-        non_breaking.extend(n);
 
         // Main logic for the Search-View
         let (window, stack, current_stack_page, open_win) = ui::window::window(app);
@@ -71,6 +63,15 @@ async fn main() {
             sherlock.open_window = Some(open_win.clone());
             sherlock.stack = Some(stack.downgrade());
         }
+        window.connect_show({
+            let t0 = t0.clone();
+            move |_| {
+            if let Ok(timing_enabled) = std::env::var("TIMING") {
+                if timing_enabled == "true" {
+                    println!("Window shown after {:?}", t0.elapsed());
+                }
+            }
+        }});
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W"]);
@@ -81,7 +82,7 @@ async fn main() {
         // Print messages if icon parsers aren't installed
         let types: HashSet<String> = gdk_pixbuf::Pixbuf::formats().into_iter().filter_map(|f| f.name()).map(|s|s.to_string()).collect();
         if !types.contains("svg") {
-            non_breaking.push(sherlock_error!(
+            warnings.push(sherlock_error!(
                 SherlockErrorType::MissingIconParser(String::from("svg")),
                 format!("Icon parser for svg not found.\n\
                 This could hinder Sherlock from rendering .svg icons.\n\
@@ -89,7 +90,7 @@ async fn main() {
             ));
         }
         if !types.contains("png") {
-            non_breaking.push(sherlock_error!(
+            warnings.push(sherlock_error!(
                 SherlockErrorType::MissingIconParser(String::from("png")),
                 format!("Icon parser for png not found.\n\
                 This could hinder Sherlock from rendering .png icons.\n\
@@ -100,8 +101,9 @@ async fn main() {
         glib::MainContext::default().spawn_local({
             let sherlock = Rc::clone(&sherlock);
             async move {
+
                 // Either show user-specified content or show normal search
-                let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page, Rc::clone(&sherlock));
+                let (error_stack, error_model) = ui::error_view::errors(&errors, &warnings, &current_stack_page, Rc::clone(&sherlock));
                 let (search_frame, _handler) = match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
                     Ok(r) => r,
                     Err(e) => {
@@ -117,7 +119,7 @@ async fn main() {
                 if let Some(c) = CONFIG.get() {
                     let opacity = c.appearance.opacity;
                     if !(0.1..=1.0).contains(&opacity) {
-                        non_breaking.push(sherlock_error!(
+                        warnings.push(sherlock_error!(
                             SherlockErrorType::ConfigError(Some(format!(
                                 "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
                                 opacity,
@@ -131,8 +133,8 @@ async fn main() {
                 // Mode switching
                 // Logic for the Error-View
                 let error_view_active = if !app_config.debug.try_suppress_errors {
-                    let show_errors = !error_list.is_empty();
-                    let show_warnings = !app_config.debug.try_suppress_warnings && !non_breaking.is_empty();
+                    let show_errors = !errors.is_empty();
+                    let show_warnings = !app_config.debug.try_suppress_warnings && !warnings.is_empty();
                     show_errors || show_warnings
                 } else {
                     false
@@ -169,6 +171,16 @@ async fn main() {
                     }
                     sherlock.flush();
                 }
+
+                // Load Icon theme
+                if let Some(warning) = Loader::load_icon_theme() {
+                    let _result = warning.insert(false);
+                }
+
+                // Load CSS Stylesheet
+                if let Err(error) = Loader::load_css() {
+                    let _result = error.insert(false);
+                }
             }
         });
 
@@ -188,6 +200,7 @@ async fn main() {
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
                 println!("Window creation took {:?}", t1.elapsed());
+                println!("Start to Finish took: {:?}", t0.elapsed());
             }
         }
     });
@@ -195,8 +208,7 @@ async fn main() {
     drop(lock);
 }
 
-#[sherlock_macro::timing("\nContent loading")]
-fn startup_loading() -> (
+async fn startup_loading() -> (
     Application,
     Vec<SherlockError>,
     Vec<SherlockError>,
@@ -204,19 +216,28 @@ fn startup_loading() -> (
     SherlockConfig,
     LockFile,
 ) {
+    let t0 = Instant::now();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
-
-    // Initialize application
-    let application = Application::builder()
-        .application_id("dev.skxxtz.sherlock")
-        .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
-        .build();
 
     // Check for '.lock'-file to only start a single instance
     let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|_| {
         process::exit(1);
     });
+
+    let app_future = async {
+        // Initialize application
+        let application = Application::builder()
+            // .application_id("dev.skxxtz.sherlock")
+            .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
+            .build();
+        // Needed in order start Sherlock without glib flag handling
+        application.connect_command_line(|app, _| {
+            app.activate();
+            0
+        });
+        application
+    };
 
     // Setup flags
     let sherlock_flags = Loader::load_flags()
@@ -248,16 +269,17 @@ fn startup_loading() -> (
         .map_err(|e| startup_errors.push(e))
         .ok();
 
-
     if let Some(config) = CONFIG.get() {
         env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
     }
 
-    // Needed in order start Sherlock without glib flag handling
-    application.connect_command_line(|app, _| {
-        app.activate();
-        0
-    });
+    let application = app_future.await;
+
+    if let Ok(timing_enabled) = std::env::var("TIMING") {
+        if timing_enabled == "true" {
+            println!("Initial Setup took {:?}", t0.elapsed());
+        }
+    }
 
     (
         application,

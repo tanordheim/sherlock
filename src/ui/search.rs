@@ -28,7 +28,7 @@ use crate::{
     CONFIG,
 };
 
-#[sherlock_macro::timing("Search Window Creation")]
+#[sherlock_macro::timing(name = "Search Window Creation")]
 pub fn search(
     window: &ApplicationWindow,
     stack_page_ref: &Rc<RefCell<String>>,

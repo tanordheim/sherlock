@@ -83,7 +83,7 @@ pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<()
             }
         };
         if let Err(err) = result {
-            let _result = err.insert();
+            let _result = err.insert(false);
         }
     });
     Ok(())

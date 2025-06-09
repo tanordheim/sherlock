@@ -248,7 +248,7 @@ impl SherlockConfig {
 
         std::process::exit(0);
     }
-    #[sherlock_macro::timing("Loading config")]
+    #[sherlock_macro::timing(name = "Loading config")]
     pub fn from_flags(
         sherlock_flags: &SherlockFlags,
     ) -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
