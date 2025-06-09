@@ -140,7 +140,7 @@ impl Launcher {
             LauncherType::Emoji(emj) => Tile::app_tile(self, &emj.data),
             LauncherType::File(f) => Tile::app_tile(self, &f.data),
             LauncherType::Theme(thm) => Tile::app_tile(self, &thm.themes),
-            LauncherType::Process(proc) => Tile::process_tile(self, &proc),
+            LauncherType::Process(proc) => Tile::process_tile(self, proc),
             LauncherType::Web(web) => Tile::web_tile(self, &web),
 
             // Async tiles

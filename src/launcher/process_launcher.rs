@@ -10,19 +10,13 @@ use crate::utils::errors::{SherlockError, SherlockErrorType};
 #[derive(Clone, Debug)]
 pub struct ProcessLauncher {
     pub icon: String,
-    pub processes: HashMap<(i32, i32), String>,
 }
 
 impl ProcessLauncher {
     pub fn new(icon: &str) -> Option<Self> {
-        if let Some(processes) = get_all_processes() {
-            return Some(Self {
-                processes,
-                icon: icon.to_string(),
-            });
-        } else {
-            return None;
-        }
+        return Some(Self {
+            icon: icon.to_string(),
+        });
     }
     pub fn kill(pid: (i32, i32)) -> Result<(), SherlockError> {
         if pid.0 != pid.1 {
@@ -42,59 +36,58 @@ impl ProcessLauncher {
             )
         })
     }
-}
+    pub fn get_all_processes() -> Option<HashMap<(i32, i32), String>> {
+        match all_processes() {
+            Ok(procs) => {
+                let user_processes: Vec<Process> = procs
+                    .flatten()
+                    .par_bridge()
+                    .filter_map(|p| match p.uid() {
+                        Ok(uid) if uid > 0 => Some(p),
+                        _ => None,
+                    })
+                    .collect();
+                let mut process_names: HashMap<i32, String> = user_processes
+                    .par_iter()
+                    .filter_map(|p| {
+                        p.exe().ok().and_then(|path| {
+                            path.file_name()?.to_str().map(|n| (p.pid, n.to_string()))
+                        })
+                    })
+                    .collect();
 
-fn get_all_processes() -> Option<HashMap<(i32, i32), String>> {
-    match all_processes() {
-        Ok(procs) => {
-            let user_processes: Vec<Process> = procs
-                .flatten()
-                .par_bridge()
-                .filter_map(|p| match p.uid() {
-                    Ok(uid) if uid > 0 => Some(p),
-                    _ => None,
-                })
-                .collect();
-            let mut process_names: HashMap<i32, String> = user_processes
-                .par_iter()
-                .filter_map(|p| {
-                    p.exe()
-                        .ok()
-                        .and_then(|path| path.file_name()?.to_str().map(|n| (p.pid, n.to_string())))
-                })
-                .collect();
-
-            let stats: Vec<_> = user_processes
-                .par_iter()
-                .filter_map(|p| p.stat().ok())
-                .collect();
-            let mut tmp: HashMap<i32, i32> = HashMap::new();
-            let collected: HashMap<(i32, i32), String> = stats
-                .into_iter()
-                .rev()
-                .filter_map(|item| {
-                    if item.ppid == 1 {
-                        let named_id = tmp.get(&item.pid).copied().unwrap_or(item.pid);
-                        process_names
-                            .remove(&named_id)
-                            .and_then(|name| Some(((item.pid, named_id), name)))
-                    } else if item.tty_nr != 0 {
-                        if let Some(r) = tmp.remove(&item.pid) {
-                            tmp.insert(item.ppid, r);
+                let stats: Vec<_> = user_processes
+                    .par_iter()
+                    .filter_map(|p| p.stat().ok())
+                    .collect();
+                let mut tmp: HashMap<i32, i32> = HashMap::new();
+                let collected: HashMap<(i32, i32), String> = stats
+                    .into_iter()
+                    .rev()
+                    .filter_map(|item| {
+                        if item.ppid == 1 {
+                            let named_id = tmp.get(&item.pid).copied().unwrap_or(item.pid);
+                            process_names
+                                .remove(&named_id)
+                                .and_then(|name| Some(((item.pid, named_id), name)))
+                        } else if item.tty_nr != 0 {
+                            if let Some(r) = tmp.remove(&item.pid) {
+                                tmp.insert(item.ppid, r);
+                            } else if tmp.get(&item.ppid).is_none() {
+                                tmp.insert(item.ppid, item.pid);
+                            }
+                            None
                         } else if tmp.get(&item.ppid).is_none() {
                             tmp.insert(item.ppid, item.pid);
+                            None
+                        } else {
+                            None
                         }
-                        None
-                    } else if tmp.get(&item.ppid).is_none() {
-                        tmp.insert(item.ppid, item.pid);
-                        None
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            Some(collected)
+                    })
+                    .collect();
+                Some(collected)
+            }
+            Err(_) => None,
         }
-        Err(_) => None,
     }
 }

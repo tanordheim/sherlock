@@ -15,8 +15,10 @@ use super::Tile;
 
 impl Tile {
     pub fn process_tile(launcher: &Launcher, proc: &ProcessLauncher) -> Vec<SherlockRow> {
-        proc.processes
-            .iter()
+        let processes = ProcessLauncher::get_all_processes().unwrap_or_default();
+
+        processes
+            .into_iter()
             .map(|(key, value)| {
                 let tile = AppTile::new();
                 let imp = tile.imp();
@@ -83,7 +85,6 @@ impl Tile {
                 if launcher.shortcut {
                     object.set_shortcut_holder(Some(imp.shortcut_holder.downgrade()));
                 }
-
                 object
             })
             .collect()
