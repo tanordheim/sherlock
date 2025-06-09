@@ -32,7 +32,7 @@ impl ThemePicker {
                     .filter(|path| path.is_file() || path.is_symlink())
                     .filter_map(|path| {
                         if path.extension()?.to_str()? == "css" {
-                            let name = path.file_name()?.to_str()?.to_string();
+                            let name = path.file_name()?.to_str()?;
                             Some(AppData::new_for_theme(name, path.to_str(), prio))
                         } else {
                             None
@@ -52,10 +52,11 @@ impl ThemePicker {
             themes,
         })
     }
-    pub fn select_theme<T: AsRef<str>>(theme: T) -> Result<(), SherlockError> {
+    pub fn select_theme<T>(theme: T) -> Result<(), SherlockError>
+    where
+        T: AsRef<[u8]>,
+    {
         let absolute = Self::get_cached()?;
-        let theme = theme.as_ref();
-
         write(&absolute, theme).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileWriteError(absolute.clone()),

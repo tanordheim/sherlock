@@ -4,6 +4,7 @@ use serde::{
 };
 use serde_json::Value;
 use std::{
+    borrow::Cow,
     collections::{BTreeSet, HashMap, HashSet},
     env,
     fmt::Debug,
@@ -115,17 +116,18 @@ impl AppData {
             terminal: false,
         }
     }
-    pub fn new_for_theme<T: AsRef<str>, S: AsRef<str>>(
-        name: T,
-        path: Option<S>,
-        priority: f32,
-    ) -> Self {
-        let name = name.as_ref().to_string();
-        let path = path.map(|s| s.as_ref().to_string());
+    pub fn new_for_theme<'a, T, S>(name: T, path: Option<S>, priority: f32) -> Self
+    where
+        T: Into<Cow<'a, str>>,
+        S: Into<Cow<'a, str>>,
+    {
+        let name: Cow<'a, str> = name.into();
+        let path = path.map(|s| s.into().into_owned());
+        let name_string = name.into_owned();
         Self {
-            name: name.to_string(),
+            name: name_string.clone(),
             exec: path,
-            search_string: name,
+            search_string: name_string,
             priority,
             icon: Some(String::from("sherlock-devtools")),
             icon_class: None,
@@ -329,9 +331,7 @@ impl JsonCache {
                 e.to_string()
             )
         })?;
-        simd_json::from_reader(file).map_err(|e| sherlock_error!(
-            SherlockErrorType::DeserializationError,
-            e.to_string()
-        ))
+        simd_json::from_reader(file)
+            .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))
     }
 }

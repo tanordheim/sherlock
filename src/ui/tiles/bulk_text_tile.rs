@@ -27,7 +27,7 @@ impl Tile {
         }
 
         // Set icons
-        imp.icon.set_icon(&Some(&bulk_text.icon), &None, &None);
+        imp.icon.set_icon(Some(&bulk_text.icon), None, None);
         imp.icon.set_pixel_size(15);
 
         object.add_css_class("bulk-text");

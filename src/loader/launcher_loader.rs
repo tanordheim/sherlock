@@ -52,7 +52,8 @@ impl Loader {
 
         // Read cached counter file
         let counter_reader = CounterReader::new()?;
-        let counts: HashMap<String, f32> = JsonCache::read(&counter_reader.path).unwrap_or_default();
+        let counts: HashMap<String, f32> =
+            JsonCache::read(&counter_reader.path).unwrap_or_default();
         let max_decimals = counts
             .iter()
             .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))

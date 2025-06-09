@@ -27,8 +27,11 @@ impl Tile {
                 object.set_css_classes(&vec!["tile"]);
 
                 // Icon stuff
-                imp.icon
-                    .set_icon(&value.icon, &value.icon_class, &launcher.icon);
+                imp.icon.set_icon(
+                    value.icon.as_deref(),
+                    value.icon_class.as_deref(),
+                    launcher.icon.as_deref(),
+                );
 
                 let update_closure = {
                     // Construct attrs and enable action capabilities

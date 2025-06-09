@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc, time::SystemTime};
+use std::{borrow::Cow, cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc, time::SystemTime};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
@@ -20,16 +20,15 @@ use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipedE
 
 /// Custom string matching
 pub trait SherlockSearch {
-    fn fuzzy_match<T: AsRef<str> + Debug>(&self, substring: T) -> bool;
+    fn fuzzy_match<'a, T: Into<Cow<'a, str>> + Debug>(&self, substring: T) -> bool;
 }
 
 impl SherlockSearch for String {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
+    fn fuzzy_match<'a, T>(&self, substring: T) -> bool
     where
-        Self: AsRef<str>,
-        T: AsRef<str> + Debug,
+        T: Into<Cow<'a, str>> + Debug,
     {
-        let lowercase = substring.as_ref().to_lowercase();
+        let lowercase = substring.into().to_lowercase();
         let char_pattern: HashSet<char> = lowercase.chars().collect();
         let concat_str: String = self
             .to_lowercase()
@@ -40,9 +39,9 @@ impl SherlockSearch for String {
     }
 }
 impl SherlockSearch for PipedElements {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
+    fn fuzzy_match<'a, T>(&self, substring: T) -> bool
     where
-        T: AsRef<str>,
+        T: Into<Cow<'a, str>> + Debug,
     {
         // check which value to use
         let search_in = match self.title {
@@ -50,7 +49,7 @@ impl SherlockSearch for PipedElements {
             None => &self.description,
         };
         if let Some(search_in) = search_in {
-            let lowercase = substring.as_ref().to_lowercase();
+            let lowercase = substring.into().to_lowercase();
             let char_pattern: HashSet<char> = lowercase.chars().collect();
             let concat_str: String = search_in
                 .to_lowercase()
@@ -64,22 +63,11 @@ impl SherlockSearch for PipedElements {
 }
 /// Apply icon by name or by path if applicable
 pub trait IconComp {
-    fn set_icon<T: AsRef<str>>(
-        &self,
-        icon_name: &Option<T>,
-        icon_class: &Option<String>,
-        fallback: &Option<T>,
-    );
+    fn set_icon(&self, icon_name: Option<&str>, icon_class: Option<&str>, fallback: Option<&str>);
 }
 impl IconComp for Image {
-    fn set_icon<T: AsRef<str>>(
-        &self,
-        icon_name: &Option<T>,
-        icon_class: &Option<String>,
-        fallback: &Option<T>,
-    ) {
-        if let Some(icon_name) = icon_name.as_ref().or_else(|| fallback.as_ref()) {
-            let icon_name = icon_name.as_ref();
+    fn set_icon(&self, icon_name: Option<&str>, icon_class: Option<&str>, fallback: Option<&str>) {
+        if let Some(icon_name) = icon_name.or(fallback) {
             if icon_name.starts_with("/") {
                 self.set_from_file(Some(icon_name));
             } else {
@@ -88,7 +76,9 @@ impl IconComp for Image {
         } else {
             self.set_visible(false);
         }
-        icon_class.as_ref().map(|c| self.add_css_class(c));
+        if let Some(class) = icon_class {
+            self.add_css_class(class);
+        }
     }
 }
 pub trait ShortCut {

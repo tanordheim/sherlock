@@ -32,7 +32,7 @@ impl Tile {
                 imp.title.set_markup(&value);
 
                 // Icon stuff
-                imp.icon.set_icon(&Some(proc.icon.clone()), &None, &None);
+                imp.icon.set_icon(Some(&proc.icon), None, None);
 
                 // parent and child process ids
                 let (ppid, cpid) = key;

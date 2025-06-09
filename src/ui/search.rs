@@ -288,18 +288,18 @@ fn construct_window(
 
     // Update the search icon
     imp.search_icon.set_icon(
-        &Some(&config.appearance.search_bar_icon),
-        &None,
-        &Some(&default_search_icon()),
+        Some(&config.appearance.search_bar_icon),
+        None,
+        Some(&default_search_icon()),
     );
     imp.search_icon
         .set_pixel_size(config.appearance.search_icon_size);
 
     // Create the back arrow
     imp.search_icon_back.set_icon(
-        &Some(&config.appearance.search_bar_icon_back),
-        &None,
-        &Some(&default_search_icon_back()),
+        Some(&config.appearance.search_bar_icon_back),
+        None,
+        Some(&default_search_icon_back()),
     );
     imp.search_icon_back
         .set_pixel_size(config.appearance.search_icon_size);

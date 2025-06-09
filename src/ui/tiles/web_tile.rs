@@ -27,7 +27,7 @@ impl Tile {
             imp.category.set_visible(false);
         }
 
-        imp.icon.set_icon(&Some(&web.icon), &None, &None);
+        imp.icon.set_icon(Some(&web.icon), None, None);
 
         // Construct attrs and enable action capabilities
         object.with_launcher(&launcher);

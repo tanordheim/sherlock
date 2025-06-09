@@ -245,7 +245,7 @@ impl Tile {
 
                 imp.title.set_text(&clipboard_content);
 
-                imp.icon.set_icon(&Some(&icon), &None, &None);
+                imp.icon.set_icon(Some(icon), None, None);
                 imp.icon.set_pixel_size(15);
 
                 // Add action capabilities

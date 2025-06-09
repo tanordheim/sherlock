@@ -42,7 +42,7 @@ impl Tile {
                 }
 
                 // Set icon
-                imp.icon.set_icon(&item.icon, &None, &None);
+                imp.icon.set_icon(item.icon.as_deref(), None, None);
 
                 // Custom Image Data
                 if let Some(bin) = item.binary.clone() {
