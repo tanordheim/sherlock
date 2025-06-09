@@ -309,13 +309,26 @@ impl Currency {
             "sgd" | "singapore dollar" => Some((self.sgd, "S$".to_string())),
             "hkd" | "hong kong dollar" => Some((self.hkd, "HK$".to_string())),
             "krw" | "south korean won" | "won" => Some((self.krw, "₩".to_string())),
-            _ => None,
+            _ =>  None
         }
     }
     pub fn unit_exists(unit: &str) -> bool {
         let allowed = vec![
-            "usd", "eur", "jpy", "gbp", "aud", "cad", "chf", "cny", "nzd", "sek", "nok", "mxn",
-            "sgd", "hkd", "krw",
+            "usd", "dollar", "us dollar", "bucks",
+            "eur", "euro", "euros", "european euro",
+            "jpy", "yen", "japanese yen",
+            "gbp", "pound", "british pound", "pound sterling",
+            "aud", "australian dollar", "aussie dollar", "aussie",
+            "cad", "canadian dollar", "loonie",
+            "chf", "swiss franc", "franc",
+            "cny", "chinese yuan", "renminbi", "yuan",
+            "nzd", "new zealand dollar", "kiwi",
+            "sek", "swedish krona", "krona",
+            "nok", "norwegian krone", "krone",
+            "mxn", "mexican peso", "peso",
+            "sgd", "singapore dollar",
+            "hkd", "hong kong dollar",
+            "krw", "south korean won", "won",
         ];
         allowed.contains(&unit.to_lowercase().as_str())
     }
