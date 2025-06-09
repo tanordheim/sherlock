@@ -102,11 +102,8 @@ impl ConfKeys {
             shortcut_modifier_str: String::new(),
         }
     }
-    fn eval_bind_combination<T: AsRef<str>>(
-        key: T,
-    ) -> (Option<ModifierType>, (Option<Key>, Option<String>)) {
-        let key_str = key.as_ref();
-        match key_str.split("-").collect::<Vec<&str>>().as_slice() {
+    fn eval_bind_combination(key: &str) -> (Option<ModifierType>, (Option<Key>, Option<String>)) {
+        match key.split("-").collect::<Vec<&str>>().as_slice() {
             [modifier, key, ..] => (ConfKeys::eval_mod(modifier), ConfKeys::eval_key(key)),
             [key, ..] => (None, ConfKeys::eval_key(key)),
             _ => (None, (None, None)),
