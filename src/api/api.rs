@@ -38,6 +38,7 @@ pub static RESPONSE_SOCKET: Lazy<RwLock<Option<String>>> = Lazy::new(|| RwLock::
 pub struct SherlockAPI {
     pub app: WeakRef<Application>,
     pub window: Option<WeakRef<ApplicationWindow>>,
+    pub open_window: Option<WeakRef<ApplicationWindow>>,
     pub stack: Option<WeakRef<Stack>>,
     pub search_ui: Option<WeakRef<SearchUiObj>>,
     pub search_handler: Option<SearchHandler>,
@@ -49,6 +50,7 @@ impl SherlockAPI {
         Self {
             app: app.downgrade(),
             window: None,
+            open_window: None,
             stack: None,
             search_ui: None,
             search_handler: None,
@@ -58,7 +60,7 @@ impl SherlockAPI {
     }
 
     /// Best use await_request() followed by flush() instead
-    pub fn _request(&mut self, api_call: ApiCall) {
+    pub fn request(&mut self, api_call: ApiCall) {
         self.flush();
         if self.match_action(&api_call).is_none() {
             self.queue.push(api_call);
@@ -98,6 +100,7 @@ impl SherlockAPI {
     }
     pub fn open(&self) -> Option<()> {
         let window = self.window.as_ref().and_then(|win| win.upgrade())?;
+        let open_window = self.open_window.as_ref().and_then(|win| win.upgrade())?;
         let start_count = SherlockCounter::new()
             .and_then(|counter| counter.increment())
             .unwrap_or(0);
@@ -107,6 +110,7 @@ impl SherlockAPI {
         // parse sherlock actions
         let actions: Vec<SherlockAction> =
             JsonCache::read(&config.files.actions).unwrap_or_default();
+
         // activate sherlock actions
         actions
             .into_iter()
@@ -118,7 +122,7 @@ impl SherlockAPI {
                 ]);
                 execute_from_attrs(&window, &attrs, None);
             });
-        window.present();
+        open_window.present();
         Some(())
     }
     pub fn obfuscate(&self, vis: bool) -> Option<()> {

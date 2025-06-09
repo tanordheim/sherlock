@@ -1,6 +1,6 @@
 use api::call::ApiCall;
 use gio::prelude::*;
-use gtk4::prelude::GtkApplicationExt;
+use gtk4::prelude::{GtkApplicationExt};
 use gtk4::{glib, Application};
 use loader::pipe_loader::PipedData;
 use std::cell::RefCell;
@@ -68,6 +68,7 @@ async fn main() {
         {
             let mut sherlock = sherlock.borrow_mut();
             sherlock.window = Some(window.downgrade());
+            sherlock.open_window = Some(open_win.clone());
             sherlock.stack = Some(stack.downgrade());
         }
 
@@ -75,9 +76,7 @@ async fn main() {
         app.set_accels_for_action("win.close", &["<Ctrl>W"]);
 
         // Significantly better id done here
-        if let Some(window) = open_win.upgrade(){
-            let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-        }
+        sherlock.borrow_mut().request(ApiCall::Show);
 
         // Print messages if icon parsers aren't installed
         let types: HashSet<String> = gdk_pixbuf::Pixbuf::formats().into_iter().filter_map(|f| f.name()).map(|s|s.to_string()).collect();
@@ -208,6 +207,12 @@ fn startup_loading() -> (
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
+    // Initialize application
+    let application = Application::builder()
+        .application_id("dev.skxxtz.sherlock")
+        .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
+        .build();
+
     // Check for '.lock'-file to only start a single instance
     let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|_| {
         process::exit(1);
@@ -243,11 +248,6 @@ fn startup_loading() -> (
         .map_err(|e| startup_errors.push(e))
         .ok();
 
-    // Initialize application
-    let application = Application::builder()
-        .application_id("dev.skxxtz.sherlock")
-        .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
-        .build();
 
     if let Some(config) = CONFIG.get() {
         env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
