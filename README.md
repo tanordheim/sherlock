@@ -18,6 +18,7 @@ Sherlock is a lightweight and efficient application launcher built with Rust and
 ### Quick Links
 - [Documentation](https://github.com/Skxxtz/sherlock/tree/main/docs): Sherlock's documentation
 - [sherlock-wiki](https://github.com/Skxxtz/sherlock-wiki): allows you to search Wikipedia from within Sherlock using the `bulk_text` launcher.
+- [CONTRIBUTING.md](https://github.com/Skxxtz/sherlock/blob/main/.github/CONTRIBUTING.md): Please read this before submitting a PR.
 <br><br>
 
 > **🚨 Warning:** This app is/was created on **Arch Linux** with the **Hyprland** tiling window manager in mind. It may cause errors or won't function at all on other system configurations.
