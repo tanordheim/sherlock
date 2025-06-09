@@ -593,7 +593,6 @@ gridview child:selected box {
     padding: 0px 20px 0px 10px;
     background: darkgray;
     margin-bottom: 10px;
-    border-radius: 7px;
 }
 
 .tile.weather-tile #content-holder {
@@ -630,54 +629,67 @@ gridview child:selected box {
 /* Weather Types */
 .tile.weather-tile.weather-clear {
     background: var(--weather-clear);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-few-clouds {
     background: var(--weather-few-clouds);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-many-clouds {
     background: var(--weather-many-clouds);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-mist {
     background: var(--weather-mist);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-showers {
     background: var(--weather-showers);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-freezing-scattered-rain-storm {
     background: var(--weather-freezing-scattered-rain-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-freezing-scattered-rain {
     background: var(--weather-freezing-scattered-rain);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-scattered-day {
     background: var(--weather-snow-scattered-day);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-storm {
     background: var(--weather-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-storm {
     background: var(--weather-snow-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-scattered-storm {
     background: var(--weather-snow-scattered-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-showers-scattered {
     background: var(--weather-showers-scattered);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-none-available {
     background: hsl(var(--weather-none-available));
+    background-clip: padding-box;
 }
 
 
