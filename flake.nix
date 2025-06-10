@@ -51,7 +51,7 @@
             ];
           };
 
-        nativeBuildInputs = with pkgs; [rustToolchain pkg-config];
+        nativeBuildInputs = with pkgs; [rustToolchain pkg-config wrapGAppsHook];
         buildInputs = with pkgs; [
           dbus
           glib
