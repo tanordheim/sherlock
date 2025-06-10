@@ -12,6 +12,7 @@ on:
       - "**.markdown"
       - "**.rasi"
       - "**.flake"
+      - "**.lock"
       - "**.json"
       - "**.png"
       - "**.gif"
