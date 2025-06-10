@@ -33,7 +33,7 @@
 
       perSystem = {system, ...}: let
         name = "sherlock";
-        version = "0.1.12";
+        version = "0.1.13";
 
         pkgs = import nixpkgs {
           inherit system;
@@ -53,13 +53,15 @@
 
         nativeBuildInputs = with pkgs; [rustToolchain pkg-config];
         buildInputs = with pkgs; [
-          dbus.dev
-          glib.dev
-          gtk4.dev
-          gtk4-layer-shell.dev
-          openssl.dev
-          sqlite.dev
-          wayland.dev
+          dbus
+          glib
+          gtk4
+          gtk4-layer-shell
+          gdk-pixbuf
+          librsvg
+          openssl
+          sqlite
+          wayland
         ];
         commonArgs = {
           inherit src buildInputs nativeBuildInputs;

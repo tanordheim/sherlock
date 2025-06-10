@@ -3,7 +3,7 @@ use gio::glib::subclass::Signal;
 use gio::glib::{SignalHandlerId, WeakRef};
 use gtk4::prelude::{BoxExt, GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
-use gtk4::{glib, GestureClick, Image, Label};
+use gtk4::{glib, prelude::*, GestureClick, Image, Label};
 use once_cell::unsync::OnceCell;
 use std::cell::{Cell, RefCell};
 use std::sync::OnceLock;
@@ -46,16 +46,26 @@ impl ObjectImpl for ContextAction {
         self.icon.set(icon.downgrade()).unwrap();
 
         // Modkey label
-        let modkey = Label::new(None);
-        modkey.set_halign(gtk4::Align::Start);
-        modkey.set_valign(gtk4::Align::Center);
+        let modkey = Label::builder()
+            .halign(gtk4::Align::Start)
+            .valign(gtk4::Align::Center)
+            .wrap(false)
+            .single_line_mode(true)
+            .ellipsize(gtk4::pango::EllipsizeMode::End)
+            .vexpand(true)
+            .build();
         obj.append(&modkey);
         self.modkey.set(modkey.downgrade()).unwrap();
 
         // Title label
-        let title = Label::new(None);
-        title.set_halign(gtk4::Align::Start);
-        title.set_valign(gtk4::Align::Center);
+        let title = Label::builder()
+            .halign(gtk4::Align::Start)
+            .valign(gtk4::Align::Center)
+            .wrap(false)
+            .single_line_mode(true)
+            .ellipsize(gtk4::pango::EllipsizeMode::End)
+            .vexpand(true)
+            .build();
         obj.append(&title);
         self.title.set(title.downgrade()).unwrap();
 
@@ -68,7 +78,8 @@ impl ObjectImpl for ContextAction {
             gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
-                        obj.emit_by_name::<()>("context-action-should-activate", &[]);
+                        let exit: u8 = 0;
+                        obj.emit_by_name::<()>("context-action-should-activate", &[&exit]);
                     }
                 }
             });
@@ -80,7 +91,11 @@ impl ObjectImpl for ContextAction {
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
         // Signal used to activate actions connected to the SherlockRow
-        SIGNALS.get_or_init(|| vec![Signal::builder("context-action-should-activate").build()])
+        SIGNALS.get_or_init(|| {
+            vec![Signal::builder("context-action-should-activate")
+                .param_types([u8::static_type()])
+                .build()]
+        })
     }
 }
 

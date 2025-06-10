@@ -4,7 +4,8 @@ use serde::{
 };
 use serde_json::Value;
 use std::{
-    collections::{HashMap, HashSet},
+    borrow::Cow,
+    collections::{BTreeSet, HashMap, HashSet},
     env,
     fmt::Debug,
     fs::{self, File},
@@ -32,6 +33,8 @@ pub struct RawLauncher {
     pub r#type: String,
     pub priority: f32,
 
+    #[serde(default = "default_true")]
+    pub exit: bool,
     #[serde(default = "default_true")]
     pub shortcut: bool,
     #[serde(default = "default_true")]
@@ -105,6 +108,28 @@ impl AppData {
             search_string: String::new(),
             priority: 0.0,
             icon: None,
+            icon_class: None,
+            tag_start: None,
+            tag_end: None,
+            desktop_file: None,
+            actions: vec![],
+            terminal: false,
+        }
+    }
+    pub fn new_for_theme<'a, T, S>(name: T, path: Option<S>, priority: f32) -> Self
+    where
+        T: Into<Cow<'a, str>>,
+        S: Into<Cow<'a, str>>,
+    {
+        let name: Cow<'a, str> = name.into();
+        let path = path.map(|s| s.into().into_owned());
+        let name_string = name.into_owned();
+        Self {
+            name: name_string.clone(),
+            exec: path,
+            search_string: name_string,
+            priority,
+            icon: Some(String::from("sherlock-devtools")),
             icon_class: None,
             tag_start: None,
             tag_end: None,
@@ -255,8 +280,23 @@ impl CounterReader {
         Ok(CounterReader { path })
     }
     pub fn increment(&self, key: &str) -> Result<(), SherlockError> {
-        let mut content: HashMap<String, f32> = JsonCache::read(&self.path)?;
-        *content.entry(key.to_string()).or_insert(0.0) += 1.0;
+        let mut content: HashMap<String, u32> = JsonCache::read(&self.path)?;
+        let unique_values: HashMap<u32, u32> = content
+            .values()
+            .copied()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .enumerate()
+            .map(|(i, v)| (v, (i + 1) as u32))
+            .collect();
+
+        content.iter_mut().for_each(|(_, v)| {
+            if let Some(new) = unique_values.get(v) {
+                *v = new.clone();
+            }
+        });
+
+        *content.entry(key.to_string()).or_insert(0) += 1;
         JsonCache::write(&self.path, &content)?;
         Ok(())
     }
@@ -285,19 +325,13 @@ impl JsonCache {
         let home = home_dir()?;
         let path = expand_path(path, &home);
 
-        let file = if path.exists() {
-            File::open(&path)
-        } else {
-            println!("{:?}", path);
-            File::create(&path)
-        }
-        .map_err(|e| {
+        let file = File::open(&path).map_err(|e| {
             sherlock_error!(
                 SherlockErrorType::FileExistError(path.clone()),
                 e.to_string()
             )
         })?;
-        let res: Result<T, simd_json::Error> = simd_json::from_reader(file);
-        Ok(res.unwrap_or_default())
+        simd_json::from_reader(file)
+            .map_err(|e| sherlock_error!(SherlockErrorType::DeserializationError, e.to_string()))
     }
 }

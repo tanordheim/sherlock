@@ -16,7 +16,8 @@ where
     let file = File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
 }
-pub fn expand_path(path: &Path, home: &Path) -> PathBuf {
+pub fn expand_path<T: AsRef<Path>>(path: T, home: &Path) -> PathBuf {
+    let path = path.as_ref();
     let mut components = path.components();
     if let Some(std::path::Component::Normal(first)) = components.next() {
         if first == "~" {

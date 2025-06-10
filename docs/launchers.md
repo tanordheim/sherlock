@@ -28,6 +28,7 @@ The launcher can be of the following types:<br>
 - **[Emoji](#emoji-picker):** This launcher allows you to search and pick emojis.
 - **[Bulk Text](#bulk-text):** The Bulk Text is a way to launch a custom script/application in an async form and to display its result in a widget.
 - **[Teams Event Launcher](#teams-event):** This launcher is capable of joining Microsoft Teams meetings that are scheduled to begin between 5mins ago and in 15mins.
+- **[Theme Picker](#theme-picjer):** This launcher shows available themes and sets them as your default.
 - **[Music Player Launcher](#music-player):** This launcher shows the currently playing song with artist and toggles playback on return.
 - **[Process Terminator](#process-terminator):** This utility shows user processes and terminates them on return.
 - **[Weather Launcher](#weather-launcher):** It shows the current weather condition in your selected region or city.
@@ -285,10 +286,11 @@ Sets the icon-name the launcher should show.
 Specifies what the launcher should parse:
 
 - **`calc.math`** - displays the solutions to mathematical problems
-- **`calc.lengths`** - displays the solutions to length transformations
-- **`calc.weights`** - displays the solutions to weight transformations
-- **`calc.volumes`** - displays the solutions to volume transformations
-- **`calc.temperatures`** - displays the solutions to temerature transformations
+- **`calc.lengths` (unit)** - displays the solutions to length transformations
+- **`calc.weights` (unit)** - displays the solutions to weight transformations
+- **`calc.volumes` (unit)** - displays the solutions to volume transformations
+- **`calc.temperatures` (unit)** - displays the solutions to temerature transformations
+- **`calc.currencies` (unit)** - displays the solutions to currency transformations
 
 > **💡 Note:** You can also use `calc.units` to use all available unit transformations
 
@@ -334,10 +336,11 @@ Specifies what the launcher should parse:
 - **`colors.rgb`** - displays rgb colors in Sherlock. Format supports optional rgb prefix and optional parentheses.
 - **`colors.hsl`** - displays hsl colors in Sherlock. Format supports optional hsl prefix and optional parentheses.
 - **`calc.math`** - displays the solutions to mathematical problems
-- **`calc.lengths`** - displays the solutions to length transformations
-- **`calc.weights`** - displays the solutions to weight transformations
-- **`calc.volumes`** - displays the solutions to volume transformations
-- **`calc.temperatures`** - displays the solutions to temerature transformations
+- **`calc.lengths` (unit)** - displays the solutions to length transformations
+- **`calc.weights` (unit)** - displays the solutions to weight transformations
+- **`calc.volumes` (unit)** - displays the solutions to volume transformations
+- **`calc.temperatures` (unit)** - displays the solutions to temerature transformations
+- **`calc.currencies` (unit)** - displays the solutions to currency transformations
 
 > **💡 Note:**
 > You can also use
@@ -543,6 +546,27 @@ Specifies the offset from the `date` parameter.<br>
 
 **`event_end`** (optional):<br>
 Specifies the second offset from the `date` parameter.<br>
+
+<br>
+
+## Theme Picker
+
+```json
+{
+    "name": "Theme Picker",
+    "type": "theme_picker",
+    "args": {
+        "location": "~/.config/sherlock/themes/"
+    },
+    "priority": 4,
+    "home": true
+}
+```
+
+### Arguments (args)
+
+**`location`** (optional):<br>
+Specifies your theme directory. Defaults to `~/.config/sherlock/themes/`.
 
 <br>
 

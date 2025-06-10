@@ -7,7 +7,7 @@ use crate::utils::{
 };
 
 impl Loader {
-    #[sherlock_macro::timing("Loading flags")]
+    #[sherlock_macro::timing(name = "Loading flags", level = "setup")]
     pub fn load_flags() -> Result<SherlockFlags, SherlockError> {
         let args: Vec<String> = env::args().collect();
         if args.contains(&"--help".to_string()) {
@@ -66,6 +66,8 @@ impl SherlockFlags {
             sub_menu: extract_flag_value("--sub-menu"),
             method: extract_flag_value("--method"),
             field: extract_flag_value("--field"),
+            multi: check_flag_existance("--multi"),
+            photo_mode: check_flag_existance("--photo"),
         })
     }
 }

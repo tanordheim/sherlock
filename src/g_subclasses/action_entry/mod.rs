@@ -38,7 +38,7 @@ impl ContextAction {
         imp.icon
             .get()
             .and_then(|tmp| tmp.upgrade())
-            .map(|icon| icon.set_icon(&action.icon, &None, &None));
+            .map(|icon| icon.set_icon(action.icon.as_deref(), None, None));
         if let Some(exec) = &action.exec {
             let signal_id = obj.connect_local("context-action-should-activate", false, {
                 let exec = exec.clone();
@@ -52,7 +52,7 @@ impl ContextAction {
                         ("term", Some(&terminal.to_string())),
                         ("exit", Some(&exit.to_string())),
                     ]);
-                    execute_from_attrs(&row, &attrs);
+                    execute_from_attrs(&row, &attrs, None);
                     // To reload ui according to mode
                     let _ = row.activate_action("win.update-items", Some(&false.to_variant()));
                     None

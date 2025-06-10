@@ -1,35 +1,34 @@
-use std::{cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc};
+use std::{borrow::Cow, cell::RefCell, collections::HashSet, fmt::Debug, rc::Rc, time::SystemTime};
 
 use gdk_pixbuf::subclass::prelude::ObjectSubclassIsExt;
 use gio::{
     glib::{
         self,
-        object::{Cast, CastNone, ObjectExt},
+        object::{Cast, CastNone, IsA, ObjectExt},
         variant::ToVariant,
-        WeakRef,
+        Object, WeakRef,
     },
     prelude::ListModelExt,
     ListStore,
 };
 use gtk4::{
     prelude::WidgetExt, Box as GtkBox, GridView, Image, Label, ListScrollFlags, ListView,
-    SingleSelection,
+    SingleSelection, Stack, StackPage,
 };
 
-use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipeData};
+use crate::{g_subclasses::sherlock_row::SherlockRow, loader::pipe_loader::PipedElements};
 
 /// Custom string matching
 pub trait SherlockSearch {
-    fn fuzzy_match<T: AsRef<str> + Debug>(&self, substring: T) -> bool;
+    fn fuzzy_match<'a, T: Into<Cow<'a, str>> + Debug>(&self, substring: T) -> bool;
 }
 
 impl SherlockSearch for String {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
+    fn fuzzy_match<'a, T>(&self, substring: T) -> bool
     where
-        Self: AsRef<str>,
-        T: AsRef<str> + Debug,
+        T: Into<Cow<'a, str>> + Debug,
     {
-        let lowercase = substring.as_ref().to_lowercase();
+        let lowercase = substring.into().to_lowercase();
         let char_pattern: HashSet<char> = lowercase.chars().collect();
         let concat_str: String = self
             .to_lowercase()
@@ -39,10 +38,10 @@ impl SherlockSearch for String {
         concat_str.contains(&lowercase)
     }
 }
-impl SherlockSearch for PipeData {
-    fn fuzzy_match<T>(&self, substring: T) -> bool
+impl SherlockSearch for PipedElements {
+    fn fuzzy_match<'a, T>(&self, substring: T) -> bool
     where
-        T: AsRef<str>,
+        T: Into<Cow<'a, str>> + Debug,
     {
         // check which value to use
         let search_in = match self.title {
@@ -50,7 +49,7 @@ impl SherlockSearch for PipeData {
             None => &self.description,
         };
         if let Some(search_in) = search_in {
-            let lowercase = substring.as_ref().to_lowercase();
+            let lowercase = substring.into().to_lowercase();
             let char_pattern: HashSet<char> = lowercase.chars().collect();
             let concat_str: String = search_in
                 .to_lowercase()
@@ -64,21 +63,11 @@ impl SherlockSearch for PipeData {
 }
 /// Apply icon by name or by path if applicable
 pub trait IconComp {
-    fn set_icon(
-        &self,
-        icon_name: &Option<String>,
-        icon_class: &Option<String>,
-        fallback: &Option<String>,
-    );
+    fn set_icon(&self, icon_name: Option<&str>, icon_class: Option<&str>, fallback: Option<&str>);
 }
 impl IconComp for Image {
-    fn set_icon(
-        &self,
-        icon_name: &Option<String>,
-        icon_class: &Option<String>,
-        fallback: &Option<String>,
-    ) {
-        if let Some(icon_name) = icon_name.as_ref().or_else(|| fallback.as_ref()) {
+    fn set_icon(&self, icon_name: Option<&str>, icon_class: Option<&str>, fallback: Option<&str>) {
+        if let Some(icon_name) = icon_name.or(fallback) {
             if icon_name.starts_with("/") {
                 self.set_from_file(Some(icon_name));
             } else {
@@ -87,7 +76,9 @@ impl IconComp for Image {
         } else {
             self.set_visible(false);
         }
-        icon_class.as_ref().map(|c| self.add_css_class(c));
+        if let Some(class) = icon_class {
+            self.add_css_class(class);
+        }
     }
 }
 pub trait ShortCut {
@@ -133,6 +124,8 @@ pub trait SherlockNav {
     fn execute_by_index(&self, index: u32);
     fn selected_item(&self) -> Option<glib::Object>;
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>>;
+    fn mark_active(&self) -> Option<()>;
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>>;
 }
 impl SherlockNav for ListView {
     fn focus_offset(
@@ -237,7 +230,8 @@ impl SherlockNav for ListView {
             for item in index..selection.n_items() {
                 if let Some(row) = selection.item(item).and_downcast::<SherlockRow>() {
                     if row.imp().shortcut.get() {
-                        row.emit_by_name::<()>("row-should-activate", &[]);
+                        let exit: u8 = 0;
+                        row.emit_by_name::<()>("row-should-activate", &[&exit]);
                         break;
                     }
                 }
@@ -263,6 +257,22 @@ impl SherlockNav for ListView {
             })
             .collect();
         Some(weaks)
+    }
+    fn mark_active(&self) -> Option<()> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let current = selection.selected_item().and_downcast::<SherlockRow>()?;
+        current.set_active(!current.imp().active.get());
+        Some(())
+    }
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>> {
+        let selection = self.model().and_downcast::<SingleSelection>()?;
+        let actives: Vec<T> = (0..selection.n_items())
+            .filter_map(|i| selection.item(i).and_downcast::<SherlockRow>())
+            .filter(|r| r.active())
+            .map(|r| r.upcast::<Object>())
+            .filter_map(|r| r.downcast::<T>().ok())
+            .collect();
+        Some(actives)
     }
 }
 impl SherlockNav for GridView {
@@ -328,5 +338,30 @@ impl SherlockNav for GridView {
     }
     fn get_weaks(&self) -> Option<Vec<WeakRef<SherlockRow>>> {
         None
+    }
+    fn mark_active(&self) -> Option<()> {
+        None
+    }
+    fn get_actives<T: IsA<Object>>(&self) -> Option<Vec<T>> {
+        None
+    }
+}
+
+pub trait PathHelpers {
+    fn modtime(&self) -> Option<SystemTime>;
+}
+
+pub trait StackHelpers {
+    fn get_page_names(&self) -> Vec<String>;
+}
+impl StackHelpers for Stack {
+    fn get_page_names(&self) -> Vec<String> {
+        let selection = self.pages();
+        let pages: Vec<String> = (0..selection.n_items())
+            .filter_map(|i| selection.item(i).and_downcast::<StackPage>())
+            .filter_map(|item| item.name())
+            .map(|name| name.to_string())
+            .collect();
+        pages
     }
 }

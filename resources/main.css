@@ -193,6 +193,7 @@ image {
     min-height: 50px;
     padding: 0px 10px;
     margin-bottom: 5px;
+    border: 1px solid transparent;
     border-radius: 4px;
 }
 
@@ -207,43 +208,44 @@ image {
     animation: fadeInUp 0.2s ease-out forwards;
 }
 
-.tile.animate:nth-child(1) {
+row:nth-child(1) .tile.animate{
     animation-delay: 0.05s;
 }
 
-.tile.animate:nth-child(2) {
+row:nth-child(2) .tile.animate{
     animation-delay: 0.1s;
 }
 
-.tile.animate:nth-child(3) {
+
+row:nth-child(3) .tile.animate{
     animation-delay: 0.15s;
 }
 
-.tile.animate:nth-child(4) {
+row:nth-child(4) .tile.animate{
     animation-delay: 0.2s;
 }
 
-.tile.animate:nth-child(5) {
+row:nth-child(5) .tile.animate{
     animation-delay: 0.25s;
 }
 
-.tile.animate:nth-child(6) {
+row:nth-child(6) .tile.animate{
     animation-delay: 0.3s;
 }
 
-.tile.animate:nth-child(7) {
+row:nth-child(7) .tile.animate{
     animation-delay: 0.35s;
 }
 
-.tile.animate:nth-child(8) {
+row:nth-child(8) .tile.animate{
     animation-delay: 0.4s;
 }
 
-.tile.animate:nth-child(9) {
+row:nth-child(9) .tile.animate{
     animation-delay: 0.45s;
 }
 
-.tile.animate:nth-child(10) {
+row:nth-child(10) .tile.animate{
     animation-delay: 0.5s;
 }
 
@@ -274,8 +276,12 @@ image {
 row:selected .tile {
     background: hsla(var(--foreground), 1);
     background-color: hsla(var(--foreground), 1);
-    outline: none;
-    border: none;
+}
+row:selected .tile.multi-active,
+.tile.multi-active {
+    background: hsla(var(--foreground), 1);
+    background-color: hsla(var(--foreground), 1);
+    border: 1px solid hsla(var(--text), 1);
 }
 
 .tile:selected .tag,
@@ -623,54 +629,67 @@ gridview child:selected box {
 /* Weather Types */
 .tile.weather-tile.weather-clear {
     background: var(--weather-clear);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-few-clouds {
     background: var(--weather-few-clouds);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-many-clouds {
     background: var(--weather-many-clouds);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-mist {
     background: var(--weather-mist);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-showers {
     background: var(--weather-showers);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-freezing-scattered-rain-storm {
     background: var(--weather-freezing-scattered-rain-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-freezing-scattered-rain {
     background: var(--weather-freezing-scattered-rain);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-scattered-day {
     background: var(--weather-snow-scattered-day);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-storm {
     background: var(--weather-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-storm {
     background: var(--weather-snow-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-snow-scattered-storm {
     background: var(--weather-snow-scattered-storm);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-showers-scattered {
     background: var(--weather-showers-scattered);
+    background-clip: padding-box;
 }
 
 .tile.weather-tile.weather-none-available {
     background: hsl(var(--weather-none-available));
+    background-clip: padding-box;
 }
 
 

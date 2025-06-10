@@ -1,18 +1,18 @@
-// CRATE
-use gio::glib::MainContext;
+use api::call::ApiCall;
 use gio::prelude::*;
-use gtk4::prelude::{BoxExt, EntryExt, GtkApplicationExt, WidgetExt};
-use gtk4::Application;
+use gtk4::prelude::{GtkApplicationExt, WidgetExt};
+use gtk4::{glib, Application};
+use loader::pipe_loader::PipedData;
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::OnceLock;
 use std::time::Instant;
-use std::{env, process, thread};
-use ui::util::{SearchHandler, SearchUI};
+use std::{env, process};
 use utils::config::SherlockFlags;
 
-// MODS
 mod actions;
+mod api;
 mod application;
 mod daemon;
 mod g_subclasses;
@@ -22,10 +22,9 @@ pub mod prelude;
 mod ui;
 mod utils;
 
-// IMPORTS
+use api::api::SherlockModes;
+use api::server::SherlockServer;
 use application::lock::{self, LockFile};
-use daemon::daemon::SherlockDaemon;
-use loader::pipe_loader::deserialize_pipe;
 use loader::Loader;
 use utils::{
     config::SherlockConfig,
@@ -33,213 +32,175 @@ use utils::{
 };
 
 const SOCKET_PATH: &str = "/tmp/sherlock_daemon.socket";
+const SOCKET_DIR: &str = "/tmp/";
 const LOCK_FILE: &str = "/tmp/sherlock.lock";
-
-struct Sherlock {
-    pub search_ui: Option<SearchUI>,
-    pub search_handler: Option<SearchHandler>,
-}
-impl Sherlock {
-    pub fn new() -> Self {
-        Self {
-            search_ui: None,
-            search_handler: None,
-        }
-    }
-    pub fn obfuscate(&self, visibility: bool) {
-        if let Some(search_bar) = self.search_ui.as_ref().and_then(|s| s.search_bar.upgrade()) {
-            search_bar.set_visibility(visibility);
-        }
-    }
-    pub fn clear_results(&self) -> Option<()> {
-        let handler = self.search_handler.as_ref()?;
-        if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
-            model.remove_all();
-        }
-        Some(())
-    }
-    pub fn show_raw(&self) -> Option<()> {
-        let ui = self.search_ui.as_ref()?;
-        let handler = self.search_handler.as_ref()?;
-        if let Some(title) = ui.mode_title_holder.upgrade() {
-            title.set_visible(false);
-        }
-        if let Some(model) = handler.model.as_ref().and_then(|s| s.upgrade()) {
-            model.remove_all();
-        }
-        if let Some(all) = ui.all.upgrade() {
-            all.set_visible(false);
-        }
-        if let Some(status) = ui.status_bar.upgrade() {
-            status.set_visible(false);
-        }
-        Some(())
-    }
-}
 
 static CONFIG: OnceLock<SherlockConfig> = OnceLock::new();
 
 #[tokio::main]
 async fn main() {
-    let (application, startup_errors, non_breaking, sherlock_flags, app_config, lock) =
-        startup_loading();
     let t0 = Instant::now();
+    let (application, startup_errors, non_breaking, sherlock_flags, app_config, lock) =
+        startup_loading().await;
+    let t01 = Instant::now();
     application.connect_activate(move |app| {
-        let sherlock = Rc::new(RefCell::new(Sherlock::new()));
+        let sherlock = Rc::new(RefCell::new(api::api::SherlockAPI::new(app)));
         let t1 = Instant::now();
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
-                println!("Activation took {:?}", t0.elapsed());
+                println!("GTK Activation took {:?}", t01.elapsed());
             }
         }
-        let mut error_list = startup_errors.clone();
-        let mut non_breaking = non_breaking.clone();
+        let errors = startup_errors.clone();
+        let mut warnings = non_breaking.clone();
 
-        // Load custom icons from icon path specified in 'config.toml'
-        let n = Loader::load_icon_theme();
-        non_breaking.extend(n);
-
-        // Load CSS Stylesheet
-        let n = Loader::load_css()
-            .map_err(|e| error_list.push(e))
-            .unwrap_or_default();
-        non_breaking.extend(n);
 
         // Main logic for the Search-View
         let (window, stack, current_stack_page, open_win) = ui::window::window(app);
+        {
+            let mut sherlock = sherlock.borrow_mut();
+            sherlock.window = Some(window.downgrade());
+            sherlock.open_window = Some(open_win.clone());
+            sherlock.stack = Some(stack.downgrade());
+        }
+        window.connect_show({
+            let t0 = t0.clone();
+            move |_| {
+            if let Ok(timing_enabled) = std::env::var("TIMING") {
+                if timing_enabled == "true" {
+                    println!("Window shown after {:?}", t0.elapsed());
+                }
+            }
+        }});
 
         // Add closing logic
         app.set_accels_for_action("win.close", &["<Ctrl>W"]);
 
         // Significantly better id done here
-        if let Some(window) = open_win.upgrade(){
-            let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+        sherlock.borrow_mut().request(ApiCall::Show);
+
+        // Print messages if icon parsers aren't installed
+        let types: HashSet<String> = gdk_pixbuf::Pixbuf::formats().into_iter().filter_map(|f| f.name()).map(|s|s.to_string()).collect();
+        if !types.contains("svg") {
+            warnings.push(sherlock_error!(
+                SherlockErrorType::MissingIconParser(String::from("svg")),
+                format!("Icon parser for svg not found.\n\
+                This could hinder Sherlock from rendering .svg icons.\n\
+                Please ensure that \"librsvg\" is installed correctly.")
+            ));
+        }
+        if !types.contains("png") {
+            warnings.push(sherlock_error!(
+                SherlockErrorType::MissingIconParser(String::from("png")),
+                format!("Icon parser for png not found.\n\
+                This could hinder Sherlock from rendering .png icons.\n\
+                Please ensure that \"gdk-pixbuf2\" is installed correctly.")
+            ));
         }
 
-        // Either show user-specified content or show normal search
-        let (error_stack, error_model) = ui::error_view::errors(&error_list, &non_breaking, &current_stack_page);
-        let pipe = Loader::load_pipe_args();
-        let (search_stack, handler) = if pipe.is_empty() {
-            match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
-                Ok(r) => r,
-                Err(e) => {
-                    error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
-                    return
-                }
-            }
-        } else {
-            if sherlock_flags.display_raw {
-                let pipe = String::from_utf8_lossy(&pipe);
-                ui::user::display_raw(pipe, sherlock_flags.center_raw, error_model)
-            } else {
-                let parsed = deserialize_pipe(pipe);
+        glib::MainContext::default().spawn_local({
+            let sherlock = Rc::clone(&sherlock);
+            async move {
+
+                // Either show user-specified content or show normal search
+                let (error_stack, error_model) = ui::error_view::errors(&errors, &warnings, &current_stack_page, Rc::clone(&sherlock));
+                let (search_frame, _handler) = match ui::search::search(&window, &current_stack_page, error_model.clone(), Rc::clone(&sherlock)) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error_model.upgrade().map(|stack| stack.append(&e.tile("ERROR")));
+                        return
+                    }
+                };
+                stack.add_named(&search_frame, Some("search-page"));
+                stack.add_named(&error_stack, Some("error-page"));
+
+
+                // Notify the user about the value not having any effect to avoid confusion
                 if let Some(c) = CONFIG.get() {
-                    let method: &str = c.pipe.method.as_deref().unwrap_or("print");
-                    ui::user::display_pipe(&window, parsed, method, error_model)
+                    let opacity = c.appearance.opacity;
+                    if !(0.1..=1.0).contains(&opacity) {
+                        warnings.push(sherlock_error!(
+                            SherlockErrorType::ConfigError(Some(format!(
+                                "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
+                                opacity,
+                                opacity.clamp(0.1, 1.0)
+                            ))),
+                            ""
+                        ));
+                    }
+                }
+
+                // Mode switching
+                // Logic for the Error-View
+                let error_view_active = if !app_config.debug.try_suppress_errors {
+                    let show_errors = !errors.is_empty();
+                    let show_warnings = !app_config.debug.try_suppress_warnings && !warnings.is_empty();
+                    show_errors || show_warnings
                 } else {
-                    return;
+                    false
+                };
+                {
+                    let mut sherlock = sherlock.borrow_mut();
+                    let pipe = Loader::load_pipe_args();
+                    let mut mode: Option<SherlockModes> = None;
+                    if !pipe.is_empty() {
+                        if sherlock_flags.display_raw {
+                            let pipe = String::from_utf8_lossy(&pipe).to_string();
+                            mode = Some(SherlockModes::DisplayRaw(pipe));
+                        } else if let Some(mut data) = PipedData::new(&pipe){
+                            if let Some(settings) = data.settings.take(){
+                                settings.into_iter().for_each(|request| {
+                                    sherlock.await_request(request);
+                                });
+                            }
+                            mode = data.elements.take().map(|elements| SherlockModes::Pipe(elements));
+                        }
+                    };
+                    if let Some(mode) = mode {
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    } else {
+                        let mode = SherlockModes::Search;
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    }
+                    if error_view_active {
+                        let mode = SherlockModes::Error;
+                        let request = ApiCall::SwitchMode(mode);
+                        sherlock.await_request(request);
+                    }
+                    sherlock.flush();
+                }
+
+                // Load Icon theme
+                if let Some(warning) = Loader::load_icon_theme() {
+                    let _result = warning.insert(false);
+                }
+
+                // Load CSS Stylesheet
+                if let Err(error) = Loader::load_css(true) {
+                    let _result = error.insert(false);
                 }
             }
-        };
-        stack.add_named(&search_stack, Some("search-page"));
-
-        // Notify the user about the value not having any effect to avoid confusion
-        if let Some(c) = CONFIG.get() {
-            let opacity = c.appearance.opacity;
-
-            if !(0.1..=1.0).contains(&opacity) {
-                non_breaking.push(sherlock_error!(
-                    SherlockErrorType::ConfigError(Some(format!(
-                        "The opacity value of {} exceeds the allowed range (0.1 - 1.0) and will be automatically set to {}.",
-                        opacity,
-                        opacity.clamp(0.1, 1.0)
-                    ))),
-                    ""
-                ));
-            }
-        }
-
-        // Logic for the Error-View
-        stack.add_named(&error_stack, Some("error-page"));
-        if !app_config.debug.try_suppress_errors {
-            let show_errors = !error_list.is_empty();
-            let show_warnings = !app_config.debug.try_suppress_warnings && !non_breaking.is_empty();
-            if show_errors || show_warnings {
-                let _ = gtk4::prelude::WidgetExt::activate_action(
-                    &window,
-                    "win.switch-page",
-                    Some(&String::from("->error-page").to_variant()),
-                );
-            } else {
-                let _ = gtk4::prelude::WidgetExt::activate_action(
-                    &window,
-                    "win.switch-page",
-                    Some(&String::from("->search-page").to_variant()),
-                );
-            }
-        }
+        });
 
         // Logic for handling the daemonization
-        if let Some(c) = CONFIG.get() {
-            if c.behavior.daemonize {
-                // Used to cache render
-                if let Some(window) = open_win.upgrade() {
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
-                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
-                }
-
-                window.connect_show({
-                    move |_window|{
-                    handler.populate();
-                }});
-                // Create async pipeline
-                let (sender, receiver) = async_channel::bounded(1);
-                thread::spawn(move || {
-                    async_std::task::block_on(async {
-                        let _daemon = SherlockDaemon::new(sender).await;
-                    });
-                });
-
-                // Handle receiving using pipline
-                let open_win_clone = open_win.clone();
-                MainContext::default().spawn_local({
-                    let sherlock = Rc::clone(&sherlock);
-                    async move {
-                        while let Ok(msg) = receiver.recv().await {
-                            if let Some(window) = open_win_clone.upgrade() {
-                                match msg.as_str() {
-                                    "show" | "open-window" => {
-                                        let _ = gtk4::prelude::WidgetExt::activate_action(
-                                            &window, "win.open", None,
-                                        );
-                                    },
-                                    "obfuscate" => {
-                                        sherlock.borrow().obfuscate(false);
-                                    },
-                                    "deobfuscate" => {
-                                        sherlock.borrow().obfuscate(true);
-                                    },
-                                    "clear" => {
-                                        window.set_visible(true);
-                                        sherlock.borrow().clear_results();
-                                    },
-                                    "input_only" => {
-                                        window.set_visible(true);
-                                        sherlock.borrow().show_raw();
-                                    }
-                                    _ => {
-                                        println!("{:?}", msg);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+        if app_config.behavior.daemonize {
+            // Used to cache render
+            if let Some(window) = open_win.upgrade() {
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.open", None);
+                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
             }
         }
+
+        // Spawn api listener
+        let _server = SherlockServer::listen(sherlock);
+
+        // Print Timing
         if let Ok(timing_enabled) = std::env::var("TIMING") {
             if timing_enabled == "true" {
                 println!("Window creation took {:?}", t1.elapsed());
+                println!("Start to Finish took: {:?}", t0.elapsed());
             }
         }
     });
@@ -247,8 +208,7 @@ async fn main() {
     drop(lock);
 }
 
-#[sherlock_macro::timing("\nContent loading")]
-fn startup_loading() -> (
+async fn startup_loading() -> (
     Application,
     Vec<SherlockError>,
     Vec<SherlockError>,
@@ -256,14 +216,28 @@ fn startup_loading() -> (
     SherlockConfig,
     LockFile,
 ) {
+    let t0 = Instant::now();
     let mut non_breaking: Vec<SherlockError> = Vec::new();
     let mut startup_errors: Vec<SherlockError> = Vec::new();
 
     // Check for '.lock'-file to only start a single instance
-    let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|e| {
-        eprintln!("{}", e);
+    let lock = lock::ensure_single_instance(LOCK_FILE).unwrap_or_else(|_| {
         process::exit(1);
     });
+
+    let app_future = async {
+        // Initialize application
+        let application = Application::builder()
+            // .application_id("dev.skxxtz.sherlock")
+            .flags(gio::ApplicationFlags::NON_UNIQUE | gio::ApplicationFlags::HANDLES_COMMAND_LINE)
+            .build();
+        // Needed in order start Sherlock without glib flag handling
+        application.connect_command_line(|app, _| {
+            app.activate();
+            0
+        });
+        application
+    };
 
     // Setup flags
     let sherlock_flags = Loader::load_flags()
@@ -295,21 +269,17 @@ fn startup_loading() -> (
         .map_err(|e| startup_errors.push(e))
         .ok();
 
-    // Initialize application
-    let application = Application::new(
-        Some("dev.skxxtz.sherlock"),
-        gio::ApplicationFlags::HANDLES_COMMAND_LINE,
-    );
-
     if let Some(config) = CONFIG.get() {
         env::set_var("GSK_RENDERER", &config.appearance.gsk_renderer);
     }
 
-    // Needed in order start Sherlock without glib flag handling
-    application.connect_command_line(|app, _| {
-        app.activate();
-        0
-    });
+    let application = app_future.await;
+
+    if let Ok(timing_enabled) = std::env::var("TIMING") {
+        if timing_enabled == "true" {
+            println!("Initial Setup took {:?}", t0.elapsed());
+        }
+    }
 
     (
         application,

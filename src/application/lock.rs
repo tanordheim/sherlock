@@ -6,7 +6,7 @@ use procfs::process::Process;
 
 use crate::daemon::daemon::SherlockDaemon;
 
-#[sherlock_macro::timing("Ensuring single instance")]
+#[sherlock_macro::timing(name = "Ensuring single instance", level = "setup")]
 pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
     let path = PathBuf::from(lock_file);
     if path.exists() {
@@ -14,8 +14,7 @@ pub fn ensure_single_instance(lock_file: &str) -> Result<LockFile, String> {
             if let Some(pid) = content.parse::<i32>().ok() {
                 match Process::new(pid) {
                     Ok(_) => {
-                        let _ = SherlockDaemon::open();
-                        std::process::exit(0)
+                        let _ = SherlockDaemon::instance();
                     }
                     Err(_) => {
                         let _ = fs::remove_file(lock_file);

@@ -1,9 +1,6 @@
-use std::{
-    os::unix::process::CommandExt,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
-use crate::CONFIG;
+use crate::{sher_log, CONFIG};
 use crate::{
     sherlock_error,
     utils::errors::{SherlockError, SherlockErrorType},
@@ -32,29 +29,62 @@ pub fn command_launch(exec: &str, keyword: &str) -> Result<(), SherlockError> {
     Ok(())
 }
 
-fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
-    let raw_command = format!("{}{}{}", prefix, cmd, flags).replace('"', "");
+pub fn asynchronous_execution(cmd: &str, prefix: &str, flags: &str) -> Result<(), SherlockError> {
+    let raw_command = format!("{}{}{}", prefix, cmd, flags).replace(r#"\""#, "'");
+    sher_log!(format!(r#"Spawning command "{}""#, raw_command));
 
     let mut command = Command::new("sh");
-    command.arg("-c").arg(raw_command);
+    command.arg("-c").arg(raw_command.clone());
 
-    unsafe {
-        command
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .pre_exec(|| {
-                nix::unistd::setsid().ok();
-                Ok(())
-            });
-    }
+    command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
-    command.spawn().map_err(|e| {
+    // Move command string into task
+    let child = command.spawn().map_err(|e| {
+        sher_log!(format!(
+            "Failed to spawn command: {}\nError: {}",
+            raw_command, e
+        ));
         sherlock_error!(
             SherlockErrorType::CommandExecutionError(cmd.to_string()),
             e.to_string()
         )
     })?;
 
+    tokio::spawn(async move {
+        let result = match child.wait_with_output() {
+            Ok(output) => {
+                if output.status.success() {
+                    sher_log!(format!("Command succeeded: {}", raw_command));
+                    Ok(())
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    sher_log!(format!(
+                        "Command failed: {}\nStderr: {}",
+                        raw_command, stderr
+                    ));
+                    Err(sherlock_error!(
+                        SherlockErrorType::CommandExecutionError(raw_command.to_string()),
+                        stderr.to_string()
+                    ))
+                }
+            }
+            Err(e) => {
+                sher_log!(format!(
+                    "Failed to wait for command: {}\nError: {}",
+                    raw_command, e
+                ));
+                Err(sherlock_error!(
+                    SherlockErrorType::CommandExecutionError(raw_command.to_string()),
+                    e.to_string()
+                ))
+            }
+        };
+        if let Err(err) = result {
+            let _result = err.insert(false);
+        }
+    });
     Ok(())
 }

@@ -11,8 +11,8 @@ use gio::glib::{self, WeakRef};
 use gio::ListStore;
 use gtk4::gdk::{Key, ModifierType};
 use gtk4::{
-    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Label, ListView, ScrolledWindow,
-    Spinner,
+    prelude::*, Box as GtkBox, CustomFilter, CustomSorter, Entry, Justification, Label, ListView,
+    ScrolledWindow, Spinner,
 };
 use serde::Deserialize;
 
@@ -22,6 +22,8 @@ use crate::utils::config::default_modkey_ascii;
 use crate::utils::errors::{SherlockError, SherlockErrorType};
 use crate::{sherlock_error, CONFIG};
 
+use super::tiles::util::TextViewTileBuilder;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConfKeys {
     // Next
@@ -30,6 +32,9 @@ pub struct ConfKeys {
     // Previous
     pub prev: Option<Key>,
     pub prev_mod: Option<ModifierType>,
+    // Inplace execution
+    pub exec_inplace: Option<Key>,
+    pub exec_inplace_mod: Option<ModifierType>,
     // ContextMenu
     pub context: Option<Key>,
     pub context_mod: Option<ModifierType>,
@@ -50,6 +55,10 @@ impl ConfKeys {
                 Some(next) => ConfKeys::eval_bind_combination(next),
                 _ => (None, (None, None)),
             };
+            let (exec_inplace_mod, inplace) = match &c.binds.exec_inplace {
+                Some(inplace) => ConfKeys::eval_bind_combination(inplace),
+                _ => (None, (None, None)),
+            };
             let (context_mod, context) = match &c.binds.context {
                 Some(context) => ConfKeys::eval_bind_combination(context),
                 _ => (None, (None, None)),
@@ -65,6 +74,8 @@ impl ConfKeys {
                 next_mod,
                 prev: prev.0,
                 prev_mod,
+                exec_inplace: inplace.0,
+                exec_inplace_mod,
                 context: context.0,
                 context_mod,
                 context_str: context.1,
@@ -81,6 +92,8 @@ impl ConfKeys {
             next_mod: None,
             prev: None,
             prev_mod: None,
+            exec_inplace: None,
+            exec_inplace_mod: None,
             context: None,
             context_mod: None,
             context_mod_str: String::new(),
@@ -89,11 +102,8 @@ impl ConfKeys {
             shortcut_modifier_str: String::new(),
         }
     }
-    fn eval_bind_combination<T: AsRef<str>>(
-        key: T,
-    ) -> (Option<ModifierType>, (Option<Key>, Option<String>)) {
-        let key_str = key.as_ref();
-        match key_str.split("-").collect::<Vec<&str>>().as_slice() {
+    fn eval_bind_combination(key: &str) -> (Option<ModifierType>, (Option<Key>, Option<String>)) {
+        match key.split("-").collect::<Vec<&str>>().as_slice() {
             [modifier, key, ..] => (ConfKeys::eval_mod(modifier), ConfKeys::eval_key(key)),
             [key, ..] => (None, ConfKeys::eval_key(key)),
             _ => (None, (None, None)),
@@ -110,6 +120,7 @@ impl ConfKeys {
             "pgdown" => (Some(Key::Page_Down), Some(String::from("⇟"))),
             "end" => (Some(Key::End), Some(String::from("End"))),
             "home" => (Some(Key::Home), Some(String::from("Home"))),
+            "return" => (Some(Key::Return), Some(String::from("↩"))),
             // Alphabet
             k if k.len() == 1 && k.chars().all(|c| c.is_ascii_alphabetic()) => {
                 (Key::from_name(k), Some(k.to_uppercase()))
@@ -160,6 +171,7 @@ impl ConfKeys {
 pub struct SherlockAction {
     pub on: u32,
     pub action: String,
+    pub exec: Option<String>,
 }
 pub struct SherlockCounter {
     path: PathBuf,
@@ -173,7 +185,7 @@ impl SherlockCounter {
             )
         })?;
         let home_dir = PathBuf::from(home);
-        let path = home_dir.join(".sherlock/sherlock_count");
+        let path = home_dir.join(".cache/sherlock/sherlock_count");
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(|e| {
                 sherlock_error!(
@@ -237,22 +249,29 @@ pub struct SearchHandler {
     pub modes: Rc<RefCell<HashMap<String, Option<String>>>>,
     pub task: Rc<RefCell<Option<glib::JoinHandle<()>>>>,
     pub error_model: WeakRef<ListStore>,
+    pub filter: WeakRef<CustomFilter>,
+    pub sorter: WeakRef<CustomSorter>,
+    pub binds: ConfKeys,
+    pub first_iter: Cell<bool>,
 }
 impl SearchHandler {
-    pub fn new(model: WeakRef<ListStore>, error_model: WeakRef<ListStore>) -> Self {
+    pub fn new(
+        model: WeakRef<ListStore>,
+        error_model: WeakRef<ListStore>,
+        filter: WeakRef<CustomFilter>,
+        sorter: WeakRef<CustomSorter>,
+        binds: ConfKeys,
+        first_iter: Cell<bool>,
+    ) -> Self {
         Self {
             model: Some(model),
             modes: Rc::new(RefCell::new(HashMap::new())),
             task: Rc::new(RefCell::new(None)),
             error_model,
-        }
-    }
-    pub fn empty(error_model: WeakRef<ListStore>) -> Self {
-        Self {
-            model: None,
-            modes: Rc::new(RefCell::new(HashMap::new())),
-            task: Rc::new(RefCell::new(None)),
-            error_model,
+            filter,
+            sorter,
+            binds,
+            first_iter,
         }
     }
     pub fn clear(&self) {
@@ -260,9 +279,11 @@ impl SearchHandler {
             model.remove_all();
         }
     }
+
     pub fn populate(&self) {
         // clear potentially stuck rows
         self.clear();
+        self.first_iter.set(true);
 
         // load launchers
         let (launchers, n) = match Loader::load_launchers().map_err(|e| e.tile("ERROR")) {
@@ -282,9 +303,9 @@ impl SearchHandler {
 
         if let Some(model) = self.model.as_ref().and_then(|m| m.upgrade()) {
             let mut holder: HashMap<String, Option<String>> = HashMap::new();
-            let rows: Vec<WeakRef<SherlockRow>> = launchers
+            let rows: Vec<SherlockRow> = launchers
                 .into_iter()
-                .map(|launcher| {
+                .map(|mut launcher| {
                     let patch = launcher.get_patch();
                     if let Some(alias) = &launcher.alias {
                         holder.insert(format!("{} ", alias), launcher.name);
@@ -292,12 +313,11 @@ impl SearchHandler {
                     patch
                 })
                 .flatten()
-                .map(|row| {
-                    model.append(&row);
-                    row.downgrade()
-                })
                 .collect();
-            update_async(rows, &self.task, String::new());
+            model.splice(0, model.n_items(), &rows);
+            let weaks: Vec<WeakRef<SherlockRow>> =
+                rows.into_iter().map(|row| row.downgrade()).collect();
+            update_async(weaks, &self.task, String::new());
             *self.modes.borrow_mut() = holder;
         }
     }
@@ -370,4 +390,24 @@ pub fn update_async(
         }
     });
     *current_task.borrow_mut() = Some(task);
+}
+
+pub fn display_raw<T: AsRef<str>>(content: T, center: bool) -> GtkBox {
+    let builder = TextViewTileBuilder::new("/dev/skxxtz/sherlock/ui/text_view_tile.ui");
+    builder
+        .content
+        .as_ref()
+        .and_then(|tmp| tmp.upgrade())
+        .map(|ctx| {
+            let buffer = ctx.buffer();
+            ctx.add_css_class("raw_text");
+            ctx.set_monospace(true);
+            let sanitized: String = content.as_ref().chars().filter(|&c| c != '\0').collect();
+            buffer.set_text(&sanitized);
+            if center {
+                ctx.set_justification(Justification::Center);
+            }
+        });
+    let row = builder.object.unwrap_or_default();
+    row
 }

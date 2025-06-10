@@ -26,6 +26,8 @@ pub struct SherlockFlags {
     pub method: Option<String>,
     pub field: Option<String>,
     pub sub_menu: Option<String>,
+    pub multi: bool,
+    pub photo_mode: bool,
 }
 /// Configuration sections:
 ///
@@ -69,7 +71,7 @@ pub struct SherlockConfig {
 
     /// Internal settings for JSON piping (e.g., default return action)
     #[serde(default)]
-    pub pipe: ConfigPipe,
+    pub runtime: Runtime,
 
     /// Configures expand feature
     #[serde(default)]
@@ -89,7 +91,13 @@ impl SherlockConfig {
             behavior: ConfigBehavior::default(),
             binds: ConfigBinds::default(),
             files: ConfigFiles::default(),
-            pipe: ConfigPipe { method: None },
+            runtime: Runtime {
+                method: None,
+                multi: false,
+                center: false,
+                photo_mode: false,
+                display_raw: false,
+            },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
         }
@@ -103,7 +111,13 @@ impl SherlockConfig {
             behavior: ConfigBehavior::default(),
             binds: ConfigBinds::default(),
             files: ConfigFiles::with_root(root),
-            pipe: ConfigPipe { method: None },
+            runtime: Runtime {
+                method: None,
+                multi: false,
+                center: false,
+                photo_mode: false,
+                display_raw: false,
+            },
             expand: ConfigExpand::default(),
             backdrop: ConfigBackdrop::default(),
         }
@@ -234,7 +248,7 @@ impl SherlockConfig {
 
         std::process::exit(0);
     }
-    #[sherlock_macro::timing("Loading config")]
+    #[sherlock_macro::timing(name = "Loading config")]
     pub fn from_flags(
         sherlock_flags: &SherlockFlags,
     ) -> Result<(SherlockConfig, Vec<SherlockError>), SherlockError> {
@@ -385,7 +399,11 @@ impl SherlockConfig {
             &home,
         );
         config.behavior.sub_menu = sherlock_flags.sub_menu.clone();
-        config.pipe.method = sherlock_flags.method.clone();
+        config.runtime.method = sherlock_flags.method.clone();
+        config.runtime.center = sherlock_flags.center_raw.clone();
+        config.runtime.multi = sherlock_flags.multi;
+        config.runtime.display_raw = sherlock_flags.display_raw;
+        config.runtime.photo_mode = sherlock_flags.photo_mode;
         config.behavior.field = sherlock_flags.field.clone();
 
         if sherlock_flags.daemonize {
@@ -430,7 +448,7 @@ pub struct ConfigUnits {
     #[serde(default = "default_temperatures")]
     pub temperatures: String,
     #[serde(default = "default_currency")]
-    pub _currency: String,
+    pub currency: String,
 }
 impl Default for ConfigUnits {
     fn default() -> Self {
@@ -439,7 +457,7 @@ impl Default for ConfigUnits {
             weights: default_weights(),
             volumes: default_volumes(),
             temperatures: default_temperatures(),
-            _currency: default_currency(),
+            currency: default_currency(),
         }
     }
 }
@@ -635,12 +653,26 @@ pub struct ConfigBinds {
     pub context: Option<String>,
     #[serde(default)]
     pub modifier: Option<String>,
+    #[serde(default)]
+    pub exec_inplace: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ConfigPipe {
+pub struct Runtime {
     #[serde(default)]
     pub method: Option<String>,
+
+    #[serde(default)]
+    pub multi: bool,
+
+    #[serde(default)]
+    pub center: bool,
+
+    #[serde(default)]
+    pub photo_mode: bool,
+
+    #[serde(default)]
+    pub display_raw: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

@@ -1,6 +1,7 @@
 use gio::glib::object::ObjectExt;
 use gio::glib::subclass::Signal;
 use gio::glib::{SignalHandlerId, WeakRef};
+use gtk4::prelude::*;
 use gtk4::prelude::{GestureSingleExt, WidgetExt};
 use gtk4::subclass::prelude::*;
 use gtk4::{glib, GestureClick};
@@ -15,6 +16,7 @@ use crate::loader::util::ApplicationAction;
 /// ## Fields:
 /// * **spawn_focus**: Whether the tile should receive focus when Sherlock starts.
 /// * **shortcut**: Whether the tile can display `modkey + number` shortcuts.
+/// * **active**: Whether the row should be shown as active in multi selection
 /// * **gesture**: State to hold and replace double-click gestures.
 /// * **shortcut_holder**: A `GtkBox` widget that holds the `modkey + number` shortcut indicators.
 /// * **priority**: Determines the tile's ordering within the `GtkListView`.
@@ -35,6 +37,9 @@ pub struct SherlockRow {
 
     /// Whether the tile can display `modkey + number` shortcuts  
     pub shortcut: Cell<bool>,
+
+    /// Whether the row should be shown as active in multi selection
+    pub active: Cell<bool>,
 
     /// State to hold and replace double-click gestures
     pub gesture: OnceCell<GestureClick>,
@@ -106,7 +111,8 @@ impl ObjectImpl for SherlockRow {
             gesture.connect_pressed(move |_, n_clicks, _, _| {
                 if n_clicks >= 2 {
                     if let Some(obj) = obj.upgrade() {
-                        obj.emit_by_name::<()>("row-should-activate", &[]);
+                        let exit: u8 = 0;
+                        obj.emit_by_name::<()>("row-should-activate", &[&exit]);
                     }
                 }
             });
@@ -118,7 +124,11 @@ impl ObjectImpl for SherlockRow {
     fn signals() -> &'static [glib::subclass::Signal] {
         static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
         // Signal used to activate actions connected to the SherlockRow
-        SIGNALS.get_or_init(|| vec![Signal::builder("row-should-activate").build()])
+        SIGNALS.get_or_init(|| {
+            vec![Signal::builder("row-should-activate")
+                .param_types([u8::static_type()])
+                .build()]
+        })
     }
 }
 

@@ -6,8 +6,8 @@ use gio::{
     ListStore,
 };
 use gtk4::{
-    prelude::{ListItemExt, WidgetExt},
-    ListView, Revealer, SignalListItemFactory, SingleSelection,
+    prelude::ListItemExt, ListView, Revealer, ScrolledWindow, SignalListItemFactory,
+    SingleSelection,
 };
 
 use crate::{g_subclasses::action_entry::ContextAction, CONFIG};
@@ -15,18 +15,32 @@ use crate::{g_subclasses::action_entry::ContextAction, CONFIG};
 use super::util::ContextUI;
 
 pub fn make_context() -> (ContextUI, Revealer) {
+    let max_heigth = CONFIG.get().map_or(60, |c| c.appearance.height - 200);
     let factory = make_factory();
     let model = ListStore::new::<ContextAction>();
     let selection = SingleSelection::new(Some(model.clone()));
-    let context = ListView::new(Some(selection), Some(factory));
     let context_open = Rc::new(Cell::new(false));
+    let context = ListView::builder()
+        .name("context-menu")
+        .model(&selection)
+        .factory(&factory)
+        .focusable(false)
+        .build();
+
+    let viewport = ScrolledWindow::builder()
+        .child(&context)
+        .propagate_natural_height(true)
+        .max_content_height(max_heigth)
+        .vexpand(true)
+        .width_request(300)
+        .build();
 
     let revealer = Revealer::builder()
         .transition_type(gtk4::RevealerTransitionType::Crossfade)
         .transition_duration(100)
         .valign(gtk4::Align::End)
         .halign(gtk4::Align::End)
-        .child(&context)
+        .child(&viewport)
         .build();
 
     if !CONFIG.get().map_or(false, |c| c.behavior.animate) {
@@ -53,9 +67,6 @@ pub fn make_context() -> (ContextUI, Revealer) {
         }
     });
 
-    context.set_widget_name("context-menu");
-    context.set_focusable(false);
-    context.set_width_request(300);
     let ui = ContextUI {
         model: model.downgrade(),
         view: context.downgrade(),

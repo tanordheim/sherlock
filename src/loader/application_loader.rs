@@ -12,6 +12,7 @@ use std::time::SystemTime;
 
 use super::util::ApplicationAction;
 use super::{util, Loader};
+use crate::prelude::PathHelpers;
 use crate::utils::{
     errors::{SherlockError, SherlockErrorType},
     files::read_lines,
@@ -167,6 +168,7 @@ impl Loader {
         priority: f32,
         counts: &HashMap<String, f32>,
         decimals: i32,
+        last_changed: Option<SystemTime>,
     ) -> Result<HashSet<AppData>, SherlockError> {
         let system_apps = get_applications_dir();
 
@@ -178,7 +180,15 @@ impl Loader {
         apps.retain(|v| {
             if let Some(path) = &v.desktop_file {
                 if desktop_files.contains(path) {
-                    cached_paths.insert(path.clone());
+                    // Do not flag files as cached that have been modified after the cache has last been
+                    // modified
+                    if let (Some(modtime), Some(last_changed)) = (path.modtime(), last_changed) {
+                        if modtime < last_changed {
+                            cached_paths.insert(path.clone());
+                        } else {
+                            return false;
+                        }
+                    }
                     return true;
                 }
             }
@@ -254,6 +264,7 @@ impl Loader {
 
                 // Refresh cache in the background
                 let old_apps = apps.clone();
+                let last_changed = config.behavior.cache.modtime();
                 rayon::spawn_fifo({
                     let counts_clone = counts.clone();
                     move || {
@@ -262,6 +273,7 @@ impl Loader {
                             priority,
                             &counts_clone,
                             decimals,
+                            last_changed,
                         ) {
                             Loader::write_cache(&new_apps, &config.behavior.cache);
                         }
@@ -322,6 +334,7 @@ pub fn get_applications_dir() -> HashSet<PathBuf> {
 
 pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
     dirs.into_par_iter()
+        .filter(|dir| dir.is_dir())
         .filter_map(|dir| {
             fs::read_dir(dir).ok().map(|entries| {
                 entries
@@ -342,14 +355,11 @@ pub fn get_desktop_files(dirs: HashSet<PathBuf>) -> HashSet<PathBuf> {
         .collect::<HashSet<PathBuf>>()
 }
 pub fn file_has_changed(file_path: &Path, compare_to: &Path) -> bool {
-    fn modtime(path: &Path) -> Option<SystemTime> {
-        fs::metadata(path).ok().and_then(|m| m.modified().ok())
-    }
-    match (modtime(&file_path), modtime(&compare_to)) {
+    match (&file_path.modtime(), &compare_to.modtime()) {
         (Some(t1), Some(t2)) if t1 >= t2 => return true,
         _ => {}
     }
-    return false;
+    false
 }
 
 #[test]
@@ -380,4 +390,10 @@ fn test_get_applications_dir() {
 
     // Assert that the result matches the expected HashSet
     assert_eq!(res, expected_app_dirs);
+}
+
+impl PathHelpers for Path {
+    fn modtime(&self) -> Option<SystemTime> {
+        self.metadata().ok().and_then(|m| m.modified().ok())
+    }
 }

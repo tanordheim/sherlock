@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-    <template class="SearchUI" parent="GtkBox">
+    <template class="GridSearchUI" parent="GtkBox">
         <property name="orientation">vertical</property>
 
         <child>
@@ -76,7 +76,7 @@
                         <property name="name">scroll-window</property>
                         <property name="focusable">false</property>
                         <child>
-                            <object class="GtkListView" id="result-frame">
+                            <object class="GtkGridView" id="result-frame">
                                 <property name="name">list_box</property>
                                 <child>
                                 </child>

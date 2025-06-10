@@ -8,18 +8,16 @@ use gtk4::{
 use gtk4::{Builder, Stack};
 use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::actions::execute_from_attrs;
+use crate::daemon::daemon::close_response;
 use crate::launcher::emoji_picker::emojies;
-use crate::loader::util::JsonCache;
 use crate::utils::config::SherlockConfig;
 use crate::CONFIG;
 
 use super::tiles::util::TextViewTileBuilder;
-use super::util::{SherlockAction, SherlockCounter};
 
+#[sherlock_macro::timing(name = "Window frame creation")]
 pub fn window(
     application: &Application,
 ) -> (
@@ -61,16 +59,18 @@ pub fn window(
         window.set_margin(gtk4_layer_shell::Edge::Top, config.expand.margin);
     }
 
-    let focus_controller = EventControllerFocus::new();
-    focus_controller.connect_leave({
-        let window_ref = window.downgrade();
-        move |_| {
-            if let Some(window) = window_ref.upgrade() {
-                let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+    if !config.runtime.photo_mode {
+        let focus_controller = EventControllerFocus::new();
+        focus_controller.connect_leave({
+            let window_ref = window.downgrade();
+            move |_| {
+                if let Some(window) = window_ref.upgrade() {
+                    let _ = gtk4::prelude::WidgetExt::activate_action(&window, "win.close", None);
+                }
             }
-        }
-    });
-    window.add_controller(focus_controller);
+        });
+        window.add_controller(focus_controller);
+    }
 
     // Handle the key press event
     let key_controller = EventControllerKey::new();
@@ -117,6 +117,10 @@ pub fn window(
             if !window.is_visible() {
                 return;
             }
+
+            // Send close message to possible instance
+            let _result = close_response();
+
             if let Some(c) = CONFIG.get() {
                 match c.behavior.daemonize {
                     true => {
@@ -128,37 +132,6 @@ pub fn window(
                         );
                     }
                     false => window.destroy(),
-                }
-            };
-        })
-        .build();
-
-    // Setup action to open the window
-    let action_open = ActionEntry::builder("open")
-        .activate(move |window: &ApplicationWindow, _, _| {
-            // Increment Sherlock Execution counter
-            let start_count = SherlockCounter::new()
-                .and_then(|counter| counter.increment())
-                .unwrap_or(0);
-
-            if let Some(c) = CONFIG.get() {
-                // parse sherlock actions
-                let actions: Vec<SherlockAction> =
-                    JsonCache::read(&c.files.actions).unwrap_or_default();
-                // activate sherlock actions
-                actions
-                    .into_iter()
-                    .filter(|action| start_count % action.on == 0)
-                    .for_each(|action| {
-                        let attrs: HashMap<String, String> =
-                            HashMap::from([(String::from("method"), action.action)]);
-                        execute_from_attrs(window, &attrs);
-                    });
-                match c.behavior.daemonize {
-                    true => {
-                        window.present();
-                    }
-                    false => window.present(),
                 }
             };
         })
@@ -176,19 +149,22 @@ pub fn window(
 
             fn parse_transition(from: &str, to: &str) -> StackTransitionType {
                 match (from, to) {
-                    ("search-page", "error-page") => StackTransitionType::OverRightLeft,
-                    ("error-page", "search-page") => StackTransitionType::OverRightLeft,
+                    ("search-page", "error-page") => StackTransitionType::SlideRight,
+                    ("error-page", "search-page") => StackTransitionType::SlideLeft,
                     ("search-page", "emoji-page") => StackTransitionType::SlideLeft,
                     ("emoji-page", "search-page") => StackTransitionType::SlideRight,
+                    ("search-page", "display-raw") => StackTransitionType::SlideRight,
                     _ => StackTransitionType::None,
                 }
             }
             if let Some((from, to)) = parameter.split_once("->") {
                 stack_clone.upgrade().map(|stack| {
                     stack.set_transition_type(parse_transition(&from, &to));
-                    stack.set_visible_child_name(&to);
+                    if let Some(child) = stack.child_by_name(&to) {
+                        stack.set_visible_child(&child);
+                        *page_clone.borrow_mut() = to.to_string();
+                    }
                 });
-                *page_clone.borrow_mut() = to.to_string();
             }
         })
         .build();
@@ -210,13 +186,9 @@ pub fn window(
                         buf.set_text(parameter.as_ref());
                     });
                 if let Some(stack_clone) = stack_clone.upgrade() {
-                    builder
-                        .object
-                        .as_ref()
-                        .and_then(|tmp| tmp.upgrade())
-                        .map(|obj| {
-                            stack_clone.add_named(&obj, Some("next-page"));
-                        });
+                    builder.object.as_ref().map(|obj| {
+                        stack_clone.add_named(obj, Some("next-page"));
+                    });
                     stack_clone.set_transition_type(gtk4::StackTransitionType::SlideLeft);
                     stack_clone.set_visible_child_name("next-page");
                 }
@@ -259,30 +231,15 @@ pub fn window(
         .build();
 
     window.set_child(Some(&stack));
-    let win_ref = match backdrop {
-        Some(backdrop) => {
-            backdrop.add_action_entries([action_open]);
-            window.add_action_entries([
-                action_close,
-                action_stack_switch,
-                action_next_page,
-                emoji_action,
-                action_remove_page,
-            ]);
-            backdrop.downgrade()
-        }
-        _ => {
-            window.add_action_entries([
-                action_close,
-                action_open,
-                action_stack_switch,
-                action_next_page,
-                emoji_action,
-                action_remove_page,
-            ]);
-            window.downgrade()
-        }
-    };
+    window.add_action_entries([
+        action_close,
+        action_stack_switch,
+        action_next_page,
+        emoji_action,
+        action_remove_page,
+    ]);
+    let win_ref = backdrop.as_ref().unwrap_or(&window).downgrade();
+
     return (window, stack, current_stack_page, win_ref);
 }
 
