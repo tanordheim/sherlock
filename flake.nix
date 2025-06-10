@@ -74,7 +74,7 @@
             pname = "${name}";
             version = "${version}";
 
-            # meta = {mainProgram = "sherlock";};
+            meta = {mainProgram = "sherlock";};
           });
       in {
         devShells.default = pkgs.mkShell {
